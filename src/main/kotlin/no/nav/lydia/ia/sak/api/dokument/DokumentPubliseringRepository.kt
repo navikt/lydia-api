@@ -19,13 +19,35 @@ import javax.sql.DataSource
 class DokumentPubliseringRepository(
     val dataSource: DataSource,
 ) {
-    fun hentDokumentPubliseringMetadata(samarbeidsId: Int): DokumentPubliseringMetadata? {
-        TODO(
-            """
-            SELECT FROM ia_prosess JOIN ia_sak JOIN virksomhet ... WHERE samarbeidId = :samarbeidId
-            """.trimIndent(),
-        )
-    }
+    fun hentDokumentPubliseringMetadata(samarbeidId: Int): DokumentPubliseringMetadata? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT virksomhet.orgnr,
+                           virksomhet.navn AS virksomhetsNavn,
+                           ia_sak.saksnummer,
+                           ia_prosess.id AS samarbeidId,
+                           ia_prosess.navn AS samarbeidsnavn
+                    FROM ia_prosess
+                         JOIN ia_sak
+                            ON ia_prosess.saksnummer = ia_sak.saksnummer
+                         JOIN virksomhet
+                            ON ia_sak.orgnr = virksomhet.orgnr
+                    WHERE ia_prosess.id = :samarbeidId
+                    """.trimIndent(),
+                    mapOf("samarbeidId" to samarbeidId),
+                ).map { row ->
+                    DokumentPubliseringMetadata(
+                        orgnummer = row.string("orgnr"),
+                        virksomhetsNavn = row.string("virksomhetsNavn"),
+                        saksnummer = row.string("saksnummer"),
+                        samarbeidId = row.int("samarbeidId"),
+                        samarbeidsnavn = row.string("samarbeidsnavn"),
+                    )
+                }.asSingle,
+            )
+        }
 
     fun opprettDokument(
         samarbeidId: Int,

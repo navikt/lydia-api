@@ -41,7 +41,7 @@ class DokumentPubliseringProdusent(
             virksomhetsNavn: String,
             saksnummer: String,
             samarbeidId: Int,
-            samarbeidNavn: String,
+            samarbeidsnavn: String,
             navEnhet: NavEnhet,
             innhold: T,
         ): DokumentPubliseringMedInnhold =
@@ -59,7 +59,7 @@ class DokumentPubliseringProdusent(
                 ),
                 samarbeid = SamarbeidDto(
                     id = samarbeidId,
-                    navn = samarbeidNavn,
+                    navn = samarbeidsnavn,
                 ),
                 innhold = Json.encodeToJsonElement(innhold).jsonObject,
             )
