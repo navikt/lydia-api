@@ -18,6 +18,8 @@ import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -37,6 +39,7 @@ fun Route.iaSakPlan(
     iaTeamService: IATeamService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
+    dokumentPubliseringRepository: DokumentPubliseringRepository,
 ) {
     get("$PLAN_BASE_ROUTE/mal") {
         call.somLesebruker(adGrupper = adGrupper) { _ ->
@@ -62,8 +65,13 @@ fun Route.iaSakPlan(
                 auditType = AuditType.create,
                 saksnummer = saksnummer,
             )
-        }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.map { plan ->
+            val dokumenter = dokumentPubliseringRepository.hentDokument(
+                dokumentReferanseId = plan.id,
+                dokumentType = DokumentPublisering.Type.SAMARBEIDSPLAN,
+            )
+            val publiseringStatus = dokumenter.maxByOrNull { it.opprettetTidspunkt }?.status
+            call.respond(status = HttpStatusCode.OK, message = plan.tilDto(publiseringStatus))
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -145,7 +153,7 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto(publiseringStatus = null))
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -181,7 +189,7 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto(publiseringStatus = null))
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -224,7 +232,7 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto(publiseringStatus = null))
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

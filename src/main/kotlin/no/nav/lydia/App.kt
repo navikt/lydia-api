@@ -273,8 +273,9 @@ fun startLydiaBackend() {
         ),
         spørreundersøkelseOppdateringProdusent = spørreundersøkelseOppdateringProdusent,
     )
+    val dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource = dataSource)
     val dokumentPubliseringService = DokumentPubliseringService(
-        dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource),
+        dokumentPubliseringRepository = dokumentPubliseringRepository,
         spørreundersøkelseService = spørreundersøkelseService,
         samarbeidService = samarbeidService,
         dokumentPubliseringProdusent = DokumentPubliseringProdusent(kafka = naisEnv.kafka, topic = Topic.DOKUMENT_PUBLISERING_TOPIC),
@@ -418,6 +419,7 @@ fun startLydiaBackend() {
             samarbeidService = samarbeidService,
             spørreundersøkelseService = spørreundersøkelseService,
             planService = planService,
+            dokumentPubliseringRepository = dokumentPubliseringRepository,
             dokumentPubliseringService = dokumentPubliseringService,
         )
     }.also {
@@ -513,6 +515,7 @@ private fun Application.lydiaRestApi(
     spørreundersøkelseService: SpørreundersøkelseService,
     iaTeamService: IATeamService,
     planService: PlanService,
+    dokumentPubliseringRepository: DokumentPubliseringRepository,
     dokumentPubliseringService: DokumentPubliseringService,
 ) {
     install(ContentNegotiation) {
@@ -607,6 +610,7 @@ private fun Application.lydiaRestApi(
                 planService = planService,
                 iaSakService = iaSakService,
                 iaTeamService = iaTeamService,
+                dokumentPubliseringRepository = dokumentPubliseringRepository,
             )
             virksomhet(
                 virksomhetService = virksomhetService,
