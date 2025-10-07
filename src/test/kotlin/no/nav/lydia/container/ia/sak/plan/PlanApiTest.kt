@@ -7,6 +7,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.minus
@@ -14,6 +15,8 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
 import no.nav.lydia.helper.PlanHelper.Companion.SLUTT_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdInkludert
@@ -45,6 +48,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
+import no.nav.lydia.helper.statuskode
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -251,6 +256,37 @@ class PlanApiTest {
 
         plan.antallTemaInkludert() shouldBe 0
         plan.antallInnholdInkludert() shouldBe 0
+        plan.publiseringStatus shouldBe null
+    }
+
+    @Test
+    fun `kan opprette og publisere en plan, motta kvittering, hente plan og verifisere at tidspunkt og status er korrekt`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val enTomPlanMal = hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+
+        val førPublisering = sak.hentPlan(prosessId = samarbeid.id)
+        førPublisering.sistPublisert shouldBe null
+        førPublisering.publiseringStatus shouldBe null
+
+        val response = publiserDokument(
+            dokumentReferanseId = plan.id,
+            dokumentType = DokumentPublisering.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+        val dokumentPubliseringDto = response.third.get()
+
+        val etterSendtTilPublisering = sak.hentPlan(prosessId = samarbeid.id)
+        etterSendtTilPublisering.sistPublisert shouldBe null
+        etterSendtTilPublisering.publiseringStatus shouldBe DokumentPublisering.Status.OPPRETTET
+
+        sendKvittering(dokument = dokumentPubliseringDto)
+
+        val etterKvittering = sak.hentPlan(prosessId = samarbeid.id)
+        etterKvittering.sistPublisert shouldNotBe null
+        etterKvittering.publiseringStatus shouldBe DokumentPublisering.Status.PUBLISERT
     }
 
     @Test

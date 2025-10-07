@@ -3,6 +3,7 @@ package no.nav.lydia.ia.sak.api.plan
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
@@ -13,13 +14,17 @@ data class PlanDto(
     val sistPublisert: LocalDate?,
     val status: IASamarbeid.Status,
     val temaer: List<PlanTemaDto>,
+    val publiseringStatus: DokumentPublisering.Status? = null,
 )
 
-fun Plan.tilDto(): PlanDto =
+fun Plan.tilDto(): PlanDto = this.tilDto(publiseringStatus = null)
+
+fun Plan.tilDto(publiseringStatus: DokumentPublisering.Status?): PlanDto =
     PlanDto(
         id = id.toString(),
         sistEndret = sistEndret,
         sistPublisert = sistPublisert,
         status = status,
         temaer = temaer.tilDtoer(),
+        publiseringStatus = publiseringStatus,
     )
