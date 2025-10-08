@@ -57,7 +57,11 @@ fun Plan.tilDtoMedPubliseringStatus(
         temaer = temaer.tilDtoer(),
         publiseringStatus = publiseringStatus,
         harEndringerSidenSistPublisert = when (publiseringStatus) {
-            PUBLISERT -> sistEndret.erEtter(publiseringTidspunkt)
+            PUBLISERT -> {
+                println("Plan sist_endret: $sistEndret")
+                println("Plan publiseringsTidspunkt: $publiseringTidspunkt")
+                sistEndret.erEtter(publiseringTidspunkt)
+            }
             else -> false
         },
     )
