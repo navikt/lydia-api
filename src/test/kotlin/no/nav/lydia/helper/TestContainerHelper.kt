@@ -58,6 +58,8 @@ import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.api.plan.PlanDtoI
+import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
@@ -997,22 +999,22 @@ class PlanHelper {
         val START_DATO = LocalDate(year = 2021, monthNumber = 1, dayOfMonth = 1)
         val SLUTT_DATO = LocalDate(year = 2022, monthNumber = 2, dayOfMonth = 2)
 
-        fun PlanDto.antallTemaInkludert() = temaer.filter { it.inkludert }.size
+        fun PlanDtoI.antallTemaInkludert() = temaer.filter { it.inkludert }.size
 
-        fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
+        fun PlanDtoI.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
 
-        fun PlanDto.antallInnholdMedStatus(status: PlanUndertema.Status) =
+        fun PlanDtoI.antallInnholdMedStatus(status: PlanUndertema.Status) =
             temaer.flatMap { it.undertemaer }.filter {
                 it.inkludert &&
                     it.status == status
             }.size
 
-        fun PlanDto.tidligstStartDato(): LocalDate =
+        fun PlanDtoI.tidligstStartDato(): LocalDate =
             this.temaer.flatMap { it.undertemaer }
                 .filter { it.startDato != null }
                 .minOf { it.startDato!! }
 
-        fun PlanDto.senesteSluttDato(): LocalDate =
+        fun PlanDtoI.senesteSluttDato(): LocalDate =
             this.temaer.flatMap { it.undertemaer }
                 .filter { it.sluttDato != null }
                 .maxOf { it.sluttDato!! }
@@ -1022,7 +1024,7 @@ class PlanHelper {
             token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -1034,7 +1036,7 @@ class PlanHelper {
             token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -1156,11 +1158,11 @@ class PlanHelper {
                 )
             }
 
-        fun PlanDto.inkluderTemaOgAltInnhold(
+        fun PlanMedPubliseringStatusDto.inkluderTemaOgAltInnhold(
             temaId: Int,
             startDato: LocalDate = START_DATO,
             sluttDato: LocalDate = SLUTT_DATO,
-        ): PlanDto =
+        ): PlanMedPubliseringStatusDto =
             this.copy(
                 temaer = temaer.map { tema ->
                     if (tema.id == temaId) {
@@ -1193,6 +1195,22 @@ class PlanHelper {
                 },
             )
 
+        fun PlanMedPubliseringStatusDto.inkluderAlt(
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): PlanMedPubliseringStatusDto =
+            this.copy(
+                temaer = temaer.map { tema ->
+                    tema.copy(
+                        inkludert = true,
+                        undertemaer = tema.undertemaer.inkluderAltInnhold(
+                            startDato = startDato,
+                            sluttDato = sluttDato,
+                        ),
+                    )
+                },
+            )
+
         fun IASakDto.opprettEnPlan(
             token: String = authContainerHelper.saksbehandler1.token,
             plan: PlanMalDto = hentPlanMal(),
@@ -1200,7 +1218,7 @@ class PlanHelper {
         ) = applikasjon.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId/opprett")
             .jsonBody(Json.encodeToString(plan))
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -1270,7 +1288,7 @@ class PlanHelper {
                 failure = { fail(it.message) },
             )
 
-        fun PlanDto.tilRequest(): List<EndreTemaRequest> =
+        fun PlanDtoI.tilRequest(): List<EndreTemaRequest> =
             this.temaer.map { tema ->
                 EndreTemaRequest(
                     tema.id,
@@ -1297,7 +1315,7 @@ class PlanHelper {
                     failure = { fail(it.message) },
                 )
 
-        fun PlanDto.planleggOgFullførAlleUndertemaer(
+        fun PlanMedPubliseringStatusDto.planleggOgFullførAlleUndertemaer(
             orgnummer: String,
             saksnummer: String,
             prosessId: Int,

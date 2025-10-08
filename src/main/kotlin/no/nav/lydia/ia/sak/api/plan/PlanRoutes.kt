@@ -9,6 +9,7 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
+import kotlinx.datetime.LocalDateTime
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -70,8 +71,18 @@ fun Route.iaSakPlan(
                 dokumentReferanseId = plan.id,
                 dokumentType = DokumentPublisering.Type.SAMARBEIDSPLAN,
             )
-            val publiseringStatus = dokumenter.maxByOrNull { it.opprettetTidspunkt }?.status
-            call.respond(status = HttpStatusCode.OK, message = plan.tilDto(publiseringStatus))
+            val publiseringStatusOgTidspunkt: Pair<DokumentPublisering.Status, LocalDateTime?>? =
+                dokumenter.maxByOrNull { it.opprettetTidspunkt }?.let { sisteDokument ->
+                    Pair(
+                        sisteDokument.status,
+                        sisteDokument.publisertTidspunkt,
+                    )
+                }
+
+            call.respond(
+                status = HttpStatusCode.OK,
+                message = plan.tilDtoMedPubliseringStatus(publiseringStatusOgTidspunkt?.first, publiseringStatusOgTidspunkt?.second),
+            )
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -99,7 +110,7 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
+            call.respond(status = HttpStatusCode.Created, message = it.tilDtoMedPubliseringStatus())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -153,7 +164,7 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto(publiseringStatus = null))
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -189,7 +200,7 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto(publiseringStatus = null))
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -232,7 +243,7 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto(publiseringStatus = null))
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

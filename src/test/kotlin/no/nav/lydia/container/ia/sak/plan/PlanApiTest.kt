@@ -285,8 +285,8 @@ class PlanApiTest {
         sendKvittering(dokument = dokumentPubliseringDto)
 
         val etterKvittering = sak.hentPlan(prosessId = samarbeid.id)
-        etterKvittering.sistPublisert shouldNotBe null
         etterKvittering.publiseringStatus shouldBe DokumentPublisering.Status.PUBLISERT
+        etterKvittering.sistPublisert shouldNotBe null
     }
 
     @Test
