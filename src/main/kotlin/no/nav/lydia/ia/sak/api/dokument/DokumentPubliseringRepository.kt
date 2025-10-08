@@ -129,6 +129,7 @@ class DokumentPubliseringRepository(
                     publisert = :publisertDato
                     WHERE referanse_id = :referanseId 
                     AND type = :type
+                    AND dokument_id IS NULL
                     """.trimIndent(),
                     mapOf(
                         "status" to DokumentPublisering.Status.PUBLISERT.name, // TODO: hva ved feilende journalføring?
