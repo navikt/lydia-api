@@ -33,6 +33,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgAltInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderTemaOgAltInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
 import no.nav.lydia.helper.PlanHelper.Companion.senesteSluttDato
 import no.nav.lydia.helper.PlanHelper.Companion.slettPlanForSamarbeid
 import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
@@ -269,6 +270,7 @@ class PlanApiTest {
         val førPublisering = sak.hentPlan(prosessId = samarbeid.id)
         førPublisering.sistPublisert shouldBe null
         førPublisering.publiseringStatus shouldBe null
+        førPublisering.harEndringerSidenSistPublisert shouldBe false
 
         val response = publiserDokument(
             dokumentReferanseId = plan.id,
@@ -281,12 +283,37 @@ class PlanApiTest {
         val etterSendtTilPublisering = sak.hentPlan(prosessId = samarbeid.id)
         etterSendtTilPublisering.sistPublisert shouldBe null
         etterSendtTilPublisering.publiseringStatus shouldBe DokumentPublisering.Status.OPPRETTET
+        etterSendtTilPublisering.harEndringerSidenSistPublisert shouldBe false
 
         sendKvittering(dokument = dokumentPubliseringDto)
 
         val etterKvittering = sak.hentPlan(prosessId = samarbeid.id)
         etterKvittering.publiseringStatus shouldBe DokumentPublisering.Status.PUBLISERT
         etterKvittering.sistPublisert shouldNotBe null
+        etterKvittering.harEndringerSidenSistPublisert shouldBe false
+    }
+
+    @Test
+    fun `skal informere dersom en plan har endringer siden sist publisering`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val enTomPlanMal = hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+
+        val response = publiserDokument(
+            dokumentReferanseId = plan.id,
+            dokumentType = DokumentPublisering.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        sendKvittering(response.third.get())
+        sak.hentPlan().harEndringerSidenSistPublisert shouldBe false
+
+        val planEtterEndring = plan.planleggOgFullførAlleUndertemaer(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = samarbeid.id,
+        )
+        planEtterEndring.harEndringerSidenSistPublisert shouldBe true
     }
 
     @Test

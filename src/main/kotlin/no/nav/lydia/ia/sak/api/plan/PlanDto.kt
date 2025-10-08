@@ -2,8 +2,10 @@ package no.nav.lydia.ia.sak.api.plan
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Status.PUBLISERT
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
@@ -40,6 +42,7 @@ data class PlanMedPubliseringStatusDto(
     override val temaer: List<PlanTemaDto>,
     val sistPublisert: LocalDateTime? = null,
     val publiseringStatus: DokumentPublisering.Status? = null,
+    val harEndringerSidenSistPublisert: Boolean = false,
 ) : PlanDtoI
 
 fun Plan.tilDtoMedPubliseringStatus(
@@ -53,4 +56,15 @@ fun Plan.tilDtoMedPubliseringStatus(
         status = status,
         temaer = temaer.tilDtoer(),
         publiseringStatus = publiseringStatus,
+        harEndringerSidenSistPublisert = when (publiseringStatus) {
+            PUBLISERT -> sistEndret.erEtter(publiseringTidspunkt)
+            else -> false
+        },
     )
+
+private fun LocalDateTime.erEtter(dato: LocalDateTime?) =
+    if (dato == null) {
+        false
+    } else {
+        this.toJavaLocalDateTime().isAfter(dato.toJavaLocalDateTime())
+    }
