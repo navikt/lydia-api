@@ -117,7 +117,8 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.io.path.Path
 import kotlin.test.fail
@@ -728,7 +729,7 @@ class DokumentPubliseringHelper {
                         samarbeidId = 1,
                         dokumentId = dokId,
                         journalpostId = UUID.randomUUID().toString(),
-                        publisertDato = LocalDateTime.now().toKotlinLocalDateTime(),
+                        publisertDato = ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).toLocalDateTime().toKotlinLocalDateTime(),
                         type = dokument.dokumentType.name,
                     ),
                 ),
