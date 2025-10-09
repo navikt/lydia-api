@@ -9,7 +9,7 @@ import kotliquery.using
 import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -104,16 +104,16 @@ class IASamarbeidRepository(
                 queryOf(
                     """
                     SELECT dok.dokument_id, dok.type, isk.fullfort
-                    FROM dokument_til_publisering dok
+                    FROM kvittert_dokument dok
                     JOIN ia_sak_kartlegging isk on (isk.kartlegging_id = dok.referanse_id)
-                    WHERE
-                        dok.dokument_id IS NOT NULL  
+                    WHERE dok.type = :behovsvurderingType
                         AND dok.status = :publisertStatus
                         AND dok.ia_prosess = :samarbeidId
                     """.trimIndent(),
                     mapOf(
+                        "behovsvurderingType" to DokumentPubliseringDto.Type.BEHOVSVURDERING.name,
                         "samarbeidId" to samarbeidId,
-                        "publisertStatus" to DokumentPublisering.Status.PUBLISERT.name,
+                        "publisertStatus" to DokumentPubliseringDto.Status.PUBLISERT.name,
                     ),
                 ).map {
                     DokumentMetadata(
@@ -125,30 +125,30 @@ class IASamarbeidRepository(
             )
         }
 
-    fun hentSamarbeidsplanDokumenterForSamarbeid(samarbeidId: Int) =
+    fun hentSamarbeidsplanDokumentForSamarbeid(samarbeidId: Int) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                    SELECT dok.dokument_id, dok.type, isp.sist_publisert
-                    FROM dokument_til_publisering dok
-                    JOIN ia_sak_plan isp on (isp.plan_id = dok.referanse_id)
-                    WHERE
-                        dok.dokument_id IS NOT NULL  
+                    SELECT *
+                    FROM kvittert_dokument dok
+                    WHERE type = :planType
                         AND dok.status = :publisertStatus
                         AND dok.ia_prosess = :samarbeidId
+                    ORDER BY publisert_tidspunkt DESC LIMIT 1
                     """.trimIndent(),
                     mapOf(
+                        "planType" to DokumentPubliseringDto.Type.SAMARBEIDSPLAN.name,
                         "samarbeidId" to samarbeidId,
-                        "publisertStatus" to DokumentPublisering.Status.PUBLISERT.name,
+                        "publisertStatus" to DokumentPubliseringDto.Status.PUBLISERT.name,
                     ),
                 ).map {
                     DokumentMetadata(
                         dokumentId = it.string("dokument_id"),
                         type = it.string("type"),
-                        dato = it.localDateTime("sist_publisert").toKotlinLocalDateTime(),
+                        dato = it.localDateTime("publisert_tidspunkt").toKotlinLocalDateTime(),
                     )
-                }.asList,
+                }.asSingle,
             )
         }
 

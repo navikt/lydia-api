@@ -260,6 +260,7 @@ fun startLydiaBackend() {
 
     val spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(kafka = naisEnv.kafka)
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository, iaSakService = iaSakService)
+    val dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource = dataSource)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaSakService = iaSakService,
@@ -272,8 +273,8 @@ fun startLydiaBackend() {
             spørreundersøkelseBigqueryProdusent,
         ),
         spørreundersøkelseOppdateringProdusent = spørreundersøkelseOppdateringProdusent,
+        dokumentPubliseringRepository = dokumentPubliseringRepository,
     )
-    val dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource = dataSource)
     val dokumentPubliseringService = DokumentPubliseringService(
         dokumentPubliseringRepository = dokumentPubliseringRepository,
         spørreundersøkelseService = spørreundersøkelseService,
@@ -419,7 +420,6 @@ fun startLydiaBackend() {
             samarbeidService = samarbeidService,
             spørreundersøkelseService = spørreundersøkelseService,
             planService = planService,
-            dokumentPubliseringRepository = dokumentPubliseringRepository,
             dokumentPubliseringService = dokumentPubliseringService,
         )
     }.also {
@@ -515,7 +515,6 @@ private fun Application.lydiaRestApi(
     spørreundersøkelseService: SpørreundersøkelseService,
     iaTeamService: IATeamService,
     planService: PlanService,
-    dokumentPubliseringRepository: DokumentPubliseringRepository,
     dokumentPubliseringService: DokumentPubliseringService,
 ) {
     install(ContentNegotiation) {
@@ -602,6 +601,7 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 spørreundersøkelseService = spørreundersøkelseService,
+                dokumentPubliseringService = dokumentPubliseringService,
                 iaTeamService = iaTeamService,
             )
             iaSakPlan(
@@ -610,7 +610,7 @@ private fun Application.lydiaRestApi(
                 planService = planService,
                 iaSakService = iaSakService,
                 iaTeamService = iaTeamService,
-                dokumentPubliseringRepository = dokumentPubliseringRepository,
+                dokumentPubliseringService = dokumentPubliseringService,
             )
             virksomhet(
                 virksomhetService = virksomhetService,

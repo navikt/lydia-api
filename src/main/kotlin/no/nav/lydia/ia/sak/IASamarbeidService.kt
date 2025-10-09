@@ -63,9 +63,13 @@ class IASamarbeidService(
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
 
-    private fun hentPubliserteDokumenter(samarbeidId: Int): List<DokumentMetadata> =
-        samarbeidRepository.hentSpørreundersøkelseDokumenterForSamarbeid(samarbeidId = samarbeidId)
-            .plus(samarbeidRepository.hentSamarbeidsplanDokumenterForSamarbeid(samarbeidId = samarbeidId))
+    private fun hentPubliserteDokumenter(samarbeidId: Int): List<DokumentMetadata> {
+        val publiserteBehovsvurderinger = samarbeidRepository.hentSpørreundersøkelseDokumenterForSamarbeid(samarbeidId = samarbeidId).toMutableList()
+        val publisertSamarbeidsplan = samarbeidRepository.hentSamarbeidsplanDokumentForSamarbeid(samarbeidId = samarbeidId)
+        publisertSamarbeidsplan?.let { publiserteBehovsvurderinger.add(it) }
+
+        return publiserteBehovsvurderinger.toList()
+    }
 
     fun hentSamarbeid(sak: IASak): Either<Feil, List<IASamarbeid>> =
         Either.catch {
@@ -97,7 +101,7 @@ class IASamarbeidService(
                 when (sakshendelse.hendelsesType) {
                     FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> fullførSamarbeidMaskineltPåEnFullførtSak(
                         sakshendelse = sakshendelse,
-                    )?.let { samarbeid ->
+                    ).let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(input = samarbeid) }
                     }
 
@@ -279,7 +283,7 @@ class IASamarbeidService(
         }
     }
 
-    private fun fullførSamarbeidMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid? =
+    private fun fullførSamarbeidMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid =
         samarbeidRepository.fullførSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)
 
     private fun avbrytSamarbeid(

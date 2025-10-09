@@ -50,38 +50,30 @@ class DokumentPubliseringRepository(
         }
 
     fun opprettDokument(
-        samarbeidId: Int,
         referanseId: UUID,
-        dokumentType: DokumentPublisering.Type,
+        dokumentType: DokumentPubliseringDto.Type,
         opprettetAv: NavAnsatt,
     ): Either<Feil, DokumentPubliseringDto> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 action = queryOf(
                     paramMap = mapOf(
-                        "samarbeidId" to samarbeidId,
                         "referanseId" to referanseId.toString(),
                         "type" to dokumentType.name,
                         "opprettetAv" to opprettetAv.navIdent,
-                        "status" to DokumentPublisering.Status.OPPRETTET.name,
                     ),
                     statement =
                         """
                         INSERT INTO dokument_til_publisering (
-                          ia_prosess,
                           referanse_id, 
                           type, 
-                          opprettet_av, 
-                          status
+                          opprettet_av
                         ) 
                         VALUES (
-                          :samarbeidId,
                           :referanseId, 
                           :type, 
-                          :opprettetAv, 
-                          :status
+                          :opprettetAv 
                         )
-                        ON CONFLICT (id) DO NOTHING
                         RETURNING *
                         """.trimIndent(),
                 ).map { row ->
@@ -95,10 +87,40 @@ class DokumentPubliseringRepository(
                 ).left()
         }
 
-    fun hentDokument(
+    fun hentKvitterteDokumenter(
+        referanseId: UUID,
+        type: DokumentPubliseringDto.Type,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
+                SELECT * FROM kvittert_dokument
+                 WHERE referanse_id = :referanseId
+                 AND type = :type
+                """.trimIndent(),
+                mapOf(
+                    "referanseId" to referanseId.toString(),
+                    "type" to type.name,
+                ),
+            ).map {
+                KvittertDokument(
+                    dokumentId = UUID.fromString(it.string("dokument_id")),
+                    samarbeidId = it.int("ia_prosess"),
+                    referanseId = UUID.fromString(it.string("referanse_id")),
+                    type = DokumentPubliseringDto.Type.valueOf(it.string("type")),
+                    status = DokumentPubliseringDto.Status.valueOf(it.string("status")),
+                    publisertTidspunkt = it.localDateTimeOrNull("publisert_tidspunkt")?.toKotlinLocalDateTime(),
+                    journalpostId = it.stringOrNull("journalpost_id"),
+                    kvittertTidspunkt = it.localDateTime("kvittert_tidspunkt").toKotlinLocalDateTime(),
+                )
+            }.asList,
+        )
+    }
+
+    fun hentDokumentTilPublisering(
         dokumentReferanseId: UUID,
-        dokumentType: DokumentPublisering.Type,
-    ): List<DokumentPubliseringDto> =
+        dokumentType: DokumentPubliseringDto.Type,
+    ): DokumentPubliseringDto? =
         using(closeable = sessionOf(dataSource)) { session ->
             session.run(
                 action = queryOf(
@@ -113,56 +135,60 @@ class DokumentPubliseringRepository(
                     ),
                 ).map { row ->
                     row.tilDokumentDto()
-                }.asList,
+                }.asSingle,
             )
         }
 
     fun lagreKvittering(kvittering: KvitteringDto) =
         using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE dokument_til_publisering SET
-                    status = :status,
-                    dokument_id = :dokumentId,
-                    journalpost_id = :journalpostId,
-                    publisert = :publisertDato
-                    WHERE referanse_id = :referanseId 
-                    AND type = :type
-                    AND dokument_id IS NULL
-                    """.trimIndent(),
-                    mapOf(
-                        "status" to DokumentPublisering.Status.PUBLISERT.name, // TODO: hva ved feilende journalføring?
-                        "dokumentId" to kvittering.dokumentId,
-                        "journalpostId" to kvittering.journalpostId,
-                        "publisertDato" to kvittering.publisertDato.toJavaLocalDateTime(),
-                        "referanseId" to kvittering.referanseId,
-                        "type" to kvittering.type,
-                    ),
-                ).asUpdate,
-            ).also {
-                println(
-                    mapOf(
-                        "status" to DokumentPublisering.Status.PUBLISERT.name, // TODO: hva ved feilende journalføring?
-                        "dokumentId" to kvittering.dokumentId,
-                        "journalpostId" to kvittering.journalpostId,
-                        "publisertDato" to kvittering.publisertDato.toJavaLocalDateTime(),
-                        "referanse_id" to kvittering.referanseId,
-                        "type" to kvittering.type,
-                    ).toString(),
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                        DELETE FROM dokument_til_publisering
+                            WHERE referanse_id = :referanseId
+                            AND type = :type
+                        """.trimIndent(),
+                        mapOf<String, String>(
+                            "referanseId" to kvittering.referanseId,
+                            "type" to kvittering.type,
+                        ),
+                    ).asUpdate,
+                )
+                tx.run(
+                    queryOf(
+                        """
+                        INSERT INTO kvittert_dokument
+                            (dokument_id, ia_prosess, referanse_id, type, status, publisert_tidspunkt, journalpost_id)
+                        VALUES (
+                            :dokumentId,
+                            :samarbeidId,
+                            :referanseId,
+                            :type,
+                            :status,
+                            :publisertTidspunkt,
+                            :journalpostId
+                        )
+                        """.trimIndent(), // TODO: håndter duplicate key
+                        mapOf(
+                            "dokumentId" to kvittering.dokumentId,
+                            "samarbeidId" to kvittering.samarbeidId,
+                            "referanseId" to kvittering.referanseId,
+                            "type" to kvittering.type,
+                            "status" to DokumentPubliseringDto.Status.PUBLISERT.name, // TODO: hva ved feilende journalføring?
+                            "publisertTidspunkt" to kvittering.publisertDato.toJavaLocalDateTime(),
+                            "journalpostId" to kvittering.journalpostId,
+                        ),
+                    ).asUpdate,
                 )
             }
         }
 
     fun Row.tilDokumentDto(): DokumentPubliseringDto =
         DokumentPubliseringDto(
-            dokumentId = this.stringOrNull(columnLabel = "dokument_id"),
             referanseId = this.string(columnLabel = "referanse_id"),
             opprettetAv = this.string(columnLabel = "opprettet_av"),
-            status = DokumentPublisering.Status.valueOf(this.string(columnLabel = "status")),
-            dokumentType = DokumentPublisering.Type.valueOf(this.string(columnLabel = "type")),
+            dokumentType = DokumentPubliseringDto.Type.valueOf(this.string(columnLabel = "type")),
             opprettetTidspunkt = this.localDateTime(columnLabel = "opprettet").toKotlinLocalDateTime(),
-            publisertTidspunkt = this.localDateTimeOrNull(columnLabel = "publisert")?.toKotlinLocalDateTime(),
-            samarbeidId = this.int("ia_prosess"),
         )
 }

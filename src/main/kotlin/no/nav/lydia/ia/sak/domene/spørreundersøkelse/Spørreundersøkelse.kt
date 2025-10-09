@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import kotlinx.datetime.LocalDateTime
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import java.util.UUID
 
 data class Spørreundersøkelse(
@@ -17,8 +16,6 @@ data class Spørreundersøkelse(
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
-    val publisertTidspunkt: LocalDateTime?,
-    val publiseringStatus: DokumentPublisering.Status,
     val temaer: List<Tema>,
     val gyldigTilTidspunkt: LocalDateTime,
 ) {

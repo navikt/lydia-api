@@ -13,7 +13,8 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companio
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.eksport.tilTemaResultatKafkaDto
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
@@ -34,6 +35,7 @@ class SpørreundersøkelseService(
     val iaSakService: IASakService,
     val planService: PlanService,
     val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
+    val dokumentPubliseringRepository: DokumentPubliseringRepository,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -170,9 +172,11 @@ class SpørreundersøkelseService(
         if (spørreundersøkelse.status == Spørreundersøkelse.Status.SLETTET) {
             return IASakSpørreundersøkelseError.`allerede slettet`.left()
         }
-        if (spørreundersøkelse.publiseringStatus != DokumentPublisering.Status.IKKE_PUBLISERT) {
+
+        if (erPublisertEllerUnderPublisering(spørreundersøkelse)) {
             return IASakSpørreundersøkelseError.`publisert, kan ikke slettes`.left()
         }
+
         if (spørreundersøkelse.status == Spørreundersøkelse.Status.AVSLUTTET && spørreundersøkelse.harMinstEttResultat()) {
             return IASakSpørreundersøkelseError.`kan ikke slettes`.left()
         }
@@ -293,7 +297,7 @@ class SpørreundersøkelseService(
         if (behovsvurdering.status != Spørreundersøkelse.Status.AVSLUTTET) {
             return IASakSpørreundersøkelseError.`ikke avsluttet, kan ikke bytte samarbeid`.left()
         }
-        if (behovsvurdering.publiseringStatus != DokumentPublisering.Status.IKKE_PUBLISERT) {
+        if (erPublisertEllerUnderPublisering(spørreundersøkelse = behovsvurdering)) {
             return IASakSpørreundersøkelseError.`publisert, kan ikke bytte samarbeid`.left()
         }
 
@@ -341,5 +345,18 @@ class SpørreundersøkelseService(
             ?: return IASakSpørreundersøkelseError.`ugyldig temaId`.left()
 
         return temaResultat.tilTemaResultatKafkaDto().right()
+    }
+
+    private fun erPublisertEllerUnderPublisering(spørreundersøkelse: Spørreundersøkelse): Boolean {
+        val type = DokumentPubliseringDto.Type.valueOf(spørreundersøkelse.type.name.uppercase())
+        val dokumentErUnderPublisering = dokumentPubliseringRepository.hentDokumentTilPublisering(
+            dokumentReferanseId = spørreundersøkelse.id,
+            dokumentType = type,
+        ) != null
+        val finnesPubliserteDokumenter = dokumentPubliseringRepository.hentKvitterteDokumenter(
+            referanseId = spørreundersøkelse.id,
+            type = type,
+        ).any { it.status == DokumentPubliseringDto.Status.PUBLISERT }
+        return finnesPubliserteDokumenter || dokumentErUnderPublisering
     }
 }

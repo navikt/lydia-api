@@ -50,7 +50,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -269,12 +269,12 @@ class PlanApiTest {
 
         val førPublisering = sak.hentPlan(prosessId = samarbeid.id)
         førPublisering.sistPublisert shouldBe null
-        førPublisering.publiseringStatus shouldBe null
+        førPublisering.publiseringStatus shouldBe DokumentPubliseringDto.Status.IKKE_PUBLISERT
         førPublisering.harEndringerSidenSistPublisert shouldBe false
 
         val response = publiserDokument(
             dokumentReferanseId = plan.id,
-            dokumentType = DokumentPublisering.Type.SAMARBEIDSPLAN,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
             token = authContainerHelper.saksbehandler1.token,
         )
         response.statuskode() shouldBe HttpStatusCode.Created.value
@@ -282,13 +282,13 @@ class PlanApiTest {
 
         val etterSendtTilPublisering = sak.hentPlan(prosessId = samarbeid.id)
         etterSendtTilPublisering.sistPublisert shouldBe null
-        etterSendtTilPublisering.publiseringStatus shouldBe DokumentPublisering.Status.OPPRETTET
+        etterSendtTilPublisering.publiseringStatus shouldBe DokumentPubliseringDto.Status.OPPRETTET
         etterSendtTilPublisering.harEndringerSidenSistPublisert shouldBe false
 
-        sendKvittering(dokument = dokumentPubliseringDto)
+        sendKvittering(dokument = dokumentPubliseringDto, sak.hentAlleSamarbeid().first().id)
 
         val etterKvittering = sak.hentPlan(prosessId = samarbeid.id)
-        etterKvittering.publiseringStatus shouldBe DokumentPublisering.Status.PUBLISERT
+        etterKvittering.publiseringStatus shouldBe DokumentPubliseringDto.Status.PUBLISERT
         etterKvittering.sistPublisert shouldNotBe null
         etterKvittering.harEndringerSidenSistPublisert shouldBe false
     }
@@ -302,10 +302,10 @@ class PlanApiTest {
 
         val response = publiserDokument(
             dokumentReferanseId = plan.id,
-            dokumentType = DokumentPublisering.Type.SAMARBEIDSPLAN,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
             token = authContainerHelper.saksbehandler1.token,
         )
-        sendKvittering(response.third.get())
+        sendKvittering(response.third.get(), sak.hentAlleSamarbeid().first().id)
         sak.hentPlan().harEndringerSidenSistPublisert shouldBe false
 
         val planEtterEndring = plan.planleggOgFullførAlleUndertemaer(

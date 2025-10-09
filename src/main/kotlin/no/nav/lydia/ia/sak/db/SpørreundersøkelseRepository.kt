@@ -12,7 +12,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Companion.tilDokumentTilPubliseringStatus
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
@@ -55,16 +54,12 @@ class SpørreundersøkelseRepository(
                                virksomhet.navn,
                                virksomhet.orgnr,
                                sak.saksnummer,
-                               samarbeid.id                      AS samarbeid_id,
-                               dokument_til_publisering.status   AS publisering_status,
-                               dokument_til_publisering.publisert AS publisert
+                               samarbeid.id                      AS samarbeid_id
                         FROM ia_sak_kartlegging sporreundersokelse
                                  JOIN ia_prosess samarbeid
                                       ON sporreundersokelse.ia_prosess = samarbeid.id
                                  JOIN ia_sak sak USING (saksnummer, orgnr)
                                  JOIN virksomhet USING (orgnr)
-                                 LEFT JOIN dokument_til_publisering
-                                           ON dokument_til_publisering.referanse_id = sporreundersokelse.kartlegging_id
                         WHERE samarbeid.id = :samarbeidId
                             AND sporreundersokelse.status != '${Spørreundersøkelse.Status.SLETTET}'
                             AND sporreundersokelse.type = :type;
@@ -96,16 +91,12 @@ class SpørreundersøkelseRepository(
                                virksomhet.navn,
                                virksomhet.orgnr,
                                sak.saksnummer,
-                               samarbeid.id                      AS samarbeid_id,
-                               dokument_til_publisering.status   AS publisering_status,
-                               dokument_til_publisering.publisert AS publisert
+                               samarbeid.id                      AS samarbeid_id
                         FROM ia_sak_kartlegging sporreundersokelse
                                  JOIN ia_prosess samarbeid
                                       ON sporreundersokelse.ia_prosess = samarbeid.id
                                  JOIN ia_sak sak USING (saksnummer, orgnr)
                                  JOIN virksomhet USING (orgnr)
-                                 LEFT JOIN dokument_til_publisering
-                                           ON dokument_til_publisering.referanse_id = sporreundersokelse.kartlegging_id
                         WHERE sporreundersokelse.kartlegging_id = :kartleggingId;
                         """.trimMargin(),
                         mapOf(
@@ -237,8 +228,6 @@ class SpørreundersøkelseRepository(
             påbegyntTidspunkt = localDateTimeOrNull("pabegynt")?.toKotlinLocalDateTime(),
             fullførtTidspunkt = localDateTimeOrNull("fullfort")?.toKotlinLocalDateTime(),
             gyldigTilTidspunkt = localDateTime("gyldig_til").toKotlinLocalDateTime(),
-            publiseringStatus = stringOrNull("publisering_status").tilDokumentTilPubliseringStatus(),
-            publisertTidspunkt = localDateTimeOrNull("publisert")?.toKotlinLocalDateTime(),
         )
     }
 
@@ -519,16 +508,12 @@ class SpørreundersøkelseRepository(
                                virksomhet.navn,
                                virksomhet.orgnr,
                                sak.saksnummer,
-                               samarbeid.id                      AS samarbeid_id,
-                               dokument_til_publisering.status   AS publisering_status,
-                               dokument_til_publisering.publisert AS publisert
+                               samarbeid.id                      AS samarbeid_id
                         FROM ia_sak_kartlegging sporreundersokelse
                                  JOIN ia_prosess samarbeid
                                       ON sporreundersokelse.ia_prosess = samarbeid.id
                                  JOIN ia_sak sak USING (saksnummer, orgnr)
                                  JOIN virksomhet USING (orgnr)
-                                 LEFT JOIN dokument_til_publisering
-                                           ON dokument_til_publisering.referanse_id = sporreundersokelse.kartlegging_id
                         """.trimMargin(),
                     ).map { it.tilSpørreundersøkelse(tx) }.asList,
                 )

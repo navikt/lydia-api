@@ -52,7 +52,6 @@ import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SaksStatusDto
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
@@ -696,37 +695,23 @@ class DokumentPubliseringHelper {
     companion object {
         fun publiserDokument(
             dokumentReferanseId: String,
-            dokumentType: DokumentPublisering.Type = DokumentPublisering.Type.BEHOVSVURDERING,
+            dokumentType: DokumentPubliseringDto.Type = DokumentPubliseringDto.Type.BEHOVSVURDERING,
             token: String,
         ) = applikasjon.performPost(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/$dokumentType/ref/$dokumentReferanseId")
             .authentication().bearer(token = token)
             .tilSingelRespons<DokumentPubliseringDto>()
 
-        fun hentDokumentPubliseringRespons(
-            dokumentReferanseId: String,
-            dokumentType: DokumentPublisering.Type = DokumentPublisering.Type.BEHOVSVURDERING,
-            token: String = authContainerHelper.lesebruker.token,
-        ) = applikasjon.performGet(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/$dokumentType/ref/$dokumentReferanseId")
-            .authentication().bearer(token = token)
-            .tilSingelRespons<DokumentPubliseringDto>()
-
-        fun hentDokumentPublisering(
-            dokumentReferanseId: String,
-            dokumentType: DokumentPublisering.Type = DokumentPublisering.Type.BEHOVSVURDERING,
-            token: String = authContainerHelper.lesebruker.token,
-        ) = hentDokumentPubliseringRespons(dokumentReferanseId = dokumentReferanseId, dokumentType = dokumentType, token = token).third.fold(
-            success = { it },
-            failure = { fail(it.message) },
-        )
-
-        fun sendKvittering(dokument: DokumentPubliseringDto) {
+        fun sendKvittering(
+            dokument: DokumentPubliseringDto,
+            samarbeidId: Int,
+        ) {
             val dokId = UUID.randomUUID().toString()
             kafkaContainerHelper.sendOgVentTilKonsumert(
                 nøkkel = dokId,
                 melding = Json.encodeToString(
                     KvitteringDto(
                         referanseId = dokument.referanseId,
-                        samarbeidId = 1,
+                        samarbeidId = samarbeidId,
                         dokumentId = dokId,
                         journalpostId = UUID.randomUUID().toString(),
                         publisertDato = ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).toLocalDateTime().toKotlinLocalDateTime(),

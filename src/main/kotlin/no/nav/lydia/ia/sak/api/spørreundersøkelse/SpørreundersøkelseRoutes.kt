@@ -22,6 +22,8 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -40,6 +42,7 @@ const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 fun Route.iaSakSpørreundersøkelse(
     iaSakService: IASakService,
     spørreundersøkelseService: SpørreundersøkelseService,
+    dokumentPubliseringService: DokumentPubliseringService,
     iaTeamService: IATeamService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
@@ -67,7 +70,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = spørreundersøkelseEither.getOrNull()?.saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.Created, it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.Created, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -96,8 +100,14 @@ fun Route.iaSakSpørreundersøkelse(
                 auditType = AuditType.access,
                 saksnummer = saksnummer,
             )
-        }.map {
-            call.respond(HttpStatusCode.OK, it.tilUtenInnholdDto())
+        }.map { liste ->
+            call.respond(
+                HttpStatusCode.OK,
+                liste.map {
+                    val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+                    it.tilUtenInnholdDto(publiseringStatus)
+                },
+            )
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -122,7 +132,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -165,7 +176,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -186,7 +198,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -210,7 +223,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.sendFeil(it)
         }
@@ -240,7 +254,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = input.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.sendFeil(it)
         }

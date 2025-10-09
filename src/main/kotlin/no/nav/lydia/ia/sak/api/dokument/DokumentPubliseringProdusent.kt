@@ -33,7 +33,7 @@ class DokumentPubliseringProdusent(
         fun getKafkaMeldingKey(
             samarbeidId: Int,
             referanseId: String,
-            type: DokumentPublisering.Type,
+            type: DokumentPubliseringDto.Type,
         ): String = "$samarbeidId-$referanseId-${type.name}"
 
         inline fun <reified T> DokumentPubliseringDto.medTilsvarendeInnhold(
@@ -72,7 +72,7 @@ data class DokumentPubliseringMedInnhold(
     val virksomhet: VirksomhetDto,
     val samarbeid: SamarbeidDto,
     val referanseId: String,
-    val type: DokumentPublisering.Type,
+    val type: DokumentPubliseringDto.Type,
     val dokumentOpprettetAv: String,
     val innhold: JsonObject,
 )
