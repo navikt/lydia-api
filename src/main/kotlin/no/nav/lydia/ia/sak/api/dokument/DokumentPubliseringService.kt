@@ -12,10 +12,9 @@ import kotlinx.serialization.json.jsonObject
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Status.OPPRETTET
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Type.BEHOVSVURDERING
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Type.EVALUERING
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Type.SAMARBEIDSPLAN
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.BEHOVSVURDERING
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.EVALUERING
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.SAMARBEIDSPLAN
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -39,16 +38,40 @@ class DokumentPubliseringService(
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
+    fun hentPubliseringStatus(
+        referanseId: UUID,
+        type: DokumentPubliseringDto.Type,
+    ): PubliseringStatus {
+        val dokumentTilPublisering = dokumentPubliseringRepository.hentDokumentTilPublisering(dokumentReferanseId = referanseId, dokumentType = type)
+        val kvitterteDokumenter = dokumentPubliseringRepository.hentKvitterteDokumenter(referanseId = referanseId, type = type)
+        if (kvitterteDokumenter.isEmpty()) {
+            return PubliseringStatus(
+                referanseId = referanseId,
+                type = type,
+                status = if (dokumentTilPublisering != null) DokumentPubliseringDto.Status.OPPRETTET else DokumentPubliseringDto.Status.IKKE_PUBLISERT,
+                publiseringTidspunkt = null,
+            )
+        } else {
+            val sisteVersjon = kvitterteDokumenter.maxBy { it.kvittertTidspunkt }
+            return PubliseringStatus(
+                referanseId = sisteVersjon.referanseId,
+                type = sisteVersjon.type,
+                status = sisteVersjon.status,
+                publiseringTidspunkt = sisteVersjon.publisertTidspunkt,
+            )
+        }
+    }
+
     fun hentDokumentPublisering(
         dokumentReferanseId: UUID,
-        dokumentType: DokumentPublisering.Type,
+        dokumentType: DokumentPubliseringDto.Type,
     ): Either<Feil, DokumentPubliseringDto> =
         try {
-            val liste = dokumentPubliseringRepository.hentDokument(dokumentReferanseId = dokumentReferanseId, dokumentType = dokumentType)
-            liste.firstOrNull()?.right() ?: Feil(
-                feilmelding = "Ingen dokument funnet for referanseId: $dokumentReferanseId og type: $dokumentType",
-                httpStatusCode = HttpStatusCode.NotFound,
-            ).left()
+            dokumentPubliseringRepository.hentDokumentTilPublisering(dokumentReferanseId = dokumentReferanseId, dokumentType = dokumentType)?.right()
+                ?: Feil(
+                    feilmelding = "Ingen dokument funnet for referanseId: $dokumentReferanseId og type: $dokumentType",
+                    httpStatusCode = HttpStatusCode.NotFound,
+                ).left()
         } catch (e: Exception) {
             val melding = "Feil ved henting av en dokument til publisering"
             log.warn("$melding. Feilmelding: '${e.message}'", e)
@@ -56,7 +79,7 @@ class DokumentPubliseringService(
         }
 
     fun publiserDokument(
-        dokumentType: DokumentPublisering.Type,
+        dokumentType: DokumentPubliseringDto.Type,
         dokumentReferanseId: UUID,
         opprettetAv: NavAnsatt,
         navEnhet: NavEnhet,
@@ -72,8 +95,10 @@ class DokumentPubliseringService(
         opprettetAv: NavAnsatt,
         navEnhet: NavEnhet,
     ): Either<Feil, DokumentPubliseringDto> {
-        val listeAvTidligerePubliseringer = dokumentPubliseringRepository.hentDokument(dokumentReferanseId = dokumentReferanseId, dokumentType = SAMARBEIDSPLAN)
-        val driverÅPubliserer = listeAvTidligerePubliseringer.any { it.status == OPPRETTET }
+        val driverÅPubliserer = dokumentPubliseringRepository.hentDokumentTilPublisering(
+            dokumentReferanseId = dokumentReferanseId,
+            dokumentType = SAMARBEIDSPLAN,
+        ) != null
         if (driverÅPubliserer) {
             return Feil(feilmelding = "", httpStatusCode = HttpStatusCode.InternalServerError).left()
         }
@@ -82,10 +107,9 @@ class DokumentPubliseringService(
         val metadata = dokumentPubliseringRepository.hentDokumentPubliseringMetadata(plan.samarbeidId) ?: return Feil("", HttpStatusCode.NotFound).left()
 
         return dokumentPubliseringRepository.opprettDokument(
-            samarbeidId = plan.samarbeidId,
             referanseId = dokumentReferanseId,
-            SAMARBEIDSPLAN,
-            opprettetAv,
+            dokumentType = SAMARBEIDSPLAN,
+            opprettetAv = opprettetAv,
         ).onRight { dokumentPubliseringDto ->
             dokumentPubliseringProdusent.sendPåKafka(
                 input = dokumentPubliseringDto.medTilsvarendeInnhold(
@@ -103,7 +127,7 @@ class DokumentPubliseringService(
 
     private fun publiserSpørreundersøkelse(
         dokumentReferanseId: UUID,
-        dokumentType: DokumentPublisering.Type,
+        dokumentType: DokumentPubliseringDto.Type,
         opprettetAv: NavAnsatt,
         navEnhet: NavEnhet,
     ): Either<Feil, DokumentPubliseringDto> {
@@ -146,7 +170,6 @@ class DokumentPubliseringService(
         }
 
         return dokumentPubliseringRepository.opprettDokument(
-            samarbeidId = samarbeid.id,
             referanseId = dokumentReferanseId,
             dokumentType = dokumentType,
             opprettetAv = opprettetAv,

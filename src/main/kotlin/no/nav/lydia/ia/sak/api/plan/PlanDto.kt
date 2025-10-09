@@ -4,8 +4,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Status.PUBLISERT
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
+import no.nav.lydia.ia.sak.api.dokument.PubliseringStatus
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
@@ -41,26 +41,21 @@ data class PlanMedPubliseringStatusDto(
     override val status: IASamarbeid.Status,
     override val temaer: List<PlanTemaDto>,
     val sistPublisert: LocalDateTime? = null,
-    val publiseringStatus: DokumentPublisering.Status? = null,
+    val publiseringStatus: DokumentPubliseringDto.Status? = null,
     val harEndringerSidenSistPublisert: Boolean = false,
 ) : PlanDtoI
 
-fun Plan.tilDtoMedPubliseringStatus(
-    publiseringStatus: DokumentPublisering.Status? = null,
-    publiseringTidspunkt: LocalDateTime? = null,
-): PlanMedPubliseringStatusDto =
+fun Plan.tilDtoMedPubliseringStatus(publiseringStatus: PubliseringStatus? = null): PlanMedPubliseringStatusDto =
     PlanMedPubliseringStatusDto(
         id = id.toString(),
         sistEndret = sistEndret,
-        sistPublisert = publiseringTidspunkt,
+        sistPublisert = publiseringStatus?.publiseringTidspunkt,
         status = status,
         temaer = temaer.tilDtoer(),
-        publiseringStatus = publiseringStatus,
-        harEndringerSidenSistPublisert = when (publiseringStatus) {
-            PUBLISERT -> {
-                println("Plan sist_endret: $sistEndret")
-                println("Plan publiseringsTidspunkt: $publiseringTidspunkt")
-                sistEndret.erEtter(publiseringTidspunkt)
+        publiseringStatus = publiseringStatus?.status,
+        harEndringerSidenSistPublisert = when (publiseringStatus?.status) {
+            DokumentPubliseringDto.Status.PUBLISERT -> {
+                sistEndret.erEtter(publiseringStatus.publiseringTidspunkt)
             }
             else -> false
         },

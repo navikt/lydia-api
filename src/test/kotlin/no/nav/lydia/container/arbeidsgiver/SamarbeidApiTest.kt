@@ -61,9 +61,11 @@ class SamarbeidApiTest {
     @Test
     fun `skal få alle samarbeid for alle saker (også gamle) for et orgnr`() {
         val orgnr = VirksomhetHelper.nyttOrgnummer()
+
         val gammelSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
         publiserDokument(sak = gammelSak)
         gammelSak.fullførSak()
+
         val aktivSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
         publiserDokument(sak = aktivSak)
 
@@ -123,5 +125,5 @@ internal fun publiserDokument(
         failure = { fail(it.message) },
     )
 
-    DokumentPubliseringHelper.sendKvittering(dokument)
+    DokumentPubliseringHelper.sendKvittering(dokument = dokument, samarbeidId = samarbeid.id)
 }

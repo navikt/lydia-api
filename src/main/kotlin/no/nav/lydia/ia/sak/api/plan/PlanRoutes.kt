@@ -9,7 +9,6 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
-import kotlinx.datetime.LocalDateTime
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -19,8 +18,8 @@ import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -40,7 +39,7 @@ fun Route.iaSakPlan(
     iaTeamService: IATeamService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
-    dokumentPubliseringRepository: DokumentPubliseringRepository,
+    dokumentPubliseringService: DokumentPubliseringService,
 ) {
     get("$PLAN_BASE_ROUTE/mal") {
         call.somLesebruker(adGrupper = adGrupper) { _ ->
@@ -67,21 +66,11 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map { plan ->
-            val dokumenter = dokumentPubliseringRepository.hentDokument(
-                dokumentReferanseId = plan.id,
-                dokumentType = DokumentPublisering.Type.SAMARBEIDSPLAN,
-            )
-            val publiseringStatusOgTidspunkt: Pair<DokumentPublisering.Status, LocalDateTime?>? =
-                dokumenter.maxByOrNull { it.opprettetTidspunkt }?.let { sisteDokument ->
-                    Pair(
-                        sisteDokument.status,
-                        sisteDokument.publisertTidspunkt,
-                    )
-                }
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(plan.id, DokumentPubliseringDto.Type.SAMARBEIDSPLAN)
 
             call.respond(
                 status = HttpStatusCode.OK,
-                message = plan.tilDtoMedPubliseringStatus(publiseringStatusOgTidspunkt?.first, publiseringStatusOgTidspunkt?.second),
+                message = plan.tilDtoMedPubliseringStatus(publiseringStatus),
             )
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)

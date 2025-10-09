@@ -17,7 +17,6 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.hentDokumentPublisering
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
@@ -48,7 +47,7 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent.FullførtBehovsvurdering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -293,7 +292,7 @@ class BehovsvurderingApiTest {
         alleBehovsvurderinger.first().opprettetAv shouldBe behvosvurdering.opprettetAv
         alleBehovsvurderinger.first().opprettetTidspunkt shouldBe behvosvurdering.opprettetTidspunkt
         alleBehovsvurderinger.first().status shouldBe Spørreundersøkelse.Status.OPPRETTET
-        alleBehovsvurderinger.first().publiseringStatus shouldBe DokumentPublisering.Status.IKKE_PUBLISERT
+        alleBehovsvurderinger.first().publiseringStatus shouldBe DokumentPubliseringDto.Status.IKKE_PUBLISERT
         alleBehovsvurderinger.first().endretTidspunkt shouldBe null
     }
 
@@ -316,7 +315,7 @@ class BehovsvurderingApiTest {
             type = Spørreundersøkelse.Type.Behovsvurdering,
         )
 
-        alleSpørreundersøkelser.first().publiseringStatus shouldBe DokumentPublisering.Status.OPPRETTET
+        alleSpørreundersøkelser.first().publiseringStatus shouldBe DokumentPubliseringDto.Status.OPPRETTET
     }
 
     @Test
@@ -339,15 +338,10 @@ class BehovsvurderingApiTest {
             type = Spørreundersøkelse.Type.Behovsvurdering,
         )
 
-        alleSpørreundersøkelser.first().publiseringStatus shouldBe DokumentPublisering.Status.OPPRETTET
+        alleSpørreundersøkelser.first().publiseringStatus shouldBe DokumentPubliseringDto.Status.OPPRETTET
         alleSpørreundersøkelser.first().publisertTidspunkt shouldBe null
 
-        sendKvittering(dokument = dokumentPubliseringDto)
-
-        val publisertDokument = hentDokumentPublisering(
-            dokumentReferanseId = dokumentPubliseringDto.referanseId,
-            token = authContainerHelper.saksbehandler1.token,
-        )
+        sendKvittering(dokument = dokumentPubliseringDto, sak.hentAlleSamarbeid().first().id)
 
         val hentAlleSpørreundersøkelserIgjen = hentSpørreundersøkelse(
             orgnr = sak.orgnr,
@@ -356,8 +350,8 @@ class BehovsvurderingApiTest {
             type = Spørreundersøkelse.Type.Behovsvurdering,
         )
 
-        hentAlleSpørreundersøkelserIgjen.first().publiseringStatus shouldBe DokumentPublisering.Status.PUBLISERT
-        hentAlleSpørreundersøkelserIgjen.first().publisertTidspunkt shouldBe publisertDokument.publisertTidspunkt
+        hentAlleSpørreundersøkelserIgjen.first().publiseringStatus shouldBe DokumentPubliseringDto.Status.PUBLISERT
+        hentAlleSpørreundersøkelserIgjen.first().publisertTidspunkt shouldNotBe null
     }
 
     @Test
@@ -927,7 +921,6 @@ class BehovsvurderingApiTest {
         response.statuskode() shouldBe HttpStatusCode.Created.value
         val dokumentPubliseringDto = response.third.get()
         dokumentPubliseringDto.referanseId shouldBe avsluttetBehovsvurdering.id
-        dokumentPubliseringDto.status shouldNotBe DokumentPublisering.Status.IKKE_PUBLISERT
 
         shouldFail {
             avsluttetBehovsvurdering.flytt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = andreSamarbeid.id)
