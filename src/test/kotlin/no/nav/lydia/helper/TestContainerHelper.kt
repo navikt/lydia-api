@@ -15,6 +15,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.InternalSerializationApi
@@ -704,6 +705,8 @@ class DokumentPubliseringHelper {
         fun sendKvittering(
             dokument: DokumentPubliseringDto,
             samarbeidId: Int,
+            ønsketPublisertDato: LocalDateTime =
+                ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).toLocalDateTime().toKotlinLocalDateTime(),
         ) {
             val dokId = UUID.randomUUID().toString()
             kafkaContainerHelper.sendOgVentTilKonsumert(
@@ -714,7 +717,7 @@ class DokumentPubliseringHelper {
                         samarbeidId = samarbeidId,
                         dokumentId = dokId,
                         journalpostId = UUID.randomUUID().toString(),
-                        publisertDato = ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).toLocalDateTime().toKotlinLocalDateTime(),
+                        publisertDato = ønsketPublisertDato,
                         type = dokument.dokumentType.name,
                     ),
                 ),
