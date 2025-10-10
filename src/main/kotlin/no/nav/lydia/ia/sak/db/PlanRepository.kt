@@ -27,6 +27,7 @@ import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -444,10 +445,11 @@ class PlanRepository(
                 queryOf(
                     """
                     UPDATE ia_sak_plan SET
-                      sist_endret = now()
+                      sist_endret = :endretTidspunkt
                     WHERE plan_id = :planId
                     """.trimIndent(),
                     mapOf(
+                        "endretTidspunkt" to LocalDateTime.now(),
                         "planId" to plan.id.toString(),
                     ),
                 ).asUpdate,

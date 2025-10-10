@@ -13,7 +13,6 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
@@ -46,7 +45,6 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -59,7 +57,6 @@ import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
-import java.sql.Timestamp
 import java.time.LocalDate.now
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -288,12 +285,9 @@ class PlanApiTest {
         etterSendtTilPublisering.publiseringStatus shouldBe DokumentPubliseringDto.Status.OPPRETTET
         etterSendtTilPublisering.harEndringerSidenSistPublisert shouldBe false
 
-        val nåværrendeTidspunktIPostgreSqlContainer =
-            postgresContainerHelper.hentEnkelKolonne<Timestamp>("SELECT NOW()").toLocalDateTime().toKotlinLocalDateTime()
         sendKvittering(
             dokument = dokumentPubliseringDto,
             sak.hentAlleSamarbeid().first().id,
-            ønsketPublisertDato = nåværrendeTidspunktIPostgreSqlContainer,
         )
 
         val etterKvittering = sak.hentPlan(prosessId = samarbeid.id)
@@ -314,12 +308,9 @@ class PlanApiTest {
             dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
             token = authContainerHelper.saksbehandler1.token,
         )
-        val nåværrendeTidspunktIPostgreSqlContainer =
-            postgresContainerHelper.hentEnkelKolonne<Timestamp>("SELECT NOW()").toLocalDateTime().toKotlinLocalDateTime()
         sendKvittering(
             dokument = response.third.get(),
             samarbeidId = sak.hentAlleSamarbeid().first().id,
-            ønsketPublisertDato = nåværrendeTidspunktIPostgreSqlContainer,
         )
         // DEBUG
         sak.hentPlan().harEndringerSidenSistPublisert shouldBe false
