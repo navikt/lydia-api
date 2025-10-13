@@ -49,6 +49,8 @@ import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.api.plan.PlanDtoI
+import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
@@ -102,7 +104,8 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.io.path.Path
 import kotlin.test.fail
@@ -563,37 +566,28 @@ class DokumentPubliseringHelper {
     companion object {
         fun publiserDokument(
             dokumentReferanseId: String,
+            dokumentType: DokumentPubliseringDto.Type = DokumentPubliseringDto.Type.BEHOVSVURDERING,
             token: String,
-        ) = applikasjon.performPost(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/Behovsvurdering/ref/$dokumentReferanseId")
+        ) = applikasjon.performPost(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/$dokumentType/ref/$dokumentReferanseId")
             .authentication().bearer(token = token)
             .tilSingelRespons<DokumentPubliseringDto>()
 
-        fun hentDokumentPubliseringRespons(
-            dokumentReferanseId: String,
-            token: String = authContainerHelper.lesebruker.token,
-        ) = applikasjon.performGet(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/Behovsvurdering/ref/$dokumentReferanseId")
-            .authentication().bearer(token = token)
-            .tilSingelRespons<DokumentPubliseringDto>()
-
-        fun hentDokumentPublisering(
-            dokumentReferanseId: String,
-            token: String = authContainerHelper.lesebruker.token,
-        ) = hentDokumentPubliseringRespons(dokumentReferanseId = dokumentReferanseId, token = token).third.fold(
-            success = { it },
-            failure = { fail(it.message) },
-        )
-
-        fun sendKvittering(dokument: DokumentPubliseringDto) {
+        fun sendKvittering(
+            dokument: DokumentPubliseringDto,
+            samarbeidId: Int,
+            ønsketPublisertDato: LocalDateTime =
+                ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).toLocalDateTime().toKotlinLocalDateTime(),
+        ) {
             val dokId = UUID.randomUUID().toString()
             kafkaContainerHelper.sendOgVentTilKonsumert(
                 nøkkel = dokId,
                 melding = Json.encodeToString(
                     KvitteringDto(
                         referanseId = dokument.referanseId,
-                        samarbeidId = 1,
+                        samarbeidId = samarbeidId,
                         dokumentId = dokId,
                         journalpostId = UUID.randomUUID().toString(),
-                        publisertDato = LocalDateTime.now().toKotlinLocalDateTime(),
+                        publisertDato = ønsketPublisertDato,
                         type = dokument.dokumentType.name,
                     ),
                 ),
@@ -603,7 +597,7 @@ class DokumentPubliseringHelper {
     }
 }
 
-class IASakKartleggingHelper {
+class IASakSpørreundersøkelseHelper {
     companion object {
         fun opprettSpørreundersøkelse(
             orgnr: String,
@@ -756,10 +750,7 @@ class IASakKartleggingHelper {
             saksnummer: String,
         ) = applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnummer/$saksnummer/$id")
             .authentication().bearer(token)
-            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                success = { it },
-                failure = { fail(it.message) },
-            )
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         fun SpørreundersøkelseDto.flytt(
             token: String = authContainerHelper.saksbehandler1.token,
@@ -847,13 +838,13 @@ class IASakKartleggingHelper {
             return spørreundersøkelseSvarDto
         }
 
-        fun hentKartleggingMedSvar(
+        fun hentSpørreundersøkelseResultat(
             token: String = authContainerHelper.saksbehandler1.token,
             orgnr: String,
             saksnummer: String,
-            kartleggingId: String,
+            spørreundersøkelseId: String,
         ): SpørreundersøkelseResultatDto =
-            applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
+            applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/$spørreundersøkelseId")
                 .authentication().bearer(token)
                 .tilSingelRespons<SpørreundersøkelseResultatDto>().third.fold(
                     success = { respons -> respons },
@@ -867,22 +858,22 @@ class PlanHelper {
         val START_DATO = LocalDate(year = 2021, monthNumber = 1, dayOfMonth = 1)
         val SLUTT_DATO = LocalDate(year = 2022, monthNumber = 2, dayOfMonth = 2)
 
-        fun PlanDto.antallTemaInkludert() = temaer.filter { it.inkludert }.size
+        fun PlanDtoI.antallTemaInkludert() = temaer.filter { it.inkludert }.size
 
-        fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
+        fun PlanDtoI.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
 
-        fun PlanDto.antallInnholdMedStatus(status: PlanUndertema.Status) =
+        fun PlanDtoI.antallInnholdMedStatus(status: PlanUndertema.Status) =
             temaer.flatMap { it.undertemaer }.filter {
                 it.inkludert &&
                     it.status == status
             }.size
 
-        fun PlanDto.tidligstStartDato(): LocalDate =
+        fun PlanDtoI.tidligstStartDato(): LocalDate =
             this.temaer.flatMap { it.undertemaer }
                 .filter { it.startDato != null }
                 .minOf { it.startDato!! }
 
-        fun PlanDto.senesteSluttDato(): LocalDate =
+        fun PlanDtoI.senesteSluttDato(): LocalDate =
             this.temaer.flatMap { it.undertemaer }
                 .filter { it.sluttDato != null }
                 .maxOf { it.sluttDato!! }
@@ -892,7 +883,7 @@ class PlanHelper {
             token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -904,7 +895,7 @@ class PlanHelper {
             token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -1026,11 +1017,11 @@ class PlanHelper {
                 )
             }
 
-        fun PlanDto.inkluderTemaOgAltInnhold(
+        fun PlanMedPubliseringStatusDto.inkluderTemaOgAltInnhold(
             temaId: Int,
             startDato: LocalDate = START_DATO,
             sluttDato: LocalDate = SLUTT_DATO,
-        ): PlanDto =
+        ): PlanMedPubliseringStatusDto =
             this.copy(
                 temaer = temaer.map { tema ->
                     if (tema.id == temaId) {
@@ -1063,6 +1054,22 @@ class PlanHelper {
                 },
             )
 
+        fun PlanMedPubliseringStatusDto.inkluderAlt(
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): PlanMedPubliseringStatusDto =
+            this.copy(
+                temaer = temaer.map { tema ->
+                    tema.copy(
+                        inkludert = true,
+                        undertemaer = tema.undertemaer.inkluderAltInnhold(
+                            startDato = startDato,
+                            sluttDato = sluttDato,
+                        ),
+                    )
+                },
+            )
+
         fun IASakDto.opprettEnPlan(
             token: String = authContainerHelper.saksbehandler1.token,
             plan: PlanMalDto = hentPlanMal(),
@@ -1070,7 +1077,7 @@ class PlanHelper {
         ) = applikasjon.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId/opprett")
             .jsonBody(Json.encodeToString(plan))
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -1140,7 +1147,7 @@ class PlanHelper {
                 failure = { fail(it.message) },
             )
 
-        fun PlanDto.tilRequest(): List<EndreTemaRequest> =
+        fun PlanDtoI.tilRequest(): List<EndreTemaRequest> =
             this.temaer.map { tema ->
                 EndreTemaRequest(
                     tema.id,
@@ -1167,7 +1174,7 @@ class PlanHelper {
                     failure = { fail(it.message) },
                 )
 
-        fun PlanDto.planleggOgFullførAlleUndertemaer(
+        fun PlanMedPubliseringStatusDto.planleggOgFullførAlleUndertemaer(
             orgnummer: String,
             saksnummer: String,
             prosessId: Int,

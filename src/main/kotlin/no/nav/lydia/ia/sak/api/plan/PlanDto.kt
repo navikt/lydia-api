@@ -2,18 +2,28 @@ package no.nav.lydia.ia.sak.api.plan
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
+import no.nav.lydia.ia.sak.api.dokument.PubliseringStatus
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
+interface PlanDtoI {
+    val id: String
+    val sistEndret: LocalDateTime
+    val status: IASamarbeid.Status
+    val temaer: List<PlanTemaDto>
+}
+
 @Serializable
 data class PlanDto(
-    val id: String,
-    val sistEndret: LocalDateTime,
+    override val id: String,
+    override val sistEndret: LocalDateTime,
     val sistPublisert: LocalDate?,
-    val status: IASamarbeid.Status,
-    val temaer: List<PlanTemaDto>,
-)
+    override val status: IASamarbeid.Status,
+    override val temaer: List<PlanTemaDto>,
+) : PlanDtoI
 
 fun Plan.tilDto(): PlanDto =
     PlanDto(
@@ -23,3 +33,37 @@ fun Plan.tilDto(): PlanDto =
         status = status,
         temaer = temaer.tilDtoer(),
     )
+
+@Serializable
+data class PlanMedPubliseringStatusDto(
+    override val id: String,
+    override val sistEndret: LocalDateTime,
+    override val status: IASamarbeid.Status,
+    override val temaer: List<PlanTemaDto>,
+    val sistPublisert: LocalDateTime? = null,
+    val publiseringStatus: DokumentPubliseringDto.Status? = null,
+    val harEndringerSidenSistPublisert: Boolean = false,
+) : PlanDtoI
+
+fun Plan.tilDtoMedPubliseringStatus(publiseringStatus: PubliseringStatus? = null): PlanMedPubliseringStatusDto =
+    PlanMedPubliseringStatusDto(
+        id = id.toString(),
+        sistEndret = sistEndret,
+        sistPublisert = publiseringStatus?.publiseringTidspunkt,
+        status = status,
+        temaer = temaer.tilDtoer(),
+        publiseringStatus = publiseringStatus?.status,
+        harEndringerSidenSistPublisert = when (publiseringStatus?.status) {
+            DokumentPubliseringDto.Status.PUBLISERT -> {
+                sistEndret.erEtter(publiseringStatus.publiseringTidspunkt)
+            }
+            else -> false
+        },
+    )
+
+private fun LocalDateTime.erEtter(dato: LocalDateTime?) =
+    if (dato == null) {
+        false
+    } else {
+        this.toJavaLocalDateTime().isAfter(dato.toJavaLocalDateTime())
+    }

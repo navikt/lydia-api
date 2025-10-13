@@ -25,7 +25,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.api.plan.PlanDtoI
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -173,7 +173,7 @@ class SamarbeidsplanProdusentTest {
     private suspend fun konsummerOgSjekkKafkaMelding(
         sakDto: IASakDto,
         samarbeidDto: IASamarbeidDto,
-        planDto: PlanDto,
+        planDto: PlanDtoI,
         startDato: LocalDate? = null,
         sluttDato: LocalDate? = null,
     ) {
@@ -199,7 +199,7 @@ class SamarbeidsplanProdusentTest {
         planTilSalesforce: SamarbeidsplanKafkaMelding,
         sak: IASakDto,
         samarbeid: IASamarbeidDto,
-        opprettetPlan: PlanDto,
+        opprettetPlan: PlanDtoI,
         startDato: LocalDate?,
         sluttDato: LocalDate?,
     ) {

@@ -2,7 +2,8 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
+import no.nav.lydia.ia.sak.api.dokument.PubliseringStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 @Serializable
@@ -18,11 +19,11 @@ data class SpørreundersøkelseDto(
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
     val publisertTidspunkt: LocalDateTime?,
-    val publiseringStatus: DokumentPublisering.Status,
+    val publiseringStatus: DokumentPubliseringDto.Status,
     val gyldigTilTidspunkt: LocalDateTime,
 )
 
-fun Spørreundersøkelse.tilDto(): SpørreundersøkelseDto =
+fun Spørreundersøkelse.tilDto(publiseringStatus: PubliseringStatus): SpørreundersøkelseDto =
     SpørreundersøkelseDto(
         id = id.toString(),
         samarbeidId = samarbeidId,
@@ -34,7 +35,7 @@ fun Spørreundersøkelse.tilDto(): SpørreundersøkelseDto =
         endretTidspunkt = endretTidspunkt,
         påbegyntTidspunkt = påbegyntTidspunkt,
         fullførtTidspunkt = fullførtTidspunkt,
-        publisertTidspunkt = publisertTidspunkt,
-        publiseringStatus = publiseringStatus,
+        publisertTidspunkt = publiseringStatus.publiseringTidspunkt,
+        publiseringStatus = publiseringStatus.status,
         gyldigTilTidspunkt = gyldigTilTidspunkt,
     )

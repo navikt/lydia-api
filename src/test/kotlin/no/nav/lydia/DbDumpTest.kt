@@ -2,10 +2,10 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.IASakKartleggingHelper
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -116,7 +116,7 @@ class DbDumpTest {
         temaer.forEach { temaDto ->
             filter(temaDto.spørsmålOgSvaralternativer).forEach { spørsmålDto ->
                 sesjonsIder.forEach { sesjonId ->
-                    IASakKartleggingHelper.sendKartleggingSvarTilKafka(
+                    IASakSpørreundersøkelseHelper.sendKartleggingSvarTilKafka(
                         kartleggingId = spørreundersøkelseId,
                         spørsmålId = spørsmålDto.id,
                         sesjonId = sesjonId,

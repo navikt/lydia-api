@@ -9,30 +9,41 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.flytt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentForhåndsvisning
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.flytt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentForhåndsvisning
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentSpørreundersøkelse
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
+import no.nav.lydia.helper.body
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class EvalueringApiTest {
@@ -283,5 +294,100 @@ class EvalueringApiTest {
             it.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
             it.id shouldBe evaluering.id
         }
+    }
+
+    @Test
+    fun `skal IKKE kunne slette en spørreunderøkelse av typen 'EVALUERING' som allerede er slettet`() {
+        val sak = nySakIViBistår()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val evalueringUtenSvar = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering, antallSvarPåSpørsmål = 0)
+
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${evalueringUtenSvar.id}'",
+        ) shouldHaveSize 0
+
+        val responseSlettFørste = evalueringUtenSvar.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        responseSlettFørste.statuskode() shouldBe HttpStatusCode.OK.value
+
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select status from ia_sak_kartlegging where kartlegging_id = '${evalueringUtenSvar.id}'",
+        ).forAll { it shouldBe "SLETTET" }
+
+        hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentAlleSamarbeid().first().id,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+        ) shouldHaveSize 0
+
+        val responseSlettIgjen = evalueringUtenSvar.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        responseSlettIgjen.statuskode() shouldBe HttpStatusCode.Forbidden.value
+
+        responseSlettIgjen.body() shouldMatch "Kan ikke slette spørreundersøkelse. Den er allerede slettet"
+    }
+
+    @Test
+    fun `skal IKKE kunne slette en spørreunderøkelse av typen 'EVALUERING' som har resultater å vise`() {
+        val sak = nySakIViBistår()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val evaluering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering)
+
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${evaluering.id}'",
+        ) shouldHaveSize 3
+
+        val response = evaluering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        response.statuskode() shouldBe HttpStatusCode.Forbidden.value
+
+        response.body() shouldMatch "Kan ikke slette spørreundersøkelse. Har minst ett svar"
+
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select status from ia_sak_kartlegging where kartlegging_id = '${evaluering.id}'",
+        ).forAll { it shouldNotBe "SLETTET" }
+
+        hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentAlleSamarbeid().first().id,
+            type = Spørreundersøkelse.Type.Evaluering,
+        ) shouldHaveSize 1
+    }
+
+    @Test
+    @Ignore("Publisering av Evaluering er ikke implementert enda")
+    fun `skal IKKE kunne slette en spørreunderøkelse av typen 'EVALUERING' som er publisert`() {
+        // TODO: Fjern @Ignore når publisering av Evaluering er implementert
+        val sak = nySakIViBistår()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val evaluering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering)
+
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${evaluering.id}'",
+        ) shouldHaveSize 3
+
+        publiserDokument(
+            dokumentReferanseId = evaluering.id,
+            token = authContainerHelper.saksbehandler1.token,
+        ).statuskode() shouldBe HttpStatusCode.Created.value
+
+        val response = evaluering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        response.statuskode() shouldBe HttpStatusCode.Forbidden.value
+
+        response.body() shouldMatch "Kan ikke slette spørreundersøkelse. Den er publisert"
+
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select status from ia_sak_kartlegging where kartlegging_id = '${evaluering.id}'",
+        ).forAll { it shouldNotBe "SLETTET" }
+
+        hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentAlleSamarbeid().first().id,
+            type = Spørreundersøkelse.Type.Evaluering,
+        ) shouldHaveSize 1
     }
 }

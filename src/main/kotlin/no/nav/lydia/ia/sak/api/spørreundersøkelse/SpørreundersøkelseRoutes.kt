@@ -22,6 +22,8 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -40,6 +42,7 @@ const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 fun Route.iaSakSpørreundersøkelse(
     iaSakService: IASakService,
     spørreundersøkelseService: SpørreundersøkelseService,
+    dokumentPubliseringService: DokumentPubliseringService,
     iaTeamService: IATeamService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
@@ -67,7 +70,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = spørreundersøkelseEither.getOrNull()?.saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.Created, it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.Created, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -96,8 +100,14 @@ fun Route.iaSakSpørreundersøkelse(
                 auditType = AuditType.access,
                 saksnummer = saksnummer,
             )
-        }.map {
-            call.respond(HttpStatusCode.OK, it.tilUtenInnholdDto())
+        }.map { liste ->
+            call.respond(
+                HttpStatusCode.OK,
+                liste.map {
+                    val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+                    it.tilUtenInnholdDto(publiseringStatus)
+                },
+            )
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -122,7 +132,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -165,7 +176,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -186,7 +198,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -210,7 +223,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.sendFeil(it)
         }
@@ -240,7 +254,8 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = input.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto())
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
         }.mapLeft {
             call.sendFeil(it)
         }
@@ -269,33 +284,64 @@ fun <T> ApplicationCall.somFølgerAvSakIProsess(
 }
 
 object IASakSpørreundersøkelseError {
-    val `ikke støttet statusendring` =
-        Feil("Ikke en støttet statusendring", HttpStatusCode.Forbidden)
-    val `ikke påbegynt` =
-        Feil("Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.PÅBEGYNT.name}', kan ikke avslutte", HttpStatusCode.Forbidden)
-    val `feil status kan ikke starte` =
-        Feil("Kan ikke starte spørreundersøkelse, feil status", HttpStatusCode.Forbidden)
-    val `ikke avsluttet` =
-        Feil(
-            "Spørreundersøkelse er ikke i forventet status: '${Spørreundersøkelse.Status.AVSLUTTET.name}'",
-            HttpStatusCode.Forbidden,
-        )
-    val `ikke avsluttet, kan ikke bytte samarbeid` =
-        Feil(
-            "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke bytte samarbeid",
-            HttpStatusCode.BadRequest,
-        )
+    val `ikke støttet statusendring` = Feil(
+        "Ikke en støttet statusendring",
+        HttpStatusCode.Forbidden,
+    )
+    val `ikke påbegynt` = Feil(
+        "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.PÅBEGYNT.name}', kan ikke avslutte",
+        HttpStatusCode.Forbidden,
+    )
+    val `feil status kan ikke starte` = Feil(
+        "Kan ikke starte spørreundersøkelse, feil status",
+        HttpStatusCode.Forbidden,
+    )
+    val `kan ikke slettes` = Feil(
+        "Kan ikke slette spørreundersøkelse. Har minst ett svar",
+        HttpStatusCode.Forbidden,
+    )
+    val `publisert, kan ikke slettes` = Feil(
+        "Kan ikke slette spørreundersøkelse. Den er publisert",
+        HttpStatusCode.Forbidden,
+    )
+    val `allerede slettet` = Feil(
+        "Kan ikke slette spørreundersøkelse. Den er allerede slettet",
+        HttpStatusCode.Forbidden,
+    )
+    val `ikke avsluttet` = Feil(
+        "Spørreundersøkelse er ikke i forventet status: '${Spørreundersøkelse.Status.AVSLUTTET.name}'",
+        HttpStatusCode.Forbidden,
+    )
+    val `ikke avsluttet, kan ikke bytte samarbeid` = Feil(
+        "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke bytte samarbeid",
+        HttpStatusCode.BadRequest,
+    )
     val `publisert, kan ikke bytte samarbeid` = Feil(
         "Spørreundersøkelse er publisert, kan ikke bytte samarbeid",
         HttpStatusCode.BadRequest,
     )
-    val `generell feil under uthenting` =
-        Feil("Generell feil under uthenting av en spørreundersøkelse", HttpStatusCode.InternalServerError)
-    val `feil under oppdatering` =
-        Feil("Feil under oppdatering av spørreundersøkelse", HttpStatusCode.InternalServerError)
-    val `sak ikke i rett status` =
-        Feil("Sak er ikke i rett status", HttpStatusCode.Forbidden)
-    val `ugyldig id` = Feil("Ugyldig spørreundersøkelse", HttpStatusCode.BadRequest)
-    val `ugyldig temaId` = Feil("Ugyldig tema", HttpStatusCode.BadRequest)
-    val `ugyldig type` = Feil("Ugyldig type spørreundersøkelse", HttpStatusCode.BadRequest)
+    val `generell feil under uthenting` = Feil(
+        "Generell feil under uthenting av en spørreundersøkelse",
+        HttpStatusCode.InternalServerError,
+    )
+    val `feil under oppdatering` = Feil(
+        "Feil under oppdatering av spørreundersøkelse",
+        HttpStatusCode.InternalServerError,
+    )
+    val `sak ikke i rett status` = Feil(
+        "Sak er ikke i rett status",
+        HttpStatusCode.Forbidden,
+    )
+    val `ugyldig id` = Feil(
+        "Ugyldig spørreundersøkelse",
+        HttpStatusCode.BadRequest,
+    )
+    val `ugyldig temaId` = Feil(
+        "Ugyldig tema",
+        HttpStatusCode.BadRequest,
+    )
+    val `ugyldig type` = Feil(
+        "Ugyldig type spørreundersøkelse",
+        HttpStatusCode.BadRequest,
+    )
 }

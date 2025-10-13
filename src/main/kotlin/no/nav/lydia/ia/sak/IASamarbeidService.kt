@@ -7,6 +7,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
+import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.AKTIV_EVALUERING
@@ -54,13 +55,21 @@ class IASamarbeidService(
                         navn = samarbeid.navn,
                         status = samarbeid.status,
                         sistEndret = samarbeid.sistEndret,
-                        dokumenter = samarbeidRepository.hentSpørreundersøkelseDokumenterForSamarbeid(samarbeidId = samarbeid.id),
+                        dokumenter = hentPubliserteDokumenter(samarbeidId = samarbeid.id),
                     )
                 }.filter { it.dokumenter.isNotEmpty() }
         }.mapLeft {
             log.warn("Feil ved uthenting av samarbeid", it)
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
+
+    private fun hentPubliserteDokumenter(samarbeidId: Int): List<DokumentMetadata> {
+        val publiserteBehovsvurderinger = samarbeidRepository.hentSpørreundersøkelseDokumenterForSamarbeid(samarbeidId = samarbeidId).toMutableList()
+        val publisertSamarbeidsplan = samarbeidRepository.hentSamarbeidsplanDokumentForSamarbeid(samarbeidId = samarbeidId)
+        publisertSamarbeidsplan?.let { publiserteBehovsvurderinger.add(it) }
+
+        return publiserteBehovsvurderinger.toList()
+    }
 
     fun hentSamarbeid(sak: IASak): Either<Feil, List<IASamarbeid>> =
         Either.catch {
@@ -92,7 +101,7 @@ class IASamarbeidService(
                 when (sakshendelse.hendelsesType) {
                     FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> fullførSamarbeidMaskineltPåEnFullførtSak(
                         sakshendelse = sakshendelse,
-                    )?.let { samarbeid ->
+                    ).let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(input = samarbeid) }
                     }
 
@@ -274,7 +283,7 @@ class IASamarbeidService(
         }
     }
 
-    private fun fullførSamarbeidMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid? =
+    private fun fullførSamarbeidMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid =
         samarbeidRepository.fullførSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)
 
     private fun avbrytSamarbeid(

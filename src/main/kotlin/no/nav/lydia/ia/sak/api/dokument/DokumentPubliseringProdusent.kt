@@ -3,12 +3,13 @@ package no.nav.lydia.ia.sak.api.dokument
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.eksport.KafkaProdusent
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.pdfgen.DokumentPubliseringSakDto
 import no.nav.lydia.integrasjoner.pdfgen.SamarbeidDto
@@ -32,20 +33,21 @@ class DokumentPubliseringProdusent(
         fun getKafkaMeldingKey(
             samarbeidId: Int,
             referanseId: String,
-            type: DokumentPublisering.Type,
+            type: DokumentPubliseringDto.Type,
         ): String = "$samarbeidId-$referanseId-${type.name}"
 
-        fun DokumentPubliseringDto.medTilsvarendeInnhold(
+        inline fun <reified T> DokumentPubliseringDto.medTilsvarendeInnhold(
             orgnr: String,
             virksomhetsNavn: String,
-            samarbeid: IASamarbeid,
+            saksnummer: String,
+            samarbeidId: Int,
+            samarbeidsnavn: String,
             navEnhet: NavEnhet,
-            spørreundersøkelseResultat: SpørreundersøkelseResultatDto,
-            fullførtTidspunkt: LocalDateTime,
+            innhold: T,
         ): DokumentPubliseringMedInnhold =
             DokumentPubliseringMedInnhold(
                 sak = DokumentPubliseringSakDto(
-                    saksnummer = samarbeid.saksnummer,
+                    saksnummer = saksnummer,
                     navenhet = navEnhet,
                 ),
                 referanseId = referanseId,
@@ -56,19 +58,10 @@ class DokumentPubliseringProdusent(
                     navn = virksomhetsNavn,
                 ),
                 samarbeid = SamarbeidDto(
-                    id = samarbeid.id,
-                    navn = samarbeid.navn,
+                    id = samarbeidId,
+                    navn = samarbeidsnavn,
                 ),
-                innhold = spørreundersøkelseResultat.tilSpørreundersøkelseInnholdDto(
-                    fullførtTidspunkt = fullførtTidspunkt,
-                ),
-            )
-
-        fun SpørreundersøkelseResultatDto.tilSpørreundersøkelseInnholdDto(fullførtTidspunkt: LocalDateTime): SpørreundersøkelseInnholdIDokumentDto =
-            SpørreundersøkelseInnholdIDokumentDto(
-                id = id,
-                fullførtTidspunkt = fullførtTidspunkt,
-                spørsmålMedSvarPerTema = spørsmålMedSvarPerTema,
+                innhold = Json.encodeToJsonElement(innhold).jsonObject,
             )
     }
 }
@@ -79,9 +72,9 @@ data class DokumentPubliseringMedInnhold(
     val virksomhet: VirksomhetDto,
     val samarbeid: SamarbeidDto,
     val referanseId: String,
-    val type: DokumentPublisering.Type,
+    val type: DokumentPubliseringDto.Type,
     val dokumentOpprettetAv: String,
-    val innhold: SpørreundersøkelseInnholdIDokumentDto,
+    val innhold: JsonObject,
 )
 
 @Serializable

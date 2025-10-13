@@ -8,11 +8,11 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
@@ -177,6 +177,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `Avslutting av en spørreundersøkelse med typen 'Behovsvurdering' skal trigge kafka-eksport`() {
+        // TODO: Denne kan til tider være litt flaky, samme med de fleste "trigge kafka eksport" testene i min erfaring - Sindre
         val sak = nySakIKartleggesMedEtSamarbeid()
         val avsluttetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(

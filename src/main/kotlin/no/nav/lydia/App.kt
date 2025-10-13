@@ -247,6 +247,7 @@ fun startLydiaBackend() {
 
     val spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(kafka = naisEnv.kafka)
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository, iaSakService = iaSakService)
+    val dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource = dataSource)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaSakService = iaSakService,
@@ -259,12 +260,14 @@ fun startLydiaBackend() {
             spørreundersøkelseBigqueryProdusent,
         ),
         spørreundersøkelseOppdateringProdusent = spørreundersøkelseOppdateringProdusent,
+        dokumentPubliseringRepository = dokumentPubliseringRepository,
     )
     val dokumentPubliseringService = DokumentPubliseringService(
-        dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource),
+        dokumentPubliseringRepository = dokumentPubliseringRepository,
         spørreundersøkelseService = spørreundersøkelseService,
         samarbeidService = samarbeidService,
         dokumentPubliseringProdusent = DokumentPubliseringProdusent(kafka = naisEnv.kafka, topic = Topic.DOKUMENT_PUBLISERING_TOPIC),
+        planRepository = planRepository,
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
@@ -573,6 +576,7 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 spørreundersøkelseService = spørreundersøkelseService,
+                dokumentPubliseringService = dokumentPubliseringService,
                 iaTeamService = iaTeamService,
             )
             iaSakPlan(
@@ -581,6 +585,7 @@ private fun Application.lydiaRestApi(
                 planService = planService,
                 iaSakService = iaSakService,
                 iaTeamService = iaTeamService,
+                dokumentPubliseringService = dokumentPubliseringService,
             )
             virksomhet(
                 virksomhetService = virksomhetService,

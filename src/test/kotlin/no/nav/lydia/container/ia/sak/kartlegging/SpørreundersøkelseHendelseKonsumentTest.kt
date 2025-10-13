@@ -5,11 +5,11 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.IASakKartleggingHelper
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.stengTema
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.sendKartleggingSvarTilKafka
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.stengTema
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -71,7 +71,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
             behovsvurdering.stengTema(temaId = tema.temaId)
         }
 
-        val fullførtBehovsvurdering = IASakKartleggingHelper.hentSpørreundersøkelse(
+        val fullførtBehovsvurdering = IASakSpørreundersøkelseHelper.hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
@@ -96,7 +96,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
         val førsteTema = behovsvurdering.temaer.first()
         behovsvurdering.stengTema(temaId = førsteTema.temaId)
 
-        val behovsvurderingMedEttStengtTema = IASakKartleggingHelper.hentSpørreundersøkelse(
+        val behovsvurderingMedEttStengtTema = IASakSpørreundersøkelseHelper.hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,

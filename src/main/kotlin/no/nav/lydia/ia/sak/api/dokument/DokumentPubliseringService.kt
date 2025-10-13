@@ -5,11 +5,21 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.BEHOVSVURDERING
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.EVALUERING
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.SAMARBEIDSPLAN
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
+import no.nav.lydia.ia.sak.api.plan.tilDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
+import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.azure.NavEnhet
@@ -18,35 +28,106 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.UUID
-import kotlin.jvm.javaClass
 
 class DokumentPubliseringService(
     val dokumentPubliseringRepository: DokumentPubliseringRepository,
     val spørreundersøkelseService: SpørreundersøkelseService,
     val samarbeidService: IASamarbeidService,
     val dokumentPubliseringProdusent: DokumentPubliseringProdusent,
+    val planRepository: PlanRepository,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
+    fun hentPubliseringStatus(
+        referanseId: UUID,
+        type: DokumentPubliseringDto.Type,
+    ): PubliseringStatus {
+        val dokumentTilPublisering = dokumentPubliseringRepository.hentDokumentTilPublisering(dokumentReferanseId = referanseId, dokumentType = type)
+        val kvitterteDokumenter = dokumentPubliseringRepository.hentKvitterteDokumenter(referanseId = referanseId, type = type)
+        if (kvitterteDokumenter.isEmpty()) {
+            return PubliseringStatus(
+                referanseId = referanseId,
+                type = type,
+                status = if (dokumentTilPublisering != null) DokumentPubliseringDto.Status.OPPRETTET else DokumentPubliseringDto.Status.IKKE_PUBLISERT,
+                publiseringTidspunkt = null,
+            )
+        } else {
+            val sisteVersjon = kvitterteDokumenter.maxBy { it.kvittertTidspunkt }
+            return PubliseringStatus(
+                referanseId = sisteVersjon.referanseId,
+                type = sisteVersjon.type,
+                status = sisteVersjon.status,
+                publiseringTidspunkt = sisteVersjon.publisertTidspunkt,
+            )
+        }
+    }
+
     fun hentDokumentPublisering(
         dokumentReferanseId: UUID,
-        dokumentType: DokumentPublisering.Type,
+        dokumentType: DokumentPubliseringDto.Type,
     ): Either<Feil, DokumentPubliseringDto> =
         try {
-            val liste = dokumentPubliseringRepository.hentDokument(dokumentReferanseId = dokumentReferanseId, dokumentType = dokumentType)
-            liste.firstOrNull()?.right() ?: Feil(
-                feilmelding = "Ingen dokument funnet for referanseId: $dokumentReferanseId og type: $dokumentType",
-                httpStatusCode = HttpStatusCode.NotFound,
-            ).left()
+            dokumentPubliseringRepository.hentDokumentTilPublisering(dokumentReferanseId = dokumentReferanseId, dokumentType = dokumentType)?.right()
+                ?: Feil(
+                    feilmelding = "Ingen dokument funnet for referanseId: $dokumentReferanseId og type: $dokumentType",
+                    httpStatusCode = HttpStatusCode.NotFound,
+                ).left()
         } catch (e: Exception) {
             val melding = "Feil ved henting av en dokument til publisering"
             log.warn("$melding. Feilmelding: '${e.message}'", e)
             Feil(feilmelding = melding, httpStatusCode = HttpStatusCode.InternalServerError).left()
         }
 
-    fun opprettOgSendTilPublisering(
+    fun publiserDokument(
+        dokumentType: DokumentPubliseringDto.Type,
         dokumentReferanseId: UUID,
-        dokumentType: DokumentPublisering.Type,
+        opprettetAv: NavAnsatt,
+        navEnhet: NavEnhet,
+    ) = when (dokumentType) {
+        EVALUERING,
+        BEHOVSVURDERING,
+        -> publiserSpørreundersøkelse(dokumentReferanseId, dokumentType, opprettetAv, navEnhet)
+        SAMARBEIDSPLAN -> publiserSamarbeidsplan(dokumentReferanseId, opprettetAv, navEnhet)
+    }
+
+    private fun publiserSamarbeidsplan(
+        dokumentReferanseId: UUID,
+        opprettetAv: NavAnsatt,
+        navEnhet: NavEnhet,
+    ): Either<Feil, DokumentPubliseringDto> {
+        val driverÅPubliserer = dokumentPubliseringRepository.hentDokumentTilPublisering(
+            dokumentReferanseId = dokumentReferanseId,
+            dokumentType = SAMARBEIDSPLAN,
+        ) != null
+        if (driverÅPubliserer) {
+            return Feil(feilmelding = "", httpStatusCode = HttpStatusCode.InternalServerError).left()
+        }
+
+        val plan = planRepository.hentPlan(dokumentReferanseId) ?: return Feil("", HttpStatusCode.NotFound).left()
+        val metadata = dokumentPubliseringRepository.hentDokumentPubliseringMetadata(plan.samarbeidId) ?: return Feil("", HttpStatusCode.NotFound).left()
+
+        return dokumentPubliseringRepository.opprettDokument(
+            referanseId = dokumentReferanseId,
+            dokumentType = SAMARBEIDSPLAN,
+            opprettetAv = opprettetAv,
+        ).onRight { dokumentPubliseringDto ->
+            dokumentPubliseringProdusent.sendPåKafka(
+                input = dokumentPubliseringDto.medTilsvarendeInnhold(
+                    orgnr = metadata.orgnummer,
+                    virksomhetsNavn = metadata.virksomhetsNavn,
+                    saksnummer = metadata.saksnummer,
+                    samarbeidId = metadata.samarbeidId,
+                    samarbeidsnavn = metadata.samarbeidsnavn,
+                    navEnhet = navEnhet,
+                    innhold = plan.tilDto(),
+                ),
+            )
+        }
+    }
+
+    private fun publiserSpørreundersøkelse(
+        dokumentReferanseId: UUID,
+        dokumentType: DokumentPubliseringDto.Type,
         opprettetAv: NavAnsatt,
         navEnhet: NavEnhet,
     ): Either<Feil, DokumentPubliseringDto> {
@@ -89,23 +170,38 @@ class DokumentPubliseringService(
         }
 
         return dokumentPubliseringRepository.opprettDokument(
-            samarbeid = samarbeid,
             referanseId = dokumentReferanseId,
             dokumentType = dokumentType,
             opprettetAv = opprettetAv,
         ).onRight { dokumentPubliseringDto ->
+
+            val innhold =
+                Json.encodeToJsonElement(
+                    spørreundersøkelse.tilResultatDto().tilSpørreundersøkelseInnholdDto(
+                        fullførtTidspunkt = spørreundersøkelse.fullførtTidspunkt ?: spørreundersøkelse.endretTidspunkt ?: spørreundersøkelse.opprettetTidspunkt,
+                    ),
+                ).jsonObject
+
             dokumentPubliseringProdusent.sendPåKafka(
                 input = dokumentPubliseringDto.medTilsvarendeInnhold(
                     orgnr = spørreundersøkelse.orgnummer,
                     virksomhetsNavn = spørreundersøkelse.virksomhetsNavn,
-                    samarbeid = samarbeid,
+                    saksnummer = samarbeid.saksnummer,
+                    samarbeidId = samarbeid.id,
+                    samarbeidsnavn = samarbeid.navn,
                     navEnhet = navEnhet,
-                    spørreundersøkelseResultat = spørreundersøkelse.tilResultatDto(),
-                    fullførtTidspunkt = spørreundersøkelse.fullførtTidspunkt ?: spørreundersøkelse.endretTidspunkt ?: spørreundersøkelse.opprettetTidspunkt,
+                    innhold = innhold,
                 ),
             )
         }
     }
+
+    private fun SpørreundersøkelseResultatDto.tilSpørreundersøkelseInnholdDto(fullførtTidspunkt: LocalDateTime): SpørreundersøkelseInnholdIDokumentDto =
+        SpørreundersøkelseInnholdIDokumentDto(
+            id = id,
+            fullførtTidspunkt = fullførtTidspunkt,
+            spørsmålMedSvarPerTema = spørsmålMedSvarPerTema,
+        )
 
     fun lagreKvittering(kvittering: KvitteringDto) = dokumentPubliseringRepository.lagreKvittering(kvittering)
 }

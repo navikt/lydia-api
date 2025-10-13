@@ -18,6 +18,8 @@ import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -37,6 +39,7 @@ fun Route.iaSakPlan(
     iaTeamService: IATeamService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
+    dokumentPubliseringService: DokumentPubliseringService,
 ) {
     get("$PLAN_BASE_ROUTE/mal") {
         call.somLesebruker(adGrupper = adGrupper) { _ ->
@@ -62,8 +65,13 @@ fun Route.iaSakPlan(
                 auditType = AuditType.create,
                 saksnummer = saksnummer,
             )
-        }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.map { plan ->
+            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(plan.id, DokumentPubliseringDto.Type.SAMARBEIDSPLAN)
+
+            call.respond(
+                status = HttpStatusCode.OK,
+                message = plan.tilDtoMedPubliseringStatus(publiseringStatus),
+            )
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -91,7 +99,7 @@ fun Route.iaSakPlan(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
+            call.respond(status = HttpStatusCode.Created, message = it.tilDtoMedPubliseringStatus())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
