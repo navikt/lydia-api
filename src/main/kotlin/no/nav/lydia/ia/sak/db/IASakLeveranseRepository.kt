@@ -1,23 +1,14 @@
 package no.nav.lydia.ia.sak.db
 
-import arrow.core.left
-import arrow.core.right
-import kotlinx.datetime.toJavaLocalDate
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
-import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
-import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
 import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.ia.sak.domene.Modul
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.Rolle
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 private val hentIASakLeveranserSql =
@@ -61,155 +52,6 @@ class IASakLeveranseRepository(
             ).map(this::mapTilIASakLeveranse).asList
 
             session.run(query)
-        }
-
-    fun hentIATjenster() =
-        using(sessionOf(dataSource)) { session ->
-            val sql =
-                """
-                select 
-                    ia_tjeneste.id as iaTjenesteId,
-                    ia_tjeneste.navn as iaTjenesteNavn,
-                    ia_tjeneste.deaktivert as iaTjenesteDeaktivert
-                from ia_tjeneste
-                where deaktivert = false
-                """.trimIndent()
-
-            val query = queryOf(sql).map { mapTilIATjeneste(it) }.asList
-            session.run(query)
-        }
-
-    fun hentModuler() =
-        using(sessionOf(dataSource)) { session ->
-            val sql =
-                """
-                select 
-                    ia_tjeneste.id as iaTjenesteId,
-                    ia_tjeneste.navn as iaTjenesteNavn,
-                    ia_tjeneste.deaktivert as iaTjenesteDeaktivert,
-                    modul.id as modulId,
-                    modul.navn as modulNavn,
-                    modul.deaktivert as modulDeaktivert
-                from ia_tjeneste join modul on (ia_tjeneste.id = modul.ia_tjeneste)
-                where 
-                    modul.deaktivert = false AND
-                    ia_tjeneste.deaktivert = false
-                """.trimIndent()
-
-            val query = queryOf(sql).map { mapTilModul(it) }.asList
-            session.run(query)
-        }
-
-    fun opprettIASakLeveranse(
-        iaSakleveranse: IASakLeveranseOpprettelsesDto,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-    ) = using(sessionOf(dataSource = dataSource, returnGeneratedKey = true)) { session ->
-        val sql =
-            """
-            insert into iasak_leveranse (
-                saksnummer,
-                modul,
-                frist,
-                opprettet_av,
-                sist_endret_av,
-                sist_endret_av_rolle,
-                opprettet_tidspunkt
-            ) 
-            values (
-                :saksnummer,
-                :modul,
-                :frist,
-                :opprettetAv,
-                :opprettetAv,
-                :opprettetAvRolle,
-                now()
-            )
-            """.trimIndent()
-
-        val iaSakLeveranseId = session.run(
-            queryOf(
-                statement = sql,
-                paramMap = mapOf(
-                    "saksnummer" to iaSakleveranse.saksnummer,
-                    "modul" to iaSakleveranse.modulId,
-                    "frist" to iaSakleveranse.frist.toJavaLocalDate(),
-                    "opprettetAv" to saksbehandler.navIdent,
-                    "opprettetAvRolle" to saksbehandler.rolle.name,
-                ),
-            ).asUpdateAndReturnGeneratedKey,
-        ) ?: return@using IASakError.`generell feil under uthenting`.left()
-
-        hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt())?.right()
-            ?: IASakError.`generell feil under uthenting`.left()
-    }
-
-    fun hentIASakLeveranse(iaSakLeveranseId: Int) =
-        using(sessionOf(dataSource)) { session ->
-            val sql =
-                """
-                $hentIASakLeveranserSql
-                where iasak_leveranse.id = :iaSakLeveranseId
-                """.trimIndent()
-
-            val query = queryOf(
-                statement = sql,
-                paramMap = mapOf(
-                    "iaSakLeveranseId" to iaSakLeveranseId,
-                ),
-            ).map { mapTilIASakLeveranse(it) }.asSingle
-            session.run(query)
-        }
-
-    fun slettIASakLeveranse(iaSakLeveranseId: Int) =
-        using(sessionOf(dataSource = dataSource)) { session ->
-            val query = queryOf(
-                statement = "delete from iasak_leveranse where id = :iaSakLeveranseId",
-                paramMap = mapOf(
-                    "iaSakLeveranseId" to iaSakLeveranseId,
-                ),
-            ).asUpdate
-
-            session.run(query)
-        }
-
-    fun oppdaterIASakLeveranse(
-        iaSakLeveranseId: Int,
-        oppdateringsDto: IASakLeveranseOppdateringsDto,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-    ) = using(sessionOf(dataSource = dataSource)) { session ->
-        val fullførtDato = when (oppdateringsDto.status) {
-            LEVERT -> LocalDateTime.now()
-            else -> null
-        }
-        val query = queryOf(
-            """
-            update iasak_leveranse set 
-                status = :status,
-                fullfort = :fullfort,
-                sist_endret = :sistEndret,
-                sist_endret_av = :sistEndretAv,
-                sist_endret_av_rolle = :sistEndretAvRolle
-            where id = :iaSakLeveranseId
-            """.trimIndent(),
-            mapOf(
-                "iaSakLeveranseId" to iaSakLeveranseId,
-                "status" to oppdateringsDto.status.name,
-                "fullfort" to fullførtDato,
-                "sistEndret" to LocalDateTime.now(),
-                "sistEndretAv" to saksbehandler.navIdent,
-                "sistEndretAvRolle" to saksbehandler.rolle.name,
-            ),
-        ).asUpdate
-        session.run(query)
-
-        hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.right() ?: IASakError.`ugyldig iaSakLeveranseId`.left()
-    }
-
-    fun hentAlleIASakLeveranser() =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(hentIASakLeveranserSql).map(this::mapTilIASakLeveranse).asList,
-            )
         }
 
     private fun mapTilIASakLeveranse(rad: Row) =

@@ -1,8 +1,6 @@
 package no.nav.lydia.helper
 
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
-import no.nav.lydia.ia.sak.domene.IATjeneste
-import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
 import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
@@ -51,9 +49,6 @@ class TestData(
             Næringsgruppe(kode = "90.012", navn = "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst")
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
-
-        private val AKTIV_IATJENESTE = IATjeneste(1, "Redusere sykefravær", false)
-        val AKTIV_MODUL = Modul(15, AKTIV_IATJENESTE, "Redusere sykefravær", false)
 
         val gjeldendePeriode: Periode by lazy {
             val publiseringsinfo = hentPubliseringsinfo()

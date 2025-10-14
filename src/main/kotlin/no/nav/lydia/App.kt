@@ -30,8 +30,6 @@ import no.nav.lydia.arbeidsgiver.samarbeid
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent
 import no.nav.lydia.ia.eksport.IASakEksporterer
-import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
-import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
 import no.nav.lydia.ia.eksport.IASakProdusent
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
@@ -50,7 +48,6 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.EierskapsendringObserver
-import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
@@ -80,9 +77,6 @@ import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.team.iaSakTeam
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
-import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktRepository
-import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktService
-import no.nav.lydia.iatjenesteoversikt.api.iaTjenesteoversikt
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
@@ -118,7 +112,6 @@ import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
-import no.nav.lydia.vedlikehold.LukkAlleÅpneIaTjenester
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -179,11 +172,6 @@ fun startLydiaBackend() {
         tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnv),
         security = naisEnv.security,
     )
-    val iaSakLeveranseProdusent = IASakLeveranseProdusent(
-        kafka = naisEnv.kafka,
-        azureService = azureService,
-    )
-    val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
     val sendPlanPåKafkaObserver = SendPlanPåKafkaObserver(
         planRepository = planRepository,
         samarbeidsplanProdusent = samarbeidsplanProdusent,
@@ -231,7 +219,6 @@ fun startLydiaBackend() {
             virksomhetRepository = virksomhetRepository,
         ),
         iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
-        iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver),
         samarbeidService = samarbeidService,
         planRepository = planRepository,
         endringsObservers = listOf(eierskapsendringObserver),
@@ -303,10 +290,6 @@ fun startLydiaBackend() {
             iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
             iaSakStatistikkProdusent = iaSakStatistikkProdusent,
         ),
-        iaSakLeveranseEksportør = IASakLeveranseEksportør(
-            iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
-            iaSakLeveranseProdusent = iaSakLeveranseProdusent,
-        ),
         iaSakStatusExportør = IASakStatusEksportør(
             iaSakRepository = IASakRepository(dataSource = dataSource),
             iaSakStatusProdusent = iaSakStatusProdusent,
@@ -337,10 +320,6 @@ fun startLydiaBackend() {
         samarbeidsplanBigqueryEksporterer = SamarbeidsplanBigqueryEksporterer(
             samarbeidsplanBigqueryProdusent = samarbeidsplanBigqueryProdusent,
             planRepository = planRepository,
-        ),
-        lukkAlleÅpneIaTjenester = LukkAlleÅpneIaTjenester(
-            iaSakLeveranseRepository = IASakLeveranseRepository(dataSource),
-            iaSakLeveranseProdusent = iaSakLeveranseProdusent,
         ),
         samarbeidKafkaEksporterer = SamarbeidKafkaEksporterer(
             samarbeidRepository = samarbeidRepository,
@@ -461,7 +440,6 @@ private fun jobblytter(
     iaSakStatusOppdaterer: IASakStatusOppdaterer,
     iaSakEksporterer: IASakEksporterer,
     iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
-    iaSakLeveranseEksportør: IASakLeveranseEksportør,
     iaSakStatusExportør: IASakStatusEksportør,
     næringsDownloader: NæringsDownloader,
     statistikkViewOppdaterer: StatistikkViewOppdaterer,
@@ -470,7 +448,6 @@ private fun jobblytter(
     samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
     samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer,
     spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
-    lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
     samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
     iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
     virksomhetService: VirksomhetService,
@@ -482,7 +459,6 @@ private fun jobblytter(
             iaSakStatusOppdaterer = iaSakStatusOppdaterer,
             iaSakEksporterer = iaSakEksporterer,
             iaSakStatistikkEksporterer = iaSakStatistikkEksporterer,
-            iaSakLeveranseEksportør = iaSakLeveranseEksportør,
             iaSakStatusExportør = iaSakStatusExportør,
             næringsDownloader = næringsDownloader,
             statistikkViewOppdaterer = statistikkViewOppdaterer,
@@ -490,7 +466,6 @@ private fun jobblytter(
             samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer,
             samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer,
             spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer,
-            lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester,
             samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer,
             samarbeidKafkaEksporterer = samarbeidKafkaEksporterer,
             iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer,
@@ -623,13 +598,6 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 dokumentPubliseringService = dokumentPubliseringService,
                 azureService = azureService,
-            )
-            iaTjenesteoversikt(
-                iaTjenesteoversiktService = IATjenesteoversiktService(
-                    iaTjenesteoversiktRepository = IATjenesteoversiktRepository(dataSource),
-                ),
-                auditLog = auditLog,
-                naisEnvironment = naisEnv,
             )
             statusoversikt(
                 geografiService = GeografiService(),

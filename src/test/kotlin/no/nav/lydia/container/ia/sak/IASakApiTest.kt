@@ -25,6 +25,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemae
 import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
+import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaksStatus
@@ -64,6 +65,7 @@ import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
 import no.nav.lydia.ia.sak.api.ÅrsaksType
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
@@ -407,6 +409,30 @@ class IASakApiTest {
         response.statuskode() shouldBe HttpStatusCode.InternalServerError.value
         applikasjon shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
         postgresContainerHelper.performUpdate("DELETE FROM ia_sak_hendelse WHERE id = '777'")
+    }
+
+    @Test
+    fun `skal kunne hente gamle leveranser på historiske saker`() {
+        val sak = nySakIViBistår().fullførSak()
+
+        // forutsetter data fra migrering i V65__legg_til_ia_tjeneste_utvikle_partssamarbeid.sql
+        postgresContainerHelper.performUpdate(
+            """
+            insert into iasak_leveranse values (
+                1, '${sak.saksnummer}', 18, now(), 'LEVERT', '${authContainerHelper.saksbehandler1.navIdent}',
+                now(), '${authContainerHelper.saksbehandler1.navIdent}'
+            )
+            """.trimIndent(),
+        )
+
+        val leveranser = hentIASakLeveranser(sak.orgnr, sak.saksnummer)
+        leveranser.forExactlyOne { tjeneste ->
+            tjeneste.iaTjeneste.navn shouldBe "Utvikle partssamarbeid"
+            tjeneste.leveranser.forExactlyOne { leveranse ->
+                leveranse.status shouldBe IASakLeveranseStatus.LEVERT
+                leveranse.modul.navn shouldBe "Utvikle partssamarbeid"
+            }
+        }
     }
 
     @Test

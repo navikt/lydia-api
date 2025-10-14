@@ -16,7 +16,6 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
@@ -36,18 +35,11 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakLeveranseDto
-import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
-import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakLeveranserPerTjenesteDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.IATjenesteDto
-import no.nav.lydia.ia.sak.api.IA_MODULER_PATH
 import no.nav.lydia.ia.sak.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.IA_TJENESTER_PATH
 import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
-import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SaksStatusDto
@@ -69,7 +61,6 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultat
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseUtenInnholdDto
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -81,9 +72,6 @@ import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
-import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktDto
-import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
-import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.integrasjoner.kartlegging.HendelsType
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel
 import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
@@ -346,26 +334,6 @@ class SakHelper {
                 },
             )
 
-        fun hentIATjenester(token: String = authContainerHelper.saksbehandler1.token) =
-            applikasjon.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH")
-                .authentication().bearer(token = token)
-                .tilListeRespons<IATjenesteDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = {
-                        fail(it.stackTraceToString())
-                    },
-                )
-
-        fun hentModuler(token: String = authContainerHelper.saksbehandler1.token) =
-            applikasjon.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_MODULER_PATH")
-                .authentication().bearer(token = token)
-                .tilListeRespons<ModulDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = {
-                        fail(it.stackTraceToString())
-                    },
-                )
-
         fun hentSamarbeidshistorikk(
             orgnummer: String,
             token: String = authContainerHelper.saksbehandler1.token,
@@ -484,97 +452,6 @@ class SakHelper {
                     ),
                 )
 
-        fun oppdaterIASakLeveranse(
-            orgnr: String,
-            saksnummer: String,
-            iaSakLeveranseId: Int,
-            status: IASakLeveranseStatus,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performPut("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
-            .authentication().bearer(token)
-            .jsonBody(
-                Json.encodeToString(
-                    IASakLeveranseOppdateringsDto(
-                        status = status,
-                    ),
-                ),
-            )
-
-        fun IASakLeveranseDto.oppdaterIASakLeveranse(
-            orgnr: String,
-            status: IASakLeveranseStatus,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = oppdaterIASakLeveranse(
-            orgnr = orgnr,
-            saksnummer = saksnummer,
-            iaSakLeveranseId = id,
-            status = status,
-            token = token,
-        ).tilSingelRespons<IASakLeveranseDto>().third.fold(
-            success = { it },
-            failure = {
-                fail("${it.message} ${it.response.body().asString("text/plain")}")
-            },
-        )
-
-        fun slettIASakLeveranse(
-            orgnr: String,
-            saksnummer: String,
-            iaSakLeveranseId: Int,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performDelete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
-            .authentication().bearer(token)
-
-        fun IASakLeveranseDto.slettIASakLeveranse(
-            orgnr: String,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = slettIASakLeveranse(
-            orgnr = orgnr,
-            saksnummer = saksnummer,
-            iaSakLeveranseId = id,
-            token = token,
-        ).tilSingelRespons<Int>().third.fold(
-            success = { it },
-            failure = {
-                fail("${it.message} ${it.response.body().asString("text/plain")}")
-            },
-        )
-
-        fun IASakDto.opprettIASakLeveranse(
-            frist: LocalDate = java.time.LocalDate.now().toKotlinLocalDate(),
-            modulId: Int,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = opprettIASakLeveranse(
-            orgnr = orgnr,
-            saksnummer = saksnummer,
-            frist = frist,
-            modulId = modulId,
-            token = token,
-        ).tilSingelRespons<IASakLeveranseDto>().third.fold(
-            success = { it },
-            failure = {
-                fail("${it.message} ${it.response.body().asString("text/plain")}")
-            },
-        )
-
-        fun opprettIASakLeveranse(
-            orgnr: String,
-            saksnummer: String,
-            frist: LocalDate,
-            modulId: Int,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
-            .authentication().bearer(token)
-            .jsonBody(
-                Json.encodeToString(
-                    IASakLeveranseOpprettelsesDto(
-                        saksnummer = saksnummer,
-                        modulId = modulId,
-                        frist = frist,
-                    ),
-                ),
-            )
-
         fun nyHendelsePåSak(
             sak: IASakDto,
             hendelsestype: IASakshendelseType,
@@ -677,13 +554,7 @@ class SakHelper {
             return this.oppdaterHendelsesTidspunkter(antallDagerTilbake = dagerSomSkalTrekkesFra)
         }
 
-        fun IASakDto.fullførSak(
-            modulId: Int = TestData.AKTIV_MODUL.id,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ): IASakDto {
-            // TODO: Fjern leveranse ting
-            val leveranse = this.opprettIASakLeveranse(modulId = modulId)
-            leveranse.oppdaterIASakLeveranse(this.orgnr, IASakLeveranseStatus.LEVERT)
+        fun IASakDto.fullførSak(token: String = authContainerHelper.saksbehandler1.token): IASakDto {
             opprettEnPlan()
             return fullførSamarbeid().nyHendelse(hendelsestype = IASakshendelseType.FULLFØR_BISTAND, token = token)
         }
@@ -1349,58 +1220,6 @@ class PlanHelper {
                 token = token,
             )
         }
-    }
-}
-
-class IATjenesteoversiktHelper {
-    companion object {
-        fun hentMineIATjenester(token: String = authContainerHelper.saksbehandler1.token) =
-            applikasjon.performGet("$IATJENESTEOVERSIKT_PATH/$MINE_IATJENESTER_PATH")
-                .authentication().bearer(token)
-                .tilListeRespons<IATjenesteoversiktDto>()
-    }
-}
-
-class LeveranseHelper {
-    companion object {
-        fun hentIATjenesterFraDatabase() = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
-
-        fun leggTilModul(modul: ModulDto) =
-            postgresContainerHelper.performUpdate(
-                """
-                insert into modul (id, ia_tjeneste, navn, deaktivert) values (
-                    ${modul.id},
-                    ${modul.iaTjeneste},
-                    '${modul.navn}',
-                    ${modul.deaktivert}
-                )
-                """.trimIndent(),
-            )
-
-        fun leggTilIATjeneste(iaTjeneste: IATjenesteDto) =
-            postgresContainerHelper.performUpdate(
-                """
-                insert into ia_tjeneste (id, navn, deaktivert) values (
-                    ${iaTjeneste.id},
-                    '${iaTjeneste.navn}',
-                    ${iaTjeneste.deaktivert}
-                )
-                """.trimIndent(),
-            )
-
-        fun deaktiverModul(modul: ModulDto) =
-            postgresContainerHelper.performUpdate(
-                """
-                update modul set deaktivert = true where id = ${modul.id}
-                """.trimIndent(),
-            )
-
-        fun deaktiverIATjeneste(iaTjeneste: IATjenesteDto) =
-            postgresContainerHelper.performUpdate(
-                """
-                update ia_tjeneste set deaktivert = true where id = ${iaTjeneste.id}
-                """.trimIndent(),
-            )
     }
 }
 
