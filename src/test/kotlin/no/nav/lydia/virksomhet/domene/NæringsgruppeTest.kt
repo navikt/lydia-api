@@ -8,7 +8,7 @@ import kotlin.test.Test
 class NæringsgruppeTest {
     @Test
     fun `utledder bransje ut i fra næringsundergruppe`() {
-        Næringsgruppe(navn = "Kanskje Barnehager", kode = "88911").tilBransje() shouldBe Bransje.BARNEHAGER
+        Næringsgruppe(navn = "Kanskje Barnehager", kode = "85100").tilBransje() shouldBe Bransje.BARNEHAGER
         Næringsgruppe(navn = "Kanskje Sykehus", kode = "86105").tilBransje() shouldBe Bransje.SYKEHUS
         Næringsgruppe(navn = "Ukjent", kode = "99999").tilBransje() shouldBe null
         UOPPGITT.tilBransje() shouldBe null
@@ -26,7 +26,7 @@ class NæringsgruppeTest {
 
     @Test
     fun `takler koder med eller uten punktum`() {
-        Næringsgruppe(navn = "Kanskje Barnehager", kode = "88.911").tilBransje() shouldBe Bransje.BARNEHAGER
+        Næringsgruppe(navn = "Kanskje Barnehager", kode = "85.100").tilBransje() shouldBe Bransje.BARNEHAGER
         Næringsgruppe(navn = "Kanskje Sykehus", kode = "86.105").tilBransje() shouldBe Bransje.SYKEHUS
         Næringsgruppe(navn = "Ukjent", kode = "99.999").tilBransje() shouldBe null
     }

@@ -122,6 +122,15 @@ Det er denne man bruker som utvikler om man vil koble seg opp mot topicet lokalt
 6. Nå skal man klar for å koble seg opp mot topicet i miljøet man har valgt. Bruk de ulike kommandoene i `kafka-cli` for å gjøre det du har tenkt å gjøre. For å f.eks. konsumere meldinger på `ia-sak-v1`-topicet kan man kjøre kommandoen:
 `kafka-console-consumer --bootstrap-server $KAFKA_BROKERS --consumer.config $KAFKA_CONFIG/kafka.properties --topic "pia.ia-sak-v1"`
 
+## Oppdater næringskoder i testkjøring
+Vi bruker næringskoder og næringsgruppering fra SSB i Fia i testkjøring, både lokalt og i integrasjonstester.
+Næringskoder oppdateres kjeldent av SSB. Men i det tilfelle, må man laste ned siste versjon av næringskoder til filen `scripts/db/næringer.json`. 
+
+1. Finn ut hvilken versjon av Næringsgruppering som er siste versjon: https://data.ssb.no/api/klass/v1/classifications/6 
+2. Last ned næringskoder i JSON format fra SSB. Siste versjon (høst 2025) tilgjengelig har nummer `3218`  https://data.ssb.no/api/klass/v1/versions/3218 
+3. Lagre filen som `scripts/db/næringer.json`
+
+Filen er lest i `TestData` som lager testdata for integrasjonstester og lokalt kjøring.
 
 # Henvendelser
 Spørsmål knyttet til koden eller prosjektet kan stilles som et [issue her på GitHub](https://github.com/navikt/lydia-api/issues).

@@ -21,6 +21,8 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_ETTÅRIGE_VEKSTER_ELLERS
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
@@ -39,7 +41,6 @@ import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.brreg.Adresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
@@ -49,28 +50,16 @@ class VirksomhetOppdateringTest {
     fun `vi oppdaterer næringsgrupper til en bedrift`() {
         val nyVirksomhet = nyVirksomhet(
             næringer = listOf(
-                Næringsgruppe(
-                    "Barnehager",
-                    "88.911",
-                ),
-                Næringsgruppe(
-                    "Dyrking av ettårige vekster ellers",
-                    "01.190",
-                ),
+                BARNEHAGER_SOM_NÆRINGSGRUPPE,
+                DYRKING_AV_ETTÅRIGE_VEKSTER_ELLERS,
             ),
         )
         lastInnNyVirksomhet(nyVirksomhet)
 
         val oppdatertVirksomhet = nyVirksomhet.copy(
             næringsundergrupper = listOf(
-                Næringsgruppe(
-                    navn = "Dyrking av ettårige vekster ellers",
-                    kode = "01.190",
-                ),
-                Næringsgruppe(
-                    navn = "Barnehager",
-                    kode = "88.911",
-                ),
+                BARNEHAGER_SOM_NÆRINGSGRUPPE,
+                DYRKING_AV_ETTÅRIGE_VEKSTER_ELLERS,
             ),
         )
         sendEndringForVirksomhet(oppdatertVirksomhet)
@@ -83,14 +72,8 @@ class VirksomhetOppdateringTest {
         lastInnNyVirksomhet(
             nyVirksomhet(
                 næringer = listOf(
-                    Næringsgruppe(
-                        navn = "Barnehager",
-                        kode = "88.911",
-                    ),
-                    Næringsgruppe(
-                        navn = "Dyrking av ettårige vekster ellers",
-                        kode = "01.190",
-                    ),
+                    BARNEHAGER_SOM_NÆRINGSGRUPPE,
+                    DYRKING_AV_ETTÅRIGE_VEKSTER_ELLERS,
                 ),
             ),
         ).skalHaRiktigTilstand()

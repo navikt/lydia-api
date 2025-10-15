@@ -48,14 +48,14 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
-import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestData.Companion.BRANSJE_BARNEHAGE
-import no.nav.lydia.helper.TestData.Companion.NÆRING_BARNEHAGE
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON
 import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
+import no.nav.lydia.helper.TestData.Companion.NÆRING_UNDERVISNING
+import no.nav.lydia.helper.TestData.Companion.OPPFØRING_AV_BYGNINGER
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestData.Companion.SKOGSKJØTSEL
 import no.nav.lydia.helper.TestData.Companion.gjeldendePeriode
@@ -104,6 +104,50 @@ class SykefraværsstatistikkApiTest {
     fun `Test for å hente datasource`() {
         val jdbcUrl = postgresContainerHelper.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
+    }
+
+    @Test
+    fun `skal kunne filtrere på sykefraværsprosent sammenlignet med bransje BARNEHAGER med sin ny SN2025 næringskode`() {
+        val testKommune = Kommune(navn = "Den skal være unik", nummer = "1332")
+        // SF prosent: * --- virksomhet1 ---- Næring ---- virksomhet2 ---- Bransje ---- virksomhet3 ----  *
+        //                                 UNDERVISNING                   BARNEHAGE
+        //                       8,4%          8,5%         8,6%            9,5%           9,6%
+        settSykefraværsprosentNæring(næring = NÆRING_UNDERVISNING.tilTosifret(), prosentSiste4Kvartal = 8.5)
+        settSykefraværsprosentBransje(bransje = Bransje.BARNEHAGER, prosentSiste4Kvartal = 9.5)
+        lastInnNyVirksomhet(
+            nyVirksomhet = nyVirksomhet(næringer = listOf(BARNEHAGER_SOM_NÆRINGSGRUPPE), beliggenhet = beliggenhet(kommune = testKommune)),
+            sykefraværsProsent = 8.4,
+        )
+
+        lastInnNyVirksomhet(
+            nyVirksomhet = nyVirksomhet(næringer = listOf(BARNEHAGER_SOM_NÆRINGSGRUPPE), beliggenhet = beliggenhet(kommune = testKommune)),
+            sykefraværsProsent = 8.6,
+        )
+        lastInnNyVirksomhet(
+            nyVirksomhet = nyVirksomhet(næringer = listOf(BARNEHAGER_SOM_NÆRINGSGRUPPE), beliggenhet = beliggenhet(kommune = testKommune)),
+            sykefraværsProsent = 9.6,
+        )
+
+        val barnehagerITestKommunen = hentSykefravær(kommuner = testKommune.nummer, bransjeProgram = Bransje.BARNEHAGER.name).data
+        barnehagerITestKommunen.size shouldBe 3
+
+        val barnehagerMedSykefraværUnderBransjesverdi = hentSykefravær(
+            kommuner = testKommune.nummer,
+            snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
+            bransjeProgram = Bransje.BARNEHAGER.name,
+        ).data
+
+        barnehagerMedSykefraværUnderBransjesverdi.size shouldBe 2
+        barnehagerMedSykefraværUnderBransjesverdi.forAll { it.sykefraværsprosent shouldBeLessThanOrEqual 9.5 }
+
+        val barnehagerMedSykefraværOverBransjesverdi = hentSykefravær(
+            kommuner = testKommune.nummer,
+            snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
+            bransjeProgram = Bransje.BARNEHAGER.name,
+        ).data
+
+        barnehagerMedSykefraværOverBransjesverdi.size shouldBe 1
+        barnehagerMedSykefraværOverBransjesverdi.forAll { it.sykefraværsprosent shouldBeGreaterThanOrEqual 9.5 }
     }
 
     @Test
@@ -627,7 +671,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal hente statistikk for alle kvartaler for en virksomhet`() {
-        val næring = BARNEHAGER
+        val næring = BARNEHAGER_SOM_NÆRINGSGRUPPE
         val perioder = gjeldendePeriode.lagPerioder(12)
 
         val nyVirksomhet = lastInnNyVirksomhet(
@@ -693,7 +737,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal få med beskrivelse av datatypene når vi henter historisk statistikk`() {
-        val næring = BARNEHAGER
+        val næring = BARNEHAGER_SOM_NÆRINGSGRUPPE
         val navn = "Virksomhetsnavn for test av historiskstatistikk-beskrivelse"
         val virksomhet = lastInnNyVirksomhet(
             nyVirksomhet = nyVirksomhet(
@@ -706,7 +750,7 @@ class SykefraværsstatistikkApiTest {
         val resultat = hentStatistikkHistorikk(orgnr = virksomhet.orgnr)
 
         resultat.virksomhetsstatistikk.beskrivelse shouldBe navn
-        resultat.næringsstatistikk.beskrivelse shouldBe NÆRING_BARNEHAGE.navn
+        resultat.næringsstatistikk.beskrivelse shouldBe NÆRING_UNDERVISNING.navn
         resultat.bransjestatistikk.beskrivelse shouldBe BRANSJE_BARNEHAGE
         resultat.sektorstatistikk.beskrivelse shouldBe Sektor.PRIVAT.beskrivelse
         resultat.landsstatistikk.beskrivelse shouldBe "Norge"
@@ -797,7 +841,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne søke på bransjeprogram`() {
-        val virksomhet = nyVirksomhet(næringer = listOf(BOLIGBYGGELAG))
+        val virksomhet = nyVirksomhet(næringer = listOf(OPPFØRING_AV_BYGNINGER))
         lastInnNyVirksomhet(nyVirksomhet = virksomhet)
         hentSykefravær(
             bransjeProgram = "${Bransje.BYGG}",
@@ -810,7 +854,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne søke på både næringsgrupper og bransjeprogram samtidig`() {
-        val virksomhet = nyVirksomhet(næringer = listOf(BOLIGBYGGELAG))
+        val virksomhet = nyVirksomhet(næringer = listOf(OPPFØRING_AV_BYGNINGER))
         val virksomhet2 = nyVirksomhet(næringer = listOf(Næringsgruppe("Bygging av havne- og damanlegg", "42.910")))
         val virksomhet3 = nyVirksomhet(næringer = listOf(Næringsgruppe("Sykehus et eller annet", "86.101")))
 

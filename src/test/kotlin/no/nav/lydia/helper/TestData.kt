@@ -24,31 +24,37 @@ class TestData(
     antallTilfeldigeVirksomheter: Int = 0,
 ) {
     companion object {
+        // Se næringer og næringskoder i src/test/resources/næringskoder.json
         const val BRANSJE_BARNEHAGE = "Barnehager"
-        const val BRANSJE_NÆRINGSMIDDELINDUSTRI = "Næringsmiddelindustri"
         const val NÆRING_JORDBRUK = "01"
         const val NÆRING_SKOGBRUK = "02"
         const val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON = "87"
-        const val NÆRINGSKODE_BARNEHAGER = "88911"
-        val NÆRING_BARNEHAGE = Næringsgruppe(kode = "88", navn = "Omsorg uten botilbud, barnehager mv.")
+        const val NÆRINGSKODE_BARNEHAGER = "85100"
+        val NÆRING_UNDERVISNING = Næringsgruppe(kode = "85", navn = "Undervisning")
 
         val NÆRINGSMIDLER_IKKE_NEVNT =
             Næringsgruppe(kode = "10.890", navn = "Produksjon av næringsmidler ikke nevnt annet sted")
-        val BARNEHAGER = Næringsgruppe(kode = "88.911", navn = "Barnehager")
-        val NÆRING_MED_BINDESTREK = Næringsgruppe(kode = "91.012", navn = "Drift av fag- og forskningsbiblioteker")
-        val BOLIGBYGGELAG = Næringsgruppe(kode = "41.101", navn = "Boligbyggelag")
-        val DYRKING_AV_KORN = Næringsgruppe(
-            kode = "$NÆRING_JORDBRUK.110",
-            navn = "Dyrking av korn (unntatt ris), belgvekster og oljeholdige vekster",
-        )
-        val DYRKING_AV_RIS = Næringsgruppe(kode = "$NÆRING_JORDBRUK.120", navn = "Dyrking av ris")
+        val BARNEHAGER_SOM_NÆRINGSGRUPPE = Næringsgruppe(kode = "85.100", navn = "Førskoleundervisning og drift av barnehager")
+        val NÆRING_MED_BINDESTREK = Næringsgruppe(kode = "91.112", navn = "Drift av fag- og forskningsbiblioteker")
 
-        val SKOGSKJØTSEL = Næringsgruppe(kode = "$NÆRING_SKOGBRUK.100", navn = "Skogskjøtsel")
-        val AVVIRKNING = Næringsgruppe(kode = "$NÆRING_SKOGBRUK.200", navn = "Avvirkning")
+        // [SN2007] 41.109 Utvikling og salg av egen fast eiendom ellers --> [SN 2025] 68.120 Utvikling og salg av byggeprosjekter
+        val BOLIGBYGGELAG = Næringsgruppe(kode = "68.120", navn = "Utvikling og salg av byggeprosjekter")
+        val OPPFØRING_AV_BYGNINGER = Næringsgruppe(navn = "Oppføring av bygninger", kode = "41.000")
+        val DYRKING_AV_KORN = Næringsgruppe(
+            kode = "01.110",
+            navn = "Dyrking av korn, unntatt ris, belgvekster og oljeholdige vekster",
+        )
+        val DYRKING_AV_RIS = Næringsgruppe(kode = "01.120", navn = "Dyrking av ris")
+        val DYRKING_AV_ETTÅRIGE_VEKSTER_ELLERS = Næringsgruppe(
+            navn = "Dyrking av ettårige vekster ellers",
+            kode = "01.190",
+        )
+
+        val SKOGSKJØTSEL = Næringsgruppe(kode = "02.100", navn = "Skogskjøtsel og andre skogbruksaktiviteter")
         val SCENEKUNST =
-            Næringsgruppe(kode = "90.012", navn = "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst")
+            Næringsgruppe(kode = "90.202", navn = "Utøvende kunstnerisk virksomhet og underholdningsvirksomhet innenfor scenekunst")
         val BEDRIFTSRÅDGIVNING =
-            Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
+            Næringsgruppe(kode = "70.200", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
 
         val gjeldendePeriode: Periode by lazy {
             val publiseringsinfo = hentPubliseringsinfo()

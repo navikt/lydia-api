@@ -1,6 +1,6 @@
 package no.nav.lydia.helper
 
-import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
@@ -40,7 +40,7 @@ data class TestVirksomhet(
         val VIRKSOMHET_MED_HISTORISK_STATISTIKK = TestVirksomhet(
             orgnr = "314159265",
             navn = "Virksomhet med historisk statistikk",
-            næringsundergrupper = listOf(BARNEHAGER, SCENEKUNST),
+            næringsundergrupper = listOf(BARNEHAGER_SOM_NÆRINGSGRUPPE, SCENEKUNST),
             beliggenhet = beliggenhet(
                 kommune = SANDNES,
                 adresse = listOf("Langgata 1"),

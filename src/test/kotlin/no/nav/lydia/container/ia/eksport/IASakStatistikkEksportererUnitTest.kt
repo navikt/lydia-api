@@ -3,9 +3,9 @@ package no.nav.lydia.container.ia.eksport
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
-import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
-import no.nav.lydia.helper.TestData.Companion.NÆRING_BARNEHAGE
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
+import no.nav.lydia.helper.TestData.Companion.NÆRING_UNDERVISNING
+import no.nav.lydia.helper.TestData.Companion.OPPFØRING_AV_BYGNINGER
 import no.nav.lydia.ia.eksport.finnBransje
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.test.Test
@@ -13,7 +13,7 @@ import kotlin.test.Test
 class IASakStatistikkEksportererUnitTest {
     private val næringsgruppeIkkeIBransjeprogram =
         Næringsgruppe("Denne næringen finnes ikke i et bransjeprogram", "99999")
-    private val næringsgruppeBygg = BOLIGBYGGELAG
+    private val næringsgruppeBygg = OPPFØRING_AV_BYGNINGER
 
     @Test
     fun `skal finne riktig bransje fra næringskoder i bygg (2 siffet kode)`() {
@@ -46,14 +46,14 @@ class IASakStatistikkEksportererUnitTest {
 
         finnBransje(
             listOf(
-                BARNEHAGER,
+                BARNEHAGER_SOM_NÆRINGSGRUPPE,
                 næringsgruppeBygg,
             ),
         ) shouldBe Bransje.BARNEHAGER
 
         finnBransje(
             listOf(
-                NÆRING_BARNEHAGE,
+                NÆRING_UNDERVISNING,
                 næringsgruppeBygg,
             ),
         ) shouldBe Bransje.BYGG
@@ -72,7 +72,7 @@ class IASakStatistikkEksportererUnitTest {
     fun `tar hensyn til rekkefølge i listen av næringsgrupper`() {
         finnBransje(
             listOf(
-                BARNEHAGER,
+                BARNEHAGER_SOM_NÆRINGSGRUPPE,
                 næringsgruppeBygg,
             ),
         ) shouldBe Bransje.BARNEHAGER
@@ -80,7 +80,7 @@ class IASakStatistikkEksportererUnitTest {
         finnBransje(
             listOf(
                 næringsgruppeBygg,
-                BARNEHAGER,
+                BARNEHAGER_SOM_NÆRINGSGRUPPE,
             ),
         ) shouldBe Bransje.BYGG
     }

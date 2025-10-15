@@ -7,8 +7,8 @@ import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.StatusoversiktHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
-import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
-import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
+import no.nav.lydia.helper.TestData.Companion.OPPFØRING_AV_BYGNINGER
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IASak
@@ -76,7 +76,7 @@ class StatusoversiktApiTest {
     fun `skal kunne filtrere på næring eller bransje`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(BOLIGBYGGELAG),
+                næringer = listOf(OPPFØRING_AV_BYGNINGER),
             ),
         )
         nySakIViBistår(orgnummer = virksomhet.orgnr)
@@ -86,7 +86,7 @@ class StatusoversiktApiTest {
 
         VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(BARNEHAGER),
+                næringer = listOf(BARNEHAGER_SOM_NÆRINGSGRUPPE),
             ),
         )
 

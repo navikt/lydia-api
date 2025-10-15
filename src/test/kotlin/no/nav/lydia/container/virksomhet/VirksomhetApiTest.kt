@@ -12,7 +12,7 @@ import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.NÆRINGSMIDLER_IKKE_NEVNT
 import no.nav.lydia.helper.TestData.Companion.NÆRING_MED_BINDESTREK
@@ -66,7 +66,7 @@ class VirksomhetApiTest {
         val orgnummer = VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = nyVirksomhet(
                 næringer = listOf(
-                    BARNEHAGER,
+                    BARNEHAGER_SOM_NÆRINGSGRUPPE,
                     NÆRING_MED_BINDESTREK,
                 ),
             ),
@@ -79,7 +79,7 @@ class VirksomhetApiTest {
 
         virksomhet.orgnr shouldBe orgnummer
         virksomhet.aktivtSaksnummer shouldBe null
-        virksomhet.næringsundergruppe1.navn shouldBe BARNEHAGER.navn
+        virksomhet.næringsundergruppe1.navn shouldBe BARNEHAGER_SOM_NÆRINGSGRUPPE.navn
         virksomhet.næringsundergruppe2?.navn shouldBe NÆRING_MED_BINDESTREK.navn
     }
 
@@ -193,7 +193,7 @@ class VirksomhetApiTest {
 
     @Test
     fun `skal få bransje på virksomheter som tilhører et bransjeprogram`() {
-        val virksomhetBarnehage = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(BARNEHAGER)))
+        val virksomhetBarnehage = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(BARNEHAGER_SOM_NÆRINGSGRUPPE)))
         val virksomhetBarnehageDto = hentVirksomhetsinformasjon(orgnummer = virksomhetBarnehage.orgnr)
         virksomhetBarnehageDto.bransje shouldBe Bransje.BARNEHAGER
 
@@ -215,7 +215,7 @@ class VirksomhetApiTest {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
         val virksomhetDto = hentVirksomhetsinformasjon(orgnummer = virksomhet.orgnr)
 
-        virksomhetDto.næring shouldBe Næringsgruppe(kode = "01", navn = "Jordbruk, tilhør. tjenester, jakt")
+        virksomhetDto.næring shouldBe Næringsgruppe(kode = "01", navn = "Jordbruk og tjenester tilknyttet jordbruk, jakt og viltstell")
     }
 
     @Test
