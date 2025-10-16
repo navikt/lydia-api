@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
@@ -42,24 +43,38 @@ class DokumentPubliseringService(
         referanseId: UUID,
         type: DokumentPubliseringDto.Type,
     ): PubliseringStatus {
-        val dokumentTilPublisering = dokumentPubliseringRepository.hentDokumentTilPublisering(dokumentReferanseId = referanseId, dokumentType = type)
-        val kvitterteDokumenter = dokumentPubliseringRepository.hentKvitterteDokumenter(referanseId = referanseId, type = type)
-        if (kvitterteDokumenter.isEmpty()) {
-            return PubliseringStatus(
+        val dokumentTilPublisering: DokumentPubliseringDto? =
+            dokumentPubliseringRepository.hentDokumentTilPublisering(dokumentReferanseId = referanseId, dokumentType = type)
+        val kvitterteDokumenter: List<KvittertDokument> = dokumentPubliseringRepository.hentKvitterteDokumenter(referanseId = referanseId, type = type)
+        val sistMottattKvittering: KvittertDokument? = kvitterteDokumenter.maxByOrNull { it.kvittertTidspunkt }
+
+        return if (erEnPubliseringIGang(dokumentTilPublisering, sistMottattKvittering)) {
+            PubliseringStatus(
                 referanseId = referanseId,
                 type = type,
-                status = if (dokumentTilPublisering != null) DokumentPubliseringDto.Status.OPPRETTET else DokumentPubliseringDto.Status.IKKE_PUBLISERT,
+                status = DokumentPubliseringDto.Status.OPPRETTET,
                 publiseringTidspunkt = null,
             )
         } else {
-            val sisteVersjon = kvitterteDokumenter.maxBy { it.kvittertTidspunkt }
-            return PubliseringStatus(
-                referanseId = sisteVersjon.referanseId,
-                type = sisteVersjon.type,
-                status = sisteVersjon.status,
-                publiseringTidspunkt = sisteVersjon.publisertTidspunkt,
+            PubliseringStatus(
+                referanseId = referanseId,
+                type = type,
+                status = sistMottattKvittering?.status ?: DokumentPubliseringDto.Status.IKKE_PUBLISERT,
+                publiseringTidspunkt = sistMottattKvittering?.kvittertTidspunkt,
             )
         }
+    }
+
+    private fun erEnPubliseringIGang(
+        dokumentTilPublisering: DokumentPubliseringDto?,
+        sistMottattKvittering: KvittertDokument?,
+    ): Boolean {
+        if (dokumentTilPublisering == null) return false
+        if (sistMottattKvittering == null) return true
+
+        val sistKvitteringTid = sistMottattKvittering.kvittertTidspunkt
+        return dokumentTilPublisering.opprettetTidspunkt.toJavaLocalDateTime()
+            .isAfter(sistKvitteringTid.toJavaLocalDateTime())
     }
 
     fun hentDokumentPublisering(

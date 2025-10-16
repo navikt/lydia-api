@@ -297,6 +297,45 @@ class PlanApiTest {
     }
 
     @Test
+    fun `skal oppgi riktig status og dato ved republisering`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val enTomPlanMal = hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+
+        val response = publiserDokument(
+            dokumentReferanseId = plan.id,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+        val dokumentPubliseringDto = response.third.get()
+
+        sendKvittering(
+            dokument = dokumentPubliseringDto,
+            sak.hentAlleSamarbeid().first().id,
+        )
+
+        val etterKvittering = sak.hentPlan(prosessId = samarbeid.id)
+        etterKvittering.planleggOgFullførAlleUndertemaer(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = samarbeid.id,
+        )
+        val response2 = publiserDokument(
+            dokumentReferanseId = plan.id,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response2.statuskode() shouldBe HttpStatusCode.Created.value
+
+        val etterSendtTilPublisering = sak.hentPlan(prosessId = samarbeid.id)
+        etterSendtTilPublisering.publiseringStatus shouldBe DokumentPubliseringDto.Status.OPPRETTET
+        etterSendtTilPublisering.sistPublisert shouldBe null
+        etterSendtTilPublisering.harEndringerSidenSistPublisert shouldBe false
+    }
+
+    @Test
     fun `skal informere dersom en plan har endringer siden sist publisering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
