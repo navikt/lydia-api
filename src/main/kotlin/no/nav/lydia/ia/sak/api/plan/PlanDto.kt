@@ -61,7 +61,7 @@ fun Plan.tilDtoMedPubliseringStatus(publiseringStatus: PubliseringStatus? = null
         },
     )
 
-private fun LocalDateTime.erEtter(dato: LocalDateTime?) =
+fun LocalDateTime.erEtter(dato: LocalDateTime?) =
     if (dato == null) {
         false
     } else {

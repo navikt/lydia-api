@@ -14,6 +14,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -63,6 +64,7 @@ class KvitteringConsumerTest {
     @Test
     fun `skal kunne publisere samarbeidsplan flere ganger`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
         val dokument = publiserDokument(
@@ -70,17 +72,23 @@ class KvitteringConsumerTest {
             dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
             token = authContainerHelper.saksbehandler1.token,
         ).third.get()
-        sendKvittering(dokument, sak.hentAlleSamarbeid().first().id)
+        sendKvittering(dokument, samarbeid.id)
 
         val planEtterPublisering = sak.hentPlan()
         planEtterPublisering.publiseringStatus shouldBe DokumentPubliseringDto.Status.PUBLISERT
 
+        val planEtterEndring = plan.planleggOgFullførAlleUndertemaer(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = samarbeid.id,
+        )
+
         val dokumentV2 = publiserDokument(
-            dokumentReferanseId = plan.id,
+            dokumentReferanseId = planEtterEndring.id,
             dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
             token = authContainerHelper.saksbehandler1.token,
         ).third.get()
-        sendKvittering(dokumentV2, sak.hentAlleSamarbeid().first().id)
+        sendKvittering(dokumentV2, samarbeid.id)
 
         val planEtterRePublisering = sak.hentPlan()
         planEtterRePublisering.publiseringStatus shouldBe DokumentPubliseringDto.Status.PUBLISERT

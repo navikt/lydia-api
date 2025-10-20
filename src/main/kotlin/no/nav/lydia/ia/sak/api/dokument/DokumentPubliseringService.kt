@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.BEHOVSVURDER
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.EVALUERING
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.SAMARBEIDSPLAN
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
+import no.nav.lydia.ia.sak.api.plan.erEtter
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
@@ -120,6 +121,25 @@ class DokumentPubliseringService(
 
         val plan = planRepository.hentPlan(dokumentReferanseId) ?: return Feil("", HttpStatusCode.NotFound).left()
         val metadata = dokumentPubliseringRepository.hentDokumentPubliseringMetadata(plan.samarbeidId) ?: return Feil("", HttpStatusCode.NotFound).left()
+
+        val harInnhold = plan.temaer.any { tema -> tema.inkludert && tema.undertemaer.any { it.inkludert } }
+        if (!harInnhold) {
+            return Feil("Planen med id '$dokumentReferanseId' har ingen innhold", HttpStatusCode.BadRequest).left()
+        }
+
+        val sistMottattKvittering = dokumentPubliseringRepository.hentKvitterteDokumenter(
+            referanseId = dokumentReferanseId,
+            type = SAMARBEIDSPLAN,
+        ).maxByOrNull { it.kvittertTidspunkt }
+
+        if (sistMottattKvittering != null) {
+            if (!plan.sistEndret.erEtter(sistMottattKvittering.kvittertTidspunkt)) {
+                return Feil(
+                    feilmelding = "Planen med id '$dokumentReferanseId' har ingen endringer siden sist publisert",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                ).left()
+            }
+        }
 
         return dokumentPubliseringRepository.opprettDokument(
             referanseId = dokumentReferanseId,

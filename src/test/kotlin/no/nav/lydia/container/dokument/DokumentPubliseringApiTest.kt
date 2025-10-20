@@ -9,10 +9,15 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.svarPåSpørsmål
+import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdInkludert
+import no.nav.lydia.helper.PlanHelper.Companion.antallTemaInkludert
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
@@ -87,6 +92,90 @@ class DokumentPubliseringApiTest {
         )
 
         response.statuskode() shouldBe HttpStatusCode.Forbidden.value
+    }
+
+    @Test
+    fun `følgere av sak som er lesebrukere skal IKKE kunne publisere en samarbeidsplan`() {
+        val saksbehandlerToken = authContainerHelper.saksbehandler1.token
+        val lesebrukerToken = authContainerHelper.lesebruker.token
+
+        val sak = nySakIViBistår(token = saksbehandlerToken)
+        sak.leggTilFolger(token = lesebrukerToken)
+        val enTomPlanMal = hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+        val dokumentRefId = plan.id
+
+        val response = publiserDokument(
+            dokumentReferanseId = dokumentRefId,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = lesebrukerToken,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.Forbidden.value
+    }
+
+    @Test
+    fun `følgere av sak som er saksbehandlere skal kunne publisere en samarbeidsplan`() {
+        val saksbehandlerToken = authContainerHelper.saksbehandler1.token
+        val følgerToken = authContainerHelper.saksbehandler2.token
+
+        val sak = nySakIViBistår(token = saksbehandlerToken)
+        sak.leggTilFolger(token = følgerToken)
+        val enTomPlanMal = hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+        val dokumentRefId = plan.id
+
+        val response = publiserDokument(
+            dokumentReferanseId = dokumentRefId,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = følgerToken,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+    }
+
+    @Test
+    fun `skal ikke kunne publisere en plan dersom planen ikke har innhold`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val enTomPlanMal = hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal)
+
+        plan.antallTemaInkludert() shouldBe 0
+        plan.antallInnholdInkludert() shouldBe 0
+        plan.publiseringStatus shouldBe null
+
+        val response = publiserDokument(
+            dokumentReferanseId = plan.id,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `skal ikke kunne publisere en plan dersom planen ikke har endringer siden sist publisering`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val enTomPlanMal = hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+
+        val response1 = publiserDokument(
+            dokumentReferanseId = plan.id,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        sendKvittering(
+            dokument = response1.third.get(),
+            samarbeidId = sak.hentAlleSamarbeid().first().id,
+        )
+
+        val response2 = publiserDokument(
+            dokumentReferanseId = plan.id,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+
+        response2.statuskode() shouldBe HttpStatusCode.BadRequest.value
     }
 
     @Test
@@ -207,7 +296,8 @@ class DokumentPubliseringApiTest {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val samarbeidId = samarbeid.id
-        val plan = sak.opprettEnPlan()
+        val enTomPlanMal = hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
         val dokumentRefId = plan.id
         val navIdent = authContainerHelper.saksbehandler1.navIdent
 
