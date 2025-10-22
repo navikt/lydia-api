@@ -111,7 +111,7 @@ class IASamarbeidRepository(
                         AND dok.ia_prosess = :samarbeidId
                     """.trimIndent(),
                     mapOf(
-                        "behovsvurderingType" to DokumentPubliseringDto.Type.BEHOVSVURDERING.name,
+                        "behovsvurderingType" to DokumentPubliseringDto.Type.BEHOVSVURDERING.name, // TODO: Legg til evaluering når det er på plass
                         "samarbeidId" to samarbeidId,
                         "publisertStatus" to DokumentPubliseringDto.Status.PUBLISERT.name,
                     ),

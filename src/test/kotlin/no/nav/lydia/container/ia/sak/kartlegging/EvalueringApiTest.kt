@@ -39,11 +39,11 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class EvalueringApiTest {
@@ -357,9 +357,7 @@ class EvalueringApiTest {
     }
 
     @Test
-    @Ignore("Publisering av Evaluering er ikke implementert enda")
     fun `skal IKKE kunne slette en spørreunderøkelse av typen 'EVALUERING' som er publisert`() {
-        // TODO: Fjern @Ignore når publisering av Evaluering er implementert
         val sak = nySakIViBistår()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val evaluering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering)
@@ -370,6 +368,7 @@ class EvalueringApiTest {
 
         publiserDokument(
             dokumentReferanseId = evaluering.id,
+            dokumentType = DokumentPubliseringDto.Type.EVALUERING,
             token = authContainerHelper.saksbehandler1.token,
         ).statuskode() shouldBe HttpStatusCode.Created.value
 

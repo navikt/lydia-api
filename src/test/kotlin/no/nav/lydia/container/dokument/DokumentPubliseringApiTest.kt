@@ -261,7 +261,6 @@ class DokumentPubliseringApiTest {
         // 2- verifiser at dokumentet + innhold er sent til Kafka
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                // key: '1-f44fee5f-cc38-41e5-bb59-ab4a7c83051d-BEHOVSVURDERING'
                 key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPubliseringDto.Type.BEHOVSVURDERING),
                 konsument = konsument,
             ) { meldinger ->
@@ -318,7 +317,6 @@ class DokumentPubliseringApiTest {
         // 2- verifiser at dokumentet + innhold er sent til Kafka
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                // key: '1-f44fee5f-cc38-41e5-bb59-ab4a7c83051d-BEHOVSVURDERING'
                 key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPubliseringDto.Type.SAMARBEIDSPLAN),
                 konsument = konsument,
             ) { meldinger ->
@@ -340,6 +338,61 @@ class DokumentPubliseringApiTest {
                             it.undertemaer.forEach {
                                 it.navn.forEach {
                                     it shouldNotBe ""
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
+    @Test
+    fun `opprettelese av evaluering dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
+        val sak = nySakIViBistår()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val fullførtEvaluering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering)
+        val samarbeidId = fullførtEvaluering.samarbeidId
+        val dokumentRefId = fullførtEvaluering.id
+        val navIdent = authContainerHelper.saksbehandler1.navIdent
+
+        // 1- verifiser at et dokument har blitt opprettet
+        val response = publiserDokument(
+            dokumentReferanseId = dokumentRefId,
+            dokumentType = DokumentPubliseringDto.Type.EVALUERING,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+        val dokumentPubliseringDto: DokumentPubliseringDto = response.third.get()
+        dokumentPubliseringDto.referanseId shouldBe dokumentRefId
+        dokumentPubliseringDto.dokumentType shouldBe DokumentPubliseringDto.Type.EVALUERING
+        dokumentPubliseringDto.opprettetAv shouldBe navIdent
+        dokumentPubliseringDto.opprettetTidspunkt shouldNotBe null
+
+        // 2- verifiser at dokumentet + innhold er sent til Kafka
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPubliseringDto.Type.EVALUERING),
+                konsument = konsument,
+            ) { meldinger ->
+                meldinger shouldHaveAtLeastSize 1
+                Json.decodeFromString<DokumentPubliseringMedInnhold>(meldinger.first())
+                    .also { dokumentPubliseringMedInnhold ->
+                        dokumentPubliseringMedInnhold.referanseId shouldBe dokumentRefId
+                        dokumentPubliseringMedInnhold.virksomhet.orgnummer shouldBe sak.orgnr
+                        dokumentPubliseringMedInnhold.sak.saksnummer shouldBe sak.saksnummer
+                        dokumentPubliseringMedInnhold.samarbeid.id shouldBe samarbeidId
+                        dokumentPubliseringMedInnhold.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
+                        dokumentPubliseringMedInnhold.dokumentOpprettetAv shouldBe navIdent
+                        val innhold = Json.decodeFromJsonElement<SpørreundersøkelseInnholdIDokumentDto>(dokumentPubliseringMedInnhold.innhold)
+                        innhold.id shouldBe dokumentRefId
+                        innhold.fullførtTidspunkt shouldNotBe null
+                        dokumentPubliseringMedInnhold.type shouldBe DokumentPubliseringDto.Type.EVALUERING
+                        innhold.spørsmålMedSvarPerTema.forEach { it.navn shouldNotBe null }
+                        innhold.spørsmålMedSvarPerTema.forEach {
+                            it.spørsmålMedSvar.forEach {
+                                it.svarListe.forEach {
+                                    it.antallSvar shouldNotBe null
                                 }
                             }
                         }

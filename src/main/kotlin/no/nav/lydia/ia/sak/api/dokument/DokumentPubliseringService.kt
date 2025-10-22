@@ -23,7 +23,6 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultat
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
@@ -179,13 +178,6 @@ class DokumentPubliseringService(
 
         val spørreundersøkelse = spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId)
             .getOrElse { return it.left() }
-
-        if (spørreundersøkelse.type != Spørreundersøkelse.Type.Behovsvurdering) {
-            return Feil(
-                feilmelding = "Spørreundersøkelse med id: $dokumentReferanseId er ikke av type ${dokumentType.name}",
-                httpStatusCode = HttpStatusCode.BadRequest,
-            ).left()
-        }
 
         if (!spørreundersøkelse.harMinstEttResultat()) {
             return Feil(
