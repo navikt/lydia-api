@@ -1,7 +1,7 @@
 package no.nav.lydia.container.ia.eksport
 
-import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksportEttSamarbeid
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
@@ -20,7 +20,6 @@ import no.nav.lydia.ia.eksport.SAMARBEID_ID_PREFIKS
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class SamarbeidEksportererTest {
@@ -40,7 +39,6 @@ class SamarbeidEksportererTest {
         }
     }
 
-    @Ignore("Vi bruker engangsJobb til noe annet")
     @Test
     fun `skal trigge kafka-eksport av enkelt samarbeid`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
@@ -60,7 +58,8 @@ class SamarbeidEksportererTest {
         }
 
         // Start jobben som skal sende en melding om IA-sak på Kafka
-        kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "${SAMARBEID_ID_PREFIKS}${samarbeid.id}")
+        val samarbeidIdParameter = "${SAMARBEID_ID_PREFIKS}${samarbeid.id}"
+        kafkaContainerHelper.sendJobbMelding(iaSakSamarbeidEksportEttSamarbeid, parameter = samarbeidIdParameter)
         runBlocking {
             // Sjekk at denne meldingen ble sendt på Kafka
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -78,16 +77,7 @@ class SamarbeidEksportererTest {
                 }
             }
         }
-        applikasjon shouldContainLog "Ferdig med eksport av samarbeid".toRegex()
-    }
-
-    @Ignore("Vi bruker engangsJobb til noe annet")
-    @Test
-    fun `kafka-eksport av enkelt samarbeid logger warn dersom saken ikke er funnet`() {
-        // Start jobben som skal sende en melding om nytt samarbeid på Kafka
-        kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "1298765")
-
-        applikasjon shouldContainLog "Eksport av enkelt samarbeid, med ID: '1298765' feilet. Samarbeid ikke funnet".toRegex()
+        applikasjon shouldContainLog "Ferdig med eksport av samarbeid med parameter: '$samarbeidIdParameter'".toRegex()
     }
 
     @Test

@@ -5,6 +5,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidBigQueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksportEttSamarbeid
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
@@ -191,6 +192,18 @@ object Jobblytter : CoroutineScope {
 
                                     iaSakSamarbeidEksport -> {
                                         samarbeidKafkaEksporterer.eksporterAlleSamarbeid()
+                                    }
+
+                                    iaSakSamarbeidEksportEttSamarbeid -> {
+                                        if (jobInfo.parameter.isNullOrEmpty()) {
+                                            logger.warn(
+                                                "Forsøkte å starte jobb 'iaSakSamarbeidEksportEttSamarbeid' med null/empty parameter. " +
+                                                    "Forventer et samarbeidId. Avslutter",
+                                            )
+                                        } else {
+                                            val samarbeidId = jobInfo.parameter
+                                            samarbeidKafkaEksporterer.eksporterEnkeltSamarbeid(samarbeidIdAsString = samarbeidId)
+                                        }
                                     }
 
                                     iaSakSamarbeidBigQueryEksport -> {
