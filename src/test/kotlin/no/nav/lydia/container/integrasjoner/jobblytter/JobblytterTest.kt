@@ -4,6 +4,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.alleKategorierSykefraværsstatist
 import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksportEttSamarbeid
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
@@ -12,6 +13,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.ia.eksport.SAMARBEID_ID_PREFIKS
 import org.junit.Test
 
 class JobblytterTest {
@@ -71,6 +73,16 @@ class JobblytterTest {
         kafkaContainerHelper.sendJobbMelding(materializedViewOppdatering)
         applikasjon shouldContainLog "Oppdaterte statistikkview på ".toRegex()
         applikasjon shouldContainLog "Jobb 'materializedViewOppdatering' ferdig".toRegex()
+    }
+
+    @Test
+    fun `skal kunne trigge eksport av ett samarbeid jobb via kafka`() {
+        val samarbeidId = 12345
+        val parameter = "$SAMARBEID_ID_PREFIKS$samarbeidId"
+        kafkaContainerHelper.sendJobbMelding(jobb = iaSakSamarbeidEksportEttSamarbeid, parameter = parameter)
+        applikasjon shouldContainLog "Starter eksport av enkelt samarbeid, med id: '$samarbeidId'".toRegex()
+        applikasjon shouldContainLog "Eksport av enkelt samarbeid, med ID: '$samarbeidId' feilet. Samarbeid ikke funnet".toRegex()
+        applikasjon shouldContainLog "Ferdig med eksport av samarbeid med parameter: '$parameter'".toRegex()
     }
 
     @Test

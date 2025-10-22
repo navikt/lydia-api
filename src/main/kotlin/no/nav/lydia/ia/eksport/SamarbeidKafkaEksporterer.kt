@@ -17,13 +17,12 @@ class SamarbeidKafkaEksporterer(
     }
 
     fun eksporterEnkeltSamarbeid(samarbeidIdAsString: String) {
-        log.info("Starter eksport av enkelt samarbeid, med ID: '$samarbeidIdAsString'")
-
         samarbeidIdAsString.parseSamarbeidId().toIntOrNull()?.let { samarbeidId ->
+            log.info("Starter eksport av enkelt samarbeid, med id: '$samarbeidId'")
             hentOgSendSamarbeidTilKafka(samarbeidId)
-        } ?: log.warn("Eksport av enkelt samarbeid, med ID: '$samarbeidIdAsString' feilet. SamarbeidId er ikke gyldig")
+        } ?: log.warn("Eksport av enkelt samarbeid, med parameter: '$samarbeidIdAsString' feilet. SamarbeidId er ikke gyldig")
 
-        log.info("Ferdig med eksport av samarbeid med Id '$samarbeidIdAsString'")
+        log.info("Ferdig med eksport av samarbeid med parameter: '$samarbeidIdAsString'")
     }
 
     fun eksporterAlleSamarbeid() {
