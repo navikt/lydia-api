@@ -8,15 +8,11 @@ import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
-import org.slf4j.LoggerFactory
 
 const val ARBEIDSGIVER_SAMARBEID_PATH = "api/arbeidsgiver/samarbeid"
 
-private val logger = LoggerFactory.getLogger("SamarbeidApi")
-
 fun Route.samarbeid(samarbeidService: IASamarbeidService) {
     get("$ARBEIDSGIVER_SAMARBEID_PATH/{orgnummer}") {
-        logger.info("Samarbeid API called!")
         val orgnr = call.orgnummer ?: return@get call.sendFeil(
             Feil(
                 feilmelding = "Mangler organisasjonsnummer",
