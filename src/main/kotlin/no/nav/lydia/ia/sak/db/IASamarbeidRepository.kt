@@ -106,12 +106,13 @@ class IASamarbeidRepository(
                     SELECT dok.dokument_id, dok.type, isk.fullfort
                     FROM kvittert_dokument dok
                     JOIN ia_sak_kartlegging isk on (isk.kartlegging_id = dok.referanse_id)
-                    WHERE dok.type = :behovsvurderingType
+                    WHERE dok.type IN (:behovsvurderingType, :evalueringType)
                         AND dok.status = :publisertStatus
                         AND dok.ia_prosess = :samarbeidId
                     """.trimIndent(),
                     mapOf(
-                        "behovsvurderingType" to DokumentPubliseringDto.Type.BEHOVSVURDERING.name, // TODO: Legg til evaluering når det er på plass
+                        "behovsvurderingType" to DokumentPubliseringDto.Type.BEHOVSVURDERING.name,
+                        "evalueringType" to DokumentPubliseringDto.Type.EVALUERING.name,
                         "samarbeidId" to samarbeidId,
                         "publisertStatus" to DokumentPubliseringDto.Status.PUBLISERT.name,
                     ),
