@@ -1,17 +1,17 @@
-val ktorVersion = "3.3.0"
+val ktorVersion = "3.3.1"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.4"
-val kotestVerstion = "6.0.3"
+val kotestVerstion = "6.0.4"
 val testcontainersVersion = "1.21.3"
-val logbackVersion = "1.5.18"
-val logstashLogbackEncoderVersion = "8.1"
+val logbackVersion = "1.5.20"
+val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.16.0-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.2.20"
+    kotlin("jvm") version "2.2.21"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.2.20"
+    kotlin("plugin.serialization") version "2.2.21"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -52,12 +52,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.5")
 
     // Database
-    implementation("org.postgresql:postgresql:42.7.7")
+    implementation("org.postgresql:postgresql:42.7.8")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.13.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.15.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -104,12 +104,12 @@ dependencies {
     testImplementation("org.verapdf:validation-model:1.28.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.3.0")
+    testImplementation("no.nav.security:mock-oauth2-server:3.0.0")
 
     constraints {
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.6.Final")
+                require("4.2.7.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
