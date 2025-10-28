@@ -2,7 +2,7 @@ val ktorVersion = "3.3.1"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.4"
 val kotestVerstion = "6.0.4"
-val testcontainersVersion = "1.21.3"
+val testcontainersVersion = "2.0.1"
 val logbackVersion = "1.5.20"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.16.0-alpha"
@@ -92,9 +92,9 @@ dependencies {
 
     // Testcontainers
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
-    testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
-    testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
-    testImplementation("org.testcontainers:kafka:$testcontainersVersion")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:$testcontainersVersion")
+    testImplementation("org.testcontainers:testcontainers-postgresql:$testcontainersVersion")
+    testImplementation("org.testcontainers:testcontainers-kafka:$testcontainersVersion")
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
