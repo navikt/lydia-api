@@ -28,5 +28,8 @@ spec:
       application: pia-jobbsender
       access: write
     - team: pia
-      application: pia-jobbsender-nattlig
+      application: pia-jobbsender-oppdater-view
+      access: write
+    - team: pia
+      application: pia-jobbsender-rydde-urorte-saker
       access: write
