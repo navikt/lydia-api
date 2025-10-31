@@ -18,12 +18,3 @@ spec:
     - team: pia
       application: lydia-api
       access: readwrite   # read, write, readwrite
-    - team: pia
-      application: pia-bigquery-sink
-      access: read
-    - team: pia
-      application: pia-devops
-      access: read
-    - team: team-dialog
-      application: sf-ia-leveranse
-      access: read
