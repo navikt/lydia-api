@@ -168,10 +168,6 @@ enum class Topic(
         navn = "pia.ia-sak-status-v1",
         konsumentGruppe = "lydia-api-ia-sak-status-producer",
     ),
-    IA_SAK_LEVERANSE_TOPIC(
-        navn = "pia.ia-sak-leveranse-v1",
-        konsumentGruppe = "lydia-api-ia-sak-leveranse-producer",
-    ),
     SPORREUNDERSOKELSE_TOPIC(
         navn = "pia.sporreundersokelse-v1",
         konsumentGruppe = "lydia-api-sporreundersokelse-consumer",
