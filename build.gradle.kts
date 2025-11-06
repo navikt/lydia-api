@@ -12,10 +12,8 @@ plugins {
     kotlin("jvm") version "2.2.21"
     // Skru json-serialisering
     kotlin("plugin.serialization") version "2.2.21"
-    // For å bygge fatjar
-    id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
-    application
+    id("application")
 }
 
 repositories {
@@ -137,15 +135,8 @@ application {
 
 val lokalDbDump: String by project
 tasks {
-    shadowJar {
-        mergeServiceFiles()
-        manifest {
-            attributes(Pair("Main-Class", "no.nav.lydia.AppKt"))
-        }
-    }
-
     withType<Test> {
-        dependsOn(shadowJar)
+        dependsOn(installDist)
         useJUnit {
             if (!project.hasProperty("lokalDbDump")) {
                 excludeCategories("no.nav.lydia.CommandLineOnlyTest")
@@ -155,5 +146,5 @@ tasks {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
