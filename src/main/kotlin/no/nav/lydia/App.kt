@@ -534,7 +534,7 @@ private fun Application.lydiaRestApi(
 
     routing {
         healthChecks(HelseMonitor)
-        metrics()
+        metrics(dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource))
 
         authenticate("tokenx") {
             samarbeid(

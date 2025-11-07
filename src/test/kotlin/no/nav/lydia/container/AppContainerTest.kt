@@ -74,6 +74,7 @@ class AppContainerTest {
                 metrikker shouldContain "ia_saker_fulgt_total"
                 metrikker shouldContain "ia_saker_sluttet_a_folge_total"
                 metrikker shouldContain "samarbeidsplan_opprettet_total"
+                metrikker shouldContain "ia_dokumenter_publiseres"
             },
             failure = {
                 fail("")

@@ -6,6 +6,11 @@ import io.ktor.server.routing.get
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.core.metrics.Counter
+import io.prometheus.metrics.core.metrics.Gauge
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -15,6 +20,11 @@ private const val NAMESPACE = "pia"
 class Metrics {
     companion object {
         val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+
+        private val antallDokumenterIPubliseringsKø = Gauge.builder()
+            .name("${NAMESPACE}_ia_dokumenter_publiseres")
+            .help("Antall dokumenter i publiseringskø")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
         private val behovsvurderingerOpprettet: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_behovsvurdering_opprettet")
@@ -125,6 +135,10 @@ class Metrics {
                 samarbeidsplanOpprettet.inc()
             }
         }
+
+        fun loggAntallDokumenterIPubliseringsKø(antall: Int) {
+            antallDokumenterIPubliseringsKø.set(antall.toDouble())
+        }
     }
 }
 
@@ -139,8 +153,20 @@ enum class PlanHendelseType {
     ENDRE_STATUS,
 }
 
-fun Routing.metrics() {
+fun Routing.metrics(dokumentPubliseringRepository: DokumentPubliseringRepository) {
     get("/metrics") {
+        Metrics.loggAntallDokumenterIPubliseringsKø(
+            dokumentPubliseringRepository.hentAntallDokumenterIPubliseringsKø(),
+        )
         call.respond(Metrics.appMicrometerRegistry.scrape())
     }
 }
+
+private fun DokumentPubliseringRepository.hentAntallDokumenterIPubliseringsKø() =
+    using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                "SELECT count(*) AS antall FROM dokument_til_publisering",
+            ).map { it.int("antall") }.asSingle,
+        ) ?: 0
+    }
