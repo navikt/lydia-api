@@ -1,6 +1,5 @@
 package no.nav.lydia.appstatus
 
-import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
@@ -156,10 +155,8 @@ enum class PlanHendelseType {
 
 fun Routing.metrics(dokumentPubliseringRepository: DokumentPubliseringRepository) {
     get("/metrics") {
-        val antall = dokumentPubliseringRepository.hentAntallDokumenterIPubliseringsKø()
-        call.application.log.info("Metrics endepunk kalt. Antall dokumenter i kø: $antall")
         Metrics.loggAntallDokumenterIPubliseringsKø(
-            antall,
+            dokumentPubliseringRepository.hentAntallDokumenterIPubliseringsKø(),
         )
         call.respond(Metrics.appMicrometerRegistry.scrape())
     }
