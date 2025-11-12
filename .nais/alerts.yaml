@@ -28,8 +28,8 @@ spec:
             namespace: "pia"
             severity: warning
         - alert: "Mange dokumenter i publiseringskø"
-          expr: avg by(app) (pia_ia_dokumenter_publiseres{app="lydia-api", namespace="pia"}) > 9
-          for: 24h
+          expr: sum(sum_over_time(pia_ia_dokumenter_publiseres{app="lydia-api", namespace="pia"}[1h])) / sum(count_over_time(pia_ia_dokumenter_publiseres{app="lydia-api", namespace="pia"}[1h])) > 9
+          for: 10m
           annotations:
             consequence: "Mange dokumenter i publiseringskø"
             action: "Sjekk loggene til app `lydia-api` for å se hvorfor dokumenter ikke blir publisert"
