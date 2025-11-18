@@ -22,6 +22,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.*
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -103,7 +104,7 @@ class SpørreundersøkelseService(
         type: Spørreundersøkelse.Type,
     ): Either<Feil, Spørreundersøkelse> =
         when (type) {
-            Spørreundersøkelse.Type.Behovsvurdering -> {
+            Behovsvurdering -> {
                 samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { samarbeid ->
                     spørreundersøkelseRepository.opprettSpørreundersøkelse(
                         orgnummer = orgnummer,
@@ -118,7 +119,7 @@ class SpørreundersøkelseService(
                 }
             }
 
-            Spørreundersøkelse.Type.Evaluering -> {
+            Evaluering -> {
                 if (iaSak.status == IASak.Status.VI_BISTÅR) {
                     planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
                         val temaerInkludertIPlan = plan.temaer.filter {
@@ -192,6 +193,20 @@ class SpørreundersøkelseService(
 
         return oppdatertSpørreundersøkelse.right()
     }
+
+    fun hentSpørreundersøkelser(
+        sak: IASak,
+        prosessId: Int,
+    ): Either<Feil, List<Spørreundersøkelse>> =
+        try {
+            samarbeidService.hentSamarbeid(sak, prosessId).map {
+                spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = it, type = Behovsvurdering) +
+                    spørreundersøkelseRepository.hentSpørreundersøkelser(it, Evaluering)
+            }
+        } catch (e: Exception) {
+            log.error("Noe gikk feil ved henting av spørreundersøkelser for samarbeid $prosessId: ${e.message}", e)
+            IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
+        }
 
     fun hentSpørreundersøkelser(
         sak: IASak,
@@ -285,7 +300,7 @@ class SpørreundersøkelseService(
         oppdaterSpørreundersøkelseDto: OppdaterBehovsvurderingDto,
     ): Either<Feil, Spørreundersøkelse> {
         val behovsvurdering = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { return it.left() }
-        if (behovsvurdering.type == Spørreundersøkelse.Type.Evaluering) {
+        if (behovsvurdering.type == Evaluering) {
             return IASakSpørreundersøkelseError.`ugyldig type`.left()
         }
         if (behovsvurdering.orgnummer != oppdaterSpørreundersøkelseDto.orgnummer) {

@@ -610,6 +610,18 @@ class IASakSpørreundersøkelseHelper {
             "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId/type/${type.name}",
         ).authentication().bearer(token)
 
+        fun hentSpørreundersøkelser(
+            orgnr: String,
+            saksnummer: String,
+            prosessId: Int,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/")
+            .authentication().bearer(token)
+            .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
+
         fun hentSpørreundersøkelse(
             orgnr: String,
             saksnummer: String,

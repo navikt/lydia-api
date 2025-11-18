@@ -77,6 +77,40 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
+    get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/") {
+        // hent alle spørreundersøkelser i et samarbeid
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val prosessId = call.prosessId ?: return@get call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+                spørreundersøkelseService.hentSpørreundersøkelser(
+                    sak = iaSak,
+                    prosessId = prosessId,
+                )
+            }
+        }.also { spørreundersøkelseEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = spørreundersøkelseEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+                saksnummer = saksnummer,
+            )
+        }.map { liste ->
+            call.respond(
+                HttpStatusCode.OK,
+                liste.map {
+                    val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
+                    it.tilUtenInnholdDto(publiseringStatus)
+                },
+            )
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
     get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/type/{type}") {
         // hent alle spørreundersøkelser av en gitt type
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
