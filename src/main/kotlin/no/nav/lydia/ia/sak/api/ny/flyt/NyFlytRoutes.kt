@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
@@ -72,5 +73,9 @@ fun Route.nyFlyt(
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
+    }
+
+    delete("$NY_FLYT_PATH/{orgnummer}/angre-vurdering") {
+        call.respond(HttpStatusCode.OK)
     }
 }
