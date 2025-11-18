@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
+import arrow.core.Either
 import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
@@ -9,36 +10,60 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.IASamarbeidService
+import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
+import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somSuperbruker
+import org.slf4j.LoggerFactory
 
 const val NY_FLYT_PATH = "iasak/nyflyt"
 
 fun Route.nyFlyt(
     iaSakService: IASakService,
+    iASamarbeidService: IASamarbeidService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
 ) {
+    val logger = LoggerFactory.getLogger(this::class.java)
+
     post("$NY_FLYT_PATH/{orgnummer}/vurder") {
-        val orgnummer = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val tilstandsmaskin = TilstandsmaskinBuilder.init(
+            fiaKontekst = FiaKontekst(
+                iaSakService = iaSakService,
+                iASamarbeidService = iASamarbeidService,
+            ),
+        ).utledFraTilstand(orgnr)
+
         call.somSuperbruker(adGrupper = adGrupper) { superbruker ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
-                iaSakService.opprettSakOgMerkSomVurdert(
-                    orgnummer = orgnummer,
+                val hendelse = VurderVirksomhet(
+                    orgnr = orgnr,
                     superbruker = superbruker,
                     navEnhet = navEnhet,
-                ).map { it.toDto(navAnsatt = superbruker) }
+                )
+                val nyTilstandOgResultat: Pair<Tilstand, Either<Feil, Any?>> =
+                    tilstandsmaskin.prosessHendelse(
+                        hendelse = hendelse,
+                    )
+                val nyTilstand: Tilstand = nyTilstandOgResultat.first
+                logger.info("NyTilstand etter hendelse ${hendelse.navn()} er: '$nyTilstand'")
+
+                val resultat: Either<Feil, Any?> = nyTilstandOgResultat.second
+                resultat.map { (it as IASak).toDto(navAnsatt = superbruker) }
             }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,
                 either = iaSakEither,
-                orgnummer = orgnummer,
+                orgnummer = orgnr,
                 auditType = AuditType.create,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
             )

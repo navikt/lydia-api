@@ -562,6 +562,7 @@ private fun Application.lydiaRestApi(
             )
             nyFlyt(
                 iaSakService = iaSakService,
+                iASamarbeidService = samarbeidService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
