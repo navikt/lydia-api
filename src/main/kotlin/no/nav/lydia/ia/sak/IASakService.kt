@@ -379,7 +379,7 @@ class IASakService(
         samarbeidDto = iaSamarbeidDto,
     )
 
-    private fun slettSak(
+    fun slettSak(
         sak: IASak,
         sistEndretAvHendelseId: String?,
     ): Either<Feil, IASak> =

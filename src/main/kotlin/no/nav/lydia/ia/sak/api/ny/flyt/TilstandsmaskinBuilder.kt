@@ -113,7 +113,19 @@ sealed class Tilstand {
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
         ): Konsekvens {
-            TODO("Not yet implemented")
+            val endring = when (hendelse) {
+                is Hendelse.AngreVurderVirksomhet -> {
+                    val sak = fiaKontekst.iaSakService.hentAktivSak(orgnummer = hendelse.orgnr)!!
+                    fiaKontekst.iaSakService.slettSak(sak, sak.endretAvHendelseId)
+                }
+                else -> {
+                    Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
+                }
+            }
+            return Konsekvens(
+                nyTilstand = VirksomhetKlarTilVurdering,
+                endring = endring,
+            )
         }
     }
 

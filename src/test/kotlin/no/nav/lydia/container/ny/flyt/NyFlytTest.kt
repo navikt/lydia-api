@@ -6,7 +6,6 @@ import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper
@@ -14,7 +13,6 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.domene.IASak
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class NyFlytTest {
@@ -43,7 +41,7 @@ class NyFlytTest {
         res2.second.statusCode shouldBe HttpStatusCode.Forbidden.value
     }
 
-    @Ignore
+    @Test
     fun `skal kunne angre vurdering av samarbeid med en virksomhet`() {
         val orgnummer = VirksomhetHelper.nyttOrgnummer()
         val vurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
@@ -51,7 +49,7 @@ class NyFlytTest {
             .tilSingelRespons<IASakDto>()
         vurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
 
-        val angreVurderRes = applikasjon.performDelete("$NY_FLYT_PATH/$orgnummer/angre-vurdering")
+        val angreVurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/angre-vurdering")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>()
         angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
