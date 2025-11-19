@@ -283,6 +283,9 @@ enum class IASakshendelseType {
     TILBAKE,
     FULLFØR_BISTAND,
     SLETT_SAK,
+
+    // -- Ny flyt
+    VURDERING_FULLFØRT_UTEN_SAMARBEID,
 }
 
 @Serializable

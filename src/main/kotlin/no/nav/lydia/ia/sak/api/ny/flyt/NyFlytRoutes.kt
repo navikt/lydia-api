@@ -24,6 +24,7 @@ import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.objectId
+import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.tilgangskontroll.somSuperbruker
 
 const val NY_FLYT_PATH = "iasak/nyflyt"
@@ -42,6 +43,13 @@ fun Route.nyFlyt(
         somSuperbruker(adGrupper = adGrupper) { superbruker ->
             azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
                 block(superbruker, navEnhet)
+            }
+        }
+
+    fun <T> ApplicationCall.somSaksbehandlerMedNavenhet(block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, NavEnhet) -> Either<Feil, T>): Either<Feil, T> =
+        somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
+                block(saksbehandler, navEnhet)
             }
         }
 
@@ -111,11 +119,16 @@ fun Route.nyFlyt(
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val tilstandsmaskin = tilstandsmaskinBuilder.build(orgnr)
 
-        call.somSuperbruker(adGrupper = adGrupper) { superbruker ->
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.FullførVurdering(orgnr = orgnr, årsak = "Legg til en årsak senere"),
+                hendelse = Hendelse.FullførVurdering(
+                    orgnr = orgnr,
+                    årsak = "Legg til en årsak senere",
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
             )
-            konsekvens.endring.map { (it as IASak).toDto(navAnsatt = superbruker) }
+            konsekvens.endring.map { (it as IASak).toDto(navAnsatt = saksbehandler) }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,

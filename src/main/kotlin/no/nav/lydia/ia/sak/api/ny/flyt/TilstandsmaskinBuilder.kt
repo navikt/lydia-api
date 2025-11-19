@@ -7,6 +7,7 @@ import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
@@ -40,6 +41,9 @@ class TilstandsmaskinBuilder private constructor(
 
                 IASak.Status.VURDERES,
                 -> Tilstand.VirksomhetVurderes
+
+                IASak.Status.VURDERT,
+                -> Tilstand.VirksomhetErVurdert
 
                 IASak.Status.KONTAKTES,
                 IASak.Status.KARTLEGGES,
@@ -122,6 +126,8 @@ sealed class Tilstand {
                     fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
                         orgnummer = hendelse.orgnr,
                         årsak = hendelse.årsak,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
                     )
                 }
                 else -> {
@@ -180,6 +186,8 @@ sealed class Hendelse {
     data class FullførVurdering(
         val orgnr: String,
         val årsak: String,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class OpprettNyttSamarbeid(

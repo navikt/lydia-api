@@ -19,6 +19,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil.Companion.feil
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil.Companion.generellFeil
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -67,6 +68,8 @@ class IASak private constructor(
             Status.FULLFØRT -> FullførtTilstand()
             Status.IKKE_AKTIV -> throw IllegalStateException()
             Status.SLETTET -> throw IllegalStateException()
+            // -- Ny flyt:
+            Status.VURDERT -> throw IllegalStateException()
         }
 
     fun gyldigeNesteHendelser(
@@ -137,6 +140,11 @@ class IASak private constructor(
             }
 
             OPPRETT_SAK_FOR_VIRKSOMHET -> {
+                throw IllegalStateException("Ikke en gyldig hendelsestype")
+            }
+
+            // -- Ny flyt:
+            VURDERING_FULLFØRT_UTEN_SAMARBEID -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
         }
@@ -546,6 +554,9 @@ class IASak private constructor(
         IKKE_AKTUELL,
         FULLFØRT,
         SLETTET,
+
+        // -- Ny flyt
+        VURDERT,
         ;
 
         fun regnesSomAvsluttet(): Boolean = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
