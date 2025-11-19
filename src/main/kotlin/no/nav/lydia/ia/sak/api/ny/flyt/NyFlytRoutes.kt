@@ -31,16 +31,14 @@ fun Route.nyFlyt(
     auditLog: AuditLog,
     azureService: AzureService,
 ) {
-
-
     post("$NY_FLYT_PATH/{orgnummer}/vurder") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        val tilstandsmaskin = TilstandsmaskinBuilder.init(
+        val tilstandsmaskin = TilstandsmaskinBuilder.medKontekst(
             fiaKontekst = FiaKontekst(
                 iaSakService = iaSakService,
                 iASamarbeidService = iASamarbeidService,
             ),
-        ).utledFraTilstand(orgnr)
+        ).build(orgnr)
 
         call.somSuperbruker(adGrupper = adGrupper) { superbruker ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
@@ -49,10 +47,9 @@ fun Route.nyFlyt(
                     superbruker = superbruker,
                     navEnhet = navEnhet,
                 )
-                val konsekvens: Konsekvens =
-                    tilstandsmaskin.prosessHendelse(
-                        hendelse = hendelse,
-                    )
+                val konsekvens = tilstandsmaskin.prosesserHendelse(
+                    hendelse = hendelse,
+                )
                 application.log.info("NyTilstand etter hendelse ${hendelse.navn()} er: '${konsekvens.nyTilstand}'")
 
                 konsekvens.endring.map { (it as IASak).toDto(navAnsatt = superbruker) }

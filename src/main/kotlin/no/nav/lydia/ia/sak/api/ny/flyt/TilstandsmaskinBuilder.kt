@@ -15,13 +15,13 @@ class TilstandsmaskinBuilder private constructor(
     private val fiaKontekst: FiaKontekst,
 ) {
     companion object {
-        fun init(fiaKontekst: FiaKontekst): TilstandsmaskinBuilder = TilstandsmaskinBuilder(fiaKontekst)
+        fun medKontekst(fiaKontekst: FiaKontekst): TilstandsmaskinBuilder = TilstandsmaskinBuilder(fiaKontekst)
     }
 
-    fun utledFraTilstand(orgnr: String): Tilstandsmaskin {
+    fun build(orgnr: String): Tilstandsmaskin {
         val tilstandTilVirksomhet = hentTilstandForVirksomhet(orgnr = orgnr)
         return Tilstandsmaskin(
-            fraTilstand = tilstandTilVirksomhet,
+            startTilstand = tilstandTilVirksomhet,
             fiaKontekst = fiaKontekst,
         )
     }
@@ -54,55 +54,18 @@ class TilstandsmaskinBuilder private constructor(
 }
 
 class Tilstandsmaskin(
-    fraTilstand: Tilstand = Tilstand.VirksomhetKlarTilVurdering,
+    startTilstand: Tilstand = Tilstand.VirksomhetKlarTilVurdering,
     private val fiaKontekst: FiaKontekst,
 ) {
-    private val tilstandRef = AtomicReference<Tilstand>(fraTilstand)
+    private val tilstandRef = AtomicReference(startTilstand)
 
     var nåværendeTilstand: Tilstand
         get() = tilstandRef.get()
         set(value) = tilstandRef.set(value)
 
-    fun prosessHendelse(hendelse: Hendelse): Konsekvens {
-        val konsekvensAvUtførtTransisjon: Konsekvens = when (nåværendeTilstand) {
-            // Her beskriver vi alle transisjoner for hver tilstand
-
-            // Tilstand: Virksomhet er klar til vurdering (IKKE_AKTIV)
-            Tilstand.VirksomhetKlarTilVurdering -> when (hendelse) {
-                is Hendelse.VurderVirksomhet -> {
-                    return nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
-                }
-
-                // Uhåndterte hendelser føres til samme Tilstand + Feil
-                else -> {
-                    Konsekvens(
-                        nåværendeTilstand,
-                        Either.Left(
-                            Feil("Something odd happened", HttpStatusCode.BadRequest),
-                        ),
-                    )
-                }
-            }
-            /*
-            is VirksomhetVurderes -> when (hendelse) {
-                is AngreVurderVirksomhet -> VirksomhetKlarTilVurdering
-                is FullførVurdering -> VirksomhetErVurdert
-                else -> nåværendeTilstand
-            }*/
-
-            // Tilstand: Alle de andre tilstandene som vi ikke håndterer enda
-            else -> {
-                Konsekvens(
-                    nåværendeTilstand,
-                    Either.Left(
-                        Feil("Something odd happened", HttpStatusCode.BadRequest),
-                    ),
-                )
-            }
-        }
+    fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
+        val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
         nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
-
-        println("Nåværrende tilstand: $nåværendeTilstand")
         return konsekvensAvUtførtTransisjon
     }
 }
