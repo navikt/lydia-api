@@ -31,6 +31,7 @@ const val NY_FLYT_PATH = "iasak/nyflyt"
 fun Route.nyFlyt(
     iaSakService: IASakService,
     iASamarbeidService: IASamarbeidService,
+    nyFlytService: NyFlytService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
@@ -48,6 +49,7 @@ fun Route.nyFlyt(
         fiaKontekst = FiaKontekst(
             iaSakService = iaSakService,
             iASamarbeidService = iASamarbeidService,
+            nyFlytService = nyFlytService,
         ),
     )
 
@@ -96,6 +98,30 @@ fun Route.nyFlyt(
                 either = iaSakEither,
                 orgnummer = orgnr,
                 auditType = AuditType.delete,
+                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    post("$NY_FLYT_PATH/{orgnummer}/fullfor-vurdering") {
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val tilstandsmaskin = tilstandsmaskinBuilder.build(orgnr)
+
+        call.somSuperbruker(adGrupper = adGrupper) { superbruker ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.FullførVurdering(orgnr = orgnr, årsak = "Legg til en årsak senere"),
+            )
+            konsekvens.endring.map { (it as IASak).toDto(navAnsatt = superbruker) }
+        }.also { iaSakEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSakEither,
+                orgnummer = orgnr,
+                auditType = AuditType.update,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
             )
         }.map {

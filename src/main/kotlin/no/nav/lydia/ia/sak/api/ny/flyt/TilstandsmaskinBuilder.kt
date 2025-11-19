@@ -118,6 +118,12 @@ sealed class Tilstand {
                     val sak = fiaKontekst.iaSakService.hentAktivSak(orgnummer = hendelse.orgnr)!!
                     fiaKontekst.iaSakService.slettSak(sak, sak.endretAvHendelseId)
                 }
+                is Hendelse.FullførVurdering -> {
+                    fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
+                        orgnummer = hendelse.orgnr,
+                        årsak = hendelse.årsak,
+                    )
+                }
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 }
@@ -208,4 +214,5 @@ sealed class Hendelse {
 data class FiaKontekst(
     val iaSakService: IASakService,
     val iASamarbeidService: IASamarbeidService,
+    val nyFlytService: NyFlytService,
 )

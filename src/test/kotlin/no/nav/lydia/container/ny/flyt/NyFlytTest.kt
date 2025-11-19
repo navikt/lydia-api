@@ -13,6 +13,7 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.domene.IASak
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class NyFlytTest {
@@ -62,5 +63,19 @@ class NyFlytTest {
             """.trimIndent(),
         )
         sakenErSlettet.shouldBeTrue()
+    }
+
+    @Ignore
+    fun `skal kunne fullføre vurdering som ikke medfører et samarbeid`() {
+        val orgnummer = VirksomhetHelper.nyttOrgnummer()
+        val vurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<IASakDto>()
+        vurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
+
+        val fullførVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/fullfor-vurdering")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<IASakDto>()
+        fullførVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
     }
 }

@@ -63,6 +63,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.dokument.dokumentPublisering
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
+import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.nyFlyt
 import no.nav.lydia.ia.sak.api.plan.iaSakPlan
 import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
@@ -563,6 +564,7 @@ private fun Application.lydiaRestApi(
             nyFlyt(
                 iaSakService = iaSakService,
                 iASamarbeidService = samarbeidService,
+                nyFlytService = NyFlytService(),
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
