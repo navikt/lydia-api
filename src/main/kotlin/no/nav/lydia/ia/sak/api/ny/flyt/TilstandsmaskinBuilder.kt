@@ -63,8 +63,8 @@ class Tilstandsmaskin(
         get() = tilstandRef.get()
         set(value) = tilstandRef.set(value)
 
-    fun prosessHendelse(hendelse: Hendelse): Pair<Tilstand, Either<Feil, Any?>> {
-        var resultatAvUtførtTransisjon: Pair<Tilstand, Either<Feil, Any?>> = when (nåværendeTilstand) {
+    fun prosessHendelse(hendelse: Hendelse): Konsekvens {
+        val konsekvensAvUtførtTransisjon: Konsekvens = when (nåværendeTilstand) {
             // Her beskriver vi alle transisjoner for hver tilstand
 
             // Tilstand: Virksomhet er klar til vurdering (IKKE_AKTIV)
@@ -75,16 +75,13 @@ class Tilstandsmaskin(
 
                 // Uhåndterte hendelser føres til samme Tilstand + Feil
                 else -> {
-                    Pair(
+                    Konsekvens(
                         nåværendeTilstand,
                         Either.Left(
                             Feil("Something odd happened", HttpStatusCode.BadRequest),
                         ),
                     )
                 }
-                /*
-                TODO: Bytt Pair med Konsekvens(val nyTilstand: Tilstand, endring: Either<Feil, Any?>)
-                 * */
             }
             /*
             is VirksomhetVurderes -> when (hendelse) {
@@ -95,7 +92,7 @@ class Tilstandsmaskin(
 
             // Tilstand: Alle de andre tilstandene som vi ikke håndterer enda
             else -> {
-                Pair(
+                Konsekvens(
                     nåværendeTilstand,
                     Either.Left(
                         Feil("Something odd happened", HttpStatusCode.BadRequest),
@@ -103,12 +100,17 @@ class Tilstandsmaskin(
                 )
             }
         }
-        nåværendeTilstand = resultatAvUtførtTransisjon.first
+        nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
 
         println("Nåværrende tilstand: $nåværendeTilstand")
-        return resultatAvUtførtTransisjon
+        return konsekvensAvUtførtTransisjon
     }
 }
+
+data class Konsekvens(
+    val nyTilstand: Tilstand,
+    val endring: Either<Feil, Any?>,
+)
 
 sealed class Tilstand {
     fun navn(): String = this.javaClass.simpleName
@@ -116,14 +118,14 @@ sealed class Tilstand {
     abstract fun utførTransisjon(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
-    ): Pair<Tilstand, Either<Feil, Any?>>
+    ): Konsekvens
 
     object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Pair<Tilstand, Either<Feil, IASak>> {
-            val resultat: Either<Feil, IASak> = when (hendelse) {
+        ): Konsekvens {
+            val endring: Either<Feil, IASak> = when (hendelse) {
                 is Hendelse.VurderVirksomhet -> {
                     fiaKontekst.iaSakService.opprettSakOgMerkSomVurdert(
                         orgnummer = hendelse.orgnr,
@@ -136,9 +138,9 @@ sealed class Tilstand {
                 }
             }
 
-            return Pair(
-                first = if (resultat.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
-                second = resultat,
+            return Konsekvens(
+                nyTilstand = if (endring.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
+                endring = endring,
             )
         }
     }
@@ -147,7 +149,7 @@ sealed class Tilstand {
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Pair<Tilstand, Either<Feil, Any?>> {
+        ): Konsekvens {
             TODO("Not yet implemented")
         }
     }
@@ -156,7 +158,7 @@ sealed class Tilstand {
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Pair<Tilstand, Either<Feil, Any?>> {
+        ): Konsekvens {
             TODO("Not yet implemented")
         }
     }
@@ -165,7 +167,7 @@ sealed class Tilstand {
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Pair<Tilstand, Either<Feil, Any?>> {
+        ): Konsekvens {
             TODO("Not yet implemented")
         }
     }
@@ -175,7 +177,7 @@ sealed class Tilstand {
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Pair<Tilstand, Either<Feil, Any?>> {
+        ): Konsekvens {
             TODO("Not yet implemented")
         }
     }
