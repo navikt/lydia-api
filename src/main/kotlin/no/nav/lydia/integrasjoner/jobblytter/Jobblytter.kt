@@ -9,7 +9,6 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksportEttSamarbeid
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
@@ -28,7 +27,6 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
-import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
@@ -60,7 +58,6 @@ object Jobblytter : CoroutineScope {
     private lateinit var iaSakStatusOppdaterer: IASakStatusOppdaterer
     private lateinit var iaSakEksporterer: IASakEksporterer
     private lateinit var iaSakStatistikkEksporterer: IASakStatistikkEksporterer
-    private lateinit var iaSakStatusExportør: IASakStatusEksportør
     private lateinit var næringsDownloader: NæringsDownloader
     private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
     private lateinit var iaSakhendelseStatusJobb: IaSakhendelseStatusJobb
@@ -86,7 +83,6 @@ object Jobblytter : CoroutineScope {
         iaSakStatusOppdaterer: IASakStatusOppdaterer,
         iaSakEksporterer: IASakEksporterer,
         iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
-        iaSakStatusExportør: IASakStatusEksportør,
         næringsDownloader: NæringsDownloader,
         statistikkViewOppdaterer: StatistikkViewOppdaterer,
         iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
@@ -110,7 +106,6 @@ object Jobblytter : CoroutineScope {
         )
         this.iaSakStatusOppdaterer = iaSakStatusOppdaterer
         this.iaSakEksporterer = iaSakEksporterer
-        this.iaSakStatusExportør = iaSakStatusExportør
         this.iaSakStatistikkEksporterer = iaSakStatistikkEksporterer
         this.næringsDownloader = næringsDownloader
         this.statistikkViewOppdaterer = statistikkViewOppdaterer
@@ -172,10 +167,6 @@ object Jobblytter : CoroutineScope {
 
                                     iaSakStatistikkEksport -> {
                                         iaSakStatistikkEksporterer.eksporter()
-                                    }
-
-                                    iaSakStatusExport -> {
-                                        iaSakStatusExportør.eksporter()
                                     }
 
                                     næringsImport -> {

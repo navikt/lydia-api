@@ -33,8 +33,6 @@ import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakProdusent
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
-import no.nav.lydia.ia.eksport.IASakStatusEksportør
-import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
 import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
@@ -166,10 +164,6 @@ fun startLydiaBackend() {
     )
     val samarbeidsplanBigqueryProdusent = SamarbeidsplanBigqueryProdusent(kafka = naisEnv.kafka)
     val samarbeidBigqueryProdusent = SamarbeidBigqueryProdusent(kafka = naisEnv.kafka)
-    val iaSakStatusProdusent = IASakStatusProdusent(
-        kafka = naisEnv.kafka,
-        iaSakRepository = iaSakRepository,
-    )
     val azureService = AzureService(
         tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnv),
         security = naisEnv.security,
@@ -220,7 +214,7 @@ fun startLydiaBackend() {
             oboTokenUtveksler = OboTokenUtveksler(naisEnvironment = naisEnv),
             virksomhetRepository = virksomhetRepository,
         ),
-        iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
+        iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent),
         samarbeidService = samarbeidService,
         planRepository = planRepository,
         endringsObservers = listOf(eierskapsendringObserver),
@@ -291,10 +285,6 @@ fun startLydiaBackend() {
             iaSakRepository = iaSakRepository,
             iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
             iaSakStatistikkProdusent = iaSakStatistikkProdusent,
-        ),
-        iaSakStatusExportør = IASakStatusEksportør(
-            iaSakRepository = IASakRepository(dataSource = dataSource),
-            iaSakStatusProdusent = iaSakStatusProdusent,
         ),
         næringsDownloader = NæringsDownloader(
             url = naisEnv.integrasjoner.ssbNæringsUrl,
@@ -442,7 +432,6 @@ private fun jobblytter(
     iaSakStatusOppdaterer: IASakStatusOppdaterer,
     iaSakEksporterer: IASakEksporterer,
     iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
-    iaSakStatusExportør: IASakStatusEksportør,
     næringsDownloader: NæringsDownloader,
     statistikkViewOppdaterer: StatistikkViewOppdaterer,
     iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
@@ -461,7 +450,6 @@ private fun jobblytter(
             iaSakStatusOppdaterer = iaSakStatusOppdaterer,
             iaSakEksporterer = iaSakEksporterer,
             iaSakStatistikkEksporterer = iaSakStatistikkEksporterer,
-            iaSakStatusExportør = iaSakStatusExportør,
             næringsDownloader = næringsDownloader,
             statistikkViewOppdaterer = statistikkViewOppdaterer,
             iaSakhendelseStatusJobb = iaSakhendelseStatusJobb,
