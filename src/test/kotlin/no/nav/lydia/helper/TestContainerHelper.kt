@@ -125,7 +125,6 @@ class TestContainerHelper {
         val authContainerHelper = AuthContainerHelper(network = network, log = log)
         val kafkaContainerHelper = KafkaContainerHelper(network = network, log = log)
         val postgresContainerHelper = PostgresContainerHelper(network = network, log = log)
-        val piaPdfgenContainerHelper = PiaPdfgenContainerHelper(network = network, log = log)
         private val wiremockContainerHelper = WiremockContainerHelper()
 
         val applikasjon: GenericContainer<*> = GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
@@ -133,7 +132,6 @@ class TestContainerHelper {
                 authContainerHelper.container,
                 kafkaContainerHelper.container,
                 postgresContainerHelper.container,
-                piaPdfgenContainerHelper.container,
             )
             .withNetwork(network)
             .withExposedPorts(8080)
@@ -152,7 +150,6 @@ class TestContainerHelper {
                     .plus(authContainerHelper.envVars())
                     .plus(kafkaContainerHelper.envVars())
                     .plus(postgresContainerHelper.envVars())
-                    .plus(piaPdfgenContainerHelper.envVars())
                     .plus(wiremockContainerHelper.envVars()),
             )
             .apply { start() }

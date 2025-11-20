@@ -49,7 +49,6 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
@@ -64,7 +63,6 @@ class IASakService(
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val iaSakLeveranseRepository: IASakLeveranseRepository,
     private val årsakService: ÅrsakService,
-    private val journalpostService: JournalpostService,
     private val samarbeidService: IASamarbeidService,
     private val iaSakObservers: List<Observer<IASak>>,
     private val planRepository: PlanRepository,
@@ -214,17 +212,6 @@ class IASakService(
                     sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, resulterendeStatus = nyStatus)
                     årsakService.lagreÅrsak(sakshendelse)
                     samarbeidService.oppdaterSamarbeid(sakshendelse, sak)
-                    when (sakshendelse.hendelsesType) {
-                        IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
-                            sakshendelse = sakshendelse,
-                            navAnsattMedSaksbehandlerRolle = saksbehandler,
-                        )
-                            .onLeft {
-                                log.error("Feil ved journalføring av hendelseid: '${sakshendelse.id}'. Feil: ${it.feilmelding}")
-                            }
-
-                        else -> {}
-                    }
                     return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                         .onRight { lagretSak ->
                             endringsObservers.forEach { it.receive(før = umodifisertIaSak, endring = sakshendelse, etter = lagretSak) }

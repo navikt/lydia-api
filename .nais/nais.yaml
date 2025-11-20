@@ -39,10 +39,7 @@ spec:
         - id: elastic
   accessPolicy:
     outbound:
-      rules:
-        - application: pia-pdfgen
       external:
-        - host: {{journalpostHost}}
         - host: data.ssb.no
         - host: {{salesforceTokenHost}}
         - host: {{salesforceApiHost}}
@@ -90,9 +87,3 @@ spec:
       value: {{teamPiaGroup}}
     - name: SALESFORCE_TOKEN_BASE_URL
       value: {{salesforceTokenBaseUrl}}
-    - name: JOURNALPOST_V1_URL
-      value: {{journalpostApi}}
-    - name: PIA_PDFGEN_URL
-      value: http://pia-pdfgen
-    - name: JOURNALPOST_SCOPE
-      value: {{journalpostOboScope}}

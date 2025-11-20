@@ -1,4 +1,4 @@
-package no.nav.lydia.integrasjoner.pdfgen
+package no.nav.lydia.ia.sak.api.dokument
 
 import kotlinx.serialization.Serializable
 
