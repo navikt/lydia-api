@@ -2,34 +2,117 @@ package no.nav.lydia.container.ny.flyt
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
+import ia.felles.definisjoner.bransjer.Bransje
+import ia.felles.definisjoner.bransjer.BransjeId
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Topic
+import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
+import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
+import no.nav.lydia.tilgangskontroll.fia.Rolle
+import no.nav.lydia.virksomhet.domene.Næringsgruppe
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class NyFlytTest {
+    companion object {
+        private val iaSakTopic = Topic.IA_SAK_TOPIC
+        private val iaSakStatistikkTopic = Topic.IA_SAK_STATISTIKK_TOPIC
+        private val iaSakKonsument = kafkaContainerHelper.nyKonsument(topic = iaSakTopic)
+        private val iaSakStatistikkKonsument = kafkaContainerHelper.nyKonsument(topic = iaSakStatistikkTopic)
+
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            iaSakKonsument.subscribe(mutableListOf(iaSakTopic.navn))
+            iaSakStatistikkKonsument.subscribe(mutableListOf(iaSakStatistikkTopic.navn))
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            iaSakKonsument.unsubscribe()
+            iaSakStatistikkKonsument.unsubscribe()
+            iaSakKonsument.close()
+            iaSakStatistikkKonsument.close()
+        }
+    }
+
     @Test
     fun `skal kunne vurdere samarbeid med en virksomhet`() {
-        val orgnummer = VirksomhetHelper.nyttOrgnummer()
+        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        val virksomhet = TestVirksomhet.nyVirksomhet(
+            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+        )
+        lastInnNyVirksomhet(virksomhet)
+        val orgnummer = virksomhet.orgnr
         val res = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>()
 
         res.second.statusCode shouldBe HttpStatusCode.Created.value
-        res.third.get().status shouldBe IASak.Status.VURDERES
+        val sak = res.third.get()
+        sak.status shouldBe IASak.Status.VURDERES
+
+        // Sjekk avhengigheter er varslet
+        runBlocking {
+            // Sak observer - IASakProdusent
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(key = sak.saksnummer, konsument = iaSakKonsument) { meldinger ->
+                meldinger.forAll { hendelse ->
+                    hendelse shouldContain sak.saksnummer
+                    hendelse shouldContain sak.orgnr
+                }
+                meldinger shouldHaveSize 2
+                meldinger[0] shouldContain IASak.Status.NY.name
+                meldinger[1] shouldContain IASak.Status.VURDERES.name
+            }
+            // IASakStatistikkProdusent
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = sak.saksnummer,
+                konsument = iaSakStatistikkKonsument,
+            ) { meldinger ->
+                val objektene = meldinger.map {
+                    Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
+                }
+                objektene shouldHaveSize 2
+                objektene.forExactlyOne {
+                    it.saksnummer shouldBe sak.saksnummer
+                    it.eierAvSak shouldBe null
+                    it.status shouldBe IASak.Status.VURDERES
+                    it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
+                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
+                    it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
+                    it.bransjeprogram shouldBe Bransje.ANLEGG
+                    it.endretAvRolle shouldBe Rolle.SUPERBRUKER
+                    it.enhetsnummer shouldBe "2900"
+                    it.enhetsnavn shouldBe "IT-avdelingen" // -- Bør ha fallback til minst spesifikk avdeling
+                }
+            }
+        }
     }
 
     @Test

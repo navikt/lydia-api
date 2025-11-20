@@ -50,6 +50,22 @@ class IASakStatistikkEksportererTest {
             konsument.unsubscribe()
             konsument.close()
         }
+
+        fun hentFraKvartal(
+            it: IASakStatistikkProdusent.IASakStatistikkValue,
+            kolonne: String,
+        ) = postgresContainerHelper.hentEnkelKolonne<Double>(
+            "select $kolonne from sykefravar_statistikk_virksomhet where orgnr = '${it.orgnr}' and kvartal = ${it.kvartal} and arstall = ${it.arstall}",
+        )
+            .plusOrMinus(0.01)
+
+        fun hentFraSiste4Kvartaler(
+            it: IASakStatistikkProdusent.IASakStatistikkValue,
+            kolonne: String,
+        ) = postgresContainerHelper.hentEnkelKolonne<Double>(
+            "select $kolonne from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr = '${it.orgnr}'",
+        )
+            .plusOrMinus(0.01)
     }
 
     @Test
@@ -162,20 +178,4 @@ class IASakStatistikkEksportererTest {
             }
         }
     }
-
-    private fun hentFraKvartal(
-        it: IASakStatistikkProdusent.IASakStatistikkValue,
-        kolonne: String,
-    ) = postgresContainerHelper.hentEnkelKolonne<Double>(
-        "select $kolonne from sykefravar_statistikk_virksomhet where orgnr = '${it.orgnr}' and kvartal = ${it.kvartal} and arstall = ${it.arstall}",
-    )
-        .plusOrMinus(0.01)
-
-    private fun hentFraSiste4Kvartaler(
-        it: IASakStatistikkProdusent.IASakStatistikkValue,
-        kolonne: String,
-    ) = postgresContainerHelper.hentEnkelKolonne<Double>(
-        "select $kolonne from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr = '${it.orgnr}'",
-    )
-        .plusOrMinus(0.01)
 }
