@@ -567,6 +567,7 @@ private fun Application.lydiaRestApi(
                 nyFlytService = NyFlytService(
                     iaSakRepository = IASakRepository(dataSource = dataSource),
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+                    årsakRepository = ÅrsakRepository(dataSource = dataSource),
                 ),
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,

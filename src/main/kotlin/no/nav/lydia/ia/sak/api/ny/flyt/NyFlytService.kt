@@ -9,6 +9,8 @@ import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
+import no.nav.lydia.ia.årsak.db.ÅrsakRepository
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
@@ -16,16 +18,16 @@ import java.time.LocalDateTime
 class NyFlytService(
     val iaSakRepository: IASakRepository,
     val iaSakshendelseRepository: IASakshendelseRepository,
+    val årsakRepository: ÅrsakRepository,
 ) {
     fun fullførVurderingAvVirksomhetUtenSamarbeid(
         orgnummer: String,
-        årsak: String = "Legg til en årsak senere",
+        årsak: ValgtÅrsak,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
     ): Either<Feil, Any?> {
         val iaSak = hentAktivSak(orgnummer = orgnummer)!!
 
-        // lage hendelsen
         val hendelse = IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -37,18 +39,24 @@ class NyFlytService(
             navEnhet = navEnhet,
             resulterendeStatus = null,
         )
-        // lagre hendelsen
-
         iaSakshendelseRepository.lagreHendelse(
             hendelse = hendelse,
             sistEndretAvHendelseId = null,
             resulterendeStatus = IASak.Status.VURDERT,
         )
 
-        // oppdater status
-        // lagre årsak
-        // ..
-        TODO("Ikke implementert ennå")
+        årsakRepository.lagreÅrsakForHendelse(
+            hendelseId = hendelse.id,
+            valgtÅrsak = årsak,
+        )
+        val oppdatertSak = iaSakRepository.oppdaterStatusPåSak(
+            saksnummer = iaSak.saksnummer,
+            status = IASak.Status.VURDERT,
+            endretAvHendelseId = hendelse.id,
+            endretAv = saksbehandler.navIdent,
+        )
+
+        return oppdatertSak
     }
 
     private fun hentAktivSak(orgnummer: String): IASak? =

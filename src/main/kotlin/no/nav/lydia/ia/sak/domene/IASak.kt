@@ -2,7 +2,9 @@ package no.nav.lydia.ia.sak.domene
 
 import arrow.core.Either
 import arrow.core.right
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
@@ -527,6 +529,21 @@ class IASak private constructor(
                 status = Status.valueOf(this.string("status")),
                 endretAvHendelseId = this.string("endret_av_hendelse"),
                 eidAv = this.stringOrNull("eid_av"),
+            )
+
+        fun Row.tilIASakDto(): IASakDto =
+            IASakDto(
+                saksnummer = this.string("saksnummer"),
+                orgnr = this.string("orgnr"),
+                opprettetTidspunkt = this.localDateTime("opprettet").toKotlinLocalDateTime(),
+                opprettetAv = this.string("opprettet_av"),
+                endretTidspunkt = this.localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
+                endretAv = this.stringOrNull("endret_av"),
+                status = Status.valueOf(this.string("status")),
+                endretAvHendelseId = this.string("endret_av_hendelse"),
+                eidAv = this.stringOrNull("eid_av"),
+                gyldigeNesteHendelser = emptyList(),
+                lukket = false,
             )
 
         // -- trengs da IASak ikke er en data class

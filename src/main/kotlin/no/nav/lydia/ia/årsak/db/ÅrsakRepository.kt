@@ -4,18 +4,27 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import javax.sql.DataSource
 
 class ÅrsakRepository(
     private val dataSource: DataSource,
 ) {
     fun lagreÅrsakForHendelse(sakshendelse: VirksomhetIkkeAktuellHendelse) =
-        using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                sakshendelse.valgtÅrsak.begrunnelser.forEach { begrunnelse ->
-                    tx.run(
-                        queryOf(
-                            """
+        lagreÅrsakForHendelse(
+            hendelseId = sakshendelse.id,
+            valgtÅrsak = sakshendelse.valgtÅrsak,
+        )
+
+    fun lagreÅrsakForHendelse(
+        hendelseId: String,
+        valgtÅrsak: ValgtÅrsak,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            valgtÅrsak.begrunnelser.forEach { begrunnelse ->
+                tx.run(
+                    queryOf(
+                        """
                             INSERT INTO hendelse_begrunnelse (
                                 hendelse_id,
                                 aarsak,
@@ -31,17 +40,17 @@ class ÅrsakRepository(
                                 :begrunnelse_enum
                             ) 
                             ON CONFLICT DO NOTHING  
-                            """.trimMargin(),
-                            mapOf(
-                                "hendelse_id" to sakshendelse.id,
-                                "aarsak" to sakshendelse.valgtÅrsak.type.navn,
-                                "begrunnelse" to begrunnelse.navn,
-                                "aarsak_enum" to sakshendelse.valgtÅrsak.type.name,
-                                "begrunnelse_enum" to begrunnelse.name,
-                            ),
-                        ).asUpdate,
-                    )
-                }
+                        """.trimMargin(),
+                        mapOf(
+                            "hendelse_id" to hendelseId,
+                            "aarsak" to valgtÅrsak.type.navn,
+                            "begrunnelse" to begrunnelse.navn,
+                            "aarsak_enum" to valgtÅrsak.type.name,
+                            "begrunnelse_enum" to begrunnelse.name,
+                        ),
+                    ).asUpdate,
+                )
             }
         }
+    }
 }

@@ -1,9 +1,11 @@
 package no.nav.lydia.container.ny.flyt
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import com.github.kittinunf.fuel.core.extensions.jsonBody
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
@@ -13,7 +15,9 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.domene.IASak
-import kotlin.test.Ignore
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import kotlin.test.Test
 
 class NyFlytTest {
@@ -65,7 +69,7 @@ class NyFlytTest {
         sakenErSlettet.shouldBeTrue()
     }
 
-    @Ignore
+    @Test
     fun `skal kunne fullføre vurdering som ikke medfører et samarbeid`() {
         val orgnummer = VirksomhetHelper.nyttOrgnummer()
         val vurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
@@ -75,7 +79,18 @@ class NyFlytTest {
 
         val fullførVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/fullfor-vurdering")
             .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(
+                Json.encodeToString(
+                    ValgtÅrsak(
+                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(
+                            VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                        ),
+                    ),
+                ),
+            )
             .tilSingelRespons<IASakDto>()
         fullførVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
+        fullførVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
     }
 }

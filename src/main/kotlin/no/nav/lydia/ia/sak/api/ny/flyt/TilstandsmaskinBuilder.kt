@@ -6,6 +6,7 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
@@ -28,6 +29,7 @@ class TilstandsmaskinBuilder private constructor(
     }
 
     private fun hentTilstandForVirksomhet(orgnr: String): Tilstand =
+        // TODO: kom tilbake - bare hent status
         fiaKontekst.iaSakService.hentAktivSak(orgnummer = orgnr)?.let {
             val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(it)
 
@@ -185,7 +187,7 @@ sealed class Hendelse {
 
     data class FullførVurdering(
         val orgnr: String,
-        val årsak: String,
+        val årsak: ValgtÅrsak,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()

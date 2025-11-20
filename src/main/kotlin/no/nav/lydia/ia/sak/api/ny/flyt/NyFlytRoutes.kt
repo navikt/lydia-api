@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.log
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.application
@@ -15,11 +16,13 @@ import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
@@ -118,17 +121,18 @@ fun Route.nyFlyt(
     post("$NY_FLYT_PATH/{orgnummer}/fullfor-vurdering") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val tilstandsmaskin = tilstandsmaskinBuilder.build(orgnr)
+        val årsak = call.receive<ValgtÅrsak>()
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = Hendelse.FullførVurdering(
                     orgnr = orgnr,
-                    årsak = "Legg til en årsak senere",
+                    årsak = årsak,
                     saksbehandler = saksbehandler,
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.endring.map { (it as IASak).toDto(navAnsatt = saksbehandler) }
+            konsekvens.endring.map { (it as IASakDto) }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,

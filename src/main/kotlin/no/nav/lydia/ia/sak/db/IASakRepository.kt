@@ -9,9 +9,11 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASakDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import java.time.LocalDateTime
@@ -88,6 +90,39 @@ class IASakRepository(
             }
         }
 
+    fun oppdaterStatusPåSak(
+        saksnummer: String,
+        status: IASak.Status,
+        endretAv: String,
+        endretAvHendelseId: String,
+        sistEndret: LocalDateTime = LocalDateTime.now(),
+    ): Either<Feil, IASakDto> =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                        UPDATE ia_sak 
+                        SET
+                            status = :status,
+                            endret_av = :endret_av,
+                            endret = :endret,
+                            endret_av_hendelse = :endret_av_hendelse
+                        WHERE saksnummer = :saksnummer
+                        RETURNING *
+                        """.trimMargin(),
+                        mapOf(
+                            "saksnummer" to saksnummer,
+                            "status" to status.name,
+                            "endret_av" to endretAv,
+                            "endret_av_hendelse" to endretAvHendelseId,
+                            "endret" to sistEndret,
+                        ),
+                    ).map(this::mapRowToIASakDto).asSingle,
+                )?.right() ?: IASakError.`fikk ikke oppdatert sak`.left()
+            }
+        }
+
     fun slettSak(
         saksnummer: String,
         sistEndretAvHendelseId: String?,
@@ -122,6 +157,8 @@ class IASakRepository(
     }
 
     private fun mapRowToIASak(row: Row): IASak = row.tilIASak()
+
+    private fun mapRowToIASakDto(row: Row): IASakDto = row.tilIASakDto()
 
     fun hentSaker(orgnummer: String): List<IASak> =
         using(sessionOf(dataSource)) { session ->
@@ -162,20 +199,6 @@ class IASakRepository(
                 queryOf("SELECT * FROM ia_sak").map(this::mapRowToIASak).asList,
             )
         }
-
-    fun oppdaterSistEndret(
-        iaSak: IASak,
-        sistEndret: LocalDateTime = LocalDateTime.now(),
-    ) {
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    "UPDATE ia_sak SET endret = :sistEndret WHERE saksnummer = :saksnummer",
-                    mapOf("sistEndret" to sistEndret, "saksnummer" to iaSak.saksnummer),
-                ).asUpdate,
-            )
-        }
-    }
 
     fun hentUrørteSakerIVurderesUtenEier(): List<IASak> =
         using(sessionOf(dataSource)) { session ->
