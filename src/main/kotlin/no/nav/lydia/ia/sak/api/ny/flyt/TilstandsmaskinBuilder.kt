@@ -29,11 +29,10 @@ class TilstandsmaskinBuilder private constructor(
     }
 
     private fun hentTilstandForVirksomhet(orgnr: String): Tilstand =
-        // TODO: kom tilbake - bare hent status
-        fiaKontekst.iaSakService.hentAktivSak(orgnummer = orgnr)?.let {
-            val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(it)
+        fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = orgnr)?.let { iASakDto ->
+            val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(iASakDto.saksnummer)
 
-            when (it.status) {
+            when (iASakDto.status) {
                 IASak.Status.NY,
                 IASak.Status.IKKE_AKTIV,
                 IASak.Status.IKKE_AKTUELL,

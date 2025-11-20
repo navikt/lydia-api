@@ -3,7 +3,7 @@ package no.nav.lydia.ia.sak.api.ny.flyt
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto.Companion.erLukket
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
@@ -26,7 +26,7 @@ class NyFlytService(
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
     ): Either<Feil, Any?> {
-        val iaSak = hentAktivSak(orgnummer = orgnummer)!!
+        val iaSak = hentAktivIASakDto(orgnummer = orgnummer)!!
 
         val hendelse = IASakshendelse(
             id = ULID.random(),
@@ -59,8 +59,8 @@ class NyFlytService(
         return oppdatertSak
     }
 
-    private fun hentAktivSak(orgnummer: String): IASak? =
-        iaSakRepository.hentSaker(orgnummer = orgnummer)
+    fun hentAktivIASakDto(orgnummer: String): IASakDto? =
+        iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer)
             .sortedByDescending { it.opprettetTidspunkt }
-            .firstOrNull { !it.erLukket() }
+            .firstOrNull { !it.lukket }
 }

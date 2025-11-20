@@ -177,6 +177,23 @@ class IASakRepository(
             )
         }
 
+    fun hentAlleSakerForVirksomhet(orgnummer: String): List<IASakDto> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_sak
+                    WHERE orgnr = :orgnr
+                    order by endret
+                    """.trimMargin(),
+                    mapOf(
+                        "orgnr" to orgnummer,
+                    ),
+                ).map(this::mapRowToIASakDto).asList,
+            )
+        }
+
     fun hentIASak(saksnummer: String): IASak? =
         using(sessionOf(dataSource)) { session ->
             session.run(
