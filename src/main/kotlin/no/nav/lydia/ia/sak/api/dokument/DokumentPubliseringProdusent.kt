@@ -11,9 +11,6 @@ import no.nav.lydia.Topic
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.integrasjoner.pdfgen.DokumentPubliseringSakDto
-import no.nav.lydia.integrasjoner.pdfgen.SamarbeidDto
-import no.nav.lydia.integrasjoner.pdfgen.VirksomhetDto
 
 class DokumentPubliseringProdusent(
     kafka: Kafka,

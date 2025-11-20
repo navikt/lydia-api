@@ -82,11 +82,9 @@ import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
-import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.kvittering.KvitteringConsumer
-import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetConsumer
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetRepository
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetService
@@ -108,7 +106,6 @@ import no.nav.lydia.sykefraværsstatistikk.api.sykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
-import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
@@ -208,12 +205,6 @@ fun startLydiaBackend() {
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
         årsakService = ÅrsakService(årsakRepository = årsakRepository),
-        journalpostService = JournalpostService(
-            naisEnvironment = naisEnv,
-            pdfgenService = PiaPdfgenService(naisEnvironment = naisEnv),
-            oboTokenUtveksler = OboTokenUtveksler(naisEnvironment = naisEnv),
-            virksomhetRepository = virksomhetRepository,
-        ),
         iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent),
         samarbeidService = samarbeidService,
         planRepository = planRepository,
