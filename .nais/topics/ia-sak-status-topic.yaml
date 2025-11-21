@@ -14,3 +14,7 @@ spec:
     replication: 3  # see min/max requirements
     retentionBytes: -1  # -1 means unlimited
     retentionHours: 17520  # 2 år
+  acl:
+    - team: pia
+      application: lydia-api
+      access: readwrite   # read, write, readwrite
