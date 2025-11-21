@@ -28,7 +28,6 @@ jobs:
             .nais/topics/jobblytter-topic.yaml,\
             .nais/topics/ia-sak-topic.yaml,\
             .nais/topics/ia-sak-statistikk-topic.yaml,\
-            .nais/topics/ia-sak-status-topic.yaml,\
             .nais/topics/sporreundersokelse-topic.yaml,\
             .nais/topics/sporreundersokelse-antall-svar-topic.yaml,\
             .nais/topics/sporreundersokelse-svar-topic.yaml,\
