@@ -17,11 +17,9 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
@@ -78,7 +76,7 @@ fun Route.nyFlyt(
             )
             application.log.info("NyTilstand etter hendelse ${hendelse.navn()} er: '${konsekvens.nyTilstand}'")
 
-            konsekvens.endring.map { (it as IASak).toDto(navAnsatt = superbruker) }
+            konsekvens.endring.map { it as IASakDto }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,

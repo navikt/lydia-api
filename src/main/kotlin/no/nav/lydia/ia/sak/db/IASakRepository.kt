@@ -3,6 +3,7 @@ package no.nav.lydia.ia.sak.db
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import kotlinx.datetime.toJavaLocalDateTime
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -50,7 +51,7 @@ class IASakRepository(
                         "orgnr" to iaSakDto.orgnr,
                         "status" to iaSakDto.status.name,
                         "opprettet_av" to iaSakDto.opprettetAv,
-                        "opprettet" to iaSakDto.opprettetTidspunkt,
+                        "opprettet" to iaSakDto.opprettetTidspunkt.toJavaLocalDateTime(),
                         "endret_av_hendelse" to iaSakDto.endretAvHendelseId,
                     ),
                 ).map(this::mapRowToIASakDto).asSingle,
