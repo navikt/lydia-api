@@ -22,6 +22,41 @@ import javax.sql.DataSource
 class IASakRepository(
     val dataSource: DataSource,
 ) {
+    fun opprettSak(iaSakDto: IASakDto): IASakDto =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    INSERT INTO ia_sak (
+                        saksnummer,
+                        orgnr,
+                        status,
+                        opprettet_av,
+                        opprettet,
+                        endret_av_hendelse
+                    )
+                    VALUES (
+                        :saksnummer,
+                        :orgnr,
+                        :status,
+                        :opprettet_av,
+                        :opprettet,
+                        :endret_av_hendelse
+                    )
+                    returning *                            
+                    """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to iaSakDto.saksnummer,
+                        "orgnr" to iaSakDto.orgnr,
+                        "status" to iaSakDto.status.name,
+                        "opprettet_av" to iaSakDto.opprettetAv,
+                        "opprettet" to iaSakDto.opprettetTidspunkt,
+                        "endret_av_hendelse" to iaSakDto.endretAvHendelseId,
+                    ),
+                ).map(this::mapRowToIASakDto).asSingle,
+            )!!
+        }
+
     fun opprettSak(iaSak: IASak): IASak =
         using(sessionOf(dataSource)) { session ->
             session.run(
