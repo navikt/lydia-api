@@ -98,11 +98,11 @@ fun Route.nyFlyt(
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val tilstandsmaskin = tilstandsmaskinBuilder.build(orgnr)
 
-        call.somSuperbruker(adGrupper = adGrupper) { superbruker ->
+        call.somSuperbruker(adGrupper = adGrupper) {
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = Hendelse.AngreVurderVirksomhet(orgnr = orgnr),
             )
-            konsekvens.endring.map { (it as IASak).toDto(navAnsatt = superbruker) }
+            konsekvens.endring.map { it as IASakDto }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,

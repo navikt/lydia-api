@@ -120,8 +120,8 @@ sealed class Tilstand {
         ): Konsekvens {
             val endring = when (hendelse) {
                 is Hendelse.AngreVurderVirksomhet -> {
-                    val sak = fiaKontekst.iaSakService.hentAktivSak(orgnummer = hendelse.orgnr)!!
-                    fiaKontekst.iaSakService.slettSak(sak, sak.endretAvHendelseId)
+                    val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
+                    fiaKontekst.nyFlytService.slettSak(sakDto)
                 }
                 is Hendelse.FullførVurdering -> {
                     fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(

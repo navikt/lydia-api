@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
@@ -63,4 +64,12 @@ class NyFlytService(
         iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer)
             .sortedByDescending { it.opprettetTidspunkt }
             .firstOrNull { !it.lukket }
+
+    fun slettSak(sakDto: IASakDto): Either<Feil, IASakDto> =
+        try {
+            iaSakRepository.slettSak(saksnummer = sakDto.saksnummer, sistEndretAvHendelseId = null)
+            Either.Right(sakDto)
+        } catch (_: Exception) {
+            Either.Left(IASakError.`fikk ikke slettet sak`)
+        }
 }
