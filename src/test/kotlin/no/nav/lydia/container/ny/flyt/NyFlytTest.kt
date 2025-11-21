@@ -100,6 +100,7 @@ class NyFlytTest {
                 }
                 objektene shouldHaveSize 2
                 objektene.forExactlyOne {
+                    it.orgnr shouldBe sak.orgnr
                     it.saksnummer shouldBe sak.saksnummer
                     it.eierAvSak shouldBe null
                     it.status shouldBe IASak.Status.VURDERES

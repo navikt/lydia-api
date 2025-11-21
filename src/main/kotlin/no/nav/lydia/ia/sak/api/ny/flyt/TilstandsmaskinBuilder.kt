@@ -5,7 +5,8 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
@@ -33,22 +34,22 @@ class TilstandsmaskinBuilder private constructor(
             val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(iASakDto.saksnummer)
 
             when (iASakDto.status) {
-                IASak.Status.NY,
-                IASak.Status.IKKE_AKTIV,
-                IASak.Status.IKKE_AKTUELL,
-                IASak.Status.SLETTET,
-                IASak.Status.FULLFØRT,
+                Status.NY,
+                Status.IKKE_AKTIV,
+                Status.IKKE_AKTUELL,
+                Status.SLETTET,
+                Status.FULLFØRT,
                 -> Tilstand.VirksomhetKlarTilVurdering
 
-                IASak.Status.VURDERES,
+                Status.VURDERES,
                 -> Tilstand.VirksomhetVurderes
 
-                IASak.Status.VURDERT,
+                Status.VURDERT,
                 -> Tilstand.VirksomhetErVurdert
 
-                IASak.Status.KONTAKTES,
-                IASak.Status.KARTLEGGES,
-                IASak.Status.VI_BISTÅR,
+                Status.KONTAKTES,
+                Status.KARTLEGGES,
+                Status.VI_BISTÅR,
                 -> if (aktiveSamarbeid.isNotEmpty()) {
                     Tilstand.VirksomhetHarEttAktivtSamarbeid
                 } else {
@@ -93,9 +94,10 @@ sealed class Tilstand {
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
         ): Konsekvens {
-            val endring: Either<Feil, IASak> = when (hendelse) {
+            val endring: Either<Feil, IASakDto> = when (hendelse) {
                 is Hendelse.VurderVirksomhet -> {
-                    fiaKontekst.iaSakService.opprettSakOgMerkSomVurdert(
+                    // TODO: lag en nyFlytService.opprettSakOgMerkSomVurdert()
+                    fiaKontekst.nyFlytService.opprettSakOgMerkSomVurdert(
                         orgnummer = hendelse.orgnr,
                         superbruker = hendelse.superbruker,
                         navEnhet = hendelse.navEnhet,
