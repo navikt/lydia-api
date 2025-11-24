@@ -138,6 +138,8 @@ class NyFlytTest {
             .tilSingelRespons<IASakDto>()
         vurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
 
+        val sak = vurderRes.third.get()
+
         val angreVurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/angre-vurdering")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>()
@@ -151,6 +153,37 @@ class NyFlytTest {
             """.trimIndent(),
         )
         sakenErSlettet.shouldBeTrue()
+
+        // Sjekk avhengigheter er varslet
+        runBlocking {
+            // Sak observer - IASakProdusent
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(key = sak.saksnummer, konsument = iaSakKonsument) { meldinger ->
+                meldinger.forAll { hendelse ->
+                    hendelse shouldContain sak.saksnummer
+                    hendelse shouldContain sak.orgnr
+                }
+                meldinger shouldHaveSize 3
+                meldinger[0] shouldContain IASak.Status.NY.name
+                meldinger[1] shouldContain IASak.Status.VURDERES.name
+                meldinger[2] shouldContain IASak.Status.SLETTET.name
+            }
+            // IASakStatistikkProdusent
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = sak.saksnummer,
+                konsument = iaSakStatistikkKonsument,
+            ) { meldinger ->
+                val objektene = meldinger.map {
+                    Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
+                }
+                objektene shouldHaveSize 3
+                objektene.forExactlyOne {
+                    it.orgnr shouldBe sak.orgnr
+                    it.saksnummer shouldBe sak.saksnummer
+                    it.eierAvSak shouldBe null
+                    it.status shouldBe IASak.Status.SLETTET
+                }
+            }
+        }
     }
 
     @Test

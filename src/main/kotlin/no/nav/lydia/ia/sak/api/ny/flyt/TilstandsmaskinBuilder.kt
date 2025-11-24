@@ -123,7 +123,7 @@ sealed class Tilstand {
             val endring = when (hendelse) {
                 is Hendelse.AngreVurderVirksomhet -> {
                     val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
-                    fiaKontekst.nyFlytService.slettSak(sakDto)
+                    fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
                 }
                 is Hendelse.FullførVurdering -> {
                     fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
