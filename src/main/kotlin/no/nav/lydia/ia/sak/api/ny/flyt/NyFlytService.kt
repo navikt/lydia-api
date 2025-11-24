@@ -24,7 +24,7 @@ class NyFlytService(
     val iaSakRepository: IASakRepository,
     val iaSakshendelseRepository: IASakshendelseRepository,
     val årsakRepository: ÅrsakRepository,
-    val iaSakObservers: List<Observer<IASakDto>> = emptyList(),
+    val iaSakObservers: List<Observer<IASakDto>>,
 ) {
     private fun varsleIASakObservers(sakDto: IASakDto) {
         iaSakObservers.forEach { observer -> observer.receive(input = sakDto) }

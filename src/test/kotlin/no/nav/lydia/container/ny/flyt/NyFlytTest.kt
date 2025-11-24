@@ -56,8 +56,8 @@ class NyFlytTest {
         @JvmStatic
         fun tearDown() {
             iaSakKonsument.unsubscribe()
-            iaSakStatistikkKonsument.unsubscribe()
             iaSakKonsument.close()
+            iaSakStatistikkKonsument.unsubscribe()
             iaSakStatistikkKonsument.close()
         }
     }

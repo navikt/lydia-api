@@ -45,6 +45,8 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
+import no.nav.lydia.ia.eksport.ny.flyt.IASakDtoProdusent
+import no.nav.lydia.ia.eksport.ny.flyt.IASakDtoStatistikkProdusent
 import no.nav.lydia.ia.sak.EierskapsendringObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
@@ -148,7 +150,16 @@ fun startLydiaBackend() {
     val auditLog = AuditLog(naisEnv.miljø)
     val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
     val iaSakProdusent = IASakProdusent(kafka = naisEnv.kafka)
+    val iaSakDtoProdusent = IASakDtoProdusent(kafka = naisEnv.kafka)
     val iaSakStatistikkProdusent = IASakStatistikkProdusent(
+        kafka = naisEnv.kafka,
+        virksomhetRepository = virksomhetRepository,
+        sykefraværsstatistikkService = sykefraværsstatistikkService,
+        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+        geografiService = GeografiService(),
+        sistePubliseringService = sistePubliseringService,
+    )
+    val iaSakDtoStatistikkProdusent = IASakDtoStatistikkProdusent(
         kafka = naisEnv.kafka,
         virksomhetRepository = virksomhetRepository,
         sykefraværsstatistikkService = sykefraværsstatistikkService,
@@ -217,6 +228,12 @@ fun startLydiaBackend() {
             spørreundersøkelseBigqueryProdusent,
         ),
         iaTeamService = iaTeamService,
+    )
+    val nyFlytService = NyFlytService(
+        iaSakRepository = IASakRepository(dataSource = dataSource),
+        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+        årsakRepository = ÅrsakRepository(dataSource = dataSource),
+        iaSakObservers = listOf(iaSakDtoProdusent, iaSakDtoStatistikkProdusent),
     )
 
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
@@ -383,6 +400,7 @@ fun startLydiaBackend() {
             spørreundersøkelseService = spørreundersøkelseService,
             planService = planService,
             dokumentPubliseringService = dokumentPubliseringService,
+            nyFlytService = nyFlytService,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -472,6 +490,7 @@ private fun Application.lydiaRestApi(
     iaTeamService: IATeamService,
     planService: PlanService,
     dokumentPubliseringService: DokumentPubliseringService,
+    nyFlytService: NyFlytService,
 ) {
     install(ContentNegotiation) {
         json()
@@ -543,11 +562,7 @@ private fun Application.lydiaRestApi(
             nyFlyt(
                 iaSakService = iaSakService,
                 iASamarbeidService = samarbeidService,
-                nyFlytService = NyFlytService(
-                    iaSakRepository = IASakRepository(dataSource = dataSource),
-                    iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-                    årsakRepository = ÅrsakRepository(dataSource = dataSource),
-                ),
+                nyFlytService = nyFlytService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
