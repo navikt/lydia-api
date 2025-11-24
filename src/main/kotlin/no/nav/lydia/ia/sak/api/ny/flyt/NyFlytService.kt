@@ -150,11 +150,18 @@ class NyFlytService(
             .sortedByDescending { it.opprettetTidspunkt }
             .firstOrNull { !it.lukket }
 
-    fun slettSak(sakDto: IASakDto): Either<Feil, IASakDto> =
+    fun slettSakOgVarsleObservers(sakDto: IASakDto): Either<Feil, IASakDto> =
+        slettSak(sakDto).also { iaSakEither ->
+            iaSakEither.onRight { varsleIASakObservers(it) }
+        }
+
+    private fun slettSak(sakDto: IASakDto): Either<Feil, IASakDto> =
         try {
             iaSakRepository.slettSak(saksnummer = sakDto.saksnummer, sistEndretAvHendelseId = null)
-            Either.Right(sakDto)
+            Either.Right(sakDto.settStatusTilSlettet())
         } catch (_: Exception) {
             Either.Left(IASakError.`fikk ikke slettet sak`)
         }
+
+    private fun IASakDto.settStatusTilSlettet(): IASakDto = this.copy(status = Status.SLETTET, endretAvHendelseId = ULID.random())
 }
