@@ -140,7 +140,7 @@ class NyFlytService(
             status = Status.VURDERT,
             endretAvHendelseId = iASakshendelse.id,
             endretAv = saksbehandler.navIdent,
-        )
+        ).onRight(::varsleIASakObservers)
 
         return oppdatertSak
     }
