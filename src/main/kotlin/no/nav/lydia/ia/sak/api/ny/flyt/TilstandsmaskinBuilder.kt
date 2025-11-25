@@ -96,7 +96,6 @@ sealed class Tilstand {
         ): Konsekvens {
             val endring: Either<Feil, IASakDto> = when (hendelse) {
                 is Hendelse.VurderVirksomhet -> {
-                    // TODO: lag en nyFlytService.opprettSakOgMerkSomVurdert()
                     fiaKontekst.nyFlytService.opprettSakOgMerkSomVurdert(
                         orgnummer = hendelse.orgnr,
                         superbruker = hendelse.superbruker,

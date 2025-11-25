@@ -188,7 +188,12 @@ class NyFlytTest {
 
     @Test
     fun `skal kunne fullføre vurdering som ikke medfører et samarbeid`() {
-        val orgnummer = VirksomhetHelper.nyttOrgnummer()
+        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        val virksomhet = TestVirksomhet.nyVirksomhet(
+            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+        )
+        lastInnNyVirksomhet(virksomhet)
+        val orgnummer = virksomhet.orgnr
         val vurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>()
@@ -209,5 +214,46 @@ class NyFlytTest {
             .tilSingelRespons<IASakDto>()
         fullførVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
         fullførVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
+
+        val oppdatertSakDto = fullførVurderingRes.third.get()
+
+        runBlocking {
+            // Sak observer - IASakProdusent
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(key = oppdatertSakDto.saksnummer, konsument = iaSakKonsument) { meldinger ->
+                meldinger.forAll { hendelse ->
+                    hendelse shouldContain oppdatertSakDto.saksnummer
+                    hendelse shouldContain oppdatertSakDto.orgnr
+                }
+                meldinger shouldHaveSize 3
+                meldinger[0] shouldContain IASak.Status.NY.name
+                meldinger[1] shouldContain IASak.Status.VURDERES.name
+                meldinger[2] shouldContain IASak.Status.VURDERT.name
+            }
+
+            // IASakStatistikkProdusent
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = oppdatertSakDto.saksnummer,
+                konsument = iaSakStatistikkKonsument,
+            ) { meldinger ->
+                val objektene = meldinger.map {
+                    Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
+                }
+                objektene shouldHaveSize 3
+                objektene.forExactlyOne {
+                    it.orgnr shouldBe oppdatertSakDto.orgnr
+                    it.saksnummer shouldBe oppdatertSakDto.saksnummer
+                    it.eierAvSak shouldBe null
+                    it.status shouldBe IASak.Status.VURDERT
+                    it.ikkeAktuelBegrunnelse shouldBe "[${VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID.name}]"
+                    it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
+                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
+                    it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
+                    it.bransjeprogram shouldBe Bransje.ANLEGG
+                    it.endretAvRolle shouldBe Rolle.SUPERBRUKER
+                    it.enhetsnummer shouldBe "2900"
+                    it.enhetsnavn shouldBe "IT-avdelingen" // -- Bør ha fallback til minst spesifikk avdeling
+                }
+            }
+        }
     }
 }
