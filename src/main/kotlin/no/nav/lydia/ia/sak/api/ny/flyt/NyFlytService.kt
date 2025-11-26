@@ -4,19 +4,26 @@ import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
+import no.nav.lydia.ia.sak.IASamarbeidFeil
+import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
 
@@ -24,7 +31,10 @@ class NyFlytService(
     val iaSakRepository: IASakRepository,
     val iaSakshendelseRepository: IASakshendelseRepository,
     val årsakRepository: ÅrsakRepository,
+    val iaSamarbeidRepository: IASamarbeidRepository,
+    val iaTeamService: IATeamService,
     val iaSakObservers: List<Observer<IASakDto>>,
+    val iaSamarbeidObservers: List<Observer<IASamarbeid>>,
 ) {
     private fun varsleIASakObservers(sakDto: IASakDto) {
         iaSakObservers.forEach { observer -> observer.receive(input = sakDto) }
@@ -108,9 +118,8 @@ class NyFlytService(
     fun fullførVurderingAvVirksomhetUtenSamarbeid(
         orgnummer: String,
         årsak: ValgtÅrsak,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
-        // observers: List<Noe>
     ): Either<Feil, Any?> {
         val iaSak = hentAktivIASakDto(orgnummer = orgnummer)!!
 
@@ -155,6 +164,67 @@ class NyFlytService(
             iaSakEither.onRight { varsleIASakObservers(it) }
         }
 
+    fun opprettNyttSamarbeid(
+        orgnummer: String,
+        saksnummer: String,
+        navn: String,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+        resulterendeStatus: Status,
+    ): Either<Feil, IASamarbeidDto> {
+        val aktivSakDto = hentAktivIASakDto(orgnummer = orgnummer)
+            ?: return Either.Left(IASakError.`generell feil under uthenting`)
+        val alleSamarbeid = hentSamarbeid(saksnummer = saksnummer)
+
+        if (navn.trim().isEmpty() || navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
+            return Either.Left(IASamarbeidFeil.`ugyldig samarbeidsnavn`)
+        }
+        alleSamarbeid.getOrNull()
+            ?.find { it.navn.equals(navn, ignoreCase = true) }
+            ?.let { return Either.Left(IASamarbeidFeil.`samarbeidsnavn finnes allerede`) }
+
+        val erEierEllerFølgerAvSak = iaTeamService.erEierEllerFølgerAvSak(
+            saksnummer = aktivSakDto.saksnummer,
+            eierAvSak = aktivSakDto.eidAv,
+            saksbehandler = saksbehandler,
+        )
+        if (!erEierEllerFølgerAvSak) {
+            return Either.Left(IASakError.`er ikke følger eller eier av sak`)
+        }
+
+        val iASakshendelse = IASakshendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = saksnummer,
+            hendelsesType = IASakshendelseType.NY_PROSESS,
+            orgnummer = orgnummer,
+            opprettetAv = saksbehandler.navIdent,
+            opprettetAvRolle = saksbehandler.rolle,
+            navEnhet = navEnhet,
+            resulterendeStatus = null,
+        )
+        val lagretHendelse = iaSakshendelseRepository.lagreHendelse(
+            hendelse = iASakshendelse,
+            sistEndretAvHendelseId = null,
+            resulterendeStatus = resulterendeStatus,
+        )
+        val opprettetSamarbeid = iaSamarbeidRepository.opprettNyttSamarbeid(
+            saksnummer = saksnummer,
+            navn = navn,
+        ).also { samarbeid ->
+            iaSamarbeidObservers.forEach { it.receive(input = samarbeid) }
+        }
+
+        iaSakRepository.oppdaterStatusPåSak(
+            saksnummer = saksnummer,
+            status = resulterendeStatus,
+            endretAvHendelseId = lagretHendelse.id,
+            endretAv = saksbehandler.navIdent,
+        ).onRight(::varsleIASakObservers)
+
+        return Either.Right(opprettetSamarbeid.tilDto())
+    }
+
     private fun slettSak(sakDto: IASakDto): Either<Feil, IASakDto> =
         try {
             iaSakRepository.slettSak(saksnummer = sakDto.saksnummer, sistEndretAvHendelseId = null)
@@ -164,4 +234,11 @@ class NyFlytService(
         }
 
     private fun IASakDto.settStatusTilSlettet(): IASakDto = this.copy(status = Status.SLETTET, endretAvHendelseId = ULID.random())
+
+    private fun hentSamarbeid(saksnummer: String): Either<Feil, List<IASamarbeid>> =
+        Either.catch {
+            iaSamarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
+        }.mapLeft {
+            IASamarbeidFeil.`feil ved henting av samarbeid`
+        }
 }

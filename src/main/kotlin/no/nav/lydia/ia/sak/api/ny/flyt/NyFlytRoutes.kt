@@ -20,6 +20,7 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
@@ -141,6 +142,37 @@ fun Route.nyFlyt(
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    post("$NY_FLYT_PATH/{orgnummer}/opprett-samarbeid") {
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val tilstandsmaskin = tilstandsmaskinBuilder.build(orgnr)
+        val iaSamarbeidDto = call.receive<IASamarbeidDto>()
+
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.OpprettNyttSamarbeid(
+                    orgnr = orgnr,
+                    saksnummer = iaSamarbeidDto.saksnummer,
+                    samarbeidsnavn = iaSamarbeidDto.navn,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { it as IASamarbeidDto }
+        }.also { iaSamarbeidDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSamarbeidDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.create,
+                saksnummer = iaSamarbeidDtoEither.map { iaSamarbeid -> iaSamarbeid.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
