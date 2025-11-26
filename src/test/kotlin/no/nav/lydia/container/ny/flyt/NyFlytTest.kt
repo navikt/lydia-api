@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -28,7 +29,9 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -255,5 +258,49 @@ class NyFlytTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `skal kunne opprette et samarbeid`() {
+        val eierAvSak = authContainerHelper.superbruker1
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        val virksomhet = TestVirksomhet.nyVirksomhet(
+            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+        )
+        lastInnNyVirksomhet(virksomhet)
+        val orgnummer = virksomhet.orgnr
+
+        val res = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
+            .authentication().bearer(eierAvSak.token)
+            .tilSingelRespons<IASakDto>()
+
+        res.second.statusCode shouldBe HttpStatusCode.Created.value
+        val sak = res.third.get()
+        sak.status shouldBe IASak.Status.VURDERES
+
+        val oppdatertSak = sak.leggTilFolger(token = følgerAvSak.token)
+        val samarbeidRespons = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/opprett-samarbeid")
+            .authentication().bearer(følgerAvSak.token)
+            .jsonBody(
+                Json.encodeToString(
+                    IASamarbeidDto(
+                        id = 0,
+                        saksnummer = oppdatertSak.saksnummer,
+                        navn = "Samarbeid med ${virksomhet.navn}",
+                    ),
+                ),
+            ).tilSingelRespons<IASamarbeidDto>()
+
+        samarbeidRespons.second.statusCode shouldBe HttpStatusCode.Created.value
+        val samarbeid = samarbeidRespons.third.get()
+        samarbeid.saksnummer shouldBe sak.saksnummer
+        samarbeid.status shouldBe IASamarbeid.Status.AKTIV
+
+        // TODO: Sjekk at avhengigheter er varslet
+        // runBlocking {
+        // Samarbeid big query observer
+        // Samarbeid salesforce observer
+        // }
     }
 }

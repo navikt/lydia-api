@@ -19,7 +19,12 @@ class IATeamService(
     fun erFølgerAvSak(
         iaSak: IASak,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-    ) = hentBrukereITeam(iaSak = iaSak).map { alleFølgere ->
+    ) = erFølgerAvSak(saksnummer = iaSak.saksnummer, saksbehandler = saksbehandler)
+
+    fun erFølgerAvSak(
+        saksnummer: String,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+    ) = hentBrukereITeam(saksnummer = saksnummer).map { alleFølgere ->
         alleFølgere.any { følgerAvSak ->
             følgerAvSak == saksbehandler.navIdent
         }
@@ -30,14 +35,26 @@ class IATeamService(
     fun erEierEllerFølgerAvSak(
         iaSak: IASak,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+    ) = erEierEllerFølgerAvSak(
+        saksnummer = iaSak.saksnummer,
+        eierAvSak = iaSak.eidAv,
+        saksbehandler = saksbehandler,
+    )
+
+    fun erEierEllerFølgerAvSak(
+        saksnummer: String,
+        eierAvSak: String?,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
     ): Boolean {
-        val erEierAvSak = iaSak.eidAv == saksbehandler.navIdent
-        return erFølgerAvSak(iaSak, saksbehandler) || erEierAvSak
+        val erEierAvSak = eierAvSak == saksbehandler.navIdent
+        return erFølgerAvSak(saksnummer = saksnummer, saksbehandler = saksbehandler) || erEierAvSak
     }
 
-    fun hentBrukereITeam(iaSak: IASak) =
+    fun hentBrukereITeam(iaSak: IASak) = hentBrukereITeam(iaSak.saksnummer)
+
+    fun hentBrukereITeam(saksnummer: String) =
         try {
-            iaTeamRepository.brukereITeam(iaSak = iaSak).right()
+            iaTeamRepository.brukereITeam(saksnummer = saksnummer).right()
         } catch (e: Exception) {
             log.error("Feil ved henting av en saks brukere. Feilmelding: ${e.message}", e)
             Feil("Feil ved henting av brukere i team", httpStatusCode = HttpStatusCode.InternalServerError).left()

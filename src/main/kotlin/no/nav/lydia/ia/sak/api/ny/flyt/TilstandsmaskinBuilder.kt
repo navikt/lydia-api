@@ -132,6 +132,16 @@ sealed class Tilstand {
                         navEnhet = hendelse.navEnhet,
                     )
                 }
+                is Hendelse.OpprettNyttSamarbeid -> {
+                    fiaKontekst.nyFlytService.opprettNyttSamarbeid(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = hendelse.saksnummer,
+                        navn = hendelse.samarbeidsnavn,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                        resulterendeStatus = Status.VURDERES,
+                    )
+                }
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 }
@@ -194,6 +204,10 @@ sealed class Hendelse {
 
     data class OpprettNyttSamarbeid(
         val orgnr: String,
+        val saksnummer: String,
+        val samarbeidsnavn: String,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class OpprettPlanForSamarbeid(

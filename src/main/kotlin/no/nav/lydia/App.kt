@@ -233,7 +233,10 @@ fun startLydiaBackend() {
         iaSakRepository = IASakRepository(dataSource = dataSource),
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         årsakRepository = ÅrsakRepository(dataSource = dataSource),
+        iaSamarbeidRepository = samarbeidRepository,
+        iaTeamService = iaTeamService,
         iaSakObservers = listOf(iaSakDtoProdusent, iaSakDtoStatistikkProdusent),
+        iaSamarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
     )
 
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
