@@ -148,7 +148,9 @@ class TestData(
                 tapteDagsverk = 1_000_000.0,
             )
         }
-        genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
+        if (antallTilfeldigeVirksomheter > 0) {
+            genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
+        }
     }
 
     private fun genererTilfeldigeVirksomheter(antallVirksomheter: Int) {
