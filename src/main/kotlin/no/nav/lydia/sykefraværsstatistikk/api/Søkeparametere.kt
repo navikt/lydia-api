@@ -259,7 +259,7 @@ data class Periode(
     val årstall: Int,
 ) {
     companion object {
-        fun fraDato(dato: LocalDateTime) = Periode(årstall = dato.year, kvartal = dato.monthValue / 4 + 1).forrigePeriode()
+        fun fraDato(dato: LocalDateTime) = Periode(årstall = dato.year, kvartal = ((dato.monthValue - 1) / 3) + 1).forrigePeriode()
     }
 
     fun tilKvartal() = Kvartal(årstall = årstall, kvartal = kvartal)

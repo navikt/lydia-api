@@ -33,7 +33,6 @@ import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class IASakStatistikkEksportererTest {
@@ -69,7 +68,7 @@ class IASakStatistikkEksportererTest {
             .plusOrMinus(0.01)
     }
 
-    @Ignore
+    @Test
     fun `skal trigge kafka-eksport av IASakStatistikk`() {
         val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
         val virksomhet = TestVirksomhet.nyVirksomhet(
@@ -105,7 +104,7 @@ class IASakStatistikkEksportererTest {
         }
     }
 
-    @Ignore
+    @Test
     fun `sjekk at vi får riktig sykefraværsstatistikk basert på når hendelsen skjedde`() {
         /*
          * Statistikken for “Gjeldende periode” blir publisert etter at kvartalet er over.

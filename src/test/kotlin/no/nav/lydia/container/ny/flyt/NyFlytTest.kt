@@ -36,7 +36,6 @@ import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class NyFlytTest {
@@ -63,7 +62,7 @@ class NyFlytTest {
         }
     }
 
-    @Ignore
+    @Test
     fun `skal kunne vurdere samarbeid med en virksomhet`() {
         val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
         val virksomhet = TestVirksomhet.nyVirksomhet(
