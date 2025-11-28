@@ -470,6 +470,22 @@ class SykefraværsstatistikkApiTest {
     }
 
     @Test
+    fun `filterverdier til prioriteringssiden skal ikke innholde statuser til ny flytt`() {
+        val saksbehandler1 = authContainerHelper.saksbehandler1
+        val filterverdier = hentFilterverdier(token = saksbehandler1.token)
+
+        filterverdier.statuser shouldBe listOf(
+            IASak.Status.IKKE_AKTIV,
+            IASak.Status.VURDERES,
+            IASak.Status.KONTAKTES,
+            IASak.Status.KARTLEGGES,
+            IASak.Status.VI_BISTÅR,
+            IASak.Status.IKKE_AKTUELL,
+            IASak.Status.FULLFØRT,
+        )
+    }
+
+    @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
         val saksbehandler1 = authContainerHelper.saksbehandler1
         val filterverdier = hentFilterverdier(token = saksbehandler1.token)
