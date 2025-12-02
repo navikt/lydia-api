@@ -27,6 +27,8 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
+import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent.SamarbeidValue
+import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -45,14 +47,20 @@ class NyFlytTest {
     companion object {
         private val iaSakTopic = Topic.IA_SAK_TOPIC
         private val iaSakStatistikkTopic = Topic.IA_SAK_STATISTIKK_TOPIC
+        private val samarbeidsplanTopic = Topic.SAMARBEIDSPLAN_TOPIC
+        private val samarbeidBigqueryTopic = Topic.SAMARBEID_BIGQUERY_TOPIC
         private val iaSakKonsument = kafkaContainerHelper.nyKonsument(topic = iaSakTopic)
         private val iaSakStatistikkKonsument = kafkaContainerHelper.nyKonsument(topic = iaSakStatistikkTopic)
+        private val samarbeidsplanKonsument = kafkaContainerHelper.nyKonsument(topic = samarbeidsplanTopic)
+        private val samarbeidBigqueryKonsument = kafkaContainerHelper.nyKonsument(topic = samarbeidBigqueryTopic)
 
         @BeforeClass
         @JvmStatic
         fun setUp() {
             iaSakKonsument.subscribe(mutableListOf(iaSakTopic.navn))
             iaSakStatistikkKonsument.subscribe(mutableListOf(iaSakStatistikkTopic.navn))
+            samarbeidsplanKonsument.subscribe(mutableListOf(samarbeidsplanTopic.navn))
+            samarbeidBigqueryKonsument.subscribe(mutableListOf(samarbeidBigqueryTopic.navn))
         }
 
         @AfterClass
@@ -60,8 +68,15 @@ class NyFlytTest {
         fun tearDown() {
             iaSakKonsument.unsubscribe()
             iaSakKonsument.close()
+
             iaSakStatistikkKonsument.unsubscribe()
             iaSakStatistikkKonsument.close()
+
+            samarbeidsplanKonsument.unsubscribe()
+            samarbeidsplanKonsument.close()
+
+            samarbeidBigqueryKonsument.unsubscribe()
+            samarbeidBigqueryKonsument.close()
         }
     }
 
@@ -297,10 +312,26 @@ class NyFlytTest {
         samarbeid.saksnummer shouldBe sak.saksnummer
         samarbeid.status shouldBe IASamarbeid.Status.AKTIV
 
-        // TODO: Sjekk at avhengigheter er varslet
-        // runBlocking {
-        // Samarbeid big query observer
-        // Samarbeid salesforce observer
-        // }
+        runBlocking {
+            // Samarbeid salesforce observer
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger("${sak.saksnummer}-${samarbeid.id}", samarbeidsplanKonsument) { meldinger ->
+                val samarbeidKafka = meldinger.map { Json.decodeFromString<SamarbeidKafkaMeldingValue>(it) }
+                samarbeidKafka.forExactlyOne {
+                    it.samarbeid.id shouldBe samarbeid.id
+                    it.samarbeid.navn shouldBe "Samarbeid med ${virksomhet.navn}"
+                    it.samarbeid.status shouldBe IASamarbeid.Status.AKTIV
+                }
+            }
+
+            // Samarbeid big query observer
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(sak.saksnummer, samarbeidBigqueryKonsument) { meldinger ->
+                val samarbeidKafka = meldinger.map { Json.decodeFromString<SamarbeidValue>(it) }
+                samarbeidKafka.forExactlyOne {
+                    it.id shouldBe samarbeid.id
+                    it.navn shouldBe "Samarbeid med ${virksomhet.navn}"
+                    it.status shouldBe IASamarbeid.Status.AKTIV.name
+                }
+            }
+        }
     }
 }
