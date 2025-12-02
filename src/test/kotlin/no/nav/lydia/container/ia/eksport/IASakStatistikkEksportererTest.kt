@@ -63,7 +63,7 @@ class IASakStatistikkEksportererTest {
             it: IASakStatistikkProdusent.IASakStatistikkValue,
             kolonne: String,
         ) = postgresContainerHelper.hentEnkelKolonne<Double>(
-            "select $kolonne from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr = '${it.orgnr}'",
+            "select $kolonne from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr = '${it.orgnr}' and publisert_arstall=${it.arstall} and publisert_kvartal=${it.kvartal}",
         )
             .plusOrMinus(0.01)
     }
