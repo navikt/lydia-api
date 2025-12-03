@@ -62,16 +62,27 @@ class IASak private constructor(
     private fun tilstandFraStatus(status: Status): ProsessTilstand =
         when (status) {
             Status.NY -> StartTilstand()
+
             Status.VURDERES -> VurderesTilstand()
+
             Status.IKKE_AKTUELL -> IkkeAktuellTilstand()
+
             Status.KONTAKTES -> KontaktesTilstand()
+
             Status.KARTLEGGES -> KartleggesTilstand()
+
             Status.VI_BISTÅR -> ViBistårTilstand()
+
             Status.FULLFØRT -> FullførtTilstand()
+
             Status.IKKE_AKTIV -> throw IllegalStateException()
+
             Status.SLETTET -> throw IllegalStateException()
+
             // -- Ny flyt:
             Status.VURDERT -> throw IllegalStateException()
+
+            Status.AKTIV -> throw IllegalStateException()
         }
 
     fun gyldigeNesteHendelser(
@@ -84,18 +95,21 @@ class IASak private constructor(
         navAnsatt: NavAnsattMedSaksbehandlerRolle,
         eierEllerFølgerSak: Boolean,
     ) = when (hendelse) {
-        is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(navAnsatt, eierEllerFølgerSak)
-            .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
-            .filter { it.type == hendelse.valgtÅrsak.type }
-            .any {
-                hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
-                    .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
-            }
+        is VirksomhetIkkeAktuellHendelse -> {
+            gyldigeNesteHendelser(navAnsatt, eierEllerFølgerSak)
+                .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
+                .filter { it.type == hendelse.valgtÅrsak.type }
+                .any {
+                    hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
+                        .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
+                }
+        }
 
-        else ->
+        else -> {
             gyldigeNesteHendelser(navAnsatt, eierEllerFølgerSak)
                 .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
                 .contains(hendelse.hendelsesType)
+        }
     }
 
     private fun erEierAvSak(navAnsatt: NavAnsattMedSaksbehandlerRolle) = eidAv == navAnsatt.navIdent
@@ -147,6 +161,10 @@ class IASak private constructor(
 
             // -- Ny flyt:
             VURDERING_FULLFØRT_UTEN_SAMARBEID -> {
+                throw IllegalStateException("Ikke en gyldig hendelsestype")
+            }
+
+            IASakshendelseType.OPPRETT_SAMARBEIDSPLAN -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
         }
@@ -242,6 +260,7 @@ class IASak private constructor(
                 }
 
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
+
                 else -> generellFeil()
             }
 
@@ -574,12 +593,13 @@ class IASak private constructor(
 
         // -- Ny flyt
         VURDERT,
+        AKTIV,
         ;
 
         fun regnesSomAvsluttet(): Boolean = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
 
         companion object {
-            fun filtrerbareStatuser(): List<Status> = entries.filterNot { it == NY || it == SLETTET || it == VURDERT }
+            fun filtrerbareStatuser(): List<Status> = entries.filterNot { it == NY || it == SLETTET || it == VURDERT || it == AKTIV }
         }
     }
 }

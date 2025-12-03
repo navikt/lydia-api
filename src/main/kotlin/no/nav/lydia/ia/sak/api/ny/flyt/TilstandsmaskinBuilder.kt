@@ -9,6 +9,7 @@ import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.domene.IASak.Status
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
@@ -64,6 +65,9 @@ class TilstandsmaskinBuilder private constructor(
                 } else {
                     Tilstand.VirksomhetVurderes
                 }
+
+                Status.AKTIV,
+                -> Tilstand.VirksomhetHarAktiveSamarbeid
             }
         } ?: Tilstand.VirksomhetKlarTilVurdering
 }
@@ -128,41 +132,68 @@ sealed class Tilstand {
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Konsekvens {
-            val endring = when (hendelse) {
+        ): Konsekvens =
+            when (hendelse) {
                 is Hendelse.AngreVurderVirksomhet -> {
                     val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
-                    fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
+                    val endring = fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetKlarTilVurdering,
+                    )
                 }
 
                 is Hendelse.FullførVurdering -> {
-                    fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
+                    val endring = fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
                         orgnummer = hendelse.orgnr,
                         årsak = hendelse.årsak,
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
                     )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetErVurdert,
+                    )
                 }
 
                 is Hendelse.OpprettNyttSamarbeid -> {
-                    fiaKontekst.nyFlytService.opprettNyttSamarbeid(
+                    val endring = fiaKontekst.nyFlytService.opprettNyttSamarbeid(
                         orgnummer = hendelse.orgnr,
                         saksnummer = hendelse.saksnummer,
                         navn = hendelse.samarbeidsnavn,
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
                     )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetVurderes,
+                    )
+                }
+
+                is Hendelse.OpprettPlanForSamarbeid -> {
+                    val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
+                    val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = sakDto.saksnummer,
+                        samarbeidId = hendelse.samarbeidId,
+                        plan = hendelse.plan,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
                 }
 
                 else -> {
-                    Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
+                    val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetVurderes,
+                    )
                 }
             }
-            return Konsekvens(
-                nyTilstand = VirksomhetKlarTilVurdering,
-                endring = endring,
-            )
-        }
     }
 
     object VirksomhetErVurdert : Tilstand() { // VURDERT
@@ -225,7 +256,10 @@ sealed class Hendelse {
 
     data class OpprettPlanForSamarbeid(
         val orgnr: String,
-        val samarbeidId: UUID,
+        val samarbeidId: Int,
+        val plan: PlanMalDto,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class FullførSamarbeid(

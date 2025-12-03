@@ -15,10 +15,13 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
+import no.nav.lydia.helper.PlanHelper
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
@@ -31,6 +34,7 @@ import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent.SamarbeidValue
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
+import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -333,5 +337,58 @@ class NyFlytTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `opprettelse av samarbeidsplan skal gjøre virksomheten AKTIV`() {
+        val sak = vurderVirksomhet()
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val plan = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/${samarbeid.id}/opprett-samarbeidsplan")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(
+                Json.encodeToString(PlanHelper.hentPlanMal().inkluderAlt()),
+            ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.get()
+        plan.status shouldBe IASamarbeid.Status.AKTIV
+        hentAktivSak(sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
+    private fun hentAktivSak(
+        orgnr: String,
+        token: String = authContainerHelper.superbruker1.token,
+    ) = applikasjon.performGet("$NY_FLYT_PATH/$orgnr")
+        .authentication().bearer(token).tilSingelRespons<IASakDto>().third.get()
+
+    private fun IASakDto.opprettSamarbeid(token: String = authContainerHelper.superbruker1.token): IASamarbeidDto =
+        applikasjon.performPost("$NY_FLYT_PATH/$orgnr/opprett-samarbeid")
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(
+                    IASamarbeidDto(
+                        id = 0,
+                        saksnummer = saksnummer,
+                        navn = "Samarbeid med $orgnr",
+                    ),
+                ),
+            ).tilSingelRespons<IASamarbeidDto>().third.get()
+
+    private fun vurderVirksomhet(
+        næringskode: String = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+        token: String = authContainerHelper.superbruker1.token,
+    ): IASakDto {
+        val virksomhet = TestVirksomhet.nyVirksomhet(
+            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+        )
+        lastInnNyVirksomhet(virksomhet)
+        val orgnummer = virksomhet.orgnr
+        val res = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
+            .authentication().bearer(token)
+            .tilSingelRespons<IASakDto>()
+
+        return res.third.get()
     }
 }

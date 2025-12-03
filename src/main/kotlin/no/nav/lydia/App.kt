@@ -229,15 +229,6 @@ fun startLydiaBackend() {
         ),
         iaTeamService = iaTeamService,
     )
-    val nyFlytService = NyFlytService(
-        iaSakRepository = IASakRepository(dataSource = dataSource),
-        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-        årsakRepository = ÅrsakRepository(dataSource = dataSource),
-        iaSamarbeidRepository = samarbeidRepository,
-        iaTeamService = iaTeamService,
-        iaSakObservers = listOf(iaSakDtoProdusent, iaSakDtoStatistikkProdusent),
-        iaSamarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
-    )
 
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
 
@@ -250,6 +241,17 @@ fun startLydiaBackend() {
             sendPlanPåKafkaObserver,
             samarbeidsplanBigqueryProdusent,
         ),
+    )
+
+    val nyFlytService = NyFlytService(
+        iaSakRepository = IASakRepository(dataSource = dataSource),
+        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+        årsakRepository = ÅrsakRepository(dataSource = dataSource),
+        iaSamarbeidRepository = samarbeidRepository,
+        iaTeamService = iaTeamService,
+        planService = planService,
+        iaSakObservers = listOf(iaSakDtoProdusent, iaSakDtoStatistikkProdusent),
+        iaSamarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
     )
 
     val spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(kafka = naisEnv.kafka)

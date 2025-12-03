@@ -6,9 +6,12 @@ import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
+import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -18,6 +21,7 @@ import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
@@ -33,6 +37,7 @@ class NyFlytService(
     val årsakRepository: ÅrsakRepository,
     val iaSamarbeidRepository: IASamarbeidRepository,
     val iaTeamService: IATeamService,
+    val planService: PlanService,
     val iaSakObservers: List<Observer<IASakDto>>,
     val iaSamarbeidObservers: List<Observer<IASamarbeid>>,
 ) {
@@ -215,6 +220,48 @@ class NyFlytService(
         }
 
         return Either.Right(opprettetSamarbeid.tilDto())
+    }
+
+    fun opprettNySamarbeidsplan(
+        orgnummer: String,
+        saksnummer: String,
+        samarbeidId: Int,
+        plan: PlanMalDto,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ): Either<Feil, PlanMedPubliseringStatusDto> {
+        val plan = planService.opprettPlan(
+            samarbeidId = samarbeidId,
+            saksbehandler = saksbehandler,
+            mal = plan,
+        ).map {
+            it.tilDtoMedPubliseringStatus()
+        }.onRight {
+            val iASakshendelse = IASakshendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = saksnummer,
+                hendelsesType = IASakshendelseType.OPPRETT_SAMARBEIDSPLAN,
+                orgnummer = orgnummer,
+                opprettetAv = saksbehandler.navIdent,
+                opprettetAvRolle = saksbehandler.rolle,
+                navEnhet = navEnhet,
+                resulterendeStatus = null,
+            )
+            iaSakshendelseRepository.lagreHendelse(
+                hendelse = iASakshendelse,
+                sistEndretAvHendelseId = null,
+                resulterendeStatus = Status.AKTIV,
+            )
+            iaSakRepository.oppdaterStatusPåSak(
+                saksnummer = saksnummer,
+                status = Status.AKTIV,
+                endretAv = saksbehandler.navIdent,
+                endretAvHendelseId = iASakshendelse.id,
+            ).onRight(::varsleIASakObservers)
+        }
+
+        return plan
     }
 
     private fun slettSak(sakDto: IASakDto): Either<Feil, IASakDto> =

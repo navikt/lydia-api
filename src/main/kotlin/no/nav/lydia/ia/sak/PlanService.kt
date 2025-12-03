@@ -39,31 +39,44 @@ class PlanService(
         prosessId: Int,
         mal: PlanMalDto,
     ): Either<Feil, Plan> =
-        samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { prosess ->
-            val planEksistererAllerede = hentPlan(samarbeidId = prosess.id).isRight()
-
-            if (planEksistererAllerede) {
-                return Feil(
-                    feilmelding = "Plan eksisterer allerede for dette samarbeidet: '$prosessId'",
-                    httpStatusCode = HttpStatusCode.BadRequest,
-                ).left()
-            }
-
-            if (!mal.erGyldig()) {
-                logger.warn("Feil inndata i forespørsel. Mal er ikke gyldig.")
-                return PlanFeil.`feil inndata i forespørsel`.left()
-            }
-
-            planRepository.opprettPlan(
-                planId = UUID.randomUUID(),
-                prosessId = prosess.id,
+        samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { samarbeid ->
+            opprettPlan(
+                samarbeidId = samarbeid.id,
                 saksbehandler = saksbehandler,
                 mal = mal,
             )
-        }.onRight { plan ->
+        }
+
+    fun opprettPlan(
+        samarbeidId: Int,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+        mal: PlanMalDto,
+    ): Either<Feil, Plan> {
+        val planEksistererAllerede = hentPlan(samarbeidId = samarbeidId).isRight()
+
+        if (planEksistererAllerede) {
+            return Feil(
+                feilmelding = "Plan eksisterer allerede for dette samarbeidet: '$samarbeidId'",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ).left()
+        }
+
+        if (!mal.erGyldig()) {
+            logger.warn("Feil inndata i forespørsel. Mal er ikke gyldig.")
+            return PlanFeil.`feil inndata i forespørsel`.left()
+        }
+
+        val plan = planRepository.opprettPlan(
+            planId = UUID.randomUUID(),
+            prosessId = samarbeidId,
+            saksbehandler = saksbehandler,
+            mal = mal,
+        ).onRight { plan ->
             planObservers.forEach { it.receive(ObservedPlan(hendelsesType = OPPRETT, plan = plan)) }
             logger.info("Opprettet plan med Id '${plan.id}'")
         }
+        return plan
+    }
 
     fun endreFlereTemaer(
         lagretPlan: Plan,

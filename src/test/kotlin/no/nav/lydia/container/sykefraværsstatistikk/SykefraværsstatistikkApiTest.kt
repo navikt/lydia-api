@@ -483,6 +483,9 @@ class SykefraværsstatistikkApiTest {
             IASak.Status.IKKE_AKTUELL,
             IASak.Status.FULLFØRT,
         )
+
+        // TODO: Denne testen bør verifisere motsatt etter at ny flyt er lansert
+        // DVS: skal kun kunne filtrere på [KLAR_TIL_VURDERING, VURDERES, VURDERT, AKTIV, AVSLUTTET] (ish)
     }
 
     @Test

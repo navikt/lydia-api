@@ -21,6 +21,8 @@ val ApplicationCall.temaId
     get() = parameters["temaId"]?.toIntOrNull()
 val ApplicationCall.prosessId
     get() = parameters["prosessId"]?.toIntOrNull()
+val ApplicationCall.samarbeidId
+    get() = parameters["samarbeidId"]?.toIntOrNull()
 val ApplicationCall.dokumentType
     get() = parameters["dokumentType"]?.tilDokumentTilPubliseringType()
 val ApplicationCall.dokumentReferanseId
