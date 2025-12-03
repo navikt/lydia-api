@@ -170,7 +170,6 @@ class NyFlytService(
         navn: String,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
-        resulterendeStatus: Status,
     ): Either<Feil, IASamarbeidDto> {
         val aktivSakDto = hentAktivIASakDto(orgnummer = orgnummer)
             ?: return Either.Left(IASakError.`generell feil under uthenting`)
@@ -203,10 +202,10 @@ class NyFlytService(
             navEnhet = navEnhet,
             resulterendeStatus = null,
         )
-        val lagretHendelse = iaSakshendelseRepository.lagreHendelse(
+        iaSakshendelseRepository.lagreHendelse(
             hendelse = iASakshendelse,
             sistEndretAvHendelseId = null,
-            resulterendeStatus = resulterendeStatus,
+            resulterendeStatus = aktivSakDto.status, // Opprett samarbeid skal ikke endre status
         )
         val opprettetSamarbeid = iaSamarbeidRepository.opprettNyttSamarbeid(
             saksnummer = saksnummer,
@@ -214,13 +213,6 @@ class NyFlytService(
         ).also { samarbeid ->
             iaSamarbeidObservers.forEach { it.receive(input = samarbeid) }
         }
-
-        iaSakRepository.oppdaterStatusPåSak(
-            saksnummer = saksnummer,
-            status = resulterendeStatus,
-            endretAvHendelseId = lagretHendelse.id,
-            endretAv = saksbehandler.navIdent,
-        ).onRight(::varsleIASakObservers)
 
         return Either.Right(opprettetSamarbeid.tilDto())
     }

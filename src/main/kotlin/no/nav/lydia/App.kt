@@ -566,6 +566,7 @@ private fun Application.lydiaRestApi(
                 iaSakService = iaSakService,
                 iASamarbeidService = samarbeidService,
                 nyFlytService = nyFlytService,
+                planService = planService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,

@@ -1,12 +1,15 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
+import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.domene.IASak.Status
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
@@ -32,6 +35,12 @@ class TilstandsmaskinBuilder private constructor(
     private fun hentTilstandForVirksomhet(orgnr: String): Tilstand =
         fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = orgnr)?.let { iASakDto ->
             val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(iASakDto.saksnummer)
+            val harAktivSamarbeidsplan = aktiveSamarbeid.any { samarbeid ->
+                fiaKontekst.planService.hentPlan(samarbeid.id)
+                    .map { plan ->
+                        plan.status == IASamarbeid.Status.AKTIV
+                    }.getOrElse { false }
+            }
 
             when (iASakDto.status) {
                 Status.NY,
@@ -50,10 +59,10 @@ class TilstandsmaskinBuilder private constructor(
                 Status.KONTAKTES,
                 Status.KARTLEGGES,
                 Status.VI_BISTÅR,
-                -> if (aktiveSamarbeid.isNotEmpty()) {
-                    Tilstand.VirksomhetHarEttAktivtSamarbeid
+                -> if (harAktivSamarbeidsplan) {
+                    Tilstand.VirksomhetHarAktiveSamarbeid
                 } else {
-                    Tilstand.VirksomhetKlarTilVurdering
+                    Tilstand.VirksomhetVurderes
                 }
             }
         } ?: Tilstand.VirksomhetKlarTilVurdering
@@ -102,6 +111,7 @@ sealed class Tilstand {
                         navEnhet = hendelse.navEnhet,
                     )
                 }
+
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 }
@@ -124,6 +134,7 @@ sealed class Tilstand {
                     val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
                     fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
                 }
+
                 is Hendelse.FullførVurdering -> {
                     fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
                         orgnummer = hendelse.orgnr,
@@ -132,6 +143,7 @@ sealed class Tilstand {
                         navEnhet = hendelse.navEnhet,
                     )
                 }
+
                 is Hendelse.OpprettNyttSamarbeid -> {
                     fiaKontekst.nyFlytService.opprettNyttSamarbeid(
                         orgnummer = hendelse.orgnr,
@@ -139,9 +151,9 @@ sealed class Tilstand {
                         navn = hendelse.samarbeidsnavn,
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
-                        resulterendeStatus = Status.VURDERES,
                     )
                 }
+
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 }
@@ -162,7 +174,8 @@ sealed class Tilstand {
         }
     }
 
-    object VirksomhetHarEttAktivtSamarbeid : Tilstand() { // AKTIV
+    // -- Virksomheten har minst ett aktivt samarbeid med en aktiv samarbeidsplan
+    object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
@@ -238,5 +251,6 @@ sealed class Hendelse {
 data class FiaKontekst(
     val iaSakService: IASakService,
     val iASamarbeidService: IASamarbeidService,
+    val planService: PlanService,
     val nyFlytService: NyFlytService,
 )

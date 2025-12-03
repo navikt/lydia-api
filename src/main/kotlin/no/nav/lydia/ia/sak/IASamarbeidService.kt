@@ -38,11 +38,11 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.slf4j.LoggerFactory
 
 class IASamarbeidService(
-    val samarbeidRepository: IASamarbeidRepository,
-    val spørreundersøkelseRepository: SpørreundersøkelseRepository,
-    val samarbeidObservers: List<Observer<IASamarbeid>>,
-    val planRepository: PlanRepository,
-    val planObservers: List<Observer<ObservedPlan>>,
+    private val samarbeidRepository: IASamarbeidRepository,
+    private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
+    private val samarbeidObservers: List<Observer<IASamarbeid>>,
+    private val planRepository: PlanRepository,
+    private val planObservers: List<Observer<ObservedPlan>>,
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -101,34 +101,46 @@ class IASamarbeidService(
         when (sakshendelse) {
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
-                    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> fullførSamarbeidMaskineltPåEnFullførtSak(
-                        sakshendelse = sakshendelse,
-                    ).let { samarbeid ->
-                        samarbeidObservers.forEach { it.receive(input = samarbeid) }
+                    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> {
+                        fullførSamarbeidMaskineltPåEnFullførtSak(
+                            sakshendelse = sakshendelse,
+                        ).let { samarbeid ->
+                            samarbeidObservers.forEach { it.receive(input = samarbeid) }
+                        }
                     }
 
-                    FULLFØR_PROSESS -> fullførSamarbeid(
-                        sakshendelse = sakshendelse,
-                        sak = sak,
-                    )?.let { samarbeid ->
-                        samarbeidObservers.forEach { it.receive(input = samarbeid) }
+                    FULLFØR_PROSESS -> {
+                        fullførSamarbeid(
+                            sakshendelse = sakshendelse,
+                            sak = sak,
+                        )?.let { samarbeid ->
+                            samarbeidObservers.forEach { it.receive(input = samarbeid) }
+                        }
                     }
 
-                    AVBRYT_PROSESS -> avbrytSamarbeid(sakshendelse, sak)?.let { samarbeid ->
-                        samarbeidObservers.forEach { it.receive(input = samarbeid) }
+                    AVBRYT_PROSESS -> {
+                        avbrytSamarbeid(sakshendelse, sak)?.let { samarbeid ->
+                            samarbeidObservers.forEach { it.receive(input = samarbeid) }
+                        }
                     }
 
-                    ENDRE_PROSESS -> oppdaterNavnPåSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)
-                        ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(input = samarbeid) } }
+                    ENDRE_PROSESS -> {
+                        oppdaterNavnPåSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)
+                            ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(input = samarbeid) } }
+                    }
 
-                    SLETT_PROSESS -> slettSamarbeid(sakshendelse, sak)
-                        ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(input = samarbeid) } }
+                    SLETT_PROSESS -> {
+                        slettSamarbeid(sakshendelse, sak)
+                            ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(input = samarbeid) } }
+                    }
 
-                    NY_PROSESS -> samarbeidRepository.opprettNyttSamarbeid(
-                        saksnummer = sakshendelse.saksnummer,
-                        navn = sakshendelse.samarbeidDto.navn,
-                    ).also { samarbeid ->
-                        samarbeidObservers.forEach { it.receive(input = samarbeid) }
+                    NY_PROSESS -> {
+                        samarbeidRepository.opprettNyttSamarbeid(
+                            saksnummer = sakshendelse.saksnummer,
+                            navn = sakshendelse.samarbeidDto.navn,
+                        ).also { samarbeid ->
+                            samarbeidObservers.forEach { it.receive(input = samarbeid) }
+                        }
                     }
 
                     else -> {}

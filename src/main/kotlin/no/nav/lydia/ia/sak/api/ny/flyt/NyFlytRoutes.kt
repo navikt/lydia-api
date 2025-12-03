@@ -15,6 +15,7 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
+import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
@@ -35,6 +36,7 @@ fun Route.nyFlyt(
     iaSakService: IASakService,
     iASamarbeidService: IASamarbeidService,
     nyFlytService: NyFlytService,
+    planService: PlanService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
@@ -60,6 +62,7 @@ fun Route.nyFlyt(
             iaSakService = iaSakService,
             iASamarbeidService = iASamarbeidService,
             nyFlytService = nyFlytService,
+            planService = planService,
         ),
     )
 
