@@ -85,19 +85,19 @@ class NyFlytTest {
     }
 
     @Test
-    fun `skal kunne vurdere samarbeid med en virksomhet`() {
-        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
-        val virksomhet = TestVirksomhet.nyVirksomhet(
-            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
-        )
-        lastInnNyVirksomhet(virksomhet)
+    fun `vurder virksomhet returnerer 201 - CREATED`() {
+        val virksomhet = lastInnNyVirksomhet()
         val orgnummer = virksomhet.orgnr
         val res = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>()
 
         res.second.statusCode shouldBe HttpStatusCode.Created.value
-        val sak = res.third.get()
+    }
+
+    @Test
+    fun `skal kunne vurdere samarbeid med en virksomhet`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
 
         // Sjekk avhengigheter er varslet
@@ -154,15 +154,10 @@ class NyFlytTest {
 
     @Test
     fun `skal kunne angre vurdering av samarbeid med en virksomhet`() {
-        val orgnummer = VirksomhetHelper.nyttOrgnummer()
-        val vurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .tilSingelRespons<IASakDto>()
-        vurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
+        val sak = vurderVirksomhet()
+        sak.status shouldBe IASak.Status.VURDERES
 
-        val sak = vurderRes.third.get()
-
-        val angreVurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/angre-vurdering")
+        val angreVurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/angre-vurdering")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>()
         angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
@@ -171,7 +166,7 @@ class NyFlytTest {
             """
             SELECT count(*) = 0
                  FROM IA_SAK 
-                 WHERE orgnr = '$orgnummer'
+                 WHERE orgnr = '${sak.orgnr}'
             """.trimIndent(),
         )
         sakenErSlettet.shouldBeTrue()
@@ -210,18 +205,10 @@ class NyFlytTest {
 
     @Test
     fun `skal kunne fullføre vurdering som ikke medfører et samarbeid`() {
-        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
-        val virksomhet = TestVirksomhet.nyVirksomhet(
-            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
-        )
-        lastInnNyVirksomhet(virksomhet)
-        val orgnummer = virksomhet.orgnr
-        val vurderRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .tilSingelRespons<IASakDto>()
-        vurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
 
-        val fullførVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/fullfor-vurdering")
+        val fullførVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/fullfor-vurdering")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .jsonBody(
                 Json.encodeToString(
@@ -283,30 +270,22 @@ class NyFlytTest {
     fun `skal kunne opprette et samarbeid`() {
         val eierAvSak = authContainerHelper.superbruker1
         val følgerAvSak = authContainerHelper.saksbehandler2
-        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
-        val virksomhet = TestVirksomhet.nyVirksomhet(
-            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+        val sak = vurderVirksomhet(
+            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+            token = eierAvSak.token,
         )
-        lastInnNyVirksomhet(virksomhet)
-        val orgnummer = virksomhet.orgnr
-
-        val res = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
-            .authentication().bearer(eierAvSak.token)
-            .tilSingelRespons<IASakDto>()
-
-        res.second.statusCode shouldBe HttpStatusCode.Created.value
-        val sak = res.third.get()
         sak.status shouldBe IASak.Status.VURDERES
 
         val oppdatertSak = sak.leggTilFolger(token = følgerAvSak.token)
-        val samarbeidRespons = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/opprett-samarbeid")
+        val samarbeidsnavn = "Samarbeid med avdeling A"
+        val samarbeidRespons = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/opprett-samarbeid")
             .authentication().bearer(følgerAvSak.token)
             .jsonBody(
                 Json.encodeToString(
                     IASamarbeidDto(
                         id = 0,
                         saksnummer = oppdatertSak.saksnummer,
-                        navn = "Samarbeid med ${virksomhet.navn}",
+                        navn = samarbeidsnavn,
                     ),
                 ),
             ).tilSingelRespons<IASamarbeidDto>()
@@ -322,7 +301,7 @@ class NyFlytTest {
                 val samarbeidKafka = meldinger.map { Json.decodeFromString<SamarbeidKafkaMeldingValue>(it) }
                 samarbeidKafka.forExactlyOne {
                     it.samarbeid.id shouldBe samarbeid.id
-                    it.samarbeid.navn shouldBe "Samarbeid med ${virksomhet.navn}"
+                    it.samarbeid.navn shouldBe samarbeidsnavn
                     it.samarbeid.status shouldBe IASamarbeid.Status.AKTIV
                 }
             }
@@ -332,7 +311,7 @@ class NyFlytTest {
                 val samarbeidKafka = meldinger.map { Json.decodeFromString<SamarbeidValue>(it) }
                 samarbeidKafka.forExactlyOne {
                     it.id shouldBe samarbeid.id
-                    it.navn shouldBe "Samarbeid med ${virksomhet.navn}"
+                    it.navn shouldBe samarbeidsnavn
                     it.status shouldBe IASamarbeid.Status.AKTIV.name
                 }
             }
