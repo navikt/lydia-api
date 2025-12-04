@@ -340,7 +340,7 @@ class NyFlytTest {
     }
 
     @Test
-    fun `opprettelse av samarbeidsplan skal gjøre virksomheten AKTIV`() {
+    fun `opprettelse av samarbeidsplan når virksomheten er i status VURDERES skal gjøre virksomheten AKTIV`() {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
@@ -348,13 +348,36 @@ class NyFlytTest {
         val samarbeid = sak.opprettSamarbeid()
         hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
 
-        val plan = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/${samarbeid.id}/opprett-samarbeidsplan")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
+        val plan = samarbeid.opprettSamarbeidsplan(sak.orgnr)
+        plan.status shouldBe IASamarbeid.Status.AKTIV
+        hentAktivSak(sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
+    @Test
+    fun `opprettelse av samarbeidsplan når virksomheten er i status AKTIV skal ikke endre status`() {
+        val sak = vurderVirksomhet()
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.opprettSamarbeid(samarbeidsnavn = "Samarbeid med ${sak.orgnr}").opprettSamarbeidsplan(sak.orgnr)
+        val oppdatertSak = hentAktivSak(orgnr = sak.orgnr)
+        oppdatertSak.status shouldBe IASak.Status.AKTIV
+
+        oppdatertSak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid for ${oppdatertSak.orgnr}").opprettSamarbeidsplan(oppdatertSak.orgnr)
+        val sakMedToSamarbeid = hentAktivSak(orgnr = sak.orgnr)
+        sakMedToSamarbeid.status shouldBe IASak.Status.AKTIV
+    }
+
+    private fun IASamarbeidDto.opprettSamarbeidsplan(
+        orgnr: String,
+        token: String = authContainerHelper.superbruker1.token,
+    ): PlanMedPubliseringStatusDto {
+        val plan = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/opprett-samarbeidsplan")
+            .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(PlanHelper.hentPlanMal().inkluderAlt()),
             ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.get()
-        plan.status shouldBe IASamarbeid.Status.AKTIV
-        hentAktivSak(sak.orgnr).status shouldBe IASak.Status.AKTIV
+        return plan
     }
 
     private fun hentAktivSak(
@@ -363,7 +386,10 @@ class NyFlytTest {
     ) = applikasjon.performGet("$NY_FLYT_PATH/$orgnr")
         .authentication().bearer(token).tilSingelRespons<IASakDto>().third.get()
 
-    private fun IASakDto.opprettSamarbeid(token: String = authContainerHelper.superbruker1.token): IASamarbeidDto =
+    private fun IASakDto.opprettSamarbeid(
+        token: String = authContainerHelper.superbruker1.token,
+        samarbeidsnavn: String = "Samarbeid med $orgnr",
+    ): IASamarbeidDto =
         applikasjon.performPost("$NY_FLYT_PATH/$orgnr/opprett-samarbeid")
             .authentication().bearer(token)
             .jsonBody(
@@ -371,7 +397,7 @@ class NyFlytTest {
                     IASamarbeidDto(
                         id = 0,
                         saksnummer = saksnummer,
-                        navn = "Samarbeid med $orgnr",
+                        navn = samarbeidsnavn,
                     ),
                 ),
             ).tilSingelRespons<IASamarbeidDto>().third.get()

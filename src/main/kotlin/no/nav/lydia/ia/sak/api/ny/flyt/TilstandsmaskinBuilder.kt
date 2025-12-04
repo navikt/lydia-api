@@ -210,9 +210,46 @@ sealed class Tilstand {
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Konsekvens {
-            TODO("Not yet implemented")
-        }
+        ): Konsekvens =
+            when (hendelse) {
+                is Hendelse.OpprettNyttSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.opprettNyttSamarbeid(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = hendelse.saksnummer,
+                        navn = hendelse.samarbeidsnavn,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetVurderes,
+                    )
+                }
+
+                is Hendelse.OpprettPlanForSamarbeid -> {
+                    val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
+                    val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = sakDto.saksnummer,
+                        samarbeidId = hendelse.samarbeidId,
+                        plan = hendelse.plan,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
+                }
+
+                else -> {
+                    val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetVurderes,
+                    )
+                }
+            }
     }
 
     // object VirksomhetHarFlereAktiveSamarbeid : Tilstand()
