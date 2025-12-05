@@ -632,6 +632,21 @@ class IASakSpørreundersøkelseHelper {
                 failure = { fail(it.message) },
             )
 
+        fun IASakDto.opprettKartlegging(
+            samarbeidId: Int = hentAlleSamarbeid().first().id,
+            type: Spørreundersøkelse.Type,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = opprettSpørreundersøkelse(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            samarbeidId = samarbeidId,
+            token = token,
+            type = type,
+        ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
         fun IASakDto.opprettBehovsvurdering(
             samarbeidId: Int = hentAlleSamarbeid().first().id,
             token: String = authContainerHelper.saksbehandler1.token,
@@ -660,6 +675,7 @@ class IASakSpørreundersøkelseHelper {
                     prosessId = samarbeidId,
                     token = token,
                 )
+
                 Spørreundersøkelse.Type.Behovsvurdering -> opprettBehovsvurdering(
                     samarbeidId = samarbeidId,
                     token = token,

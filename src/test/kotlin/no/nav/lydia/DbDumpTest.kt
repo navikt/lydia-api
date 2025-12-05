@@ -5,11 +5,18 @@ import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
@@ -19,6 +26,9 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Behovsvurdering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Evaluering
 import org.junit.experimental.categories.Category
 import java.util.UUID
 import kotlin.test.Test
@@ -31,7 +41,9 @@ class DbDumpTest {
 
         opprettVirksomheterIForskjelligeStatuser()
 
-        opprettVirksomhetMedBehovsvurderinger()
+        opprettVirksomhetMedKartlegginger()
+
+        opprettVirksomhetMedFlereSaker()
 
         val jdbcUrl = postgresContainerHelper.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
@@ -45,7 +57,25 @@ class DbDumpTest {
             .waitFor()
     }
 
-    private fun opprettVirksomhetMedBehovsvurderinger() {
+    private fun opprettVirksomhetMedFlereSaker() {
+        val orgnr = lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "HURRA MEG RUNDT AS"),
+        ).orgnr
+        val eldgammelSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
+        eldgammelSak.leggTilFolger(authContainerHelper.saksbehandler3.token)
+        eldgammelSak.fullførSak()
+        eldgammelSak.oppdaterHendelsesTidspunkter(180)
+
+        val gammelSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
+        gammelSak.leggTilFolger(authContainerHelper.saksbehandler3.token)
+        gammelSak.fullførSak()
+        gammelSak.oppdaterHendelsesTidspunkter(90)
+
+        val sak = SakHelper.nySakIViBistår(orgnummer = orgnr)
+        sak.leggTilFolger(authContainerHelper.saksbehandler3.token)
+    }
+
+    private fun opprettVirksomhetMedKartlegginger() {
         val orgnr = "123459876"
         lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(orgnr = orgnr, navn = "SPENSTIG KATTEDYR"))
         val sak = SakHelper.nySakIViBistår(orgnummer = orgnr, navnPåSamarbeid = "Avdeling Pusekatt")
@@ -60,26 +90,52 @@ class DbDumpTest {
         )
 
         // -- fullført behovsvurdering alle temaer besvart med for få svar
-        sak.behovsvurderingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 1)
+        sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 1, type = Behovsvurdering)
 
         // -- fullført behovsvurdering alle temaer besvart med 3 svar
-        sak.behovsvurderingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 3)
+        sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 3, type = Behovsvurdering)
 
         // -- fullført behovsvurdering alle temaer besvart med 10 svar
-        sak.behovsvurderingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 10)
+        sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 10, type = Behovsvurdering)
 
         // -- fullført behovsvurdering kun ett tema full besvart
-        sak.behovsvurderingFørsteTemaBesvart(antallSvarPåSpørsmål = 10)
+        sak.kartleggingFørsteTemaBesvart(antallSvarPåSpørsmål = 10, type = Behovsvurdering)
 
         // -- fullført behovsvurdering med andre tema halvt besvart
-        sak.behovsvurderingMedHalvtBesvartTema(antallSvarPåSpørsmål = 10)
+        sak.kartleggingMedHalvtBesvartTema(antallSvarPåSpørsmål = 10, type = Behovsvurdering)
 
-        sak.leggTilFolger(TestContainerHelper.authContainerHelper.saksbehandler3.token)
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+
+        sak.opprettEvaluering()
+
+        sak.opprettEvaluering().start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        )
+
+        sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 1, type = Evaluering)
+
+        // -- fullført evaluering alle temaer besvart med 3 svar
+        sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 3, type = Evaluering)
+
+        // -- fullført evaluering alle temaer besvart med 10 svar
+        sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 10, type = Evaluering)
+
+        // -- fullført evaluering kun ett tema full besvart
+        sak.kartleggingFørsteTemaBesvart(antallSvarPåSpørsmål = 10, type = Evaluering)
+
+        // -- fullført evaluering med andre tema halvt besvart
+        sak.kartleggingMedHalvtBesvartTema(antallSvarPåSpørsmål = 10, type = Evaluering)
+
+        sak.leggTilFolger(authContainerHelper.saksbehandler3.token)
     }
 
-    private fun IASakDto.behovsvurderingMedHalvtBesvartTema(antallSvarPåSpørsmål: Int = 3) {
+    private fun IASakDto.kartleggingMedHalvtBesvartTema(
+        antallSvarPåSpørsmål: Int = 3,
+        type: Spørreundersøkelse.Type,
+    ) {
         val sesjonsIder = (1..antallSvarPåSpørsmål).map { UUID.randomUUID().toString() }
-        val behovsvurdering = this.opprettBehovsvurdering()
+        val behovsvurdering = this.opprettKartlegging(type = type)
         behovsvurdering.start(orgnummer = orgnr, saksnummer = this.saksnummer)
         besvarSpørsmålITemaer(listOf(behovsvurdering.temaer.first()), sesjonsIder, behovsvurdering.id)
         besvarSpørsmålITemaer(listOf(behovsvurdering.temaer[1]), sesjonsIder, behovsvurdering.id) {
@@ -88,20 +144,27 @@ class DbDumpTest {
         behovsvurdering.avslutt(orgnummer = orgnr, saksnummer = this.saksnummer)
     }
 
-    private fun IASakDto.behovsvurderingFørsteTemaBesvart(antallSvarPåSpørsmål: Int = 3) {
-        behovsVurderingMedTemaerBesvart(antallSvarPåSpørsmål) { it.temaer.take(1) }
+    private fun IASakDto.kartleggingFørsteTemaBesvart(
+        antallSvarPåSpørsmål: Int = 3,
+        type: Spørreundersøkelse.Type,
+    ) {
+        behovsVurderingMedTemaerBesvart(antallSvarPåSpørsmål, type) { it.temaer.take(1) }
     }
 
-    private fun IASakDto.behovsvurderingAlleSpørsmålBesvart(antallSvarPåSpørsmål: Int = 3) {
-        behovsVurderingMedTemaerBesvart(antallSvarPåSpørsmål) { it.temaer }
+    private fun IASakDto.kartleggingAlleSpørsmålBesvart(
+        antallSvarPåSpørsmål: Int = 3,
+        type: Spørreundersøkelse.Type,
+    ) {
+        behovsVurderingMedTemaerBesvart(antallSvarPåSpørsmål, type) { it.temaer }
     }
 
     private fun IASakDto.behovsVurderingMedTemaerBesvart(
         antallSvarPåSpørsmål: Int,
+        type: Spørreundersøkelse.Type,
         block: (SpørreundersøkelseDto) -> List<TemaDto>,
     ) {
         val sesjonsIder = (1..antallSvarPåSpørsmål).map { UUID.randomUUID().toString() }
-        val behovsvurdering = this.opprettBehovsvurdering()
+        val behovsvurdering = this.opprettKartlegging(type = type)
         behovsvurdering.start(orgnummer = orgnr, saksnummer = this.saksnummer)
         besvarSpørsmålITemaer(block(behovsvurdering), sesjonsIder, behovsvurdering.id)
         behovsvurdering.avslutt(orgnummer = orgnr, saksnummer = this.saksnummer)
@@ -129,8 +192,8 @@ class DbDumpTest {
 
     private fun opprettVirksomheterIForskjelligeStatuser() {
         listOf(
-            TestContainerHelper.authContainerHelper.saksbehandler1.token,
-            TestContainerHelper.authContainerHelper.saksbehandler2.token,
+            authContainerHelper.saksbehandler1.token,
+            authContainerHelper.saksbehandler2.token,
         ).forEach { token ->
             // -- Prioritert virksomhet
             SakHelper.opprettSakForVirksomhet(orgnummer = VirksomhetHelper.nyttOrgnummer())
