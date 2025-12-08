@@ -222,7 +222,7 @@ sealed class Tilstand {
                     )
                     Konsekvens(
                         endring = endring,
-                        nyTilstand = VirksomhetVurderes,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
                     )
                 }
 
