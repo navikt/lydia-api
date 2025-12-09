@@ -262,6 +262,8 @@ class PlanService(
         }
     }
 
+    fun hentAntallAktiveSamarbeidsplaner(saksnummer: String) = planRepository.hentAntallAktiveSamarbeidsplaner(saksnummer)
+
     companion object {
         private fun PlanMalDto.erGyldig(): Boolean =
             tema.all {

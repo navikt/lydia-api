@@ -603,4 +603,25 @@ class PlanRepository(
 
             hentPlan(plan.id, session)?.right() ?: PlanFeil.`fant ikke plan`.left()
         }
+
+    fun hentAntallAktiveSamarbeidsplaner(saksnummer: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT count(*) as antallPlaner
+                    FROM ia_sak_plan JOIN ia_prosess
+                    ON (ia_sak_plan.ia_prosess = ia_prosess.id)
+                    WHERE ia_prosess.saksnummer = :saksnummer
+                    AND ia_prosess.status = :aktivtSamarbeidStatus
+                    AND ia_sak_plan.status != :slettetPlanStatus
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                        "aktivtSamarbeidStatus" to IASamarbeid.Status.AKTIV.name,
+                        "slettetPlanStatus" to IASamarbeid.Status.SLETTET.name,
+                    ),
+                ).map { it.int("antallPlaner") }.asSingle,
+            )
+        }
 }

@@ -82,6 +82,9 @@ class Tilstandsmaskin(
         get() = tilstandRef.get()
         set(value) = tilstandRef.set(value)
 
+    val saksnummer: String?
+        get() = fiaKontekst.saksnummer
+
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
         val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
         nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
@@ -146,6 +149,7 @@ sealed class Tilstand {
                 is Hendelse.FullførVurdering -> {
                     val endring = fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
                         orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
                         årsak = hendelse.årsak,
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
@@ -159,7 +163,7 @@ sealed class Tilstand {
                 is Hendelse.OpprettNyttSamarbeid -> {
                     val endring = fiaKontekst.nyFlytService.opprettNyttSamarbeid(
                         orgnummer = hendelse.orgnr,
-                        saksnummer = hendelse.saksnummer,
+                        saksnummer = fiaKontekst.saksnummer!!,
                         navn = hendelse.samarbeidsnavn,
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
@@ -215,7 +219,7 @@ sealed class Tilstand {
                 is Hendelse.OpprettNyttSamarbeid -> {
                     val endring = fiaKontekst.nyFlytService.opprettNyttSamarbeid(
                         orgnummer = hendelse.orgnr,
-                        saksnummer = hendelse.saksnummer,
+                        saksnummer = fiaKontekst.saksnummer!!,
                         navn = hendelse.samarbeidsnavn,
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
@@ -227,10 +231,9 @@ sealed class Tilstand {
                 }
 
                 is Hendelse.OpprettPlanForSamarbeid -> {
-                    val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
                     val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
                         orgnummer = hendelse.orgnr,
-                        saksnummer = sakDto.saksnummer,
+                        saksnummer = fiaKontekst.saksnummer!!,
                         samarbeidId = hendelse.samarbeidId,
                         plan = hendelse.plan,
                         saksbehandler = hendelse.saksbehandler,
@@ -245,9 +248,8 @@ sealed class Tilstand {
                 is Hendelse.SlettPlanForSamarbeid -> {
                     val endring = fiaKontekst.nyFlytService.slettSamarbeidsplan(
                         orgnummer = hendelse.orgnr,
-                        saksnummer = hendelse.saksnummer,
+                        saksnummer = fiaKontekst.saksnummer!!,
                         samarbeidId = hendelse.samarbeidId,
-                        planId = hendelse.planId.toString(),
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
                     )
@@ -255,11 +257,6 @@ sealed class Tilstand {
                         endring = endring,
                         nyTilstand = VirksomhetHarAktiveSamarbeid, // TODO: Endre etter riktig sjekk
                     )
-                    // hvis planen som slettes er den eneste gjenstående planen for alle aktive samarbeid i virksomheten
-                    //  => VirksomhetVurderes
-                    // hvis ikke, og antall samarbeid med plan er >1
-                    //  => VirksomhetHarAktiveSamarbeid
-                    TODO("Legg til Konsekvens")
                 }
 
                 else -> {
@@ -305,7 +302,6 @@ sealed class Hendelse {
 
     data class OpprettNyttSamarbeid(
         val orgnr: String,
-        val saksnummer: String,
         val samarbeidsnavn: String,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
@@ -321,9 +317,7 @@ sealed class Hendelse {
 
     data class SlettPlanForSamarbeid(
         val orgnr: String,
-        val saksnummer: String,
         val samarbeidId: Int,
-        val planId: UUID,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()
@@ -353,4 +347,6 @@ data class FiaKontekst(
     val iASamarbeidService: IASamarbeidService,
     val planService: PlanService,
     val nyFlytService: NyFlytService,
+    // TODO: Skal orgnr inn hit og?
+    val saksnummer: String?,
 )
