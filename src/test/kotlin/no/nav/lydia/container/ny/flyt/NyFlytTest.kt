@@ -21,6 +21,7 @@ import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -37,6 +38,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -46,6 +48,7 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
+import kotlin.test.fail
 
 class NyFlytTest {
     companion object {
@@ -347,14 +350,56 @@ class NyFlytTest {
         sakMedToSamarbeid.status shouldBe IASak.Status.AKTIV
     }
 
+    @Test
+    fun `sletting av siste samarbeidsplan fører til at virksomheten går tilbake til status VURDERES`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr)
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            """
+            SELECT status from ia_sak_plan where plan_id = '${plan.id}'
+            """.trimIndent(),
+        ) shouldBe "SLETTET"
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+    }
+
+    @Test
+    fun `status er fortsatt AKTIV dersom det gjenstår en eller flere samarbeidsplaner etter sletting`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        sak.opprettSamarbeid(samarbeidsnavn = "Helt nytt").opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
+    private fun IASamarbeidDto.slettSamarbeidsplan(
+        orgnr: String,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeidsplan")
+        .authentication().bearer(token)
+        .tilSingelRespons<Int>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
     private fun IASamarbeidDto.opprettSamarbeidsplan(
         orgnr: String,
+        planMal: PlanMalDto = PlanHelper.hentPlanMal().inkluderAlt(),
         token: String = authContainerHelper.superbruker1.token,
     ): PlanMedPubliseringStatusDto {
         val plan = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/opprett-samarbeidsplan")
             .authentication().bearer(token)
             .jsonBody(
-                Json.encodeToString(PlanHelper.hentPlanMal().inkluderAlt()),
+                Json.encodeToString(planMal),
             ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.get()
         return plan
     }
