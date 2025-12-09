@@ -287,6 +287,7 @@ enum class IASakshendelseType {
     // -- Ny flyt
     VURDERING_FULLFØRT_UTEN_SAMARBEID,
     OPPRETT_SAMARBEIDSPLAN,
+    SLETT_SAMARBEIDSPLAN,
 }
 
 @Serializable

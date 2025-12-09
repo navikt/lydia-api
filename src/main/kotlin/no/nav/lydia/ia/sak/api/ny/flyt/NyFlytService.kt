@@ -21,6 +21,7 @@ import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
+import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.team.IATeamService
@@ -262,6 +263,54 @@ class NyFlytService(
         }
 
         return plan
+    }
+
+    fun slettSamarbeidsplan(
+        orgnummer: String,
+        saksnummer: String,
+        samarbeidId: Int,
+        planId: String,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ): Either<Feil, Pair<Boolean, PlanMedPubliseringStatusDto>> {
+        // hent eksisterende plan for dette samarbeidet og sjekk antall planer for virksomheten
+        val antallAktivePlaner = hentAntallAktivePlaner(saksnummer = saksnummer)
+        val harResterendeAktivePlaner = antallAktivePlaner > 1
+
+        val iASakshendelse = IASakshendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = saksnummer, // TODO: hvordan henter vi dette?
+            hendelsesType = IASakshendelseType.SLETT_SAMARBEIDSPLAN,
+            orgnummer = orgnummer,
+            opprettetAv = saksbehandler.navIdent,
+            opprettetAvRolle = saksbehandler.rolle,
+            navEnhet = navEnhet,
+            resulterendeStatus = null,
+        )
+
+     /*   val slettetPlan = planService.slettPlan(
+            samarbeidId = samarbeidId,
+            planId = planId,
+            saksbehandler = saksbehandler,
+        ).onRight {
+            //TODO: Lagre hendelse + oppdater sak + varsle observers etc.
+        }*/
+
+        TODO("return Pair(harResterendeAktivePlaner, slettetPlan)")
+    }
+
+    private fun hentAntallAktivePlaner(saksnummer: String): Int {
+        // hent alle aktive samarbeid, hent plan og returner en liste med alle aktive samarbeid for virksomhet
+        val alleAktiveSamarbeid = iaSamarbeidRepository.hentAktiveSamarbeid(saksnummer)
+        val allePlanerIEtSaksnummer: MutableList<Plan> = mutableListOf<Plan>()
+        alleAktiveSamarbeid.map { samarbeid ->
+            planService.hentPlan(samarbeidId = samarbeid.id).fold(
+                ifLeft = { },
+                ifRight = { allePlanerIEtSaksnummer.add(it) },
+            )
+        }
+        return allePlanerIEtSaksnummer.size
     }
 
     private fun slettSak(sakDto: IASakDto): Either<Feil, IASakDto> =

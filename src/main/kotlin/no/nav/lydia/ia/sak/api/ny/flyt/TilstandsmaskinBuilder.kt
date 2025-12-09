@@ -242,6 +242,26 @@ sealed class Tilstand {
                     )
                 }
 
+                is Hendelse.SlettPlanForSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.slettSamarbeidsplan(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = hendelse.saksnummer,
+                        samarbeidId = hendelse.samarbeidId,
+                        planId = hendelse.planId.toString(),
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid, // TODO: Endre etter riktig sjekk
+                    )
+                    // hvis planen som slettes er den eneste gjenstående planen for alle aktive samarbeid i virksomheten
+                    //  => VirksomhetVurderes
+                    // hvis ikke, og antall samarbeid med plan er >1
+                    //  => VirksomhetHarAktiveSamarbeid
+                    TODO("Legg til Konsekvens")
+                }
+
                 else -> {
                     val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                     Konsekvens(
@@ -295,6 +315,15 @@ sealed class Hendelse {
         val orgnr: String,
         val samarbeidId: Int,
         val plan: PlanMalDto,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
+    ) : Hendelse()
+
+    data class SlettPlanForSamarbeid(
+        val orgnr: String,
+        val saksnummer: String,
+        val samarbeidId: Int,
+        val planId: UUID,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()

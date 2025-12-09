@@ -356,3 +356,8 @@ object IASamarbeidFeil {
     val `kan ikke avbryte samarbeid` =
         Feil(feilmelding = "kan ikke avbryte samarbeid", httpStatusCode = HttpStatusCode.BadRequest)
 }
+
+object IASamarbeidsplanFeil {
+    val `ugyldig samarbeidsplanid` =
+        Feil("ugyldig samarbeidsplanId", HttpStatusCode.BadRequest)
+}
