@@ -11,19 +11,24 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.application
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
+import no.nav.lydia.ia.sak.IASamarbeidsplanFeil
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
+import no.nav.lydia.ia.sak.api.extensions.samarbeidsplanId
+import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -236,6 +241,39 @@ fun Route.nyFlyt(
             )
         }.map {
             call.respond(status = HttpStatusCode.Created, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    delete("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/slett-samarbeidsplan/{samarbeidsplanId}") {
+        val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        val samarbeidsplanId = call.samarbeidsplanId ?: return@delete call.sendFeil(IASamarbeidsplanFeil.`ugyldig samarbeidsplanid`)
+        val tilstandsmaskin = tilstandsmaskinBuilder.build(orgnr)
+
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.SlettPlanForSamarbeid(
+                    orgnr = orgnr,
+                    saksnummer = "", // TODO: hvor/hvordan henter vi dette?
+                    samarbeidId = samarbeidId,
+                    planId = samarbeidsplanId,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { it as PlanMedPubliseringStatusDto }
+        }.also { iaPlanDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaPlanDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.delete,
+                saksnummer = null, // TODO: finn ut av hvor denne kan hentes fra
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
