@@ -281,7 +281,6 @@ class NyFlytService(
         }.onRight { antallAktivePlaner ->
             val harResterendeAktivePlaner = antallAktivePlaner > 0
             val resulterendeStatus = if (harResterendeAktivePlaner) AKTIV else VURDERES
-            println("Antall planer: $antallAktivePlaner, resulterende status: $resulterendeStatus")
 
             val iASakshendelse = IASakshendelse(
                 id = ULID.random(),
