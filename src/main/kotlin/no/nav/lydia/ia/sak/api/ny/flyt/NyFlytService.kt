@@ -285,7 +285,7 @@ class NyFlytService(
             val iASakshendelse = IASakshendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
-                saksnummer = saksnummer, // TODO: hvordan henter vi dette?
+                saksnummer = saksnummer,
                 hendelsesType = IASakshendelseType.SLETT_SAMARBEIDSPLAN,
                 orgnummer = orgnummer,
                 opprettetAv = saksbehandler.navIdent,
@@ -305,8 +305,7 @@ class NyFlytService(
                 status = resulterendeStatus,
                 endretAv = saksbehandler.navIdent,
                 endretAvHendelseId = iASakshendelse.id,
-            )
-            // TODO: varsle observers etc.
+            ).onRight(::varsleIASakObservers)
         }
 
     private fun hentAntallAktivePlaner(saksnummer: String) = planService.hentAntallAktiveSamarbeidsplaner(saksnummer) ?: 0
