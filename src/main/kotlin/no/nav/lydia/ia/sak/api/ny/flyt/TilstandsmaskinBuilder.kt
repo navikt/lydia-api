@@ -175,10 +175,9 @@ sealed class Tilstand {
                 }
 
                 is Hendelse.OpprettPlanForSamarbeid -> {
-                    val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
                     val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
                         orgnummer = hendelse.orgnr,
-                        saksnummer = sakDto.saksnummer,
+                        saksnummer = fiaKontekst.saksnummer!!,
                         samarbeidId = hendelse.samarbeidId,
                         plan = hendelse.plan,
                         saksbehandler = hendelse.saksbehandler,
