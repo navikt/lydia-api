@@ -258,6 +258,20 @@ sealed class Tilstand {
                     )
                 }
 
+                is Hendelse.SlettSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.slettSamarbeid(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        samarbeidId = hendelse.samarbeidId,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
+                }
+
                 else -> {
                     val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                     Konsekvens(
@@ -321,14 +335,17 @@ sealed class Hendelse {
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
-    data class FullførSamarbeid(
+    data class SlettSamarbeid(
         val orgnr: String,
-        val samarbeidId: UUID,
+        val samarbeidId: Int,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class AvsluttSamarbeid(
         val orgnr: String,
         val samarbeidId: UUID,
+        val typeAvslutning: IASamarbeid.Status, // FULLFØRT eller AVBRUTT
     ) : Hendelse()
 
     data class GjenopprettSamarbeid(

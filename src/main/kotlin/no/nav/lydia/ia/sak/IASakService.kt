@@ -155,7 +155,7 @@ class IASakService(
             IASakshendelseType.SLETT_PROSESS -> {
                 val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(saksnummer = hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
-                if (!samarbeidService.kanSletteSamarbeid(sak = aktivSak, samarbeidId = samarbeidDto.id).kanGjennomføres) {
+                if (!samarbeidService.kanSletteSamarbeid(saksnummer = aktivSak.saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
                     return IASamarbeidFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`.left()
                 }
             }

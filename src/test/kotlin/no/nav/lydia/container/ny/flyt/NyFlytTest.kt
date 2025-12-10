@@ -381,6 +381,30 @@ class NyFlytTest {
         hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
     }
 
+    @Test
+    fun `status er fortsatt AKTIV dersom det gjenstår en eller flere samarbeid etter slett samarbeid`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val etNyttSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Helt nytt")
+
+        etNyttSamarbeid.slettSamarbeid(orgnr = sak.orgnr)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
+    private fun IASamarbeidDto.slettSamarbeid(
+        orgnr: String,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeid")
+        .authentication().bearer(token)
+        .tilSingelRespons<IASamarbeidDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
     private fun IASamarbeidDto.slettSamarbeidsplan(
         orgnr: String,
         token: String = authContainerHelper.saksbehandler1.token,

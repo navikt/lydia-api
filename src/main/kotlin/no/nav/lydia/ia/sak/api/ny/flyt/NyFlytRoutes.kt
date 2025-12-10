@@ -270,4 +270,34 @@ fun Route.nyFlyt(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+
+    delete("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/slett-samarbeid") {
+        val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.SlettSamarbeid(
+                    orgnr = orgnr,
+                    samarbeidId = samarbeidId,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { it as IASamarbeidDto }
+        }.also { iaSamarbeidDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSamarbeidDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.delete,
+                saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
 }

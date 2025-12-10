@@ -1,10 +1,12 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
+import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
+import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
@@ -39,7 +41,8 @@ class NyFlytService(
     val iaSakRepository: IASakRepository,
     val iaSakshendelseRepository: IASakshendelseRepository,
     val årsakRepository: ÅrsakRepository,
-    val iaSamarbeidRepository: IASamarbeidRepository,
+    val iaSamarbeidService: IASamarbeidService,
+    val iaSamarbeidRepository: IASamarbeidRepository, // TODO: bruk Service i stedet
     val iaTeamService: IATeamService,
     val planService: PlanService,
     val iaSakObservers: List<Observer<IASakDto>>,
@@ -163,9 +166,7 @@ class NyFlytService(
     }
 
     fun hentAktivIASakDto(orgnummer: String): IASakDto? =
-        iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer)
-            .sortedByDescending { it.opprettetTidspunkt }
-            .firstOrNull { !it.lukket }
+        iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer).sortedByDescending { it.opprettetTidspunkt }.firstOrNull { !it.lukket }
 
     fun slettSakOgVarsleObservers(sakDto: IASakDto): Either<Feil, IASakDto> =
         slettSak(sakDto).also { iaSakEither ->
@@ -179,15 +180,13 @@ class NyFlytService(
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
     ): Either<Feil, IASamarbeidDto> {
-        val aktivSakDto = hentAktivIASakDto(orgnummer = orgnummer)
-            ?: return Either.Left(IASakError.`generell feil under uthenting`)
+        val aktivSakDto = hentAktivIASakDto(orgnummer = orgnummer) ?: return Either.Left(IASakError.`generell feil under uthenting`)
         val alleSamarbeid = hentSamarbeid(saksnummer = saksnummer)
 
         if (navn.trim().isEmpty() || navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
             return Either.Left(IASamarbeidFeil.`ugyldig samarbeidsnavn`)
         }
-        alleSamarbeid.getOrNull()
-            ?.find { it.navn.equals(navn, ignoreCase = true) }
+        alleSamarbeid.getOrNull()?.find { it.navn.equals(navn, ignoreCase = true) }
             ?.let { return Either.Left(IASamarbeidFeil.`samarbeidsnavn finnes allerede`) }
 
         val erEierEllerFølgerAvSak = iaTeamService.erEierEllerFølgerAvSak(
@@ -307,6 +306,50 @@ class NyFlytService(
                 endretAvHendelseId = iASakshendelse.id,
             ).onRight(::varsleIASakObservers)
         }
+
+    fun slettSamarbeid(
+        orgnummer: String,
+        saksnummer: String,
+        samarbeidId: Int,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ): Either<Feil, IASamarbeidDto?> {
+        val samarbeidDto = IASamarbeidDto(
+            id = samarbeidId,
+            saksnummer = saksnummer,
+            navn = "",
+        )
+
+        val iaSamarbeidDto = iaSamarbeidService.slettSamarbeid(samarbeidDto = samarbeidDto, saksnummer = saksnummer)?.also { iaSamarbeid ->
+            val iASakshendelse = IASakshendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = saksnummer,
+                hendelsesType = IASakshendelseType.SLETT_PROSESS,
+                orgnummer = orgnummer,
+                opprettetAv = saksbehandler.navIdent,
+                opprettetAvRolle = saksbehandler.rolle,
+                navEnhet = navEnhet,
+                resulterendeStatus = null,
+            )
+
+            iaSakshendelseRepository.lagreHendelse(
+                hendelse = iASakshendelse,
+                sistEndretAvHendelseId = null,
+                resulterendeStatus = AKTIV,
+            )
+
+            // TODO: oppdatere sakstatus hvis nødvendig
+
+            iaSamarbeidObservers.forEach {
+                it.receive(
+                    input = iaSamarbeid,
+                )
+            }
+        }?.tilDto().right()
+
+        return iaSamarbeidDto
+    }
 
     private fun hentAntallAktivePlaner(saksnummer: String) = planService.hentAntallAktiveSamarbeidsplaner(saksnummer) ?: 0
 

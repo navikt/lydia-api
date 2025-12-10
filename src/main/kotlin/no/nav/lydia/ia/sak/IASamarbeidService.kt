@@ -130,7 +130,7 @@ class IASamarbeidService(
                     }
 
                     SLETT_PROSESS -> {
-                        slettSamarbeid(sakshendelse, sak)
+                        slettSamarbeid(samarbeidDto = sakshendelse.samarbeidDto, saksnummer = sak.saksnummer)
                             ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(input = samarbeid) } }
                     }
 
@@ -214,10 +214,10 @@ class IASamarbeidService(
     }
 
     fun kanSletteSamarbeid(
-        sak: IASak,
+        saksnummer: String,
         samarbeidId: Int,
     ): KanGjennomføreStatusendring {
-        val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
+        val samarbeid = hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).getOrNull()
             ?: throw IllegalStateException("Fant ikke samarbeid")
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
@@ -231,7 +231,7 @@ class IASamarbeidService(
         if (planRepository.hentPlan(samarbeidId = samarbeid.id) != null) {
             blokkerende.add(FINNES_SAMARBEIDSPLAN)
         }
-        if (samarbeidRepository.hentSalesforceAktiviteter(saksnummer = sak.saksnummer, samarbeidId = samarbeid.id).isNotEmpty()) {
+        if (samarbeidRepository.hentSalesforceAktiviteter(saksnummer = saksnummer, samarbeidId = samarbeid.id).isNotEmpty()) {
             blokkerende.add(FINNES_SALESFORCE_AKTIVITET)
         }
 
@@ -316,13 +316,11 @@ class IASamarbeidService(
         }
     }
 
-    private fun slettSamarbeid(
-        sakshendelse: ProsessHendelse,
-        sak: IASak,
-    ): IASamarbeid? {
-        val samarbeidDto = sakshendelse.samarbeidDto
-
-        return if (kanSletteSamarbeid(sak = sak, samarbeidId = samarbeidDto.id).kanGjennomføres) {
+    fun slettSamarbeid(
+        samarbeidDto: IASamarbeidDto,
+        saksnummer: String,
+    ): IASamarbeid? =
+        if (kanSletteSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
             samarbeidRepository.slettSamarbeid(samarbeidDto = samarbeidDto)
         } else {
             samarbeidRepository.hentSamarbeid(
@@ -330,7 +328,6 @@ class IASamarbeidService(
                 samarbeidId = samarbeidDto.id,
             )
         }
-    }
 }
 
 const val DEFAULT_SAMARBEID_NAVN = "Samarbeid uten navn"
@@ -355,9 +352,4 @@ object IASamarbeidFeil {
         Feil(feilmelding = "kan ikke fullføre samarbeid", httpStatusCode = HttpStatusCode.BadRequest)
     val `kan ikke avbryte samarbeid` =
         Feil(feilmelding = "kan ikke avbryte samarbeid", httpStatusCode = HttpStatusCode.BadRequest)
-}
-
-object IASamarbeidsplanFeil {
-    val `ugyldig samarbeidsplanid` =
-        Feil("ugyldig samarbeidsplanId", HttpStatusCode.BadRequest)
 }

@@ -38,7 +38,7 @@ fun Route.iaSamarbeid(
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
                 when (statusEndring) {
                     "fullfores" -> samarbeidService.kanFullføreSamarbeid(sak = iaSak, samarbeidId = samarbeid).right()
-                    "slettes" -> samarbeidService.kanSletteSamarbeid(sak = iaSak, samarbeidId = samarbeid).right()
+                    "slettes" -> samarbeidService.kanSletteSamarbeid(saksnummer = iaSak.saksnummer, samarbeidId = samarbeid).right()
                     "avbrytes" -> samarbeidService.kanAvbryteSamarbeid(sak = iaSak, samarbeidId = samarbeid).right()
                     else -> Feil(feilmelding = "ugyldig statusendring", httpStatusCode = HttpStatusCode.BadRequest).left()
                 }
