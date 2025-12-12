@@ -33,6 +33,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent.SamarbeidValue
+import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
@@ -406,6 +407,41 @@ class NyFlytTest {
         hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
         sak.hentAlleSamarbeid() shouldHaveSize 0
     }
+
+    @Test
+    fun `ved avslutning av siste samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal virksomheten gå til status AVSLUTTET`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeid = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+    }
+
+    private fun IASamarbeidDto.avsluttSamarbeid(
+        orgnr: String,
+        avslutningsType: IASamarbeid.Status,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/avslutt-samarbeid")
+        .authentication().bearer(token)
+        .jsonBody(
+            Json.encodeToString(
+                SamarbeidDto(
+                    id = this.id,
+                    status = avslutningsType,
+                ),
+            ),
+        )
+        .tilSingelRespons<IASamarbeidDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
 
     private fun IASamarbeidDto.slettSamarbeid(
         orgnr: String,

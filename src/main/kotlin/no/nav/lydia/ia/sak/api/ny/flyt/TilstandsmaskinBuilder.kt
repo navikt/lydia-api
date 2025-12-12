@@ -358,8 +358,10 @@ sealed class Hendelse {
 
     data class AvsluttSamarbeid(
         val orgnr: String,
-        val samarbeidId: UUID,
+        val samarbeidId: Int,
         val typeAvslutning: IASamarbeid.Status, // FULLFØRT eller AVBRUTT
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class GjenopprettSamarbeid(

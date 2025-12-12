@@ -595,6 +595,7 @@ class IASak private constructor(
         // -- Ny flyt
         VURDERT,
         AKTIV,
+        AVSLUTTET,
         ;
 
         fun regnesSomAvsluttet(): Boolean = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
