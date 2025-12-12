@@ -29,6 +29,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent.SamarbeidValue
@@ -393,6 +394,17 @@ class NyFlytTest {
 
         etNyttSamarbeid.slettSamarbeid(orgnr = sak.orgnr)
         hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        sak.hentAlleSamarbeid() shouldHaveSize 1
+    }
+
+    @Test
+    fun `skal kunne slette samarbeid når virksomhet er i tilstand VirksomhetVurderes`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.slettSamarbeid(orgnr = sak.orgnr)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        sak.hentAlleSamarbeid() shouldHaveSize 0
     }
 
     private fun IASamarbeidDto.slettSamarbeid(

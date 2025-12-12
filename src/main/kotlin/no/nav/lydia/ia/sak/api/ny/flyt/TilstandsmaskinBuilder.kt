@@ -174,6 +174,20 @@ sealed class Tilstand {
                     )
                 }
 
+                is Hendelse.SlettSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.slettSamarbeid(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        samarbeidId = hendelse.samarbeidId,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetVurderes,
+                    )
+                }
+
                 is Hendelse.OpprettPlanForSamarbeid -> {
                     val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
                         orgnummer = hendelse.orgnr,

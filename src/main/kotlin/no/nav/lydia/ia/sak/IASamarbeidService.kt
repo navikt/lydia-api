@@ -71,9 +71,9 @@ class IASamarbeidService(
         return publiserteBehovsvurderinger.toList()
     }
 
-    fun hentSamarbeid(sak: IASak): Either<Feil, List<IASamarbeid>> =
+    fun hentSamarbeid(saksnummer: String): Either<Feil, List<IASamarbeid>> =
         Either.catch {
-            samarbeidRepository.hentSamarbeid(saksnummer = sak.saksnummer)
+            samarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
         }.mapLeft {
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }

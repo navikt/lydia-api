@@ -233,24 +233,31 @@ class SpørreundersøkelseService(
         val spørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { return it.left() }
 
         val oppdatertSpørreundersøkelse: Spørreundersøkelse = when (statusViSkalEndreTil) {
-            Spørreundersøkelse.Status.PÅBEGYNT ->
+            Spørreundersøkelse.Status.PÅBEGYNT -> {
                 if (spørreundersøkelse.status != Spørreundersøkelse.Status.OPPRETTET) {
                     return IASakSpørreundersøkelseError.`feil status kan ikke starte`.left()
                 } else {
                     spørreundersøkelseRepository.startSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
                         ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
                 }
-            Spørreundersøkelse.Status.AVSLUTTET ->
+            }
+
+            Spørreundersøkelse.Status.AVSLUTTET -> {
                 if (spørreundersøkelse.status != Spørreundersøkelse.Status.PÅBEGYNT) {
                     return IASakSpørreundersøkelseError.`ikke påbegynt`.left()
                 } else {
                     spørreundersøkelseRepository.avsluttSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
                         ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
                 }
-            Spørreundersøkelse.Status.OPPRETTET ->
+            }
+
+            Spørreundersøkelse.Status.OPPRETTET -> {
                 return IASakSpørreundersøkelseError.`ikke støttet statusendring`.left()
-            Spørreundersøkelse.Status.SLETTET ->
+            }
+
+            Spørreundersøkelse.Status.SLETTET -> {
                 return IASakSpørreundersøkelseError.`ikke støttet statusendring`.left()
+            }
         }
 
         spørreundersøkelseObservers.forEach { it.receive(oppdatertSpørreundersøkelse) }
@@ -317,7 +324,7 @@ class SpørreundersøkelseService(
         }
 
         val oppdatertBehovsvurdering = iaSakService.hentIASak(saksnummer = behovsvurdering.saksnummer).flatMap {
-            samarbeidService.hentSamarbeid(sak = it)
+            samarbeidService.hentSamarbeid(saksnummer = it.saksnummer)
         }.map { prosess ->
             prosess.map { it.id }
         }.flatMap { prosesserISak ->

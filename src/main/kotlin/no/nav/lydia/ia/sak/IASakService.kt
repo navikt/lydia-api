@@ -171,7 +171,7 @@ class IASakService(
             IASakshendelseType.ENDRE_PROSESS, IASakshendelseType.NY_PROSESS -> {
                 val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(saksnummer = hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
-                val alleProsesser = samarbeidService.hentSamarbeid(aktivSak)
+                val alleProsesser = samarbeidService.hentSamarbeid(aktivSak.saksnummer)
 
                 if (samarbeidDto.navn.trim().isEmpty() || samarbeidDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
                     return IASamarbeidFeil.`ugyldig samarbeidsnavn`.left()
@@ -289,7 +289,7 @@ class IASakService(
 
     fun avbrytMaskineltSamarbeidIIkkeAktuelleSaker(tørrKjør: Boolean): Int =
         iaSakRepository.hentIkkeAktuelleSakerMedAktiveSamarbeid().map { iaSak ->
-            val alleAktiveSamarbeidPåSak = samarbeidService.hentSamarbeid(iaSak).getOrElse { emptyList() }
+            val alleAktiveSamarbeidPåSak = samarbeidService.hentSamarbeid(iaSak.saksnummer).getOrElse { emptyList() }
                 .filter { it.status == IASamarbeid.Status.AKTIV }
 
             if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
@@ -398,7 +398,7 @@ class IASakService(
         val årsaker = mutableListOf<ÅrsakTilAtSakIkkeKanAvsluttes>()
         val sak = hentIASak(saksnummer).getOrNull()
             ?: return IASakError.`generell feil under uthenting`.left()
-        val samarbeid = samarbeidService.hentSamarbeid(sak).getOrNull()
+        val samarbeid = samarbeidService.hentSamarbeid(sak.saksnummer).getOrNull()
             ?: return IASamarbeidFeil.`feil ved henting av samarbeid`.left()
 
         samarbeid.forEach { prosess ->
@@ -439,6 +439,7 @@ class IASakService(
 
         return when (erPlanFullført) {
             true -> null
+
             false -> ÅrsakTilAtSakIkkeKanAvsluttes(
                 samarbeidsId = prosess.id,
                 samarbeidsNavn = prosess.navn,
@@ -461,14 +462,17 @@ class IASakService(
                 Spørreundersøkelse.Status.AVSLUTTET,
                 Spørreundersøkelse.Status.SLETTET,
                 -> {}
-                else -> årsaker.add(
-                    ÅrsakTilAtSakIkkeKanAvsluttes(
-                        samarbeidsId = samarbeid.id,
-                        samarbeidsNavn = samarbeid.navn,
-                        id = it.first,
-                        type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
-                    ),
-                )
+
+                else -> {
+                    årsaker.add(
+                        ÅrsakTilAtSakIkkeKanAvsluttes(
+                            samarbeidsId = samarbeid.id,
+                            samarbeidsNavn = samarbeid.navn,
+                            id = it.first,
+                            type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
+                        ),
+                    )
+                }
             }
         }
         return årsaker
