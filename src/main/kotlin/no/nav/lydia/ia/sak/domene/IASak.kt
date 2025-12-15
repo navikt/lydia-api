@@ -85,6 +85,8 @@ class IASak private constructor(
             Status.VURDERT -> throw IllegalStateException()
 
             Status.AKTIV -> throw IllegalStateException()
+
+            Status.AVSLUTTET -> throw IllegalStateException()
         }
 
     fun gyldigeNesteHendelser(

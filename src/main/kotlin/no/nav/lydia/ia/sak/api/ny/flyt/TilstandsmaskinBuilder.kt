@@ -68,6 +68,9 @@ class TilstandsmaskinBuilder private constructor(
 
                 Status.AKTIV,
                 -> Tilstand.VirksomhetHarAktiveSamarbeid
+
+                Status.AVSLUTTET,
+                -> Tilstand.AlleSamarbeidIVirksomhetErAvsluttet
             }
         } ?: Tilstand.VirksomhetKlarTilVurdering
 }
@@ -283,6 +286,21 @@ sealed class Tilstand {
                     Konsekvens(
                         endring = endring,
                         nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
+                }
+
+                is Hendelse.AvsluttSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.avsluttSamarbeid(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        samarbeidId = hendelse.samarbeidId,
+                        typeAvslutning = hendelse.typeAvslutning,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
                     )
                 }
 

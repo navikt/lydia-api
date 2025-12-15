@@ -20,6 +20,7 @@ import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
+import no.nav.lydia.ia.sak.domene.IASak.Status.AVSLUTTET
 import no.nav.lydia.ia.sak.domene.IASak.Status.NY
 import no.nav.lydia.ia.sak.domene.IASak.Status.SLETTET
 import no.nav.lydia.ia.sak.domene.IASak.Status.VURDERES
@@ -340,6 +341,51 @@ class NyFlytService(
             )
 
             // TODO: oppdatere sakstatus hvis nødvendig
+
+            iaSamarbeidObservers.forEach {
+                it.receive(
+                    input = iaSamarbeid,
+                )
+            }
+        }?.tilDto().right()
+
+        return iaSamarbeidDto
+    }
+
+    fun avsluttSamarbeid(
+        orgnummer: String,
+        saksnummer: String,
+        samarbeidId: Int,
+        typeAvslutning: IASamarbeid.Status,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ): Either<Feil, IASamarbeidDto?> {
+        val samarbeidDto = IASamarbeidDto(
+            id = samarbeidId,
+            saksnummer = saksnummer,
+            navn = "",
+        )
+
+        // TODO: Håndter typeAvslutning
+
+        val iaSamarbeidDto = iaSamarbeidService.fullførSamarbeid(samarbeidDto = samarbeidDto, saksnummer = saksnummer)?.also { iaSamarbeid ->
+            val iASakshendelse = IASakshendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = saksnummer,
+                hendelsesType = IASakshendelseType.FULLFØR_PROSESS,
+                orgnummer = orgnummer,
+                opprettetAv = saksbehandler.navIdent,
+                opprettetAvRolle = saksbehandler.rolle,
+                navEnhet = navEnhet,
+                resulterendeStatus = null,
+            )
+
+            iaSakshendelseRepository.lagreHendelse(
+                hendelse = iASakshendelse,
+                sistEndretAvHendelseId = null,
+                resulterendeStatus = AVSLUTTET,
+            )
 
             iaSamarbeidObservers.forEach {
                 it.receive(

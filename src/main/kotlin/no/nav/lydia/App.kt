@@ -192,6 +192,7 @@ fun startLydiaBackend() {
     )
 
     val samarbeidService = IASamarbeidService(
+        iaSakRepository = iaSakRepository,
         samarbeidRepository = samarbeidRepository,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         planRepository = planRepository,
