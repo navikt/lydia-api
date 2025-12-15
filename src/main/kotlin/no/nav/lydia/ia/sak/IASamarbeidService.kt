@@ -21,6 +21,7 @@ import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.SAK_I_FE
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
@@ -38,6 +39,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.slf4j.LoggerFactory
 
 class IASamarbeidService(
+    private val iaSakRepository: IASakRepository,
     private val samarbeidRepository: IASamarbeidRepository,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     private val samarbeidObservers: List<Observer<IASamarbeid>>,
@@ -111,8 +113,8 @@ class IASamarbeidService(
 
                     FULLFØR_PROSESS -> {
                         fullførSamarbeid(
-                            sakshendelse = sakshendelse,
-                            sak = sak,
+                            samarbeidDto = sakshendelse.samarbeidDto,
+                            saksnummer = sak.saksnummer,
                         )?.let { samarbeid ->
                             samarbeidObservers.forEach { it.receive(input = samarbeid) }
                         }
@@ -175,17 +177,20 @@ class IASamarbeidService(
     }
 
     fun kanFullføreSamarbeid(
-        sak: IASak,
+        saksnummer: String,
         samarbeidId: Int,
     ): KanGjennomføreStatusendring {
-        val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
+        val samarbeid = hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).getOrNull()
             ?: throw IllegalStateException("Fant ikke samarbeid")
         val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
         val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering)
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
-        if (sak.status != IASak.Status.VI_BISTÅR) {
+        // TODO: Finn en bedre måte å håndtere status på her
+        val sak = iaSakRepository.hentIASak(saksnummer = saksnummer)
+
+        if (sak?.status != IASak.Status.VI_BISTÅR) {
             blokkerende.add(SAK_I_FEIL_STATUS)
         }
 
@@ -268,13 +273,11 @@ class IASamarbeidService(
         )
     }
 
-    private fun fullførSamarbeid(
-        sakshendelse: ProsessHendelse,
-        sak: IASak,
-    ): IASamarbeid? {
-        val samarbeidDto = sakshendelse.samarbeidDto
-
-        return if (kanFullføreSamarbeid(sak = sak, samarbeidId = samarbeidDto.id).kanGjennomføres) {
+    fun fullførSamarbeid(
+        samarbeidDto: IASamarbeidDto,
+        saksnummer: String,
+    ): IASamarbeid? =
+        if (kanFullføreSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
             planRepository.hentPlan(samarbeidId = samarbeidDto.id)?.let { plan ->
                 planRepository.settPlanTilFullført(plan)
                 planRepository.hentPlan(samarbeidId = samarbeidDto.id)?.let { oppdatertPlan ->
@@ -295,7 +298,6 @@ class IASamarbeidService(
                 samarbeidId = samarbeidDto.id,
             )
         }
-    }
 
     private fun fullførSamarbeidMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid =
         samarbeidRepository.fullførSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)

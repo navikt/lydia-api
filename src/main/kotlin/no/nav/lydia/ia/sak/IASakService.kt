@@ -163,7 +163,7 @@ class IASakService(
             IASakshendelseType.FULLFØR_PROSESS -> {
                 val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(saksnummer = hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
-                if (!samarbeidService.kanFullføreSamarbeid(sak = aktivSak, samarbeidId = samarbeidDto.id).kanGjennomføres) {
+                if (!samarbeidService.kanFullføreSamarbeid(saksnummer = aktivSak.saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
                     return IASamarbeidFeil.`kan ikke fullføre samarbeid`.left()
                 }
             }
