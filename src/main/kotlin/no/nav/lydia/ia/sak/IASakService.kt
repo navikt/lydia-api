@@ -147,7 +147,7 @@ class IASakService(
             IASakshendelseType.AVBRYT_PROSESS -> {
                 val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(saksnummer = hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
-                if (!samarbeidService.kanAvbryteSamarbeid(sak = aktivSak, samarbeidId = samarbeidDto.id).kanGjennomføres) {
+                if (!samarbeidService.kanAvbryteSamarbeid(saksnummer = aktivSak.saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
                     return IASamarbeidFeil.`kan ikke avbryte samarbeid`.left()
                 }
             }
