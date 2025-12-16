@@ -230,6 +230,22 @@ class IASakRepository(
             )
         }
 
+    fun hentStatusForSaksnummer(saksnummer: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT status
+                    FROM ia_sak
+                    WHERE saksnummer = :saksnummer
+                    """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                    ),
+                ).map { row -> IASak.Status.valueOf(row.string("status")) }.asSingle,
+            )
+        }
+
     fun hentIASak(saksnummer: String): IASak? =
         using(sessionOf(dataSource)) { session ->
             session.run(
