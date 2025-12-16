@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
@@ -367,50 +368,86 @@ class NyFlytService(
             navn = "",
         )
 
-        if (!iaSamarbeidService.kanFullføreSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).kanGjennomføres) {
-            return IASamarbeidFeil.`kan ikke fullføre samarbeid`.left()
-        }
-
         if (typeAvslutning == IASamarbeid.Status.AVBRUTT) {
-            TODO("IMPLEMENT DENNE HER PLOX")
-        }
-
-        val iaSamarbeidDto = iaSamarbeidService.fullførSamarbeid(samarbeidDto = samarbeidDto, saksnummer = saksnummer)?.also { iaSamarbeid ->
-            val iASakshendelse = IASakshendelse(
-                id = ULID.random(),
-                opprettetTidspunkt = LocalDateTime.now(),
+            if (!iaSamarbeidService.kanAvbryteSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).kanGjennomføres) {
+                return IASamarbeidFeil.`kan ikke fullføre samarbeid`.left()
+            }
+            val iaSamarbeidDto = iaSamarbeidService.avbrytSamarbeid(
+                samarbeidDto = samarbeidDto,
                 saksnummer = saksnummer,
-                hendelsesType = IASakshendelseType.FULLFØR_PROSESS,
-                orgnummer = orgnummer,
-                opprettetAv = saksbehandler.navIdent,
-                opprettetAvRolle = saksbehandler.rolle,
-                navEnhet = navEnhet,
-                resulterendeStatus = null,
-            )
-
-            val ingenAktiveSamarbeid = iaSamarbeidRepository.hentAktiveSamarbeid(saksnummer = saksnummer).isEmpty()
-            val status = if (ingenAktiveSamarbeid) AVSLUTTET else AKTIV
-            iaSakshendelseRepository.lagreHendelse(
-                hendelse = iASakshendelse,
-                sistEndretAvHendelseId = null,
-                resulterendeStatus = status,
-            )
-
-            iaSakRepository.oppdaterStatusPåSak(
-                saksnummer = saksnummer,
-                status = status,
-                endretAv = saksbehandler.navIdent,
-                endretAvHendelseId = iASakshendelse.id,
-            )
-
-            iaSamarbeidObservers.forEach {
-                it.receive(
-                    input = iaSamarbeid,
+            )?.also { iaSamarbeid ->
+                avslutningAvSamarbeid(
+                    saksnummer = saksnummer,
+                    orgnummer = orgnummer,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                    iaSamarbeid = iaSamarbeid,
+                    typeAvslutning = IASakshendelseType.AVBRYT_PROSESS,
                 )
             }
-        }?.tilDto().right()
 
-        return iaSamarbeidDto
+            return iaSamarbeidDto?.tilDto().right()
+        } else if (typeAvslutning == IASamarbeid.Status.FULLFØRT) {
+            if (!iaSamarbeidService.kanFullføreSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).kanGjennomføres) {
+                return IASamarbeidFeil.`kan ikke fullføre samarbeid`.left()
+            }
+
+            val iaSamarbeidDto = iaSamarbeidService.fullførSamarbeid(samarbeidDto = samarbeidDto, saksnummer = saksnummer)?.also { iaSamarbeid ->
+                avslutningAvSamarbeid(
+                    saksnummer = saksnummer,
+                    orgnummer = orgnummer,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                    iaSamarbeid = iaSamarbeid,
+                    typeAvslutning = IASakshendelseType.FULLFØR_PROSESS,
+                )
+            }
+            return iaSamarbeidDto?.tilDto().right()
+        } else {
+            return Feil("feil ved avslutning", HttpStatusCode.BadRequest).left()
+        }
+    }
+
+    private fun avslutningAvSamarbeid(
+        saksnummer: String,
+        orgnummer: String,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+        iaSamarbeid: IASamarbeid,
+        typeAvslutning: IASakshendelseType,
+    ) {
+        val iASakshendelse = IASakshendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = saksnummer,
+            hendelsesType = typeAvslutning,
+            orgnummer = orgnummer,
+            opprettetAv = saksbehandler.navIdent,
+            opprettetAvRolle = saksbehandler.rolle,
+            navEnhet = navEnhet,
+            resulterendeStatus = null,
+        )
+
+        val ingenAktiveSamarbeid = iaSamarbeidRepository.hentAktiveSamarbeid(saksnummer = saksnummer).isEmpty()
+        val status = if (ingenAktiveSamarbeid) AVSLUTTET else AKTIV
+        iaSakshendelseRepository.lagreHendelse(
+            hendelse = iASakshendelse,
+            sistEndretAvHendelseId = null,
+            resulterendeStatus = status,
+        )
+
+        iaSakRepository.oppdaterStatusPåSak(
+            saksnummer = saksnummer,
+            status = status,
+            endretAv = saksbehandler.navIdent,
+            endretAvHendelseId = iASakshendelse.id,
+        )
+
+        iaSamarbeidObservers.forEach {
+            it.receive(
+                input = iaSamarbeid,
+            )
+        }
     }
 
     private fun hentAntallAktivePlaner(saksnummer: String) = planService.hentAntallAktiveSamarbeidsplaner(saksnummer) ?: 0

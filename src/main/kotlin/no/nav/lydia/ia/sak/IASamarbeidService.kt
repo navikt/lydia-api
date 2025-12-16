@@ -121,7 +121,10 @@ class IASamarbeidService(
                     }
 
                     AVBRYT_PROSESS -> {
-                        avbrytSamarbeid(sakshendelse, sak)?.let { samarbeid ->
+                        avbrytSamarbeid(
+                            samarbeidDto = sakshendelse.samarbeidDto,
+                            saksnummer = sak.saksnummer,
+                        )?.let { samarbeid ->
                             samarbeidObservers.forEach { it.receive(input = samarbeid) }
                         }
                     }
@@ -249,10 +252,10 @@ class IASamarbeidService(
     }
 
     fun kanAvbryteSamarbeid(
-        sak: IASak,
+        saksnummer: String,
         samarbeidId: Int,
     ): KanGjennomføreStatusendring {
-        val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
+        val samarbeid = hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).getOrNull()
             ?: throw IllegalStateException("Fant ikke samarbeid")
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
 
@@ -303,13 +306,11 @@ class IASamarbeidService(
     private fun fullførSamarbeidMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid =
         samarbeidRepository.fullførSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)
 
-    private fun avbrytSamarbeid(
-        sakshendelse: ProsessHendelse,
-        sak: IASak,
-    ): IASamarbeid? {
-        val samarbeidDto = sakshendelse.samarbeidDto
-
-        return if (kanAvbryteSamarbeid(sak = sak, samarbeidId = samarbeidDto.id).kanGjennomføres) {
+    fun avbrytSamarbeid(
+        samarbeidDto: IASamarbeidDto,
+        saksnummer: String,
+    ): IASamarbeid? =
+        if (kanAvbryteSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
             samarbeidRepository.avbrytSamarbeid(samarbeidDto = samarbeidDto)
         } else {
             samarbeidRepository.hentSamarbeid(
@@ -317,7 +318,6 @@ class IASamarbeidService(
                 samarbeidId = samarbeidDto.id,
             )
         }
-    }
 
     fun slettSamarbeid(
         samarbeidDto: IASamarbeidDto,

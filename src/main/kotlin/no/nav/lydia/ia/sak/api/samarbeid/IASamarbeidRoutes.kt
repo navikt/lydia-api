@@ -39,7 +39,7 @@ fun Route.iaSamarbeid(
                 when (statusEndring) {
                     "fullfores" -> samarbeidService.kanFullføreSamarbeid(saksnummer = iaSak.saksnummer, samarbeidId = samarbeid).right()
                     "slettes" -> samarbeidService.kanSletteSamarbeid(saksnummer = iaSak.saksnummer, samarbeidId = samarbeid).right()
-                    "avbrytes" -> samarbeidService.kanAvbryteSamarbeid(sak = iaSak, samarbeidId = samarbeid).right()
+                    "avbrytes" -> samarbeidService.kanAvbryteSamarbeid(saksnummer = iaSak.saksnummer, samarbeidId = samarbeid).right()
                     else -> Feil(feilmelding = "ugyldig statusendring", httpStatusCode = HttpStatusCode.BadRequest).left()
                 }
             }
