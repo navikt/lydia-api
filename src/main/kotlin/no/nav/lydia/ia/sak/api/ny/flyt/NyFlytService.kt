@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
+import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -366,7 +367,13 @@ class NyFlytService(
             navn = "",
         )
 
-        // TODO: Håndter typeAvslutning
+        if (!iaSamarbeidService.kanFullføreSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).kanGjennomføres) {
+            return IASamarbeidFeil.`kan ikke fullføre samarbeid`.left()
+        }
+
+        if (typeAvslutning == IASamarbeid.Status.AVBRUTT) {
+            TODO("IMPLEMENT DENNE HER PLOX")
+        }
 
         val iaSamarbeidDto = iaSamarbeidService.fullførSamarbeid(samarbeidDto = samarbeidDto, saksnummer = saksnummer)?.also { iaSamarbeid ->
             val iASakshendelse = IASakshendelse(
@@ -381,10 +388,19 @@ class NyFlytService(
                 resulterendeStatus = null,
             )
 
+            val ingenAktiveSamarbeid = iaSamarbeidRepository.hentAktiveSamarbeid(saksnummer = saksnummer).isEmpty()
+            val status = if (ingenAktiveSamarbeid) AVSLUTTET else AKTIV
             iaSakshendelseRepository.lagreHendelse(
                 hendelse = iASakshendelse,
                 sistEndretAvHendelseId = null,
-                resulterendeStatus = AVSLUTTET,
+                resulterendeStatus = status,
+            )
+
+            iaSakRepository.oppdaterStatusPåSak(
+                saksnummer = saksnummer,
+                status = status,
+                endretAv = saksbehandler.navIdent,
+                endretAvHendelseId = iASakshendelse.id,
             )
 
             iaSamarbeidObservers.forEach {

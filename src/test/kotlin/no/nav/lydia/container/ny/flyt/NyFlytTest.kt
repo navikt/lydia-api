@@ -409,7 +409,7 @@ class NyFlytTest {
     }
 
     @Test
-    fun `ved avslutning av siste samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal virksomheten gå til status AVSLUTTET`() {
+    fun `ved avslutning(FULLFØR) av siste samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal virksomheten gå til status AVSLUTTET`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
@@ -422,6 +422,8 @@ class NyFlytTest {
 
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
         hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+
+        sak.hentAlleSamarbeid().first { it.id == samarbeid.id }.status shouldBe IASamarbeid.Status.FULLFØRT
     }
 
     private fun IASamarbeidDto.avsluttSamarbeid(

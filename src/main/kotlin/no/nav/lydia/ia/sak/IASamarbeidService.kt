@@ -187,10 +187,11 @@ class IASamarbeidService(
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
-        // TODO: Finn en bedre måte å håndtere status på her
-        val sak = iaSakRepository.hentIASak(saksnummer = saksnummer)
+        val statusPåSak = iaSakRepository.hentStatusForSaksnummer(saksnummer)
 
-        if (sak?.status != IASak.Status.VI_BISTÅR) {
+        if (statusPåSak != IASak.Status.VI_BISTÅR &&
+            statusPåSak != IASak.Status.AKTIV
+        ) {
             blokkerende.add(SAK_I_FEIL_STATUS)
         }
 
