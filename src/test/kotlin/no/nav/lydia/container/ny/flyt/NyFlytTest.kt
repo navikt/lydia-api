@@ -444,6 +444,73 @@ class NyFlytTest {
         sak.hentAlleSamarbeid().first { it.id == samarbeid.id }.status shouldBe IASamarbeid.Status.AVBRUTT
     }
 
+    @Test
+    fun `avslutning(AVBRYT) av samarbeid i tilstand VirksomhetHarAktiveSamarbeid med flere samarbeid skal ikke endre tilstand`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeidSomSkalAvbrytes = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        samarbeidSomSkalAvbrytes.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val aktivtSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid")
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        samarbeidSomSkalAvbrytes.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalAvbrytes.id }.status shouldBe IASamarbeid.Status.AVBRUTT
+        sak.hentAlleSamarbeid().first { it.id == aktivtSamarbeid.id }.status shouldBe IASamarbeid.Status.AKTIV
+    }
+
+    @Test
+    fun `avslutning(FULLFØR) av samarbeid i tilstand VirksomhetHarAktiveSamarbeid med flere samarbeid skal ikke endre tilstand`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val aktivtSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid")
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalFullføres.id }.status shouldBe IASamarbeid.Status.FULLFØRT
+        sak.hentAlleSamarbeid().first { it.id == aktivtSamarbeid.id }.status shouldBe IASamarbeid.Status.AKTIV
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
+    @Test
+    fun `avslutning av alle samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal føre til status AVSLUTTET`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val samarbeidSomSkalAvbrytes = sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid")
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+        samarbeidSomSkalAvbrytes.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+
+        sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalAvbrytes.id }.status shouldBe IASamarbeid.Status.AVBRUTT
+        sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalFullføres.id }.status shouldBe IASamarbeid.Status.FULLFØRT
+    }
+
     private fun IASamarbeidDto.avsluttSamarbeid(
         orgnr: String,
         avslutningsType: IASamarbeid.Status,
