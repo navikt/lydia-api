@@ -30,6 +30,7 @@ import no.nav.lydia.ia.sak.domene.IASak.Status.VURDERT
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
+import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.team.IATeamService
@@ -215,7 +216,7 @@ class NyFlytService(
         iaSakshendelseRepository.lagreHendelse(
             hendelse = iASakshendelse,
             sistEndretAvHendelseId = null,
-            resulterendeStatus = aktivSakDto.status, // Opprett samarbeid skal ikke endre status
+            resulterendeStatus = AKTIV,
         )
         val opprettetSamarbeid = iaSamarbeidRepository.opprettNyttSamarbeid(
             saksnummer = saksnummer,
@@ -223,6 +224,13 @@ class NyFlytService(
         ).also { samarbeid ->
             iaSamarbeidObservers.forEach { it.receive(input = samarbeid) }
         }
+
+        iaSakRepository.oppdaterStatusPåSak(
+            saksnummer = saksnummer,
+            status = AKTIV,
+            endretAvHendelseId = iASakshendelse.id,
+            endretAv = saksbehandler.navIdent,
+        ).onRight(::varsleIASakObservers)
 
         return Either.Right(opprettetSamarbeid.tilDto())
     }
@@ -275,15 +283,10 @@ class NyFlytService(
         samarbeidId: Int,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
-    ): Either<Feil, Int> =
+    ): Either<Feil, Plan> =
         planService.slettPlan(
             samarbeidId = samarbeidId,
-        ).map {
-            hentAntallAktivePlaner(saksnummer = saksnummer)
-        }.onRight { antallAktivePlaner ->
-            val harResterendeAktivePlaner = antallAktivePlaner > 0
-            val resulterendeStatus = if (harResterendeAktivePlaner) AKTIV else VURDERES
-
+        ).onRight {
             val iASakshendelse = IASakshendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -299,12 +302,12 @@ class NyFlytService(
             iaSakshendelseRepository.lagreHendelse(
                 hendelse = iASakshendelse,
                 sistEndretAvHendelseId = null,
-                resulterendeStatus = resulterendeStatus,
+                resulterendeStatus = AKTIV,
             )
 
             iaSakRepository.oppdaterStatusPåSak(
                 saksnummer = saksnummer,
-                status = resulterendeStatus,
+                status = AKTIV,
                 endretAv = saksbehandler.navIdent,
                 endretAvHendelseId = iASakshendelse.id,
             ).onRight(::varsleIASakObservers)
@@ -336,13 +339,29 @@ class NyFlytService(
                 resulterendeStatus = null,
             )
 
+            val alleSamarbeid = iaSamarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
+            val ingenAndreSamarbeid = alleSamarbeid.isEmpty()
+            val alleAndreSamarbeidErAvsluttet = alleSamarbeid
+                .all { it.status == IASamarbeid.Status.AVBRUTT || it.status == IASamarbeid.Status.FULLFØRT }
+
+            val resulterendeStatus = when {
+                ingenAndreSamarbeid -> VURDERES
+                alleAndreSamarbeidErAvsluttet -> AVSLUTTET
+                else -> AKTIV
+            }
+
             iaSakshendelseRepository.lagreHendelse(
                 hendelse = iASakshendelse,
                 sistEndretAvHendelseId = null,
-                resulterendeStatus = AKTIV,
+                resulterendeStatus = resulterendeStatus,
             )
 
-            // TODO: oppdatere sakstatus hvis nødvendig
+            iaSakRepository.oppdaterStatusPåSak(
+                saksnummer = saksnummer,
+                status = resulterendeStatus,
+                endretAv = saksbehandler.navIdent,
+                endretAvHendelseId = iASakshendelse.id,
+            ).onRight(::varsleIASakObservers)
 
             iaSamarbeidObservers.forEach {
                 it.receive(
@@ -449,8 +468,6 @@ class NyFlytService(
             )
         }
     }
-
-    private fun hentAntallAktivePlaner(saksnummer: String) = planService.hentAntallAktiveSamarbeidsplaner(saksnummer) ?: 0
 
     private fun slettSak(sakDto: IASakDto): Either<Feil, IASakDto> =
         try {

@@ -30,7 +30,9 @@ import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -257,7 +259,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.endring.map { it as Int }
+            konsekvens.endring.map { it as Plan }
         }.also { iaPlanDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -267,7 +269,7 @@ fun Route.nyFlyt(
                 saksnummer = tilstandsmaskin.saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.OK, message = it)
+            call.respond(status = HttpStatusCode.OK, message = it.tilDtoMedPubliseringStatus())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

@@ -173,35 +173,6 @@ sealed class Tilstand {
                     )
                     Konsekvens(
                         endring = endring,
-                        nyTilstand = VirksomhetVurderes,
-                    )
-                }
-
-                is Hendelse.SlettSamarbeid -> {
-                    val endring = fiaKontekst.nyFlytService.slettSamarbeid(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        samarbeidId = hendelse.samarbeidId,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetVurderes,
-                    )
-                }
-
-                is Hendelse.OpprettPlanForSamarbeid -> {
-                    val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        samarbeidId = hendelse.samarbeidId,
-                        plan = hendelse.plan,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
                         nyTilstand = VirksomhetHarAktiveSamarbeid,
                     )
                 }
@@ -271,7 +242,7 @@ sealed class Tilstand {
                     )
                     Konsekvens(
                         endring = endring,
-                        nyTilstand = VirksomhetHarAktiveSamarbeid, // TODO: Endre etter riktig sjekk
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
                     )
                 }
 
