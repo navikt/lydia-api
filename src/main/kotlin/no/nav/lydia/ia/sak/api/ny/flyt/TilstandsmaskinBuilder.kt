@@ -89,8 +89,63 @@ class Tilstandsmaskin(
         get() = fiaKontekst.saksnummer
 
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
-        val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
+        // lagre hendelse, ny kolonne "gjennomført default false"
+        // valider -> GyldigTransisjon
+        // utfør transisjon -> side effect -> Konsekvens
+        // persister -> oppdater tilstand (status) (oppdater hendelse, "gjennomført = true")
+
+        // iasakHendelseRepository.registrerHendelse(hendelse)
+        val transisjon = nåværendeTilstand.valider(hendelse, fiaKontekst)
+        val konsekvens = when (transisjon) {
+            is Transisjon.GyldigTransisjon -> {
+                transisjon.utfoer()
+            }
+
+            is Transisjon.UGyldigTransisjon -> {
+                transisjon.fail()
+            }
+        }
+
+        konsekvens.persister()
+
+        val strek = "--------------------------"
+
+        {
+            // command/hendelse -> Ny status? GJENNOMFØRT / IKKE
+            // ... = side-effect
+            // konsekvens -> oppdater status (sjekk sideeffect opp mot command) varsle
+        }
+
+        {
+            // command -> Hva vil vi skal skje? Fra bruker.
+
+            // side-effect -> Hva innebærer command'en? Opprett samarbeid, slett plan.. etc
+            // konsekvens/transisjon -> Oppdater tilstand
+            // hendelse -> Varsle observers
+        }
+
+        {
+            // lagre command
+            // status GJENNOMFØRT / IKKE GJENNOMFØRT
+        }
+
+        val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.valider(hendelse, fiaKontekst);
+
+        {
+            // opprett samarbeid
+            // opprett sak
+            // OK
+        }
+
         nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
+
+        {
+            // lagre hendelser
+            // oppdater status
+            // varsle observers
+            // FEIL
+        }
+
         return konsekvensAvUtførtTransisjon
     }
 }
@@ -98,24 +153,48 @@ class Tilstandsmaskin(
 data class Konsekvens(
     val nyTilstand: Tilstand,
     val endring: Either<Feil, Any?>,
-)
+    val block: (Any?) -> Unit = {},
+) {
+    fun resolve() =
+        endring.onRight {
+            block(it)
+        }
+}
+
+sealed class Transisjon {
+    class GyldigTransisjon(
+        val resulterendeTilstand: Tilstand,
+        val block: () -> Either<Feil, Any?>,
+    ) : Transisjon() {
+        fun utfoer(): Konsekvens {
+            val endring = block()
+            return Konsekvens(resulterendeTilstand, endring)
+        }
+    }
+
+    class UGyldigTransisjon(
+        val feil: Either.Left<Feil>,
+    ) : Transisjon() {
+        fun fail(): Konsekvens = Konsekvens(Tilstand.VirksomhetVurderes, feil)
+    }
+}
 
 sealed class Tilstand {
     fun navn(): String = this.javaClass.simpleName
 
-    abstract fun utførTransisjon(
+    abstract fun valider(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
-    ): Konsekvens
+    ): Transisjon
 
     object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
-        override fun utførTransisjon(
+        override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Konsekvens {
-            val endring: Either<Feil, IASakDto> = when (hendelse) {
+        ): Transisjon =
+            when (hendelse) {
                 is Hendelse.VurderVirksomhet -> {
-                    fiaKontekst.nyFlytService.opprettSakOgMerkSomVurdert(
+                    fiaKontekst.nyFlytService.opprettSakOgMerkSomVurderes(
                         orgnummer = hendelse.orgnr,
                         superbruker = hendelse.superbruker,
                         navEnhet = hendelse.navEnhet,
@@ -123,19 +202,13 @@ sealed class Tilstand {
                 }
 
                 else -> {
-                    Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
+                    Transisjon.UGyldigTransisjon(Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest)))
                 }
             }
-
-            return Konsekvens(
-                nyTilstand = if (endring.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
-                endring = endring,
-            )
-        }
     }
 
     object VirksomhetVurderes : Tilstand() { // VURDERES
-        override fun utførTransisjon(
+        override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
         ): Konsekvens =
@@ -188,7 +261,7 @@ sealed class Tilstand {
     }
 
     object VirksomhetErVurdert : Tilstand() { // VURDERT
-        override fun utførTransisjon(
+        override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
         ): Konsekvens {
@@ -198,7 +271,7 @@ sealed class Tilstand {
 
     // -- Virksomheten har minst ett aktivt samarbeid med en aktiv samarbeidsplan
     object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
-        override fun utførTransisjon(
+        override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
         ): Konsekvens =
@@ -287,7 +360,7 @@ sealed class Tilstand {
 
     // object VirksomhetHarFlereAktiveSamarbeid : Tilstand()
     object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
-        override fun utførTransisjon(
+        override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
         ): Konsekvens {
