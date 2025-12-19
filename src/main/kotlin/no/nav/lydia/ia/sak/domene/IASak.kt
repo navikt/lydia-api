@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_KARTLEGGING
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAMARBEIDSPLAN
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
@@ -165,6 +166,7 @@ class IASak private constructor(
 
             // -- Ny flyt:
             VURDERING_FULLFØRT_UTEN_SAMARBEID,
+            OPPRETT_KARTLEGGING,
             OPPRETT_SAMARBEIDSPLAN,
             SLETT_SAMARBEIDSPLAN,
             -> {

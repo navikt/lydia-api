@@ -8,9 +8,13 @@ import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
@@ -217,6 +221,30 @@ sealed class Tilstand {
                     )
                 }
 
+                is Hendelse.OpprettKartleggingForSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.opprettNyKartlegging(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        samarbeidId = hendelse.samarbeidId,
+                        type = hendelse.type,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    ).map {
+                        it.tilDto(
+                            fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                referanseId = it.id,
+                                type = it.type.name.tilDokumentTilPubliseringType(),
+                            ),
+                        )
+                    }
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
+                }
+
+                // TODO: 2 nye hendelser: FullførKartleggingForSamarbeid, SlettKartleggingForSamarbeid
+
                 is Hendelse.OpprettPlanForSamarbeid -> {
                     val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
                         orgnummer = hendelse.orgnr,
@@ -323,6 +351,16 @@ sealed class Hendelse {
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
+    data class OpprettKartleggingForSamarbeid(
+        val orgnr: String,
+        val samarbeidId: Int,
+        val type: Spørreundersøkelse.Type,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
+    ) : Hendelse()
+
+    // TODO: 2 nye hendelser: FullførKartleggingForSamarbeid, SlettKartleggingForSamarbeid
+
     data class OpprettPlanForSamarbeid(
         val orgnr: String,
         val samarbeidId: Int,
@@ -366,6 +404,7 @@ sealed class Hendelse {
 data class FiaKontekst(
     val iaSakService: IASakService,
     val iASamarbeidService: IASamarbeidService,
+    val dokumentPubliseringService: DokumentPubliseringService,
     val planService: PlanService,
     val nyFlytService: NyFlytService,
     // TODO: Skal orgnr inn hit og?

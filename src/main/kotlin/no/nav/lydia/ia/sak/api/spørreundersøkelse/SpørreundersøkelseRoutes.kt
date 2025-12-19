@@ -119,13 +119,11 @@ fun Route.iaSakSpørreundersøkelse(
         val type = call.type ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
-                spørreundersøkelseService.hentSpørreundersøkelser(
-                    sak = iaSak,
-                    prosessId = prosessId,
-                    type = type,
-                )
-            }
+            spørreundersøkelseService.hentSpørreundersøkelser(
+                saksnummer = saksnummer,
+                prosessId = prosessId,
+                type = type,
+            )
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(
                 call = call,

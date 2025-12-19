@@ -25,13 +25,17 @@ import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
+import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -50,6 +54,7 @@ fun Route.nyFlyt(
     iaSakService: IASakService,
     iASamarbeidService: IASamarbeidService,
     nyFlytService: NyFlytService,
+    dokumentPubliseringService: DokumentPubliseringService,
     planService: PlanService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
@@ -77,6 +82,7 @@ fun Route.nyFlyt(
                 iaSakService = iaSakService,
                 iASamarbeidService = iASamarbeidService,
                 nyFlytService = nyFlytService,
+                dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
                 saksnummer = nyFlytService.hentAktivIASakDto(orgnr)?.saksnummer,
             ),
@@ -212,6 +218,40 @@ fun Route.nyFlyt(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+
+    post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/opprett-kartlegging/{type}") {
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val samarbeidId = call.samarbeidId ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+        val type = call.type ?: return@post call.respond(IASakSpørreundersøkelseError.`ugyldig type`)
+
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.OpprettKartleggingForSamarbeid(
+                    orgnr = orgnr,
+                    samarbeidId = samarbeidId,
+                    type = type,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { it as SpørreundersøkelseDto }
+        }.also { iaPlanDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaPlanDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.create,
+                saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // TODO: Fullfør og sletting av kartlegging
 
     post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/opprett-samarbeidsplan") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)

@@ -98,14 +98,31 @@ class SpørreundersøkelseService(
 
     fun opprettSpørreundersøkelse(
         orgnummer: String,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         iaSak: IASak,
         prosessId: Int,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         type: Spørreundersøkelse.Type,
+    ): Either<Feil, Spørreundersøkelse> =
+        samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { samarbeid ->
+            opprettSpørreundersøkelse(
+                orgnummer = orgnummer,
+                saksnummer = iaSak.saksnummer,
+                samarbeidId = samarbeid.id,
+                type = type,
+                saksbehandler = saksbehandler,
+            )
+        }
+
+    fun opprettSpørreundersøkelse(
+        orgnummer: String,
+        saksnummer: String,
+        samarbeidId: Int,
+        type: Spørreundersøkelse.Type,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
     ): Either<Feil, Spørreundersøkelse> =
         when (type) {
             Behovsvurdering -> {
-                samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { samarbeid ->
+                samarbeidService.hentSamarbeid(saksnummer, samarbeidId).flatMap { samarbeid ->
                     spørreundersøkelseRepository.opprettSpørreundersøkelse(
                         orgnummer = orgnummer,
                         prosessId = samarbeid.id,
@@ -120,8 +137,8 @@ class SpørreundersøkelseService(
             }
 
             Evaluering -> {
-                if (iaSak.status == IASak.Status.VI_BISTÅR) {
-                    planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
+                if (iaSakService.hentStatusForSaksnummer(saksnummer) == IASak.Status.VI_BISTÅR) {
+                    planService.hentPlan(samarbeidId = samarbeidId).flatMap { plan ->
                         val temaerInkludertIPlan = plan.temaer.filter {
                             it.inkludert
                         }.ifEmpty {
@@ -148,7 +165,7 @@ class SpørreundersøkelseService(
                             )
                         }
 
-                        samarbeidService.hentSamarbeid(sak = iaSak, samarbeidId = prosessId).flatMap { samarbeid ->
+                        samarbeidService.hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).flatMap { samarbeid ->
                             spørreundersøkelseRepository.opprettSpørreundersøkelse(
                                 orgnummer = orgnummer,
                                 prosessId = samarbeid.id,
@@ -209,12 +226,12 @@ class SpørreundersøkelseService(
         }
 
     fun hentSpørreundersøkelser(
-        sak: IASak,
+        saksnummer: String,
         prosessId: Int,
         type: Spørreundersøkelse.Type,
     ): Either<Feil, List<Spørreundersøkelse>> =
         try {
-            samarbeidService.hentSamarbeid(sak, prosessId).map {
+            samarbeidService.hentSamarbeid(saksnummer, prosessId).map {
                 spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = it, type = type)
             }
         } catch (e: Exception) {
