@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
@@ -39,9 +40,11 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -501,6 +504,31 @@ class NyFlytTest {
         sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalFullføres.id }.status shouldBe IASamarbeid.Status.FULLFØRT
     }
 
+    @Test
+    fun `Opprettelse av behovsvurdering skal ikke endre status`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeid = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val behovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
+        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
+
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val spørreundersøkelse = IASakSpørreundersøkelseHelper.hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = samarbeid.id,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+        )
+        spørreundersøkelse.first().id shouldBe behovsvurdering.id
+    }
+
+    // TODO: Legg til test for fullfør og slett kartlegging
+
     private fun IASamarbeidDto.avsluttSamarbeid(
         orgnr: String,
         avslutningsType: IASamarbeid.Status,
@@ -526,6 +554,17 @@ class NyFlytTest {
     ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeid")
         .authentication().bearer(token)
         .tilSingelRespons<IASamarbeidDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
+    private fun IASamarbeidDto.opprettKartlegging(
+        orgnr: String,
+        type: Spørreundersøkelse.Type,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/opprett-kartlegging/${type.name}")
+        .authentication().bearer(token)
+        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
         )

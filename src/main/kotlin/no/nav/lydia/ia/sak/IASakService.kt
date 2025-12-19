@@ -221,6 +221,8 @@ class IASakService(
             }
     }
 
+    fun hentStatusForSaksnummer(saksnummer: String) = iaSakRepository.hentStatusForSaksnummer(saksnummer = saksnummer)
+
     fun hentAktivSak(
         orgnummer: String,
         navAnsatt: NavAnsatt,

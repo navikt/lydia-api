@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.PlanService
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
@@ -33,6 +34,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SA
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -48,6 +50,7 @@ class NyFlytService(
     val iaSamarbeidService: IASamarbeidService,
     val iaSamarbeidRepository: IASamarbeidRepository, // TODO: bruk Service i stedet
     val iaTeamService: IATeamService,
+    val spørreundersøkelseService: SpørreundersøkelseService,
     val planService: PlanService,
     val iaSakObservers: List<Observer<IASakDto>>,
     val iaSamarbeidObservers: List<Observer<IASamarbeid>>,
@@ -233,6 +236,48 @@ class NyFlytService(
         ).onRight(::varsleIASakObservers)
 
         return Either.Right(opprettetSamarbeid.tilDto())
+    }
+
+    fun opprettNyKartlegging(
+        orgnummer: String,
+        saksnummer: String,
+        samarbeidId: Int,
+        type: Spørreundersøkelse.Type,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ): Either<Feil, Spørreundersøkelse> {
+        val kartlegging = spørreundersøkelseService.opprettSpørreundersøkelse(
+            orgnummer = orgnummer,
+            saksnummer = saksnummer,
+            samarbeidId = samarbeidId,
+            type = type,
+            saksbehandler = saksbehandler,
+        ).onRight {
+            val iASakshendelse = IASakshendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = saksnummer,
+                hendelsesType = IASakshendelseType.OPPRETT_KARTLEGGING,
+                orgnummer = orgnummer,
+                opprettetAv = saksbehandler.navIdent,
+                opprettetAvRolle = saksbehandler.rolle,
+                navEnhet = navEnhet,
+                resulterendeStatus = null,
+            )
+            iaSakshendelseRepository.lagreHendelse(
+                hendelse = iASakshendelse,
+                sistEndretAvHendelseId = null,
+                resulterendeStatus = AKTIV,
+            )
+            iaSakRepository.oppdaterStatusPåSak(
+                saksnummer = saksnummer,
+                status = AKTIV,
+                endretAv = saksbehandler.navIdent,
+                endretAvHendelseId = iASakshendelse.id,
+            ).onRight(::varsleIASakObservers)
+        }
+
+        return kartlegging
     }
 
     fun opprettNySamarbeidsplan(

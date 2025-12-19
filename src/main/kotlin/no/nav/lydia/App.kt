@@ -244,18 +244,6 @@ fun startLydiaBackend() {
         ),
     )
 
-    val nyFlytService = NyFlytService(
-        iaSakRepository = IASakRepository(dataSource = dataSource),
-        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-        årsakRepository = ÅrsakRepository(dataSource = dataSource),
-        iaSamarbeidRepository = samarbeidRepository,
-        iaSamarbeidService = samarbeidService,
-        iaTeamService = iaTeamService,
-        planService = planService,
-        iaSakObservers = listOf(iaSakDtoProdusent, iaSakDtoStatistikkProdusent),
-        iaSamarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
-    )
-
     val spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(kafka = naisEnv.kafka)
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository, iaSakService = iaSakService)
     val dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource = dataSource)
@@ -273,6 +261,20 @@ fun startLydiaBackend() {
         spørreundersøkelseOppdateringProdusent = spørreundersøkelseOppdateringProdusent,
         dokumentPubliseringRepository = dokumentPubliseringRepository,
     )
+
+    val nyFlytService = NyFlytService(
+        iaSakRepository = IASakRepository(dataSource = dataSource),
+        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+        årsakRepository = ÅrsakRepository(dataSource = dataSource),
+        iaSamarbeidRepository = samarbeidRepository,
+        iaSamarbeidService = samarbeidService,
+        iaTeamService = iaTeamService,
+        spørreundersøkelseService = spørreundersøkelseService,
+        planService = planService,
+        iaSakObservers = listOf(iaSakDtoProdusent, iaSakDtoStatistikkProdusent),
+        iaSamarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
+    )
+
     val dokumentPubliseringService = DokumentPubliseringService(
         dokumentPubliseringRepository = dokumentPubliseringRepository,
         spørreundersøkelseService = spørreundersøkelseService,
@@ -570,6 +572,7 @@ private fun Application.lydiaRestApi(
                 iaSakService = iaSakService,
                 iASamarbeidService = samarbeidService,
                 nyFlytService = nyFlytService,
+                dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
