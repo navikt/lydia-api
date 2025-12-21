@@ -29,6 +29,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
+import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
@@ -251,7 +252,95 @@ fun Route.nyFlyt(
         }
     }
 
-    // TODO: Fullfør og sletting av kartlegging
+    post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/start-kartlegging/{sporreundersokelseId}") {
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+        val spørreundersøkelseId = call.spørreundersøkelseId ?: return@post call.respond(IASakSpørreundersøkelseError.`ugyldig id`)
+
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.StartKartleggingForSamarbeid(
+                    orgnr = orgnr,
+                    spørreundersøkelseId = spørreundersøkelseId,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { it as SpørreundersøkelseDto }
+        }.also { iaPlanDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaPlanDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.create,
+                saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/fullfor-kartlegging/{sporreundersokelseId}") {
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+        val spørreundersøkelseId = call.spørreundersøkelseId ?: return@post call.respond(IASakSpørreundersøkelseError.`ugyldig id`)
+
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.FullførKartleggingForSamarbeid(
+                    orgnr = orgnr,
+                    spørreundersøkelseId = spørreundersøkelseId,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { it as SpørreundersøkelseDto }
+        }.also { iaPlanDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaPlanDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.create,
+                saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    delete("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/slett-kartlegging/{sporreundersokelseId}") {
+        val orgnr = call.orgnummer ?: return@delete call.respond(IASakError.`ugyldig orgnummer`)
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+        val spørreundersøkelseId = call.spørreundersøkelseId ?: return@delete call.respond(IASakSpørreundersøkelseError.`ugyldig id`)
+
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.SlettKartleggingForSamarbeid(
+                    orgnr = orgnr,
+                    spørreundersøkelseId = spørreundersøkelseId,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { it as SpørreundersøkelseDto }
+        }.also { iaPlanDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaPlanDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.delete,
+                saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
 
     post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/opprett-samarbeidsplan") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
