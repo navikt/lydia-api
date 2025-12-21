@@ -243,7 +243,68 @@ sealed class Tilstand {
                     )
                 }
 
-                // TODO: 2 nye hendelser: FullførKartleggingForSamarbeid, SlettKartleggingForSamarbeid
+                is Hendelse.StartKartleggingForSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.startNyKartlegging(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        spørreundersøkelseId = hendelse.spørreundersøkelseId,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    ).map {
+                        it.tilDto(
+                            fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                referanseId = it.id,
+                                type = it.type.name.tilDokumentTilPubliseringType(),
+                            ),
+                        )
+                    }
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
+                }
+
+                is Hendelse.FullførKartleggingForSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.fullførNyKartlegging(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        spørreundersøkelseId = hendelse.spørreundersøkelseId,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    ).map {
+                        it.tilDto(
+                            fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                referanseId = it.id,
+                                type = it.type.name.tilDokumentTilPubliseringType(),
+                            ),
+                        )
+                    }
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
+                }
+
+                is Hendelse.SlettKartleggingForSamarbeid -> {
+                    val endring = fiaKontekst.nyFlytService.slettNyKartlegging(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        spørreundersøkelseId = hendelse.spørreundersøkelseId,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    ).map {
+                        it.tilDto(
+                            fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                referanseId = it.id,
+                                type = it.type.name.tilDokumentTilPubliseringType(),
+                            ),
+                        )
+                    }
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
+                }
 
                 is Hendelse.OpprettPlanForSamarbeid -> {
                     val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
@@ -359,7 +420,26 @@ sealed class Hendelse {
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
-    // TODO: 2 nye hendelser: FullførKartleggingForSamarbeid, SlettKartleggingForSamarbeid
+    data class StartKartleggingForSamarbeid(
+        val orgnr: String,
+        val spørreundersøkelseId: UUID,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
+    ) : Hendelse()
+
+    data class FullførKartleggingForSamarbeid(
+        val orgnr: String,
+        val spørreundersøkelseId: UUID,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
+    ) : Hendelse()
+
+    data class SlettKartleggingForSamarbeid(
+        val orgnr: String,
+        val spørreundersøkelseId: UUID,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
+    ) : Hendelse()
 
     data class OpprettPlanForSamarbeid(
         val orgnr: String,

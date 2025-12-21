@@ -42,6 +42,7 @@ import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
+import java.util.UUID
 
 class NyFlytService(
     val iaSakRepository: IASakRepository,
@@ -245,39 +246,119 @@ class NyFlytService(
         type: Spørreundersøkelse.Type,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
-    ): Either<Feil, Spørreundersøkelse> {
-        val kartlegging = spørreundersøkelseService.opprettSpørreundersøkelse(
+    ): Either<Feil, Spørreundersøkelse> =
+        spørreundersøkelseService.opprettSpørreundersøkelse(
             orgnummer = orgnummer,
             saksnummer = saksnummer,
             samarbeidId = samarbeidId,
             type = type,
             saksbehandler = saksbehandler,
-        ).onRight {
-            val iASakshendelse = IASakshendelse(
-                id = ULID.random(),
-                opprettetTidspunkt = LocalDateTime.now(),
-                saksnummer = saksnummer,
-                hendelsesType = IASakshendelseType.OPPRETT_KARTLEGGING,
-                orgnummer = orgnummer,
-                opprettetAv = saksbehandler.navIdent,
-                opprettetAvRolle = saksbehandler.rolle,
-                navEnhet = navEnhet,
-                resulterendeStatus = null,
-            )
-            iaSakshendelseRepository.lagreHendelse(
-                hendelse = iASakshendelse,
-                sistEndretAvHendelseId = null,
-                resulterendeStatus = AKTIV,
-            )
-            iaSakRepository.oppdaterStatusPåSak(
-                saksnummer = saksnummer,
-                status = AKTIV,
-                endretAv = saksbehandler.navIdent,
-                endretAvHendelseId = iASakshendelse.id,
-            ).onRight(::varsleIASakObservers)
+        ).apply {
+            onRight {
+                loggKartleggingshendelse(
+                    orgnummer = orgnummer,
+                    saksnummer = saksnummer,
+                    hendelsesType = IASakshendelseType.OPPRETT_KARTLEGGING,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                )
+            }
         }
 
-        return kartlegging
+    fun startNyKartlegging(
+        orgnummer: String,
+        saksnummer: String,
+        spørreundersøkelseId: UUID,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ): Either<Feil, Spørreundersøkelse> =
+        spørreundersøkelseService.endreSpørreundersøkelseStatus(
+            spørreundersøkelseId = spørreundersøkelseId,
+            statusViSkalEndreTil = Spørreundersøkelse.Status.PÅBEGYNT,
+        ).apply {
+            onRight {
+                loggKartleggingshendelse(
+                    orgnummer = orgnummer,
+                    saksnummer = saksnummer,
+                    hendelsesType = IASakshendelseType.START_KARTLEGGING,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                )
+            }
+        }
+
+    fun fullførNyKartlegging(
+        orgnummer: String,
+        saksnummer: String,
+        spørreundersøkelseId: UUID,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ): Either<Feil, Spørreundersøkelse> =
+        spørreundersøkelseService.endreSpørreundersøkelseStatus(
+            spørreundersøkelseId = spørreundersøkelseId,
+            statusViSkalEndreTil = Spørreundersøkelse.Status.AVSLUTTET,
+        ).apply {
+            onRight {
+                loggKartleggingshendelse(
+                    orgnummer = orgnummer,
+                    saksnummer = saksnummer,
+                    hendelsesType = IASakshendelseType.FULLFØR_KARTLEGGING,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                )
+            }
+        }
+
+    fun slettNyKartlegging(
+        orgnummer: String,
+        saksnummer: String,
+        spørreundersøkelseId: UUID,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ): Either<Feil, Spørreundersøkelse> =
+        spørreundersøkelseService.slettSpørreundersøkelse(
+            spørreundersøkelseId = spørreundersøkelseId,
+        ).apply {
+            onRight {
+                loggKartleggingshendelse(
+                    orgnummer = orgnummer,
+                    saksnummer = saksnummer,
+                    hendelsesType = IASakshendelseType.SLETT_KARTLEGGING,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                )
+            }
+        }
+
+    private fun loggKartleggingshendelse(
+        orgnummer: String,
+        saksnummer: String,
+        hendelsesType: IASakshendelseType,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+    ) {
+        val iASakshendelse = IASakshendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = saksnummer,
+            hendelsesType = hendelsesType,
+            orgnummer = orgnummer,
+            opprettetAv = saksbehandler.navIdent,
+            opprettetAvRolle = saksbehandler.rolle,
+            navEnhet = navEnhet,
+            resulterendeStatus = null,
+        )
+        iaSakshendelseRepository.lagreHendelse(
+            hendelse = iASakshendelse,
+            sistEndretAvHendelseId = null,
+            resulterendeStatus = AKTIV,
+        )
+        iaSakRepository.oppdaterStatusPåSak(
+            saksnummer = saksnummer,
+            status = AKTIV,
+            endretAv = saksbehandler.navIdent,
+            endretAvHendelseId = iASakshendelse.id,
+        ).onRight(::varsleIASakObservers)
     }
 
     fun opprettNySamarbeidsplan(

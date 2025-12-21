@@ -8,15 +8,18 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_KARTLEGGING
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_KARTLEGGING
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAMARBEIDSPLAN
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_KARTLEGGING
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAMARBEIDSPLAN
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.START_KARTLEGGING
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
@@ -167,6 +170,9 @@ class IASak private constructor(
             // -- Ny flyt:
             VURDERING_FULLFØRT_UTEN_SAMARBEID,
             OPPRETT_KARTLEGGING,
+            START_KARTLEGGING,
+            FULLFØR_KARTLEGGING,
+            SLETT_KARTLEGGING,
             OPPRETT_SAMARBEIDSPLAN,
             SLETT_SAMARBEIDSPLAN,
             -> {

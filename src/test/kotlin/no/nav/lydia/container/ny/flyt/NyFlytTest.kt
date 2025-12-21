@@ -527,7 +527,58 @@ class NyFlytTest {
         spørreundersøkelse.first().id shouldBe behovsvurdering.id
     }
 
-    // TODO: Legg til test for fullfør og slett kartlegging
+    @Test
+    fun `Starting og fullføring av behovsvurdering skal ikke endre status på IASak`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeid = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val opprettetBehovsvurdering = samarbeid.opprettKartlegging(
+            orgnr = sak.orgnr,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+        )
+        opprettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
+
+        val startetBehovsvurdering = samarbeid.startKartlegging(
+            orgnr = sak.orgnr,
+            sporreundersokelseId = opprettetBehovsvurdering.id,
+        )
+        startetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val fullførtBehovsvurdering = samarbeid.fullførKartlegging(
+            orgnr = sak.orgnr,
+            sporreundersokelseId = opprettetBehovsvurdering.id,
+        )
+
+        fullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
+    @Test
+    fun `Sletting av behovsvurdering skal ikke endre status på IASak`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeid = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val opprettetBehovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
+
+        samarbeid.startKartlegging(
+            orgnr = sak.orgnr,
+            sporreundersokelseId = opprettetBehovsvurdering.id,
+        )
+
+        val slettetBehovsvurdering = samarbeid.slettKartlegging(orgnr = sak.orgnr, sporreundersokelseId = opprettetBehovsvurdering.id)
+
+        slettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.SLETTET
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
 
     private fun IASamarbeidDto.avsluttSamarbeid(
         orgnr: String,
@@ -563,6 +614,39 @@ class NyFlytTest {
         type: Spørreundersøkelse.Type,
         token: String = authContainerHelper.saksbehandler1.token,
     ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/opprett-kartlegging/${type.name}")
+        .authentication().bearer(token)
+        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
+    private fun IASamarbeidDto.startKartlegging(
+        orgnr: String,
+        sporreundersokelseId: String,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/start-kartlegging/$sporreundersokelseId")
+        .authentication().bearer(token)
+        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
+    private fun IASamarbeidDto.fullførKartlegging(
+        orgnr: String,
+        sporreundersokelseId: String,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/fullfor-kartlegging/$sporreundersokelseId")
+        .authentication().bearer(token)
+        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
+    private fun IASamarbeidDto.slettKartlegging(
+        orgnr: String,
+        sporreundersokelseId: String,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-kartlegging/$sporreundersokelseId")
         .authentication().bearer(token)
         .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
