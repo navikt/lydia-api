@@ -580,6 +580,72 @@ class NyFlytTest {
         hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
     }
 
+    @Test
+    fun `Starting og fullføring av evaluering skal ikke endre status på IASak`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeid = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val opprettetEvaluering = samarbeid.opprettKartlegging(
+            orgnr = sak.orgnr,
+            type = Spørreundersøkelse.Type.Evaluering,
+        )
+        opprettetEvaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
+
+        val startetEvaluering = samarbeid.startKartlegging(
+            orgnr = sak.orgnr,
+            sporreundersokelseId = opprettetEvaluering.id,
+        )
+        startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val fullførtEvaluering = samarbeid.fullførKartlegging(
+            orgnr = sak.orgnr,
+            sporreundersokelseId = opprettetEvaluering.id,
+        )
+
+        fullførtEvaluering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
+    @Test
+    fun `Sletting av evaluering skal ikke endre status på IASak`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+
+        val samarbeid = sak.opprettSamarbeid()
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val opprettetEvaluering = samarbeid.opprettKartlegging(
+            orgnr = sak.orgnr,
+            type = Spørreundersøkelse.Type.Evaluering,
+        )
+        opprettetEvaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
+
+        val startetEvaluering = samarbeid.startKartlegging(
+            orgnr = sak.orgnr,
+            sporreundersokelseId = opprettetEvaluering.id,
+        )
+        startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+
+        val slettetEvaluering = samarbeid.slettKartlegging(
+            orgnr = sak.orgnr,
+            sporreundersokelseId = opprettetEvaluering.id,
+        )
+
+        slettetEvaluering.status shouldBe Spørreundersøkelse.Status.SLETTET
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
     private fun IASamarbeidDto.avsluttSamarbeid(
         orgnr: String,
         avslutningsType: IASamarbeid.Status,
