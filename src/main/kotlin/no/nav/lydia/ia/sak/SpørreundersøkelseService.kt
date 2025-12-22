@@ -137,7 +137,9 @@ class SpørreundersøkelseService(
             }
 
             Evaluering -> {
-                if (iaSakService.hentStatusForSaksnummer(saksnummer) == IASak.Status.VI_BISTÅR) {
+                if (iaSakService.hentStatusForSaksnummer(saksnummer) == IASak.Status.VI_BISTÅR ||
+                    iaSakService.hentStatusForSaksnummer(saksnummer) == IASak.Status.AKTIV
+                ) {
                     planService.hentPlan(samarbeidId = samarbeidId).flatMap { plan ->
                         val temaerInkludertIPlan = plan.temaer.filter {
                             it.inkludert
