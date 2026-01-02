@@ -237,10 +237,10 @@ fun Route.nyFlyt(
                 ),
             )
             konsekvens.endring.map { it as SpørreundersøkelseDto }
-        }.also { iaPlanDtoEither ->
+        }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
-                either = iaPlanDtoEither,
+                either = spørreundersøkelseDtoEither,
                 orgnummer = orgnr,
                 auditType = AuditType.create,
                 saksnummer = tilstandsmaskin.saksnummer,
@@ -267,16 +267,16 @@ fun Route.nyFlyt(
                 ),
             )
             konsekvens.endring.map { it as SpørreundersøkelseDto }
-        }.also { iaPlanDtoEither ->
+        }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
-                either = iaPlanDtoEither,
+                either = spørreundersøkelseDtoEither,
                 orgnummer = orgnr,
-                auditType = AuditType.create,
+                auditType = AuditType.update,
                 saksnummer = tilstandsmaskin.saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.Created, message = it)
+            call.respond(status = HttpStatusCode.OK, message = it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -297,16 +297,16 @@ fun Route.nyFlyt(
                 ),
             )
             konsekvens.endring.map { it as SpørreundersøkelseDto }
-        }.also { iaPlanDtoEither ->
+        }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
-                either = iaPlanDtoEither,
+                either = spørreundersøkelseDtoEither,
                 orgnummer = orgnr,
-                auditType = AuditType.create,
+                auditType = AuditType.update,
                 saksnummer = tilstandsmaskin.saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.Created, message = it)
+            call.respond(status = HttpStatusCode.OK, message = it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -327,10 +327,10 @@ fun Route.nyFlyt(
                 ),
             )
             konsekvens.endring.map { it as SpørreundersøkelseDto }
-        }.also { iaPlanDtoEither ->
+        }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
-                either = iaPlanDtoEither,
+                either = spørreundersøkelseDtoEither,
                 orgnummer = orgnr,
                 auditType = AuditType.delete,
                 saksnummer = tilstandsmaskin.saksnummer,
