@@ -91,6 +91,44 @@ class NyFlytService(
             lukket = false,
         )
 
+    private fun merkSomVurdert(
+        iaSakDto: IASakDto,
+        superbruker: Superbruker,
+        navEnhet: NavEnhet,
+    ): Either<Feil, IASakDto> {
+        val iaSakshendelseVurderes = iaSakshendelseRepository.lagreHendelse(
+            hendelse = iaSakDto.nyHendelseBasertPåSak(
+                hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
+                superbruker = superbruker,
+                navEnhet = navEnhet,
+            ),
+            sistEndretAvHendelseId = null,
+            resulterendeStatus = VURDERES,
+        )
+        val oppdatertIaSakDto = iaSakRepository.oppdaterStatusPåSak(
+            saksnummer = iaSakDto.saksnummer,
+            status = VURDERES,
+            endretAv = superbruker.navIdent,
+            endretAvHendelseId = iaSakshendelseVurderes.id,
+        ).onRight(::varsleIASakObservers)
+        return oppdatertIaSakDto
+    }
+
+    fun merkSakSomVurdert(
+        orgnummer: String,
+        superbruker: Superbruker,
+        navEnhet: NavEnhet,
+    ): Either<Feil, IASakDto> {
+        val aktivSakDto = hentAktivIASakDto(orgnummer = orgnummer)
+            ?: return Either.Left(IASakError.`ugyldig orgnummer`)
+
+        return merkSomVurdert(
+            iaSakDto = aktivSakDto,
+            superbruker = superbruker,
+            navEnhet = navEnhet,
+        )
+    }
+
     fun opprettSakOgMerkSomVurdert(
         orgnummer: String,
         superbruker: Superbruker,
@@ -114,23 +152,7 @@ class NyFlytService(
         val iaSakDto: IASakDto = iaSakRepository.opprettSak(
             iaSakDto = fraFørsteHendelse(iaSakHendelseOpprettSak),
         ).also(::varsleIASakObservers)
-
-        // Steg #2 lagre i DB en ny hendelse VIRKSOMHET_VURDERES, og oppdater SakDto med status VURDERES
-        val iaSakshendelseVurderes = iaSakshendelseRepository.lagreHendelse(
-            hendelse = iaSakDto.nyHendelseBasertPåSak(
-                hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
-                superbruker = superbruker,
-                navEnhet = navEnhet,
-            ),
-            sistEndretAvHendelseId = null,
-            resulterendeStatus = VURDERES,
-        )
-        val oppdatertIaSakDto = iaSakRepository.oppdaterStatusPåSak(
-            saksnummer = iaSakDto.saksnummer,
-            status = VURDERES,
-            endretAv = superbruker.navIdent,
-            endretAvHendelseId = iaSakshendelseVurderes.id,
-        ).onRight(::varsleIASakObservers)
+        val oppdatertIaSakDto = merkSomVurdert(iaSakDto, superbruker, navEnhet)
 
         return oppdatertIaSakDto
     }

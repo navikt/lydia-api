@@ -196,7 +196,24 @@ sealed class Tilstand {
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
         ): Konsekvens {
-            TODO("Not yet implemented")
+            val endring: Either<Feil, IASakDto> = when (hendelse) {
+                is Hendelse.VurderVirksomhet -> {
+                    fiaKontekst.nyFlytService.merkSakSomVurdert(
+                        orgnummer = hendelse.orgnr,
+                        superbruker = hendelse.superbruker,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                }
+
+                else -> {
+                    Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
+                }
+            }
+
+            return Konsekvens(
+                nyTilstand = if (endring.isRight()) VirksomhetVurderes else VirksomhetErVurdert,
+                endring = endring,
+            )
         }
     }
 

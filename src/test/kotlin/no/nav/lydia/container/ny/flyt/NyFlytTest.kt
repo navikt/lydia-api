@@ -275,6 +275,34 @@ class NyFlytTest {
     }
 
     @Test
+    fun `skal kunne vurdere en virksomhet som allerede er vurdert`() {
+        val sak = vurderVirksomhet()
+        sak.status shouldBe IASak.Status.VURDERES
+
+        val fullførVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/fullfor-vurdering")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(
+                Json.encodeToString(
+                    ValgtÅrsak(
+                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(
+                            VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                        ),
+                    ),
+                ),
+            )
+            .tilSingelRespons<IASakDto>()
+        fullførVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
+        fullførVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
+
+        val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<IASakDto>()
+        revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
+        revurderRes.third.get().status shouldBe IASak.Status.VURDERES
+    }
+
+    @Test
     fun `skal kunne opprette et samarbeid`() {
         val eierAvSak = authContainerHelper.superbruker1
         val følgerAvSak = authContainerHelper.saksbehandler2
