@@ -8,6 +8,7 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
@@ -300,6 +301,8 @@ class NyFlytTest {
             .tilSingelRespons<IASakDto>()
         revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
         revurderRes.third.get().status shouldBe IASak.Status.VURDERES
+
+        revurderRes.third.get().saksnummer shouldNotBe sak.saksnummer
     }
 
     @Test
@@ -672,6 +675,25 @@ class NyFlytTest {
 
         slettetEvaluering.status shouldBe Spørreundersøkelse.Status.SLETTET
         hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+    }
+
+    @Test
+    fun `skal kunne revurdere en virksomhet som er i tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+
+        val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<IASakDto>()
+        revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
+        revurderRes.third.get().status shouldBe IASak.Status.VURDERES
+
+        revurderRes.third.get().saksnummer shouldNotBe sak.saksnummer
     }
 
     private fun IASamarbeidDto.avsluttSamarbeid(

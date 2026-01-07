@@ -608,7 +608,7 @@ class IASak private constructor(
         AVSLUTTET,
         ;
 
-        fun regnesSomAvsluttet(): Boolean = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
+        fun regnesSomAvsluttet(): Boolean = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET || this == VURDERT || this == AVSLUTTET
 
         companion object {
             fun filtrerbareStatuser(): List<Status> = entries.filterNot { it == NY || it == SLETTET || it == VURDERT || it == AKTIV || it == AVSLUTTET }
