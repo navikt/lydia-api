@@ -94,7 +94,7 @@ fun Route.nyFlyt(
 
         call.somLesebruker(adGrupper) {
             nyFlytService.hentAktivIASakDto(orgnr)?.right()
-                ?: Feil(feilmelding = "Fant ingen aktiv sak på virksomheten", httpStatusCode = HttpStatusCode.NotFound).left()
+                ?: Feil(feilmelding = "Fant ingen aktiv sak på virksomheten", httpStatusCode = HttpStatusCode.NoContent).left()
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,
