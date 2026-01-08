@@ -108,7 +108,7 @@ fun Route.nyFlyt(
         call.somSuperbrukerMedNavenhet { superbruker, navEnhet ->
             val hendelse = VurderVirksomhet(
                 orgnr = orgnr,
-                superbruker = superbruker,
+                navAnsatt = superbruker,
                 navEnhet = navEnhet,
             )
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
@@ -135,9 +135,13 @@ fun Route.nyFlyt(
     post("$NY_FLYT_PATH/{orgnummer}/angre-vurdering") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
 
-        call.somSuperbruker(adGrupper = adGrupper) {
+        call.somSuperbrukerMedNavenhet { superbruker, navEnhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = Hendelse.AngreVurderVirksomhet(orgnr = orgnr),
+                hendelse = Hendelse.AngreVurderVirksomhet(
+                    orgnr = orgnr,
+                    navAnsatt = superbruker,
+                    navEnhet = navEnhet,
+                ),
             )
             konsekvens.endring.map { it as IASakDto }
         }.also { iaSakEither ->
@@ -164,7 +168,7 @@ fun Route.nyFlyt(
                 hendelse = Hendelse.FullførVurdering(
                     orgnr = orgnr,
                     årsak = årsak,
-                    saksbehandler = saksbehandler,
+                    navAnsatt = saksbehandler,
                     navEnhet = navEnhet,
                 ),
             )
@@ -193,7 +197,7 @@ fun Route.nyFlyt(
                 hendelse = Hendelse.OpprettNyttSamarbeid(
                     orgnr = orgnr,
                     samarbeidsnavn = iaSamarbeidDto.navn,
-                    saksbehandler = saksbehandler,
+                    navAnsatt = saksbehandler,
                     navEnhet = navEnhet,
                 ),
             )
@@ -225,7 +229,7 @@ fun Route.nyFlyt(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
                     plan = plan,
-                    saksbehandler = saksbehandler,
+                    navAnsatt = saksbehandler,
                     navEnhet = navEnhet,
                 ),
             )
@@ -255,7 +259,7 @@ fun Route.nyFlyt(
                 hendelse = Hendelse.SlettPlanForSamarbeid(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
-                    saksbehandler = saksbehandler,
+                    navAnsatt = saksbehandler,
                     navEnhet = navEnhet,
                 ),
             )
@@ -285,7 +289,7 @@ fun Route.nyFlyt(
                 hendelse = Hendelse.SlettSamarbeid(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
-                    saksbehandler = saksbehandler,
+                    navAnsatt = saksbehandler,
                     navEnhet = navEnhet,
                 ),
             )
@@ -321,7 +325,7 @@ fun Route.nyFlyt(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
                     typeAvslutning = typeAvslutning,
-                    saksbehandler = saksbehandler,
+                    navAnsatt = saksbehandler,
                     navEnhet = navEnhet,
                 ),
             )

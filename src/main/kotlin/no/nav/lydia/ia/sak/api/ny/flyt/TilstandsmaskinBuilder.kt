@@ -7,12 +7,17 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.ny.flyt.SaksgangOppdatering.NySakIngenOppdatering
+import no.nav.lydia.ia.sak.api.ny.flyt.SaksgangOppdatering.OppdaterSakStatus
+import no.nav.lydia.ia.sak.api.ny.flyt.SaksgangOppdatering.SakenErSlettetIngenOppdatering
+import no.nav.lydia.ia.sak.api.ny.flyt.SaksgangOppdatering.VurderingErFullførtIngenOppdatering
 import no.nav.lydia.ia.sak.domene.IASak.Status
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.util.UUID
@@ -89,86 +94,87 @@ class Tilstandsmaskin(
         get() = fiaKontekst.saksnummer
 
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
-        // lagre hendelse, ny kolonne "gjennomført default false"
-        // valider -> GyldigTransisjon
-        // utfør transisjon -> side effect -> Konsekvens
-        // persister -> oppdater tilstand (status) (oppdater hendelse, "gjennomført = true")
+        // hendelse -> tilstand.valider() -> GyldigTransisjon | UGyldigTransisjon
+        //  en transisjon inneholder:
+        //   - nyTilstand
+        //   - blokk med selve endringen (funksjon som returnerer Either<Feil, Any?>)
+        //
+        // utfør en gyldig transisjon -> gjør selve endringen -> Konsekvens (inneholder endringen)
+        // hvis endringen var vellykket på en GyldigTransisjon
+        //  --> lagre hendelse, ny kolonne "gjennomført default false" TODO: trenger vi denne nye kolonnen?
+        //  --> oppdater status (oppdater hendelse, "gjennomført = true" TODO: trenger vi denne?)
+        // => returner konsekvens (med ny tilstand og endring)
 
-        // iasakHendelseRepository.registrerHendelse(hendelse)
-        val transisjon = nåværendeTilstand.valider(hendelse, fiaKontekst)
-        val konsekvens = when (transisjon) {
+        val transisjon = nåværendeTilstand.valider(hendelse = hendelse, fiaKontekst = fiaKontekst)
+
+        return when (transisjon) {
             is Transisjon.GyldigTransisjon -> {
-                transisjon.utfoer()
+                val konsekvensAvUtførtTransisjon = transisjon.utfør() // selve endringen
+
+                // Hvis endringen var vellykket, lagre hendelsen + oppdater sak status
+                konsekvensAvUtførtTransisjon.endring.onRight {
+                    // I tilfelle av angre vurdering er saken slettet og dermed ingen oppdatering av status er nødvendig
+                    when (transisjon.saksgangOppdatering) {
+                        is OppdaterSakStatus -> {
+                            println(
+                                "[DEBUG][TEST] oppdaterer sak status i tilstandsmaskin, ønsket status: " +
+                                    "${transisjon.saksgangOppdatering.getResulterendeSakStatus()}, hendelse: ${hendelse.navn()}",
+                            )
+                            fiaKontekst.nyFlytService.lagHendelseOppdaterStatusPåSakOgVarsleObservers(
+                                orgnummer = hendelse.orgnr,
+                                navAnsatt = hendelse.navAnsatt,
+                                navEnhet = hendelse.navEnhet,
+                                iASakshendelseType = transisjon.saksgangOppdatering.startetAvHendelse,
+                                resulterendeStatus = transisjon.saksgangOppdatering.getResulterendeSakStatus(),
+                            )
+                        }
+
+                        else -> { /* Do nothing */ }
+                    }
+                    // Oppdater tilstanden i tilstandsmaskinen
+                    nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
+                }
+                konsekvensAvUtførtTransisjon
             }
 
             is Transisjon.UGyldigTransisjon -> {
                 transisjon.fail()
             }
         }
-
-        konsekvens.persister()
-
-        val strek = "--------------------------"
-
-        {
-            // command/hendelse -> Ny status? GJENNOMFØRT / IKKE
-            // ... = side-effect
-            // konsekvens -> oppdater status (sjekk sideeffect opp mot command) varsle
-        }
-
-        {
-            // command -> Hva vil vi skal skje? Fra bruker.
-
-            // side-effect -> Hva innebærer command'en? Opprett samarbeid, slett plan.. etc
-            // konsekvens/transisjon -> Oppdater tilstand
-            // hendelse -> Varsle observers
-        }
-
-        {
-            // lagre command
-            // status GJENNOMFØRT / IKKE GJENNOMFØRT
-        }
-
-        val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.valider(hendelse, fiaKontekst);
-
-        {
-            // opprett samarbeid
-            // opprett sak
-            // OK
-        }
-
-        nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
-
-        {
-            // lagre hendelser
-            // oppdater status
-            // varsle observers
-            // FEIL
-        }
-
-        return konsekvensAvUtførtTransisjon
     }
 }
 
 data class Konsekvens(
     val nyTilstand: Tilstand,
     val endring: Either<Feil, Any?>,
-    val block: (Any?) -> Unit = {},
-) {
-    fun resolve() =
-        endring.onRight {
-            block(it)
-        }
+)
+
+sealed class SaksgangOppdatering {
+    class SakErAlleredeOppdatertITransaksjon : SaksgangOppdatering()
+
+    class NySakIngenOppdatering : SaksgangOppdatering()
+
+    class SakenErSlettetIngenOppdatering : SaksgangOppdatering()
+
+    class VurderingErFullførtIngenOppdatering : SaksgangOppdatering()
+
+    data class OppdaterSakStatus(
+        val startetAvHendelse: IASakshendelseType,
+        private val resulterendeSakStatus: () -> Status,
+    ) : SaksgangOppdatering() {
+        fun getResulterendeSakStatus(): Status = resulterendeSakStatus()
+    }
 }
 
 sealed class Transisjon {
     class GyldigTransisjon(
+        val saksgangOppdatering: SaksgangOppdatering,
         val resulterendeTilstand: Tilstand,
         val block: () -> Either<Feil, Any?>,
     ) : Transisjon() {
-        fun utfoer(): Konsekvens {
+        fun utfør(): Konsekvens {
             val endring = block()
-            return Konsekvens(resulterendeTilstand, endring)
+            return Konsekvens(nyTilstand = resulterendeTilstand, endring = endring)
         }
     }
 
@@ -194,11 +200,16 @@ sealed class Tilstand {
         ): Transisjon =
             when (hendelse) {
                 is Hendelse.VurderVirksomhet -> {
-                    fiaKontekst.nyFlytService.opprettSakOgMerkSomVurderes(
-                        orgnummer = hendelse.orgnr,
-                        superbruker = hendelse.superbruker,
-                        navEnhet = hendelse.navEnhet,
-                    )
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = NySakIngenOppdatering(),
+                        resulterendeTilstand = VirksomhetVurderes,
+                    ) {
+                        fiaKontekst.nyFlytService.opprettSakOgMerkSomVurderes(
+                            orgnummer = hendelse.orgnr,
+                            superbruker = hendelse.navAnsatt,
+                            navEnhet = hendelse.navEnhet,
+                        )
+                    }
                 }
 
                 else -> {
@@ -211,50 +222,55 @@ sealed class Tilstand {
         override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Konsekvens =
+        ): Transisjon =
             when (hendelse) {
                 is Hendelse.AngreVurderVirksomhet -> {
-                    val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
-                    val endring = fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetKlarTilVurdering,
-                    )
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = SakenErSlettetIngenOppdatering(),
+                        resulterendeTilstand = VirksomhetErVurdert,
+                    ) {
+                        val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
+                        val endring = fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
+                        endring
+                    }
                 }
 
                 is Hendelse.FullførVurdering -> {
-                    val endring = fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        årsak = hendelse.årsak,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetErVurdert,
-                    )
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = VurderingErFullførtIngenOppdatering(),
+                        resulterendeTilstand = VirksomhetErVurdert,
+                    ) {
+                        fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
+                            orgnummer = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer!!,
+                            årsak = hendelse.årsak,
+                            saksbehandler = hendelse.navAnsatt,
+                            navEnhet = hendelse.navEnhet,
+                        )
+                    }
                 }
 
                 is Hendelse.OpprettNyttSamarbeid -> {
-                    val endring = fiaKontekst.nyFlytService.opprettNyttSamarbeid(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        navn = hendelse.samarbeidsnavn,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                    )
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = OppdaterSakStatus(
+                            resulterendeSakStatus = { Status.AKTIV },
+                            startetAvHendelse = IASakshendelseType.NY_PROSESS,
+                        ),
+                        resulterendeTilstand = VirksomhetErVurdert,
+                    ) {
+                        fiaKontekst.nyFlytService.opprettNyttSamarbeid(
+                            orgnummer = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer!!,
+                            navn = hendelse.samarbeidsnavn,
+                            saksbehandler = hendelse.navAnsatt,
+                            navEnhet = hendelse.navEnhet,
+                        )
+                    }
                 }
 
                 else -> {
-                    val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetVurderes,
+                    Transisjon.UGyldigTransisjon(
+                        Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest)),
                     )
                 }
             }
@@ -264,7 +280,7 @@ sealed class Tilstand {
         override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Konsekvens {
+        ): Transisjon {
             TODO("Not yet implemented")
         }
     }
@@ -274,86 +290,112 @@ sealed class Tilstand {
         override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Konsekvens =
+        ): Transisjon =
             when (hendelse) {
                 is Hendelse.OpprettNyttSamarbeid -> {
-                    val endring = fiaKontekst.nyFlytService.opprettNyttSamarbeid(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        navn = hendelse.samarbeidsnavn,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                    )
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = OppdaterSakStatus(
+                            resulterendeSakStatus = { Status.AKTIV },
+                            startetAvHendelse = IASakshendelseType.NY_PROSESS,
+                        ),
+                        resulterendeTilstand = VirksomhetHarAktiveSamarbeid,
+                    ) {
+                        fiaKontekst.nyFlytService.opprettNyttSamarbeid(
+                            orgnummer = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer!!,
+                            navn = hendelse.samarbeidsnavn,
+                            saksbehandler = hendelse.navAnsatt,
+                            navEnhet = hendelse.navEnhet,
+                        )
+                    }
                 }
 
                 is Hendelse.OpprettPlanForSamarbeid -> {
-                    val endring = fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        samarbeidId = hendelse.samarbeidId,
-                        plan = hendelse.plan,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                    )
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = OppdaterSakStatus(
+                            resulterendeSakStatus = { Status.AKTIV },
+                            startetAvHendelse = IASakshendelseType.OPPRETT_SAMARBEIDSPLAN,
+                        ),
+                        resulterendeTilstand = VirksomhetHarAktiveSamarbeid,
+                    ) {
+                        fiaKontekst.nyFlytService.opprettNySamarbeidsplan(
+                            orgnummer = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer!!,
+                            samarbeidId = hendelse.samarbeidId,
+                            plan = hendelse.plan,
+                            saksbehandler = hendelse.navAnsatt,
+                            navEnhet = hendelse.navEnhet,
+                        )
+                    }
                 }
 
                 is Hendelse.SlettPlanForSamarbeid -> {
-                    val endring = fiaKontekst.nyFlytService.slettSamarbeidsplan(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        samarbeidId = hendelse.samarbeidId,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                    )
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = OppdaterSakStatus(
+                            resulterendeSakStatus = { Status.AKTIV },
+                            startetAvHendelse = IASakshendelseType.SLETT_SAMARBEIDSPLAN,
+                        ),
+                        resulterendeTilstand = VirksomhetHarAktiveSamarbeid,
+                    ) {
+                        fiaKontekst.nyFlytService.slettSamarbeidsplan(
+                            orgnummer = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer!!,
+                            samarbeidId = hendelse.samarbeidId,
+                            saksbehandler = hendelse.navAnsatt,
+                            navEnhet = hendelse.navEnhet,
+                        )
+                    }
                 }
 
                 is Hendelse.SlettSamarbeid -> {
-                    val endring = fiaKontekst.nyFlytService.slettSamarbeid(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        samarbeidId = hendelse.samarbeidId,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                    )
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = OppdaterSakStatus(
+                            resulterendeSakStatus = {
+                                fiaKontekst.nyFlytService.utleddSakStatusBasertPaaAntallSamarbeid(samarbeidId = hendelse.samarbeidId)
+                            },
+                            startetAvHendelse = IASakshendelseType.SLETT_PROSESS,
+                        ),
+                        resulterendeTilstand = VirksomhetHarAktiveSamarbeid, // TODO, kan endres etter sletting hvis ingen aktive samarbeid gjenstår
+                    ) {
+                        fiaKontekst.nyFlytService.slettSamarbeid(
+                            orgnummer = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer!!,
+                            samarbeidId = hendelse.samarbeidId,
+                            saksbehandler = hendelse.navAnsatt,
+                            navEnhet = hendelse.navEnhet,
+                        )
+                    }
                 }
 
                 is Hendelse.AvsluttSamarbeid -> {
-                    val endring = fiaKontekst.nyFlytService.avsluttSamarbeid(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
-                        samarbeidId = hendelse.samarbeidId,
-                        typeAvslutning = hendelse.typeAvslutning,
-                        saksbehandler = hendelse.saksbehandler,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
-                    )
+                    val iASakshendelseType = if (hendelse.typeAvslutning == IASamarbeid.Status.FULLFØRT) {
+                        IASakshendelseType.FULLFØR_PROSESS
+                    } else {
+                        IASakshendelseType.AVBRYT_PROSESS
+                    }
+
+                    Transisjon.GyldigTransisjon(
+                        saksgangOppdatering = OppdaterSakStatus(
+                            resulterendeSakStatus = {
+                                fiaKontekst.nyFlytService.utleddSakStatusBasertPaaAntallSamarbeid(samarbeidId = hendelse.samarbeidId)
+                            },
+                            startetAvHendelse = iASakshendelseType,
+                        ),
+                        resulterendeTilstand = VirksomhetHarAktiveSamarbeid,
+                    ) {
+                        fiaKontekst.nyFlytService.avsluttSamarbeid(
+                            orgnummer = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer!!,
+                            samarbeidId = hendelse.samarbeidId,
+                            typeAvslutning = hendelse.typeAvslutning,
+                            saksbehandler = hendelse.navAnsatt,
+                            navEnhet = hendelse.navEnhet,
+                        )
+                    }
                 }
 
                 else -> {
-                    val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetVurderes,
-                    )
+                    Transisjon.UGyldigTransisjon(Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest)))
                 }
             }
     }
@@ -363,76 +405,86 @@ sealed class Tilstand {
         override fun valider(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Konsekvens {
+        ): Transisjon {
             TODO("Not yet implemented")
         }
     }
 }
 
 sealed class Hendelse {
+    abstract val orgnr: String
+    abstract val navAnsatt: NavAnsatt
+    abstract val navEnhet: NavEnhet
+
     fun navn(): String = this.javaClass.simpleName
 
     data class VurderVirksomhet(
-        val orgnr: String,
-        val superbruker: Superbruker,
-        val navEnhet: NavEnhet,
+        override val orgnr: String,
+        override val navAnsatt: Superbruker,
+        override val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class AngreVurderVirksomhet(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navAnsatt: Superbruker,
+        override val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class FullførVurdering(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navEnhet: NavEnhet,
+        override val navAnsatt: NavAnsattMedSaksbehandlerRolle,
         val årsak: ValgtÅrsak,
-        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class OpprettNyttSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navEnhet: NavEnhet,
+        override val navAnsatt: NavAnsattMedSaksbehandlerRolle,
         val samarbeidsnavn: String,
-        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class OpprettPlanForSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navEnhet: NavEnhet,
+        override val navAnsatt: NavAnsattMedSaksbehandlerRolle,
         val samarbeidId: Int,
         val plan: PlanMalDto,
-        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class SlettPlanForSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navEnhet: NavEnhet,
+        override val navAnsatt: NavAnsattMedSaksbehandlerRolle,
         val samarbeidId: Int,
-        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class SlettSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navEnhet: NavEnhet,
+        override val navAnsatt: NavAnsattMedSaksbehandlerRolle,
         val samarbeidId: Int,
-        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class AvsluttSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navEnhet: NavEnhet,
+        override val navAnsatt: NavAnsattMedSaksbehandlerRolle,
         val samarbeidId: Int,
         val typeAvslutning: IASamarbeid.Status, // FULLFØRT eller AVBRUTT
-        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class GjenopprettSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navEnhet: NavEnhet,
+        override val navAnsatt: NavAnsattMedSaksbehandlerRolle,
         val samarbeidId: UUID,
     ) : Hendelse()
 
     data class GjørVirksomhetKlarTilNyVurdering(
-        val orgnr: String,
+        override val orgnr: String,
+        override val navEnhet: NavEnhet,
+        override val navAnsatt: NavAnsattMedSaksbehandlerRolle,
     ) : Hendelse()
 }
 

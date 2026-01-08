@@ -22,6 +22,23 @@ import javax.sql.DataSource
 class IASamarbeidRepository(
     val dataSource: DataSource,
 ) {
+    fun hentSaksnummerTilEtSamarbeid(samarbeidId: Int): String? =
+        using(sessionOf(dataSource)) { session: Session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT ia_prosess.saksnummer
+                          from ia_prosess 
+                        JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
+                        WHERE id = :prosessId
+                    """.trimMargin(),
+                    mapOf(
+                        "prosessId" to samarbeidId,
+                    ),
+                ).map { it.string("saksnummer") }.asSingle,
+            )
+        }
+
     fun hentSamarbeid(
         saksnummer: String,
         samarbeidId: Int,
