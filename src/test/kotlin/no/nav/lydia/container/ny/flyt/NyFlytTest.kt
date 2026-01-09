@@ -696,6 +696,26 @@ class NyFlytTest {
         revurderRes.third.get().saksnummer shouldNotBe sak.saksnummer
     }
 
+    @Test
+    fun `skal kunne ta eierskap i en sak`() {
+        val superBruker = authContainerHelper.superbruker1
+        val saksbehandler = authContainerHelper.saksbehandler1
+
+        val sak = vurderVirksomhet(token = superBruker.token)
+        sak.eidAv shouldBe null
+
+        val eierskapsendringResponse = sak.bliEier(token = saksbehandler.token)
+        eierskapsendringResponse.second.statusCode shouldBe HttpStatusCode.OK.value
+
+        val sakEtterEierskapendring = eierskapsendringResponse.third.get()
+        sakEtterEierskapendring.eidAv shouldBe saksbehandler.navIdent
+    }
+
+    private fun IASakDto.bliEier(token: String) =
+        applikasjon.performPost("$NY_FLYT_PATH/$orgnr/bli-eier")
+            .authentication().bearer(token = token)
+            .tilSingelRespons<IASakDto>()
+
     private fun IASamarbeidDto.avsluttSamarbeid(
         orgnr: String,
         avslutningsType: IASamarbeid.Status,

@@ -553,6 +553,17 @@ class NyFlytService(
         }
     }
 
+    fun bliEier(
+        orgnr: String,
+        navAnsatt: NavAnsattMedSaksbehandlerRolle,
+    ): Either<Feil, IASakDto> {
+        val aktivSak = hentAktivIASakDto(orgnummer = orgnr) ?: return IASakError.`kan ikke ta eierskap da det ikke finnes noen aktiv sak`.left()
+        if (aktivSak.eidAv == navAnsatt.navIdent) {
+            return aktivSak.right()
+        }
+        return iaSakRepository.oppdaterEierPåSak(aktivSak.saksnummer, navAnsatt.navIdent)?.right() ?: IASakError.`fikk ikke oppdatert sak`.left()
+    }
+
     private fun avslutningAvSamarbeid(
         saksnummer: String,
         orgnummer: String,

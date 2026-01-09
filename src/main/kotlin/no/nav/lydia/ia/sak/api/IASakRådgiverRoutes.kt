@@ -215,4 +215,6 @@ object IASakError {
         Feil(feilmelding = "Generell feil under uthenting", httpStatusCode = HttpStatusCode.InternalServerError)
     val `kan ikke fullføre sak med aktive samarbeid` =
         Feil(feilmelding = "Kan ikke avslutte sak med aktive samarbeid", httpStatusCode = HttpStatusCode.BadRequest)
+    val `kan ikke ta eierskap da det ikke finnes noen aktiv sak` =
+        Feil(feilmelding = "kan ikke ta eierskap da det ikke finnes noen aktiv sak", httpStatusCode = HttpStatusCode.BadRequest)
 }

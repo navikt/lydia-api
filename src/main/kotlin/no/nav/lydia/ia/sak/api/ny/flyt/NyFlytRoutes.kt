@@ -469,4 +469,25 @@ fun Route.nyFlyt(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+
+    // -- Dette er tenkt å være en midlertidig løsning frem til vi har utviklet kontaktperson funksjonalitet i samarbeid med Salesforce.
+    // -- Dette etterlater ingen hendelser, men skriver kun over eierskap i den akktive saken
+    post("$NY_FLYT_PATH/{orgnummer}/bli-eier") {
+        val orgnr = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        call.somSaksbehandlerMedNavenhet { saksbehandler, _ ->
+            nyFlytService.bliEier(orgnr, saksbehandler)
+        }.also { iaSamarbeidDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSamarbeidDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.delete,
+                saksnummer = iaSamarbeidDtoEither.getOrNull()?.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
 }
