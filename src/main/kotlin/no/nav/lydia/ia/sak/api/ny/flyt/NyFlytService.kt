@@ -135,7 +135,7 @@ class NyFlytService(
         return oppdatertIaSakDto
     }
 
-    fun fullførVurderingAvVirksomhetUtenSamarbeid(
+    fun avsluttVurderingAvVirksomhetUtenSamarbeid(
         orgnummer: String,
         saksnummer: String,
         årsak: ValgtÅrsak,
