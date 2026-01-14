@@ -38,7 +38,7 @@ class TilstandsmaskinBuilder private constructor(
     }
 
     private fun hentTilstandForVirksomhet(orgnr: String): Tilstand =
-        fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = orgnr)?.let { iASakDto ->
+        fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iASakDto ->
             val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(iASakDto.saksnummer)
             val harAktivSamarbeidsplan = aktiveSamarbeid.any { samarbeid ->
                 fiaKontekst.planService.hentPlan(samarbeid.id)
@@ -145,7 +145,7 @@ sealed class Tilstand {
         ): Konsekvens =
             when (hendelse) {
                 is Hendelse.AngreVurderVirksomhet -> {
-                    val sakDto = fiaKontekst.nyFlytService.hentAktivIASakDto(orgnummer = hendelse.orgnr)!!
+                    val sakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)!!
                     val endring = fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
                     Konsekvens(
                         endring = endring,

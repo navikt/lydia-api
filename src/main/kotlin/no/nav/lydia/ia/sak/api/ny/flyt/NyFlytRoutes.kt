@@ -85,15 +85,34 @@ fun Route.nyFlyt(
                 nyFlytService = nyFlytService,
                 dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
-                saksnummer = nyFlytService.hentAktivIASakDto(orgnr)?.saksnummer,
+                saksnummer = nyFlytService.hentSisteIASakDto(orgnr)?.saksnummer,
             ),
         ).build(orgnr)
+
+    get("$NY_FLYT_PATH/{orgnummer}/tilstand") {
+        val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+
+        call.somLesebruker(adGrupper) {
+            tilstandsmaskin(orgnr).nåværendeTilstand.tilVirksomhetTilstandDto().right()
+        }.also { tilstandEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = tilstandEither,
+                orgnummer = orgnr,
+                auditType = AuditType.access,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
 
     get("$NY_FLYT_PATH/{orgnummer}") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
 
         call.somLesebruker(adGrupper) {
-            nyFlytService.hentAktivIASakDto(orgnr)?.right()
+            nyFlytService.hentSisteIASakDto(orgnr)?.right()
                 ?: Feil(feilmelding = "Fant ingen aktiv sak på virksomheten", httpStatusCode = HttpStatusCode.NoContent).left()
         }.also { iaSakEither ->
             auditLog.auditloggEither(

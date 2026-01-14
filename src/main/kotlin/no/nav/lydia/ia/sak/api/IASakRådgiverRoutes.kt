@@ -91,7 +91,7 @@ fun Route.iaSakRådgiver(
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/status") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
-        call.somLesebruker(adGrupper = adGrupper) { navAnsatt ->
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentSaksStatus(saksnummer)
         }.map {
             call.respond(it)
@@ -209,6 +209,8 @@ object IASakError {
         Feil(feilmelding = "Ugyldig saksnummer", httpStatusCode = HttpStatusCode.BadRequest)
     val `er ikke følger eller eier av sak` =
         Feil(feilmelding = "Er ikke følger eller eier av sak", httpStatusCode = HttpStatusCode.Forbidden)
+    val `er ikke følger av sak` =
+        Feil(feilmelding = "Er ikke følger av sak", httpStatusCode = HttpStatusCode.Forbidden)
     val `det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet` =
         Feil(feilmelding = "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet", httpStatusCode = HttpStatusCode.NotImplemented)
     val `generell feil under uthenting` =

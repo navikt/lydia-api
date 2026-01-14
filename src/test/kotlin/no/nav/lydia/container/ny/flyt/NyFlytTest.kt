@@ -32,6 +32,7 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent.SamarbeidValue
@@ -39,6 +40,8 @@ import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
@@ -217,23 +220,7 @@ class NyFlytTest {
         val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
 
-        val fullførVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/fullfor-vurdering")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(
-                Json.encodeToString(
-                    ValgtÅrsak(
-                        type = VIRKSOMHETEN_TAKKET_NEI,
-                        begrunnelser = listOf(
-                            VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
-                        ),
-                    ),
-                ),
-            )
-            .tilSingelRespons<IASakDto>()
-        fullførVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
-        fullførVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
-
-        val oppdatertSakDto = fullførVurderingRes.third.get()
+        val oppdatertSakDto = sak.avsluttVurdering()
 
         runBlocking {
             // Sak observer - IASakProdusent
@@ -334,7 +321,7 @@ class NyFlytTest {
         samarbeid.saksnummer shouldBe sak.saksnummer
         samarbeid.status shouldBe IASamarbeid.Status.AKTIV
 
-        hentAktivSak(sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         runBlocking {
             // Samarbeid salesforce observer
@@ -366,11 +353,11 @@ class NyFlytTest {
 
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val plan = samarbeid.opprettSamarbeidsplan(sak.orgnr)
         plan.status shouldBe IASamarbeid.Status.AKTIV
-        hentAktivSak(sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 
     @Test
@@ -380,12 +367,10 @@ class NyFlytTest {
 
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Samarbeid med ${sak.orgnr}").opprettSamarbeidsplan(sak.orgnr)
-        val oppdatertSak = hentAktivSak(orgnr = sak.orgnr)
-        oppdatertSak.status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
-        oppdatertSak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid for ${oppdatertSak.orgnr}").opprettSamarbeidsplan(oppdatertSak.orgnr)
-        val sakMedToSamarbeid = hentAktivSak(orgnr = sak.orgnr)
-        sakMedToSamarbeid.status shouldBe IASak.Status.AKTIV
+        sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid for ${sak.orgnr}").opprettSamarbeidsplan(sak.orgnr)
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 
     @Test
@@ -394,12 +379,12 @@ class NyFlytTest {
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         sak.opprettSamarbeid(samarbeidsnavn = "Helt nytt").opprettSamarbeidsplan(orgnr = sak.orgnr)
 
         samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 
     @Test
@@ -408,12 +393,12 @@ class NyFlytTest {
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val etNyttSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Helt nytt")
 
         etNyttSamarbeid.slettSamarbeid(orgnr = sak.orgnr)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         sak.hentAlleSamarbeid() shouldHaveSize 1
     }
 
@@ -422,9 +407,9 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         samarbeid.slettSamarbeid(orgnr = sak.orgnr)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
         sak.hentAlleSamarbeid() shouldHaveSize 0
     }
 
@@ -437,10 +422,10 @@ class NyFlytTest {
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
         samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr)
 
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
         sak.hentAlleSamarbeid() shouldHaveSize 1
     }
 
@@ -448,14 +433,14 @@ class NyFlytTest {
     fun `ved avslutning(FULLFØR) av siste samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal virksomheten gå til status AVSLUTTET`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
 
         sak.hentAlleSamarbeid().first { it.id == samarbeid.id }.status shouldBe IASamarbeid.Status.FULLFØRT
     }
@@ -464,14 +449,14 @@ class NyFlytTest {
     fun `ved avslutning(AVBRYT) av siste samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal virksomheten gå til status AVSLUTTET`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
 
         sak.hentAlleSamarbeid().first { it.id == samarbeid.id }.status shouldBe IASamarbeid.Status.AVBRUTT
     }
@@ -480,15 +465,15 @@ class NyFlytTest {
     fun `avslutning(AVBRYT) av samarbeid i tilstand VirksomhetHarAktiveSamarbeid med flere samarbeid skal ikke endre tilstand`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeidSomSkalAvbrytes = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         samarbeidSomSkalAvbrytes.opprettSamarbeidsplan(orgnr = sak.orgnr)
         val aktivtSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid")
 
         samarbeidSomSkalAvbrytes.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalAvbrytes.id }.status shouldBe IASamarbeid.Status.AVBRUTT
         sak.hentAlleSamarbeid().first { it.id == aktivtSamarbeid.id }.status shouldBe IASamarbeid.Status.AKTIV
@@ -498,38 +483,38 @@ class NyFlytTest {
     fun `avslutning(FULLFØR) av samarbeid i tilstand VirksomhetHarAktiveSamarbeid med flere samarbeid skal ikke endre tilstand`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
         val aktivtSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid")
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
         sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalFullføres.id }.status shouldBe IASamarbeid.Status.FULLFØRT
         sak.hentAlleSamarbeid().first { it.id == aktivtSamarbeid.id }.status shouldBe IASamarbeid.Status.AKTIV
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 
     @Test
     fun `avslutning av alle samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal føre til status AVSLUTTET`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
         val samarbeidSomSkalAvbrytes = sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid")
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
         samarbeidSomSkalAvbrytes.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
 
         sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalAvbrytes.id }.status shouldBe IASamarbeid.Status.AVBRUTT
         sak.hentAlleSamarbeid().first { it.id == samarbeidSomSkalFullføres.id }.status shouldBe IASamarbeid.Status.FULLFØRT
@@ -539,15 +524,15 @@ class NyFlytTest {
     fun `Opprettelse av behovsvurdering skal ikke endre status`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val behovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
         behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
 
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val spørreundersøkelse = IASakSpørreundersøkelseHelper.hentSpørreundersøkelse(
             orgnr = sak.orgnr,
@@ -562,10 +547,10 @@ class NyFlytTest {
     fun `Starting og fullføring av behovsvurdering skal ikke endre status på IASak`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val opprettetBehovsvurdering = samarbeid.opprettKartlegging(
             orgnr = sak.orgnr,
@@ -578,7 +563,7 @@ class NyFlytTest {
             sporreundersokelseId = opprettetBehovsvurdering.id,
         )
         startetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val fullførtBehovsvurdering = samarbeid.fullførKartlegging(
             orgnr = sak.orgnr,
@@ -586,17 +571,17 @@ class NyFlytTest {
         )
 
         fullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 
     @Test
     fun `Sletting av behovsvurdering skal ikke endre status på IASak`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val opprettetBehovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
 
@@ -608,17 +593,17 @@ class NyFlytTest {
         val slettetBehovsvurdering = samarbeid.slettKartlegging(orgnr = sak.orgnr, sporreundersokelseId = opprettetBehovsvurdering.id)
 
         slettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.SLETTET
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 
     @Test
     fun `Starting og fullføring av evaluering skal ikke endre status på IASak`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
@@ -633,7 +618,7 @@ class NyFlytTest {
             sporreundersokelseId = opprettetEvaluering.id,
         )
         startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val fullførtEvaluering = samarbeid.fullførKartlegging(
             orgnr = sak.orgnr,
@@ -641,17 +626,17 @@ class NyFlytTest {
         )
 
         fullførtEvaluering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 
     @Test
     fun `Sletting av evaluering skal ikke endre status på IASak`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.VURDERES
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
@@ -666,7 +651,7 @@ class NyFlytTest {
             sporreundersokelseId = opprettetEvaluering.id,
         )
         startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val slettetEvaluering = samarbeid.slettKartlegging(
             orgnr = sak.orgnr,
@@ -674,7 +659,7 @@ class NyFlytTest {
         )
 
         slettetEvaluering.status shouldBe Spørreundersøkelse.Status.SLETTET
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AKTIV
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 
     @Test
@@ -685,13 +670,15 @@ class NyFlytTest {
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
-        hentAktivSak(orgnr = sak.orgnr).status shouldBe IASak.Status.AVSLUTTET
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
 
         val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>()
         revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
         revurderRes.third.get().status shouldBe IASak.Status.VURDERES
+
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         revurderRes.third.get().saksnummer shouldNotBe sak.saksnummer
     }
@@ -711,8 +698,32 @@ class NyFlytTest {
         sakEtterEierskapendring.eidAv shouldBe saksbehandler.navIdent
     }
 
-    private fun IASakDto.bliEier(token: String) =
-        applikasjon.performPost("$NY_FLYT_PATH/$orgnr/bli-eier")
+    @Test
+    fun `skal få feilmelding dersom man tar eierskap i en virksomhet som ikke har en aktiv sak`() {
+        val superbruker = authContainerHelper.superbruker1
+        val virksomhetUtenSak = VirksomhetHelper.nyttOrgnummer()
+
+        val responseUtenSak = virksomhetUtenSak.bliEier(token = superbruker.token)
+        responseUtenSak.statuskode() shouldBe HttpStatusCode.BadRequest.value
+
+        val virksomhetMedAvsluttetSak = vurderVirksomhet().avsluttVurdering().orgnr
+        val responseMedAvsluttetSak = virksomhetMedAvsluttetSak.bliEier(superbruker.token)
+        responseMedAvsluttetSak.statuskode() shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `lesebrukere skal ikke kunne bli eiere`() {
+        val lesebruker = authContainerHelper.lesebruker
+        val sak = vurderVirksomhet()
+
+        val responseLesebruker = sak.bliEier(token = lesebruker.token)
+        responseLesebruker.statuskode() shouldBe HttpStatusCode.Forbidden.value
+    }
+
+    private fun IASakDto.bliEier(token: String) = orgnr.bliEier(token)
+
+    private fun String.bliEier(token: String) =
+        applikasjon.performPost("$NY_FLYT_PATH/$this/bli-eier")
             .authentication().bearer(token = token)
             .tilSingelRespons<IASakDto>()
 
@@ -812,11 +823,11 @@ class NyFlytTest {
         return plan
     }
 
-    private fun hentAktivSak(
+    private fun hentVirksomhetTilstand(
         orgnr: String,
         token: String = authContainerHelper.superbruker1.token,
-    ) = applikasjon.performGet("$NY_FLYT_PATH/$orgnr")
-        .authentication().bearer(token).tilSingelRespons<IASakDto>().third.get()
+    ) = applikasjon.performGet("$NY_FLYT_PATH/$orgnr/tilstand")
+        .authentication().bearer(token).tilSingelRespons<VirksomhetTilstandDto>().third.get()
 
     private fun IASakDto.opprettSamarbeid(
         token: String = authContainerHelper.superbruker1.token,
@@ -833,6 +844,24 @@ class NyFlytTest {
                     ),
                 ),
             ).tilSingelRespons<IASamarbeidDto>().third.get()
+
+    private fun IASakDto.avsluttVurdering(
+        token: String = authContainerHelper.superbruker1.token,
+        valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+            type = VIRKSOMHETEN_TAKKET_NEI,
+            begrunnelser = listOf(
+                VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+            ),
+        ),
+    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/fullfor-vurdering")
+        .authentication().bearer(token)
+        .jsonBody(
+            Json.encodeToString(valgtÅrsak),
+        )
+        .tilSingelRespons<IASakDto>().third.fold(
+            { it },
+            { fail(it.message) },
+        )
 
     private fun vurderVirksomhet(
         næringskode: String = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
