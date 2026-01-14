@@ -153,8 +153,8 @@ sealed class Tilstand {
                     )
                 }
 
-                is Hendelse.FullførVurdering -> {
-                    val endring = fiaKontekst.nyFlytService.fullførVurderingAvVirksomhetUtenSamarbeid(
+                is Hendelse.AvsluttVurdering -> {
+                    val endring = fiaKontekst.nyFlytService.avsluttVurderingAvVirksomhetUtenSamarbeid(
                         orgnummer = hendelse.orgnr,
                         saksnummer = fiaKontekst.saksnummer!!,
                         årsak = hendelse.årsak,
@@ -432,7 +432,7 @@ sealed class Hendelse {
         val orgnr: String,
     ) : Hendelse()
 
-    data class FullførVurdering(
+    data class AvsluttVurdering(
         val orgnr: String,
         val årsak: ValgtÅrsak,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,

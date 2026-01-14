@@ -267,7 +267,7 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
-        val fullførVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/fullfor-vurdering")
+        val avsluttVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/avslutt-vurdering")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .jsonBody(
                 Json.encodeToString(
@@ -280,8 +280,8 @@ class NyFlytTest {
                 ),
             )
             .tilSingelRespons<IASakDto>()
-        fullførVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
-        fullførVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
+        avsluttVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
+        avsluttVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
 
         val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)

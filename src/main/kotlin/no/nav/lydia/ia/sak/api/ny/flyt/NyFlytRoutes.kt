@@ -181,13 +181,13 @@ fun Route.nyFlyt(
         }
     }
 
-    post("$NY_FLYT_PATH/{orgnummer}/fullfor-vurdering") {
+    post("$NY_FLYT_PATH/{orgnummer}/avslutt-vurdering") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val årsak = call.receive<ValgtÅrsak>()
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = Hendelse.FullførVurdering(
+                hendelse = Hendelse.AvsluttVurdering(
                     orgnr = orgnr,
                     årsak = årsak,
                     saksbehandler = saksbehandler,
