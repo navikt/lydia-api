@@ -14,6 +14,7 @@ import io.ktor.server.routing.application
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -41,6 +42,7 @@ import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurdering
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
@@ -48,6 +50,7 @@ import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.tilgangskontroll.somSuperbruker
+import java.time.LocalDate
 
 const val NY_FLYT_PATH = "iasak/nyflyt"
 
@@ -166,6 +169,22 @@ fun Route.nyFlyt(
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val årsak = call.receive<ValgtÅrsak>()
 
+        if (!årsak.validerBegrunnelserForVurdering()) {
+            println("Ugyldig årsak eller begrunnelse for avslutting av vurdering: $årsak")
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Ugyldig årsak eller begrunnelse for avslutting av vurdering",
+            )
+        }
+
+        if (årsak.dato == null || årsak.dato.toJavaLocalDate().isBefore(LocalDate.now().plusDays(1))) {
+            println("Dato er feil: $årsak")
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Dato for avslutting av vurdering må oppgis",
+            )
+        }
+
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
                 hendelse = Hendelse.AvsluttVurdering(
@@ -190,6 +209,8 @@ fun Route.nyFlyt(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+
+    // TODO: -- GET: hentDatoForÅrsak
 
     post("$NY_FLYT_PATH/{orgnummer}/opprett-samarbeid") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)

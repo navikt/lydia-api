@@ -12,6 +12,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
@@ -46,13 +47,18 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -222,10 +228,12 @@ class NyFlytTest {
             .jsonBody(
                 Json.encodeToString(
                     ValgtÅrsak(
-                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        type = VIRKSOMHETEN_ER_FERDIG_VURDERT,
                         begrunnelser = listOf(
-                            VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                            VIRKSOMHETEN_HAR_TAKKET_NEI,
+                            IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
                         ),
+                        dato = LocalDate.now().plusDays(20).toKotlinLocalDate(),
                     ),
                 ),
             )
@@ -285,10 +293,11 @@ class NyFlytTest {
             .jsonBody(
                 Json.encodeToString(
                     ValgtÅrsak(
-                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        type = VIRKSOMHETEN_SKAL_VURDERES_SENERE,
                         begrunnelser = listOf(
-                            VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                            VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
                         ),
+                        dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
                     ),
                 ),
             )
