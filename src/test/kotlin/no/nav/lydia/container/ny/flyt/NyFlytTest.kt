@@ -853,7 +853,7 @@ class NyFlytTest {
                 VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
             ),
         ),
-    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/fullfor-vurdering")
+    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/avslutt-vurdering")
         .authentication().bearer(token)
         .jsonBody(
             Json.encodeToString(valgtÅrsak),
