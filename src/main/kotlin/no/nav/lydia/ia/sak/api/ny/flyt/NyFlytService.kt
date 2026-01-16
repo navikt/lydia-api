@@ -173,8 +173,8 @@ class NyFlytService(
         return oppdatertSak
     }
 
-    fun hentAktivIASakDto(orgnummer: String): IASakDto? =
-        iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer).sortedByDescending { it.opprettetTidspunkt }.firstOrNull { !it.lukket }
+    fun hentSisteIASakDto(orgnummer: String): IASakDto? =
+        iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer).maxByOrNull { it.opprettetTidspunkt }
 
     fun slettSakOgVarsleObservers(sakDto: IASakDto): Either<Feil, IASakDto> =
         slettSak(sakDto).also { iaSakEither ->
@@ -188,7 +188,14 @@ class NyFlytService(
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
     ): Either<Feil, IASamarbeidDto> {
-        val aktivSakDto = hentAktivIASakDto(orgnummer = orgnummer) ?: return Either.Left(IASakError.`generell feil under uthenting`)
+        val erFølgerAvSak = iaTeamService.erFølgerAvSak(
+            saksnummer = saksnummer,
+            saksbehandler = saksbehandler,
+        )
+        if (!erFølgerAvSak) {
+            return Either.Left(IASakError.`er ikke følger av sak`)
+        }
+
         val alleSamarbeid = hentSamarbeid(saksnummer = saksnummer)
 
         if (navn.trim().isEmpty() || navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
@@ -196,15 +203,6 @@ class NyFlytService(
         }
         alleSamarbeid.getOrNull()?.find { it.navn.equals(navn, ignoreCase = true) }
             ?.let { return Either.Left(IASamarbeidFeil.`samarbeidsnavn finnes allerede`) }
-
-        val erEierEllerFølgerAvSak = iaTeamService.erEierEllerFølgerAvSak(
-            saksnummer = aktivSakDto.saksnummer,
-            eierAvSak = aktivSakDto.eidAv,
-            saksbehandler = saksbehandler,
-        )
-        if (!erEierEllerFølgerAvSak) {
-            return Either.Left(IASakError.`er ikke følger eller eier av sak`)
-        }
 
         val iASakshendelse = IASakshendelse(
             id = ULID.random(),
@@ -551,6 +549,20 @@ class NyFlytService(
         } else {
             return Feil("feil ved avslutning", HttpStatusCode.BadRequest).left()
         }
+    }
+
+    fun bliEier(
+        orgnr: String,
+        navAnsatt: NavAnsattMedSaksbehandlerRolle,
+    ): Either<Feil, IASakDto> {
+        val aktivSak = hentSisteIASakDto(orgnummer = orgnr)
+        if (aktivSak == null || aktivSak.status.regnesSomAvsluttet()) {
+            return IASakError.`kan ikke ta eierskap da det ikke finnes noen aktiv sak`.left()
+        }
+        if (aktivSak.eidAv == navAnsatt.navIdent) {
+            return aktivSak.right()
+        }
+        return iaSakRepository.oppdaterEierPåSak(aktivSak.saksnummer, navAnsatt.navIdent)?.right() ?: IASakError.`fikk ikke oppdatert sak`.left()
     }
 
     private fun avslutningAvSamarbeid(

@@ -85,15 +85,34 @@ fun Route.nyFlyt(
                 nyFlytService = nyFlytService,
                 dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
-                saksnummer = nyFlytService.hentAktivIASakDto(orgnr)?.saksnummer,
+                saksnummer = nyFlytService.hentSisteIASakDto(orgnr)?.saksnummer,
             ),
         ).build(orgnr)
+
+    get("$NY_FLYT_PATH/{orgnummer}/tilstand") {
+        val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+
+        call.somLesebruker(adGrupper) {
+            tilstandsmaskin(orgnr).nåværendeTilstand.tilVirksomhetTilstandDto().right()
+        }.also { tilstandEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = tilstandEither,
+                orgnummer = orgnr,
+                auditType = AuditType.access,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
 
     get("$NY_FLYT_PATH/{orgnummer}") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
 
         call.somLesebruker(adGrupper) {
-            nyFlytService.hentAktivIASakDto(orgnr)?.right()
+            nyFlytService.hentSisteIASakDto(orgnr)?.right()
                 ?: Feil(feilmelding = "Fant ingen aktiv sak på virksomheten", httpStatusCode = HttpStatusCode.NoContent).left()
         }.also { iaSakEither ->
             auditLog.auditloggEither(
@@ -462,6 +481,27 @@ fun Route.nyFlyt(
                 orgnummer = orgnr,
                 auditType = AuditType.delete,
                 saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // -- Dette er tenkt å være en midlertidig løsning frem til vi har utviklet kontaktperson funksjonalitet i samarbeid med Salesforce.
+    // -- Dette etterlater ingen hendelser, men skriver kun over eierskap i den akktive saken
+    post("$NY_FLYT_PATH/{orgnummer}/bli-eier") {
+        val orgnr = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        call.somSaksbehandlerMedNavenhet { saksbehandler, _ ->
+            nyFlytService.bliEier(orgnr, saksbehandler)
+        }.also { iaSamarbeidDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSamarbeidDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.delete,
+                saksnummer = iaSamarbeidDtoEither.getOrNull()?.saksnummer,
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)
