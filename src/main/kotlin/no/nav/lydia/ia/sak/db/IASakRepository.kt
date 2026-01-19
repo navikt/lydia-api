@@ -332,6 +332,27 @@ class IASakRepository(
             )
         }
 
+    fun oppdaterEierPåSak(
+        saksnummer: String,
+        navIdent: String,
+    ): IASakDto? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak
+                    SET eid_av = :navIdent
+                    WHERE saksnummer = :saksnummer
+                    RETURNING *
+                    """.trimIndent(),
+                    mapOf(
+                        "navIdent" to navIdent,
+                        "saksnummer" to saksnummer,
+                    ),
+                ).map { mapRowToIASakDto(it) }.asSingle,
+            )
+        }
+
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(
             saksnummer: String,
