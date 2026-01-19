@@ -66,7 +66,7 @@ class IASakService(
     private val samarbeidService: IASamarbeidService,
     private val iaSakObservers: List<Observer<IASak>>,
     private val planRepository: PlanRepository,
-    private val endringsObservers: List<EndringsObserver<IASak, IASakshendelse>>,
+    private val endringsObservers: List<EndringsObserver<IASakDto, IASakshendelse>>,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     private val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
     private val iaTeamService: IATeamService,
@@ -201,7 +201,10 @@ class IASakService(
 
                 val umodifisertIaSak = sak.kopier() // siden vi muterer state i utførhende -> behandleHendelse
 
-                val følgerSak = iaTeamService.erFølgerAvSak(sak, saksbehandler)
+                val følgerSak = iaTeamService.erFølgerAvSak(
+                    saksnummer = sak.saksnummer,
+                    saksbehandler = saksbehandler,
+                )
 
                 saksbehandler.utførHendelsePåSak(
                     sak = sak,
@@ -214,7 +217,13 @@ class IASakService(
                     samarbeidService.oppdaterSamarbeid(sakshendelse, sak)
                     return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                         .onRight { lagretSak ->
-                            endringsObservers.forEach { it.receive(før = umodifisertIaSak, endring = sakshendelse, etter = lagretSak) }
+                            endringsObservers.forEach {
+                                it.receive(
+                                    før = umodifisertIaSak.toDto(navAnsatt = saksbehandler),
+                                    endring = sakshendelse,
+                                    etter = lagretSak.toDto(navAnsatt = saksbehandler),
+                                )
+                            }
                         }
                 }
                     .mapLeft { it.tilFeilMedHttpFeilkode() }
@@ -393,6 +402,9 @@ class IASakService(
 
     fun hentIASak(saksnummer: String): Either<Feil, IASak> =
         iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
+
+    fun hentIASakDto(saksnummer: String): Either<Feil, IASakDto> =
+        iaSakRepository.hentIASakDto(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
 
     fun hentMal(): Either<Feil, PlanMalDto> = PlanMalDto().right()
 

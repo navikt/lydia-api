@@ -279,6 +279,22 @@ class IASakRepository(
             )
         }
 
+    fun hentIASakDto(saksnummer: String): IASakDto? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_sak
+                    WHERE saksnummer = :saksnummer
+                    """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                    ),
+                ).map(this::mapRowToIASakDto).asSingle,
+            )
+        }
+
     fun hentAlleSaker(): List<IASak> =
         using(sessionOf(dataSource)) { session ->
             session.run(

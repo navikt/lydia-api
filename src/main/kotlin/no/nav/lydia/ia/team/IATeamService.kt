@@ -7,7 +7,6 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -16,11 +15,6 @@ class IATeamService(
     val iaTeamRepository: IATeamRepository,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
-
-    fun erFølgerAvSak(
-        iaSak: IASak,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-    ) = erFølgerAvSak(saksnummer = iaSak.saksnummer, saksbehandler = saksbehandler)
 
     fun erFølgerAvSak(
         saksnummer: String,
@@ -34,15 +28,6 @@ class IATeamService(
     }
 
     fun erEierEllerFølgerAvSak(
-        iaSak: IASak,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-    ) = erEierEllerFølgerAvSak(
-        saksnummer = iaSak.saksnummer,
-        eierAvSak = iaSak.eidAv,
-        saksbehandler = saksbehandler,
-    )
-
-    fun erEierEllerFølgerAvSak(
         saksnummer: String,
         eierAvSak: String?,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
@@ -51,7 +36,7 @@ class IATeamService(
         return erFølgerAvSak(saksnummer = saksnummer, saksbehandler = saksbehandler) || erEierAvSak
     }
 
-    fun hentBrukereITeam(iaSak: IASak) = hentBrukereITeam(iaSak.saksnummer)
+    fun hentBrukereITeam(iaSakDto: IASakDto) = hentBrukereITeam(iaSakDto.saksnummer)
 
     fun hentBrukereITeam(saksnummer: String) =
         try {
@@ -62,17 +47,17 @@ class IATeamService(
         }
 
     fun knyttBrukerTilSak(
-        iaSak: IASak,
+        iaSakDto: IASakDto,
         navAnsatt: NavAnsatt,
     ): Either<Feil, BrukerITeamDto> =
-        iaTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
+        iaTeamRepository.leggBrukerTilTeam(saksnummer = iaSakDto.saksnummer, navAnsatt = navAnsatt)?.right()
             ?: Feil("Feil ved knytting av bruker til sak", HttpStatusCode.BadRequest).left()
 
     fun fjernBrukerFraSak(
-        iaSak: IASak,
+        iaSakDto: IASakDto,
         navAnsatt: NavAnsatt,
     ): Either<Feil, BrukerITeamDto> =
-        iaTeamRepository.slettBrukerFraTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
+        iaTeamRepository.slettBrukerFraTeam(saksnummer = iaSakDto.saksnummer, navAnsatt = navAnsatt)?.right()
             ?: Feil("Feil ved fjerning av bruker som følger sak", HttpStatusCode.BadRequest).left()
 
     fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<Pair<IASakDto, String>>> =
