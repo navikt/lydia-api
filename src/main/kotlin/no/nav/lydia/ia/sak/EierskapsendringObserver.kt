@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak
 
 import no.nav.lydia.EndringsObserver
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.team.IATeamService
@@ -9,11 +9,11 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
 class EierskapsendringObserver(
     val iaTeamService: IATeamService,
-) : EndringsObserver<IASak, IASakshendelse> {
+) : EndringsObserver<IASakDto, IASakshendelse> {
     override fun receive(
-        før: IASak,
+        før: IASakDto,
         endring: IASakshendelse,
-        etter: IASak,
+        etter: IASakDto,
     ) {
         val eierskapFørEndring = før.eidAv
         if (
@@ -21,8 +21,8 @@ class EierskapsendringObserver(
             eierskapFørEndring != null
         ) {
             iaTeamService.knyttBrukerTilSak(
-                etter,
-                NavAnsatt.NavAnsattMedSaksbehandlerRolle.Saksbehandler(
+                iaSakDto = etter,
+                navAnsatt = NavAnsatt.NavAnsattMedSaksbehandlerRolle.Saksbehandler(
                     navIdent = eierskapFørEndring,
                     navn = "",
                     token = "",
