@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -74,7 +75,7 @@ class IATeamService(
         iaTeamRepository.slettBrukerFraTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
             ?: Feil("Feil ved fjerning av bruker som følger sak", HttpStatusCode.BadRequest).left()
 
-    fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<Pair<IASak, String>>> =
+    fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<Pair<IASakDto, String>>> =
         try {
             iaTeamRepository.hentSakerBrukerEierEllerFølger(navAnsatt = navAnsatt).right()
         } catch (e: Exception) {

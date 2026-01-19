@@ -12,7 +12,6 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.appstatus.Metrics.Companion.loggFølging
 import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -100,7 +99,7 @@ fun Route.iaSakTeam(
             iaTeamService.hentSakerTilBruker(lesebruker).map {
                 it.map { (iasak, orgnavn) ->
                     MineSakerDto(
-                        iaSak = iasak.toDto(lesebruker),
+                        iaSak = iasak,
                         orgnavn = orgnavn,
                     )
                 }
