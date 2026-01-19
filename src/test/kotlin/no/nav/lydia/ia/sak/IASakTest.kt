@@ -476,15 +476,16 @@ class IASakTest {
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = saksnummer,
+                hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,
+                navEnhet = navEnhet,
+                resulterendeStatus = null,
                 valgtÅrsak = ValgtÅrsak(
                     type = NAV_IGANGSETTER_IKKE_TILTAK,
                     begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK),
                 ),
-                navEnhet = navEnhet,
-                resulterendeStatus = null,
             )
 
             ENDRE_PROSESS, SLETT_PROSESS -> ProsessHendelse(

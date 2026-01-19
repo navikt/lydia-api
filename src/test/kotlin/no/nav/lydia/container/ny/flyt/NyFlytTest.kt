@@ -44,12 +44,12 @@ import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT
@@ -270,7 +270,8 @@ class NyFlytTest {
                     it.saksnummer shouldBe oppdatertSakDto.saksnummer
                     it.eierAvSak shouldBe null
                     it.status shouldBe IASak.Status.VURDERT
-                    it.ikkeAktuelBegrunnelse shouldBe "[${VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID.name}]"
+                    it.hendelse shouldBe IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
+                    it.ikkeAktuelBegrunnelse shouldBe "[${VIRKSOMHETEN_HAR_TAKKET_NEI.name}, ${IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE.name}]"
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
