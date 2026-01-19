@@ -51,12 +51,9 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT
-import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE
+import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
@@ -226,27 +223,17 @@ class NyFlytTest {
         val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
 
-        val oppdatertSakDto = sak.avsluttVurdering()
-
-        val avsluttVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/avslutt-vurdering")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(
-                Json.encodeToString(
-                    ValgtÅrsak(
-                        type = VIRKSOMHETEN_ER_FERDIG_VURDERT,
-                        begrunnelser = listOf(
-                            VIRKSOMHETEN_HAR_TAKKET_NEI,
-                            IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
-                        ),
-                        dato = LocalDate.now().plusDays(20).toKotlinLocalDate(),
-                    ),
+        val oppdatertSakDto = sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
                 ),
-            )
-            .tilSingelRespons<IASakDto>()
-        avsluttVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
-        avsluttVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
-
-        val oppdatertSakDto = avsluttVurderingRes.third.get()
+                dato = LocalDate.now().plusDays(20).toKotlinLocalDate(),
+            ),
+        )
+        oppdatertSakDto.status shouldBe IASak.Status.VURDERT
 
         runBlocking {
             // Sak observer - IASakProdusent
@@ -276,7 +263,8 @@ class NyFlytTest {
                     it.eierAvSak shouldBe null
                     it.status shouldBe IASak.Status.VURDERT
                     it.hendelse shouldBe IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
-                    it.ikkeAktuelBegrunnelse shouldBe "[${VIRKSOMHETEN_HAR_TAKKET_NEI.name}, ${IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE.name}]"
+                    it.ikkeAktuelBegrunnelse shouldBe
+                        "[${BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI.name}, ${BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE.name}]"
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
@@ -299,9 +287,9 @@ class NyFlytTest {
             .jsonBody(
                 Json.encodeToString(
                     ValgtÅrsak(
-                        type = VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                        type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
                         begrunnelser = listOf(
-                            VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                            BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
                         ),
                         dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
                     ),
@@ -876,10 +864,11 @@ class NyFlytTest {
     private fun IASakDto.avsluttVurdering(
         token: String = authContainerHelper.superbruker1.token,
         valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
-            type = VIRKSOMHETEN_TAKKET_NEI,
+            type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
             begrunnelser = listOf(
-                VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
             ),
+            dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
         ),
     ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/avslutt-vurdering")
         .authentication().bearer(token)
