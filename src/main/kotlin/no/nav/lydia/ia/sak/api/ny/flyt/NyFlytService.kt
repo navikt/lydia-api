@@ -190,7 +190,7 @@ class NyFlytService(
         return tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
             orgnr = orgnummer,
             samarbeidsperiodeId = nestSisteSakDto.saksnummer,
-            nyTilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+            tilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
         ).right()
     }
 
@@ -656,16 +656,16 @@ class NyFlytService(
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
 
-    fun oppdaterTilstand(
+    fun oppdaterTilstandOgSamarbeidsperiode(
         orgnr: String,
-        saksnummer: String,
-        forventetNyTilstand: Tilstand,
+        nySamarbeidsperiodeId: String,
+        nyTilstand: Tilstand,
     ): Either<Feil, Tilstand> {
-        val nyTilstand = tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
+        val oppdatertTilstand = tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
             orgnr = orgnr,
-            samarbeidsperiodeId = saksnummer,
-            nyTilstand = forventetNyTilstand.tilVirksomhetIATilstand(),
+            samarbeidsperiodeId = nySamarbeidsperiodeId,
+            tilstand = nyTilstand.tilVirksomhetIATilstand(),
         )
-        return nyTilstand?.tilstand?.tilTilstand()?.right() ?: Feil("kunne ikke oppdatere tilstand", HttpStatusCode.BadRequest).left()
+        return oppdatertTilstand?.tilstand?.tilTilstand()?.right() ?: Feil("kunne ikke oppdatere tilstand", HttpStatusCode.BadRequest).left()
     }
 }

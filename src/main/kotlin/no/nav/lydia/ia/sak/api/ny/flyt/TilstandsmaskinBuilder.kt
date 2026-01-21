@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
@@ -10,6 +9,8 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
+import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harAktiveSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harSamarbeidOgAlleErAvsluttet
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -27,6 +28,23 @@ class TilstandsmaskinBuilder private constructor(
 ) {
     companion object {
         fun medKontekst(fiaKontekst: FiaKontekst): TilstandsmaskinBuilder = TilstandsmaskinBuilder(fiaKontekst)
+
+        fun harAktiveSamarbeid(
+            fiaKontekst: FiaKontekst,
+            saksnummer: String,
+        ): Boolean {
+            val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(saksnummer)
+            return aktiveSamarbeid.any { samarbeid -> samarbeid.status == IASamarbeid.Status.AKTIV }
+        }
+
+        fun harSamarbeidOgAlleErAvsluttet(
+            fiaKontekst: FiaKontekst,
+            saksnummer: String,
+        ): Boolean {
+            val alleSamarbeid = fiaKontekst.iASamarbeidService.hentAlleSamarbeid(saksnummer = saksnummer)
+            return alleSamarbeid.isNotEmpty() && alleSamarbeid
+                .all { it.status == IASamarbeid.Status.AVBRUTT || it.status == IASamarbeid.Status.FULLFØRT }
+        }
     }
 
     fun build(orgnr: String): Tilstandsmaskin {
@@ -43,7 +61,7 @@ class TilstandsmaskinBuilder private constructor(
             return eksisterendeTilstand.tilstand.tilTilstand()
         }
 
-        val beregnetTilstand = beregnTilstandFraIASak(orgnr)
+        val beregnetTilstand = beregnTilstandFraIASakOgIASamarbeid(orgnr)
 
         fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iASakDto ->
             fiaKontekst.tilstandVirksomhetRepository.lagreVirksomhetTilstand(
@@ -56,44 +74,49 @@ class TilstandsmaskinBuilder private constructor(
         return beregnetTilstand
     }
 
-    private fun beregnTilstandFraIASak(orgnr: String): Tilstand =
+    @Deprecated("fjern fra hentTilstandForVirksomhet() når alle sakene har migrert til virksomhet_tilstand tabellen")
+    private fun beregnTilstandFraIASakOgIASamarbeid(orgnr: String): Tilstand =
         fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iASakDto ->
-            val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(iASakDto.saksnummer)
-            val harAktivSamarbeidsplan = aktiveSamarbeid.any { samarbeid ->
-                fiaKontekst.planService.hentPlan(samarbeid.id)
-                    .map { plan ->
-                        plan.status == IASamarbeid.Status.AKTIV
-                    }.getOrElse { false }
-            }
-
             when (iASakDto.status) {
                 Status.NY,
                 Status.IKKE_AKTIV,
                 Status.IKKE_AKTUELL,
                 Status.SLETTET,
                 Status.FULLFØRT,
-                -> Tilstand.VirksomhetKlarTilVurdering
+                -> {
+                    Tilstand.VirksomhetKlarTilVurdering
+                }
 
                 Status.VURDERES,
-                -> Tilstand.VirksomhetVurderes
+                -> {
+                    Tilstand.VirksomhetVurderes
+                }
 
                 Status.VURDERT,
-                -> Tilstand.VirksomhetErVurdert
+                -> {
+                    Tilstand.VirksomhetErVurdert
+                }
 
                 Status.KONTAKTES,
                 Status.KARTLEGGES,
                 Status.VI_BISTÅR,
-                -> if (harAktivSamarbeidsplan) {
-                    Tilstand.VirksomhetHarAktiveSamarbeid
-                } else {
-                    Tilstand.VirksomhetVurderes
+                -> {
+                    if (harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = iASakDto.saksnummer)) {
+                        Tilstand.VirksomhetHarAktiveSamarbeid
+                    } else {
+                        Tilstand.VirksomhetVurderes
+                    }
                 }
 
                 Status.AKTIV,
-                -> Tilstand.VirksomhetHarAktiveSamarbeid
+                -> {
+                    Tilstand.VirksomhetHarAktiveSamarbeid
+                }
 
                 Status.AVSLUTTET,
-                -> Tilstand.AlleSamarbeidIVirksomhetErAvsluttet
+                -> {
+                    Tilstand.AlleSamarbeidIVirksomhetErAvsluttet
+                }
             }
         } ?: Tilstand.VirksomhetKlarTilVurdering
 }
@@ -113,17 +136,18 @@ class Tilstandsmaskin(
 
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
         val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
+        val nåværendeSakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)
+        val allerSisteSakBleSlettet = nåværendeSakDto == null
 
-        if (konsekvensAvUtførtTransisjon.endring.isRight() &&
+        if (!allerSisteSakBleSlettet &&
+            konsekvensAvUtførtTransisjon.endring.isRight() &&
             konsekvensAvUtførtTransisjon.nyTilstand != nåværendeTilstand
         ) {
-            fiaKontekst.saksnummer?.let { saksnummer ->
-                fiaKontekst.tilstandVirksomhetRepository.lagreVirksomhetTilstand(
-                    orgnr = hendelse.orgnr,
-                    samarbeidsperiodeId = saksnummer,
-                    tilstand = konsekvensAvUtførtTransisjon.nyTilstand.tilVirksomhetIATilstand(),
-                )
-            }
+            fiaKontekst.nyFlytService.oppdaterTilstandOgSamarbeidsperiode(
+                orgnr = hendelse.orgnr,
+                nySamarbeidsperiodeId = nåværendeSakDto.saksnummer,
+                nyTilstand = konsekvensAvUtførtTransisjon.nyTilstand,
+            )
         }
 
         nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
@@ -395,9 +419,16 @@ sealed class Tilstand {
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
                     )
+
+                    val harAktiveSamarbeid = harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
+                    val erAlleSamarbeidAvsluttet = harSamarbeidOgAlleErAvsluttet(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
                     Konsekvens(
                         endring = endring,
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                        nyTilstand = when {
+                            harAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
+                            erAlleSamarbeidAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
+                            else -> VirksomhetVurderes
+                        },
                     )
                 }
 
@@ -410,9 +441,10 @@ sealed class Tilstand {
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
                     )
+                    val harAktiveSamarbeid = harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
                     Konsekvens(
                         endring = endring,
-                        nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
+                        nyTilstand = if (harAktiveSamarbeid) VirksomhetHarAktiveSamarbeid else AlleSamarbeidIVirksomhetErAvsluttet,
                     )
                 }
 
@@ -426,7 +458,6 @@ sealed class Tilstand {
             }
     }
 
-    // object VirksomhetHarFlereAktiveSamarbeid : Tilstand()
     object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
         override fun utførTransisjon(
             hendelse: Hendelse,

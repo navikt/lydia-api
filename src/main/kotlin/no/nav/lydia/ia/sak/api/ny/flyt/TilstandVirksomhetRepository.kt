@@ -68,7 +68,7 @@ class TilstandVirksomhetRepository(
     fun oppdaterVirksomhetTilstand(
         orgnr: String,
         samarbeidsperiodeId: String,
-        nyTilstand: VirksomhetIATilstand,
+        tilstand: VirksomhetIATilstand,
     ): VirksomhetTilstandDto? =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -76,15 +76,15 @@ class TilstandVirksomhetRepository(
                     """
                     UPDATE tilstand_virksomhet
                     SET tilstand = :tilstand,
+                        samarbeidsperiode_id = :samarbeidsperiodeId,
                         sist_endret = current_timestamp
                     WHERE orgnr = :orgnr
-                      AND samarbeidsperiode_id = :samarbeidsperiodeId
                     RETURNING *
                     """.trimIndent(),
                     mapOf(
                         "orgnr" to orgnr,
                         "samarbeidsperiodeId" to samarbeidsperiodeId,
-                        "tilstand" to nyTilstand.name,
+                        "tilstand" to tilstand.name,
                     ),
                 ).map { row ->
                     row.tilVirksomhetTilstandDto()
