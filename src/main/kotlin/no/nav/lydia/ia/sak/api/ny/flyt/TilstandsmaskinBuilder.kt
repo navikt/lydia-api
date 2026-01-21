@@ -37,7 +37,26 @@ class TilstandsmaskinBuilder private constructor(
         )
     }
 
-    private fun hentTilstandForVirksomhet(orgnr: String): Tilstand =
+    private fun hentTilstandForVirksomhet(orgnr: String): Tilstand {
+        val eksisterendeTilstand = fiaKontekst.tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr)
+        if (eksisterendeTilstand != null) {
+            return eksisterendeTilstand.tilstand.tilTilstand()
+        }
+
+        val beregnetTilstand = beregnTilstandFraIASak(orgnr)
+
+        fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iASakDto ->
+            fiaKontekst.tilstandVirksomhetRepository.lagreVirksomhetTilstand(
+                orgnr = orgnr,
+                samarbeidsperiodeId = iASakDto.saksnummer,
+                tilstand = beregnetTilstand.tilVirksomhetIATilstand(),
+            )
+        }
+
+        return beregnetTilstand
+    }
+
+    private fun beregnTilstandFraIASak(orgnr: String): Tilstand =
         fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iASakDto ->
             val aktiveSamarbeid = fiaKontekst.iASamarbeidService.hentAktiveSamarbeid(iASakDto.saksnummer)
             val harAktivSamarbeidsplan = aktiveSamarbeid.any { samarbeid ->
@@ -94,6 +113,19 @@ class Tilstandsmaskin(
 
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
         val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
+
+        if (konsekvensAvUtførtTransisjon.endring.isRight() &&
+            konsekvensAvUtførtTransisjon.nyTilstand != nåværendeTilstand
+        ) {
+            fiaKontekst.saksnummer?.let { saksnummer ->
+                fiaKontekst.tilstandVirksomhetRepository.lagreVirksomhetTilstand(
+                    orgnr = hendelse.orgnr,
+                    samarbeidsperiodeId = saksnummer,
+                    tilstand = konsekvensAvUtførtTransisjon.nyTilstand.tilVirksomhetIATilstand(),
+                )
+            }
+        }
+
         nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
         return konsekvensAvUtførtTransisjon
     }
@@ -146,6 +178,9 @@ sealed class Tilstand {
             when (hendelse) {
                 is Hendelse.AngreVurderVirksomhet -> {
                     val sakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)!!
+                    fiaKontekst.nyFlytService.slettEllerOppdaterTilstandVirksomhet(
+                        orgnummer = hendelse.orgnr,
+                    )
                     val endring = fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
                     Konsekvens(
                         endring = endring,
@@ -420,34 +455,36 @@ sealed class Tilstand {
 }
 
 sealed class Hendelse {
+    abstract val orgnr: String
+
     fun navn(): String = this.javaClass.simpleName
 
     data class VurderVirksomhet(
-        val orgnr: String,
+        override val orgnr: String,
         val superbruker: Superbruker,
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class AngreVurderVirksomhet(
-        val orgnr: String,
+        override val orgnr: String,
     ) : Hendelse()
 
     data class AvsluttVurdering(
-        val orgnr: String,
+        override val orgnr: String,
         val årsak: ValgtÅrsak,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class OpprettNyttSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val samarbeidsnavn: String,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class OpprettKartleggingForSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val samarbeidId: Int,
         val type: Spørreundersøkelse.Type,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
@@ -455,28 +492,28 @@ sealed class Hendelse {
     ) : Hendelse()
 
     data class StartKartleggingForSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val spørreundersøkelseId: UUID,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class FullførKartleggingForSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val spørreundersøkelseId: UUID,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class SlettKartleggingForSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val spørreundersøkelseId: UUID,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class OpprettPlanForSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val samarbeidId: Int,
         val plan: PlanMalDto,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
@@ -484,21 +521,21 @@ sealed class Hendelse {
     ) : Hendelse()
 
     data class SlettPlanForSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val samarbeidId: Int,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class SlettSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val samarbeidId: Int,
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
         val navEnhet: NavEnhet,
     ) : Hendelse()
 
     data class AvsluttSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val samarbeidId: Int,
         val typeAvslutning: IASamarbeid.Status, // FULLFØRT eller AVBRUTT
         val saksbehandler: NavAnsattMedSaksbehandlerRolle,
@@ -506,12 +543,12 @@ sealed class Hendelse {
     ) : Hendelse()
 
     data class GjenopprettSamarbeid(
-        val orgnr: String,
+        override val orgnr: String,
         val samarbeidId: UUID,
     ) : Hendelse()
 
     data class GjørVirksomhetKlarTilNyVurdering(
-        val orgnr: String,
+        override val orgnr: String,
     ) : Hendelse()
 }
 
@@ -521,6 +558,6 @@ data class FiaKontekst(
     val dokumentPubliseringService: DokumentPubliseringService,
     val planService: PlanService,
     val nyFlytService: NyFlytService,
-    // TODO: Skal orgnr inn hit og?
+    val tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     val saksnummer: String?,
 )

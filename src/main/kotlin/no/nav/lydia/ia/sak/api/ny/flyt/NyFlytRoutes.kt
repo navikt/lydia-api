@@ -60,6 +60,7 @@ fun Route.nyFlyt(
     nyFlytService: NyFlytService,
     dokumentPubliseringService: DokumentPubliseringService,
     planService: PlanService,
+    tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
@@ -88,6 +89,7 @@ fun Route.nyFlyt(
                 nyFlytService = nyFlytService,
                 dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
+                tilstandVirksomhetRepository = tilstandVirksomhetRepository,
                 saksnummer = nyFlytService.hentSisteIASakDto(orgnr)?.saksnummer,
             ),
         ).build(orgnr)

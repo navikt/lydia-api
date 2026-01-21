@@ -219,7 +219,7 @@ class NyFlytTest {
     }
 
     @Test
-    fun `skal kunne fullføre vurdering som ikke medfører et samarbeid`() {
+    fun `skal kunne avslutte vurdering som ikke medfører et samarbeid`() {
         val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
 
@@ -275,6 +275,29 @@ class NyFlytTest {
                 }
             }
         }
+    }
+
+    // TODO: Sikre at nyTilstand blir oppdatert og satt riktig
+    @Test
+    fun `avslutt vurdering med gyldig årsak gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetKlarTilVurdering`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
+                ),
+                dato = LocalDate.now().plusDays(20).toKotlinLocalDate(),
+            ),
+        )
+
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstand.nesteTilstand?.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(20).toKotlinLocalDate()
     }
 
     @Test
