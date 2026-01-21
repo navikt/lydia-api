@@ -87,6 +87,7 @@ import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.kvittering.KvitteringConsumer
+import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetConsumer
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetRepository
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetService
@@ -597,6 +598,7 @@ private fun Application.lydiaRestApi(
                 spørreundersøkelseService = spørreundersøkelseService,
                 dokumentPubliseringService = dokumentPubliseringService,
                 iaTeamService = iaTeamService,
+                pdfgenService = PiaPdfgenService(naisEnv),
             )
             iaSakPlan(
                 adGrupper = naisEnv.security.adGrupper,

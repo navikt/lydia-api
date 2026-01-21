@@ -39,6 +39,8 @@ spec:
         - id: elastic
   accessPolicy:
     outbound:
+      rules:
+        - application: pia-pdfgen
       external:
         - host: data.ssb.no
         - host: {{salesforceTokenHost}}
@@ -87,3 +89,5 @@ spec:
       value: {{teamPiaGroup}}
     - name: SALESFORCE_TOKEN_BASE_URL
       value: {{salesforceTokenBaseUrl}}
+    - name: PIA_PDFGEN_URL
+      value: http://pia-pdfgen

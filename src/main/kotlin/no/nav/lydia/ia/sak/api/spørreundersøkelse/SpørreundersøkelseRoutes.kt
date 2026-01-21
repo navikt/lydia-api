@@ -13,6 +13,13 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import no.nav.fia.dokument.publisering.pdfgen.PdfDokumentDto
+import no.nav.fia.dokument.publisering.pdfgen.PdfType
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -23,7 +30,10 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringSakDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
+import no.nav.lydia.ia.sak.api.dokument.SamarbeidDto
+import no.nav.lydia.ia.sak.api.dokument.VirksomhetDto
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -33,9 +43,12 @@ import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.IATeamService
+import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
+import no.nav.lydia.vedlikehold.IASakStatusOppdaterer.Companion.NAV_ENHET_FOR_MASKINELT_OPPDATERING
+import java.time.LocalDateTime
 
 const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 
@@ -44,6 +57,7 @@ fun Route.iaSakSpørreundersøkelse(
     spørreundersøkelseService: SpørreundersøkelseService,
     dokumentPubliseringService: DokumentPubliseringService,
     iaTeamService: IATeamService,
+    pdfgenService: PiaPdfgenService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
@@ -297,7 +311,66 @@ fun Route.iaSakSpørreundersøkelse(
             call.sendFeil(it)
         }
     }
+
+    get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/pdf") {
+        call.application.log.info("Sup!")
+        val spørreundersøkelseId = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
+
+        call.somLesebruker(adGrupper) { _ ->
+            spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId)
+                .map { spørreundersøkelse ->
+                    runBlocking {
+                        pdfgenService.genererPdfDokument(
+                            pdfType = spørreundersøkelse.type.tilPdfType(),
+                            pdfDokumentDto = spørreundersøkelse.tilPdfDokumentDto(),
+                        )
+                    }
+                }
+        }.also { spørreundersøkelseEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = spørreundersøkelseEither,
+                orgnummer = call.orgnummer,
+                auditType = AuditType.access,
+                saksnummer = call.saksnummer,
+            )
+        }.mapLeft {
+            call.sendFeil(it)
+        }.map {
+            call.respond(message = it, status = HttpStatusCode.OK)
+        }
+    }
 }
+
+private fun Spørreundersøkelse.tilPdfDokumentDto() =
+    PdfDokumentDto(
+        type = type.tilPdfType(),
+        referanseId = id.toString(),
+        publiseringsdato = LocalDateTime.now().toKotlinLocalDateTime(), // TODO: Fjern fra dokument
+        virksomhet = VirksomhetDto(
+            orgnummer = orgnummer,
+            navn = virksomhetsNavn,
+        ),
+        sak = DokumentPubliseringSakDto(
+            saksnummer = saksnummer,
+            navenhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING, // TODO: Fjern fra dette dokumentet
+        ),
+        samarbeid = SamarbeidDto(
+            id = samarbeidId,
+            navn = "",
+        ),
+        innhold = Json.encodeToJsonElement(
+            tilResultatDto().tilSpørreundersøkelseInnholdDto(
+                fullførtTidspunkt = fullførtTidspunkt ?: endretTidspunkt ?: opprettetTidspunkt,
+            ),
+        ).jsonObject,
+    )
+
+private fun Spørreundersøkelse.Type.tilPdfType() =
+    when (this) {
+        Spørreundersøkelse.Type.Evaluering -> PdfType.EVALUERING
+        Spørreundersøkelse.Type.Behovsvurdering -> PdfType.BEHOVSVURDERING
+    }
 
 fun <T> ApplicationCall.somFølgerAvSakIProsess(
     iaSakService: IASakService,
@@ -385,5 +458,10 @@ object IASakSpørreundersøkelseError {
     val `ugyldig type` = Feil(
         "Ugyldig type spørreundersøkelse",
         HttpStatusCode.BadRequest,
+    )
+
+    val `ugyldig status for nedlasting` = Feil(
+        feilmelding = "Kan ikke laste ned spørreundersøkelse da den ikke har FULLFØRT status",
+        httpStatusCode = HttpStatusCode.BadRequest,
     )
 }
