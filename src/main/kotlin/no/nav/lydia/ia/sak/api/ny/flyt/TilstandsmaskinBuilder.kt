@@ -136,12 +136,12 @@ class Tilstandsmaskin(
 
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
         val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
-        val nåværendeSakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)
-        val allerSisteSakBleSlettet = nåværendeSakDto == null
 
-        if (!allerSisteSakBleSlettet &&
-            konsekvensAvUtførtTransisjon.endring.isRight() &&
-            konsekvensAvUtførtTransisjon.nyTilstand != nåværendeTilstand
+        val nåværendeSakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)
+        val harFortsattMinstEnSamarbeidsperiode = nåværendeSakDto != null // samarbeidsperiode = IASak
+
+        if (harFortsattMinstEnSamarbeidsperiode &&
+            konsekvensAvUtførtTransisjon.endring.isRight()
         ) {
             fiaKontekst.nyFlytService.oppdaterTilstandOgSamarbeidsperiode(
                 orgnr = hendelse.orgnr,
@@ -421,12 +421,13 @@ sealed class Tilstand {
                     )
 
                     val harAktiveSamarbeid = harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
-                    val erAlleSamarbeidAvsluttet = harSamarbeidOgAlleErAvsluttet(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
+                    val harSamarbeidOgAlleErAvsluttet = harSamarbeidOgAlleErAvsluttet(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
+                    // TODO: husk at endring ikke er gjennomført enda --> blir algoritmen riktig?
                     Konsekvens(
                         endring = endring,
                         nyTilstand = when {
                             harAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
-                            erAlleSamarbeidAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
+                            harSamarbeidOgAlleErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
                             else -> VirksomhetVurderes
                         },
                     )
