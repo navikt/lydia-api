@@ -98,7 +98,7 @@ fun Route.nyFlyt(
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
 
         call.somLesebruker(adGrupper) {
-            tilstandsmaskin(orgnr).nåværendeTilstand.tilVirksomhetTilstandDto().right()
+            tilstandsmaskin(orgnr).hentFullTilstandForVirksomhet(orgnr = orgnr).right()
         }.also { tilstandEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -106,8 +106,12 @@ fun Route.nyFlyt(
                 orgnummer = orgnr,
                 auditType = AuditType.access,
             )
-        }.map {
-            call.respond(status = HttpStatusCode.OK, message = it)
+        }.map { virksomhetTilstandDto: VirksomhetTilstandDto? ->
+            if (virksomhetTilstandDto == null) {
+                call.respond(status = HttpStatusCode.NotFound, message = "Fant ingen tilstand for virksomhet med orgnr $orgnr")
+            } else {
+                call.respond(status = HttpStatusCode.OK, message = virksomhetTilstandDto)
+            }
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

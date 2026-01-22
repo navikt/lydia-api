@@ -161,39 +161,13 @@ class TilstandVirksomhetRepository(
             )
         }
 
-    fun hentAutomatiskOppdateringForVirksomhet(
-        orgnr: String,
-        samarbeidsperiodeId: String,
-    ): VirksomhetTilstandAutomatiskOppdateringDto? =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    SELECT tao.*
-                    FROM tilstand_automatisk_oppdatering tao
-                    JOIN tilstand_virksomhet tv ON tao.tilstand_virksomhet_id = tv.id
-                    WHERE tv.orgnr = :orgnr
-                      AND tv.samarbeidsperiode_id = :samarbeidsperiodeId
-                    ORDER BY tao.planlagt_dato DESC
-                    LIMIT 1
-                    """.trimIndent(),
-                    mapOf(
-                        "orgnr" to orgnr,
-                        "samarbeidsperiodeId" to samarbeidsperiodeId,
-                    ),
-                ).map { row ->
-                    row.tilVirksomhetTilstandAutomatiskOppdateringDto()
-                }.asSingle,
-            )
-        }
-
     private fun kotliquery.Row.tilVirksomhetTilstandDto() =
         VirksomhetTilstandDto(
             tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
             nesteTilstand = null,
         )
 
-    private fun kotliquery.Row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering() =
+    private fun kotliquery.Row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering(): VirksomhetTilstandDto =
         VirksomhetTilstandDto(
             tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
             nesteTilstand = stringOrNull("ny_tilstand")?.let { nyTilstand ->

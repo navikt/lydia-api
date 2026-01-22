@@ -142,7 +142,7 @@ class NyFlytService(
         årsak: ValgtÅrsak,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
-    ): Either<Feil, Any?> {
+    ): Either<Feil, IASakDto> {
         val iASakshendelse = IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),

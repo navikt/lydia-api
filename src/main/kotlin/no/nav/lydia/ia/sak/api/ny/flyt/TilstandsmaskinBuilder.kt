@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
 import io.ktor.http.HttpStatusCode
+import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
@@ -56,7 +57,7 @@ class TilstandsmaskinBuilder private constructor(
     }
 
     private fun hentTilstandForVirksomhet(orgnr: String): Tilstand {
-        val eksisterendeTilstand = fiaKontekst.tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr)
+        val eksisterendeTilstand: VirksomhetTilstandDto? = fiaKontekst.tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr)
         if (eksisterendeTilstand != null) {
             return eksisterendeTilstand.tilstand.tilTilstand()
         }
@@ -133,6 +134,11 @@ class Tilstandsmaskin(
 
     val saksnummer: String?
         get() = fiaKontekst.saksnummer
+
+    fun hentFullTilstandForVirksomhet(orgnr: String): VirksomhetTilstandDto? {
+        val eksisterendeTilstand: VirksomhetTilstandDto? = fiaKontekst.tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr)
+        return eksisterendeTilstand
+    }
 
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
         val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
@@ -219,7 +225,24 @@ sealed class Tilstand {
                         årsak = hendelse.årsak,
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
-                    )
+                    ).onRight { iASakDto ->
+                        fiaKontekst.tilstandVirksomhetRepository.lagreVirksomhetTilstand(
+                            orgnr = iASakDto.orgnr,
+                            samarbeidsperiodeId = iASakDto.saksnummer,
+                            tilstand = VirksomhetVurderes.tilVirksomhetIATilstand(),
+                        )?.also {
+                            fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
+                                orgnr = iASakDto.orgnr,
+                                samarbeidsperiodeId = iASakDto.saksnummer,
+                                nyTilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+                                planlagtDato = if (hendelse.årsak.dato == null) {
+                                    java.time.LocalDate.now().plusDays(90)
+                                } else {
+                                    hendelse.årsak.dato.toJavaLocalDate()
+                                },
+                            )
+                        }
+                    }
                     Konsekvens(
                         endring = endring,
                         nyTilstand = VirksomhetErVurdert,
@@ -422,7 +445,6 @@ sealed class Tilstand {
 
                     val harAktiveSamarbeid = harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
                     val harSamarbeidOgAlleErAvsluttet = harSamarbeidOgAlleErAvsluttet(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
-                    // TODO: husk at endring ikke er gjennomført enda --> blir algoritmen riktig?
                     Konsekvens(
                         endring = endring,
                         nyTilstand = when {
