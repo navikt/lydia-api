@@ -12,7 +12,6 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.appstatus.Metrics.Companion.loggFølging
 import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -28,13 +27,13 @@ fun Route.iaSakTeam(
 ) {
     get("$IA_SAK_TEAM_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val iaSak = iaSakService.hentIASak(saksnummer).fold(
+        val iaSakDto = iaSakService.hentIASakDto(saksnummer).fold(
             { feil -> return@get call.sendFeil(feil) },
             { iaSak -> iaSak },
         )
 
-        call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
-            iaTeamService.hentBrukereITeam(iaSak)
+        call.somLesebruker(adGrupper = adGrupper) {
+            iaTeamService.hentBrukereITeam(iaSakDto)
         }.onLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -45,18 +44,18 @@ fun Route.iaSakTeam(
 
     post("$IA_SAK_TEAM_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val iaSak = iaSakService.hentIASak(saksnummer).fold(
+        val iaSakDto = iaSakService.hentIASakDto(saksnummer).fold(
             { feil -> return@post call.sendFeil(feil) },
-            { iaSak -> iaSak },
+            { iASakDto -> iASakDto },
         )
 
         call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
-            return@somLesebruker iaTeamService.knyttBrukerTilSak(iaSak = iaSak, navAnsatt = lesebruker)
+            return@somLesebruker iaTeamService.knyttBrukerTilSak(iaSakDto = iaSakDto, navAnsatt = lesebruker)
         }.also {
             auditLog.auditloggEither(
                 call = call,
                 either = it,
-                orgnummer = iaSak.orgnr,
+                orgnummer = iaSakDto.orgnr,
                 auditType = AuditType.update,
                 saksnummer = saksnummer,
             )
@@ -71,18 +70,18 @@ fun Route.iaSakTeam(
 
     delete("$IA_SAK_TEAM_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val iaSak = iaSakService.hentIASak(saksnummer).fold(
+        val iaSakDto = iaSakService.hentIASakDto(saksnummer).fold(
             { feil -> return@delete call.sendFeil(feil) },
             { iaSak -> iaSak },
         )
 
         call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
-            return@somLesebruker iaTeamService.fjernBrukerFraSak(iaSak = iaSak, navAnsatt = lesebruker)
+            return@somLesebruker iaTeamService.fjernBrukerFraSak(iaSakDto = iaSakDto, navAnsatt = lesebruker)
         }.also {
             auditLog.auditloggEither(
                 call = call,
                 either = it,
-                orgnummer = iaSak.orgnr,
+                orgnummer = iaSakDto.orgnr,
                 auditType = AuditType.update,
                 saksnummer = saksnummer,
             )
@@ -100,7 +99,7 @@ fun Route.iaSakTeam(
             iaTeamService.hentSakerTilBruker(lesebruker).map {
                 it.map { (iasak, orgnavn) ->
                     MineSakerDto(
-                        iaSak = iasak.toDto(lesebruker),
+                        iaSak = iasak,
                         orgnavn = orgnavn,
                     )
                 }

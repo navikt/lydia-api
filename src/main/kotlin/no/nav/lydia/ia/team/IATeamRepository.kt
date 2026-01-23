@@ -3,8 +3,8 @@ package no.nav.lydia.ia.team
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASakDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
 
@@ -30,7 +30,7 @@ class IATeamRepository(
         }
 
     fun leggBrukerTilTeam(
-        iaSak: IASak,
+        saksnummer: String,
         navAnsatt: NavAnsatt,
     ) = using(sessionOf(dataSource)) { session ->
         session.run(
@@ -50,7 +50,7 @@ class IATeamRepository(
                     SELECT * FROM input JOIN ia_sak_team USING (ident, saksnummer);                          
                 """.trimMargin(),
                 mapOf(
-                    "saksnummer" to iaSak.saksnummer,
+                    "saksnummer" to saksnummer,
                     "ident" to navAnsatt.navIdent,
                 ),
             ).map { row ->
@@ -63,7 +63,7 @@ class IATeamRepository(
     }
 
     fun slettBrukerFraTeam(
-        iaSak: IASak,
+        saksnummer: String,
         navAnsatt: NavAnsatt,
     ) = using(sessionOf(dataSource)) { session ->
         session.run(
@@ -74,7 +74,7 @@ class IATeamRepository(
                         returning *                            
                 """.trimMargin(),
                 mapOf(
-                    "saksnummer" to iaSak.saksnummer,
+                    "saksnummer" to saksnummer,
                     "ident" to navAnsatt.navIdent,
                 ),
             ).map { row ->
@@ -86,7 +86,7 @@ class IATeamRepository(
         )
     }
 
-    fun hentSakerBrukerEierEllerFølger(navAnsatt: NavAnsatt) =
+    fun hentSakerBrukerEierEllerFølger(navAnsatt: NavAnsatt): List<Pair<IASakDto, String>> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -106,7 +106,7 @@ class IATeamRepository(
                         "navident" to navAnsatt.navIdent,
                     ),
                 ).map { row ->
-                    Pair(row.tilIASak(), row.string("navn"))
+                    Pair(row.tilIASakDto(), row.string("navn"))
                 }.asList,
             )
         }

@@ -270,7 +270,12 @@ fun Route.iaSakSpørreundersøkelse(
             val iaSak = iaSakService.hentIASak(saksnummer = input.saksnummer).getOrNull()
                 ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
 
-            if (!iaTeamService.erEierEllerFølgerAvSak(iaSak = iaSak, saksbehandler = saksbehandler)) {
+            if (!iaTeamService.erEierEllerFølgerAvSak(
+                    saksnummer = iaSak.saksnummer,
+                    eierAvSak = iaSak.eidAv,
+                    saksbehandler = saksbehandler,
+                )
+            ) {
                 return@somSaksbehandler IASakError.`er ikke følger eller eier av sak`.left()
             }
             spørreundersøkelseService.oppdaterSamarbeidIdISpørreundersøkelse(
@@ -306,7 +311,12 @@ fun <T> ApplicationCall.somFølgerAvSakIProsess(
         ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
     if (iaSak.orgnr != orgnummer) {
         IASakError.`ugyldig orgnummer`.left()
-    } else if (!iaTeamService.erEierEllerFølgerAvSak(iaSak = iaSak, saksbehandler = saksbehandler)) {
+    } else if (!iaTeamService.erEierEllerFølgerAvSak(
+            saksnummer = iaSak.saksnummer,
+            eierAvSak = iaSak.eidAv,
+            saksbehandler = saksbehandler,
+        )
+    ) {
         IASakError.`er ikke følger eller eier av sak`.left()
     } else if (iaSak.status != IASak.Status.KARTLEGGES && iaSak.status != IASak.Status.VI_BISTÅR) {
         IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
