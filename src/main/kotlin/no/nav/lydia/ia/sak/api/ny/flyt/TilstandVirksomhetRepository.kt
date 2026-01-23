@@ -9,7 +9,7 @@ import javax.sql.DataSource
 class TilstandVirksomhetRepository(
     val dataSource: DataSource,
 ) {
-    fun lagreVirksomhetTilstand(
+    fun lagreEllerOppdaterVirksomhetTilstand(
         orgnr: String,
         samarbeidsperiodeId: String,
         tilstand: VirksomhetIATilstand,

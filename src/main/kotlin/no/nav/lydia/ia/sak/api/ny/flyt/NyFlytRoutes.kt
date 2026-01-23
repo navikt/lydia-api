@@ -98,7 +98,7 @@ fun Route.nyFlyt(
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
 
         call.somLesebruker(adGrupper) {
-            tilstandsmaskin(orgnr).hentFullTilstandForVirksomhet(orgnr = orgnr).right()
+            tilstandsmaskin(orgnr).hentTilstandForVirksomhet(orgnr = orgnr).right()
         }.also { tilstandEither ->
             auditLog.auditloggEither(
                 call = call,

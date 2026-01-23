@@ -58,24 +58,17 @@ class TilstandsmaskinBuilder private constructor(
 
     private fun hentTilstandForVirksomhet(orgnr: String): Tilstand {
         val eksisterendeTilstand: VirksomhetTilstandDto? = fiaKontekst.tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr)
-        if (eksisterendeTilstand != null) {
-            return eksisterendeTilstand.tilstand.tilTilstand()
-        }
 
-        val beregnetTilstand = beregnTilstandFraIASakOgIASamarbeid(orgnr)
+        // Før migrering (bare i dev-miljø):
+        // Hvis det finnes en lagret tilstand i virksomhet_tilstand tabellen, bruk den.
+        // Hvis ikke betyr det at virksomheten er ny og skal starte i Tilstand.VirksomhetKlarTilVurdering
+        // OBS: hvis virksomhet har eksisterende sak og samarbeid, IKKE bruk Virksomhet i ny flyt
+        // OBS-2: Etter migrering skal alle virksomhet med en IA-sak få en tilstand i virksomhet_tilstand tabellen
 
-        fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iASakDto ->
-            fiaKontekst.tilstandVirksomhetRepository.lagreVirksomhetTilstand(
-                orgnr = orgnr,
-                samarbeidsperiodeId = iASakDto.saksnummer,
-                tilstand = beregnetTilstand.tilVirksomhetIATilstand(),
-            )
-        }
-
-        return beregnetTilstand
+        return eksisterendeTilstand?.tilstand?.tilTilstand() ?: Tilstand.VirksomhetKlarTilVurdering
     }
 
-    @Deprecated("fjern fra hentTilstandForVirksomhet() når alle sakene har migrert til virksomhet_tilstand tabellen")
+    @Deprecated("Bruk denne til migrering")
     private fun beregnTilstandFraIASakOgIASamarbeid(orgnr: String): Tilstand =
         fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iASakDto ->
             when (iASakDto.status) {
@@ -135,7 +128,7 @@ class Tilstandsmaskin(
     val saksnummer: String?
         get() = fiaKontekst.saksnummer
 
-    fun hentFullTilstandForVirksomhet(orgnr: String): VirksomhetTilstandDto? {
+    fun hentTilstandForVirksomhet(orgnr: String): VirksomhetTilstandDto? {
         val eksisterendeTilstand: VirksomhetTilstandDto? = fiaKontekst.tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr)
         return eksisterendeTilstand
     }
@@ -149,10 +142,10 @@ class Tilstandsmaskin(
         if (harFortsattMinstEnSamarbeidsperiode &&
             konsekvensAvUtførtTransisjon.endring.isRight()
         ) {
-            fiaKontekst.nyFlytService.oppdaterTilstandOgSamarbeidsperiode(
-                orgnr = hendelse.orgnr,
-                nySamarbeidsperiodeId = nåværendeSakDto.saksnummer,
-                nyTilstand = konsekvensAvUtførtTransisjon.nyTilstand,
+            fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
+                orgnr = nåværendeSakDto.orgnr,
+                samarbeidsperiodeId = nåværendeSakDto.saksnummer,
+                tilstand = konsekvensAvUtførtTransisjon.nyTilstand.tilVirksomhetIATilstand(),
             )
         }
 
@@ -226,10 +219,10 @@ sealed class Tilstand {
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
                     ).onRight { iASakDto ->
-                        fiaKontekst.tilstandVirksomhetRepository.lagreVirksomhetTilstand(
+                        fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
                             orgnr = iASakDto.orgnr,
                             samarbeidsperiodeId = iASakDto.saksnummer,
-                            tilstand = VirksomhetVurderes.tilVirksomhetIATilstand(),
+                            tilstand = VirksomhetErVurdert.tilVirksomhetIATilstand(),
                         )?.also {
                             fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
                                 orgnr = iASakDto.orgnr,
