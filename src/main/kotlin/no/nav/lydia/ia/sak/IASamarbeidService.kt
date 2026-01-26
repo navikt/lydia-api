@@ -82,6 +82,8 @@ class IASamarbeidService(
 
     fun hentAktiveSamarbeid(sak: IASak): List<IASamarbeid> = samarbeidRepository.hentAktiveSamarbeid(saksnummer = sak.saksnummer)
 
+    fun hentAlleSamarbeid(saksnummer: String): List<IASamarbeid> = samarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
+
     fun hentAktiveSamarbeid(saksnummer: String): List<IASamarbeid> = samarbeidRepository.hentAktiveSamarbeid(saksnummer = saksnummer)
 
     fun hentSamarbeid(

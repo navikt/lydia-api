@@ -45,6 +45,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class NyFlytService(
+    val tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     val iaSakRepository: IASakRepository,
     val iaSakshendelseRepository: IASakshendelseRepository,
     val årsakRepository: ÅrsakRepository,
@@ -141,7 +142,7 @@ class NyFlytService(
         årsak: ValgtÅrsak,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
-    ): Either<Feil, Any?> {
+    ): Either<Feil, IASakDto> {
         val iASakshendelse = IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -175,6 +176,37 @@ class NyFlytService(
 
     fun hentSisteIASakDto(orgnummer: String): IASakDto? =
         iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer).maxByOrNull { it.opprettetTidspunkt }
+
+    fun slettEllerOppdaterTilstandVirksomhet(orgnummer: String): Either<Feil, VirksomhetTilstandDto?> {
+        tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
+            ?: return Feil(
+                "kunne ikke finne tilstand for virksomhet",
+                HttpStatusCode.BadRequest,
+            ).left()
+
+        val nestSisteSakDto: IASakDto = hentNestSisteIASakDto(orgnummer = orgnummer)
+            ?: return slettVirksomhetTilstand(orgnr = orgnummer)
+
+        return tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
+            orgnr = orgnummer,
+            samarbeidsperiodeId = nestSisteSakDto.saksnummer,
+            tilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+        ).right()
+    }
+
+    private fun slettVirksomhetTilstand(orgnr: String): Either<Feil, VirksomhetTilstandDto?> =
+        try {
+            val slettetTilstand = tilstandVirksomhetRepository.slettVirksomhetTilstand(orgnr = orgnr)
+            Either.Right(slettetTilstand)
+        } catch (_: Exception) {
+            Either.Left(Feil("kunne ikke slette tilstand for virksomhet", HttpStatusCode.BadRequest))
+        }
+
+    private fun hentNestSisteIASakDto(orgnummer: String): IASakDto? {
+        val alleSaker = iaSakRepository.hentAlleSakerDtoForVirksomhet(orgnummer = orgnummer).sortedByDescending { it.opprettetTidspunkt }
+        if (alleSaker.size < 2) return null
+        return alleSaker[alleSaker.size - 2]
+    }
 
     fun slettSakOgVarsleObservers(sakDto: IASakDto): Either<Feil, IASakDto> =
         slettSak(sakDto).also { iaSakEither ->
@@ -623,4 +655,17 @@ class NyFlytService(
         }.mapLeft {
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
+
+    fun oppdaterTilstandOgSamarbeidsperiode(
+        orgnr: String,
+        nySamarbeidsperiodeId: String,
+        nyTilstand: Tilstand,
+    ): Either<Feil, Tilstand> {
+        val oppdatertTilstand = tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
+            orgnr = orgnr,
+            samarbeidsperiodeId = nySamarbeidsperiodeId,
+            tilstand = nyTilstand.tilVirksomhetIATilstand(),
+        )
+        return oppdatertTilstand?.tilstand?.tilTilstand()?.right() ?: Feil("kunne ikke oppdatere tilstand", HttpStatusCode.BadRequest).left()
+    }
 }

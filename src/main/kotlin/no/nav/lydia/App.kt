@@ -64,6 +64,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.dokument.dokumentPublisering
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
+import no.nav.lydia.ia.sak.api.ny.flyt.TilstandVirksomhetRepository
 import no.nav.lydia.ia.sak.api.ny.flyt.nyFlyt
 import no.nav.lydia.ia.sak.api.plan.iaSakPlan
 import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
@@ -247,6 +248,7 @@ fun startLydiaBackend() {
     val spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(kafka = naisEnv.kafka)
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository, iaSakService = iaSakService)
     val dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource = dataSource)
+    val tilstandVirksomhetRepository = TilstandVirksomhetRepository(dataSource = dataSource)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaSakService = iaSakService,
@@ -263,11 +265,12 @@ fun startLydiaBackend() {
     )
 
     val nyFlytService = NyFlytService(
-        iaSakRepository = IASakRepository(dataSource = dataSource),
+        tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+        iaSakRepository = iaSakRepository,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-        årsakRepository = ÅrsakRepository(dataSource = dataSource),
-        iaSamarbeidRepository = samarbeidRepository,
+        årsakRepository = årsakRepository,
         iaSamarbeidService = samarbeidService,
+        iaSamarbeidRepository = samarbeidRepository,
         iaTeamService = iaTeamService,
         spørreundersøkelseService = spørreundersøkelseService,
         planService = planService,
@@ -410,6 +413,7 @@ fun startLydiaBackend() {
             planService = planService,
             dokumentPubliseringService = dokumentPubliseringService,
             nyFlytService = nyFlytService,
+            tilstandVirksomhetRepository = tilstandVirksomhetRepository,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -500,6 +504,7 @@ private fun Application.lydiaRestApi(
     planService: PlanService,
     dokumentPubliseringService: DokumentPubliseringService,
     nyFlytService: NyFlytService,
+    tilstandVirksomhetRepository: TilstandVirksomhetRepository,
 ) {
     install(ContentNegotiation) {
         json()
@@ -574,6 +579,7 @@ private fun Application.lydiaRestApi(
                 nyFlytService = nyFlytService,
                 dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
+                tilstandVirksomhetRepository = tilstandVirksomhetRepository,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,

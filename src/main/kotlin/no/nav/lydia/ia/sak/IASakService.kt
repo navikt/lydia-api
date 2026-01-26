@@ -291,11 +291,12 @@ class IASakService(
             opprettetAv = "Fia system",
             opprettetAvRolle = Rolle.SUPERBRUKER,
             navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
+            resulterendeStatus = IASak.Status.IKKE_AKTUELL,
             valgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
                 begrunnelser = listOf(BegrunnelseType.AUTOMATISK_LUKKET),
             ),
-            resulterendeStatus = IASak.Status.IKKE_AKTUELL,
+            hendelsesType = IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL,
         )
 
     fun avbrytMaskineltSamarbeidIIkkeAktuelleSaker(tørrKjør: Boolean): Int =

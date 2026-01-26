@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
@@ -44,7 +45,7 @@ open class IASakshendelse(
             saksbehandler: NavAnsattMedSaksbehandlerRolle,
             navEnhet: NavEnhet,
         ) = when (dto.hendelsesType) {
-            VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, saksbehandler, navEnhet)
+            VIRKSOMHET_ER_IKKE_AKTUELL, VURDERING_FULLFØRT_UTEN_SAMARBEID -> VirksomhetIkkeAktuellHendelse.fromDto(dto, saksbehandler, navEnhet)
 
             NY_PROSESS,
             ENDRE_PROSESS,
@@ -130,6 +131,7 @@ class VirksomhetIkkeAktuellHendelse(
     id: String,
     opprettetTidspunkt: LocalDateTime,
     saksnummer: String,
+    hendelsesType: IASakshendelseType,
     orgnummer: String,
     opprettetAv: String,
     opprettetAvRolle: Rolle?,
@@ -140,7 +142,7 @@ class VirksomhetIkkeAktuellHendelse(
         id,
         opprettetTidspunkt = opprettetTidspunkt,
         saksnummer = saksnummer,
-        hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
+        hendelsesType = hendelsesType,
         orgnummer = orgnummer,
         opprettetAv = opprettetAv,
         opprettetAvRolle = opprettetAvRolle,
@@ -165,12 +167,13 @@ class VirksomhetIkkeAktuellHendelse(
                         id = ULID.random(),
                         opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = dto.saksnummer,
+                        hendelsesType = dto.hendelsesType,
                         orgnummer = dto.orgnummer,
                         opprettetAv = navAnsatt.navIdent,
                         opprettetAvRolle = navAnsatt.rolle,
-                        valgtÅrsak = valgtÅrsak,
                         navEnhet = navEnhet,
                         resulterendeStatus = null,
+                        valgtÅrsak = valgtÅrsak,
                     ).right()
                 } catch (e: Exception) {
                     SaksHendelseFeil.`kunne ikke deserialisere payload`.left()
