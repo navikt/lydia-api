@@ -195,7 +195,6 @@ fun Route.nyFlyt(
         val årsak = call.receive<ValgtÅrsak>()
 
         if (!årsak.validerBegrunnelserForVurdering()) {
-            println("Ugyldig årsak eller begrunnelse for avslutting av vurdering: $årsak")
             return@post call.respond(
                 status = HttpStatusCode.BadRequest,
                 message = "Ugyldig årsak eller begrunnelse for avslutting av vurdering",
@@ -203,7 +202,6 @@ fun Route.nyFlyt(
         }
 
         if (årsak.dato == null || årsak.dato.toJavaLocalDate().isBefore(LocalDate.now().plusDays(1))) {
-            println("Dato er feil: $årsak")
             return@post call.respond(
                 status = HttpStatusCode.BadRequest,
                 message = "Dato for avslutting av vurdering må oppgis",
@@ -234,8 +232,6 @@ fun Route.nyFlyt(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
-
-    // TODO: -- GET: hentDatoForÅrsak
 
     post("$NY_FLYT_PATH/{orgnummer}/opprett-samarbeid") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)

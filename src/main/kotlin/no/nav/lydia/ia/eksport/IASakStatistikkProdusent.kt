@@ -72,7 +72,6 @@ class IASakStatistikkProdusent(
             hendelse = hendelse?.hendelsesType,
             endretAv = hendelse?.opprettetAv,
             endretAvRolle = hendelse?.opprettetAvRolle,
-            // TODO: Rename ikkeAktuelBegrunnelse til begrunnelser
             ikkeAktuelBegrunnelse = if (hendelse is VirksomhetIkkeAktuellHendelse) hendelse.valgtÅrsak.begrunnelser.toString() else null,
             opprettetTidspunkt = input.opprettetTidspunkt.toKotlinLocalDateTime(),
             endretTidspunkt = input.endretTidspunkt?.toKotlinLocalDateTime() ?: input.opprettetTidspunkt.toKotlinLocalDateTime(),
