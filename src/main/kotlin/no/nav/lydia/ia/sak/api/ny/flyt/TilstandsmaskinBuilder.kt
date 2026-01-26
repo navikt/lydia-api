@@ -225,14 +225,20 @@ sealed class Tilstand {
                             samarbeidsperiodeId = iASakDto.saksnummer,
                             tilstand = VirksomhetErVurdert.tilVirksomhetIATilstand(),
                         )?.also {
+                            val nyTilstand = when (hendelse.årsak.type) {
+                                ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE -> VirksomhetVurderes.tilVirksomhetIATilstand()
+                                else -> VirksomhetKlarTilVurdering.tilVirksomhetIATilstand()
+                            }
+                            val planlagtHendelse = when (hendelse.årsak.type) {
+                                ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE -> Hendelse.VurderVirksomhet::class.simpleName!!
+                                else -> Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!
+                            }
                             fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
                                 orgnr = iASakDto.orgnr,
                                 samarbeidsperiodeId = iASakDto.saksnummer,
-                                nyTilstand = if (hendelse.årsak.type == ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE) {
-                                    VirksomhetVurderes.tilVirksomhetIATilstand()
-                                } else {
-                                    VirksomhetKlarTilVurdering.tilVirksomhetIATilstand()
-                                },
+                                startTilstand = VirksomhetErVurdert.tilVirksomhetIATilstand(),
+                                planlagtHendelse = planlagtHendelse,
+                                nyTilstand = nyTilstand,
                                 planlagtDato = if (hendelse.årsak.dato == null) {
                                     java.time.LocalDate.now().plusDays(90)
                                 } else {

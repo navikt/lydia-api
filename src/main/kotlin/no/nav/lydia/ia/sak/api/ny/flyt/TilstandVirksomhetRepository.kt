@@ -50,7 +50,7 @@ class TilstandVirksomhetRepository(
             session.run(
                 queryOf(
                     """
-                    SELECT tv.*, tao.ny_tilstand, tao.planlagt_dato
+                    SELECT tv.*, tao.start_tilstand, tao.planlagt_hendelse, tao.ny_tilstand, tao.planlagt_dato
                     FROM tilstand_virksomhet tv
                     LEFT JOIN tilstand_automatisk_oppdatering tao 
                         ON tv.id = tao.tilstand_virksomhet_id
@@ -115,6 +115,8 @@ class TilstandVirksomhetRepository(
     fun opprettAutomatiskOppdatering(
         orgnr: String,
         samarbeidsperiodeId: String,
+        startTilstand: VirksomhetIATilstand,
+        planlagtHendelse: String,
         nyTilstand: VirksomhetIATilstand,
         planlagtDato: java.time.LocalDate,
     ): VirksomhetTilstandAutomatiskOppdateringDto? =
@@ -138,12 +140,16 @@ class TilstandVirksomhetRepository(
                     INSERT INTO tilstand_automatisk_oppdatering (
                         orgnr,
                         tilstand_virksomhet_id,
+                        start_tilstand,
+                        planlagt_hendelse,
                         ny_tilstand,
                         planlagt_dato
                     )
                     VALUES (
                         :orgnr,
                         :tilstandVirksomhetId,
+                        :startTilstand,
+                        :planlagtHendelse,
                         :nyTilstand,
                         :planlagtDato
                     )
@@ -152,6 +158,8 @@ class TilstandVirksomhetRepository(
                     mapOf(
                         "orgnr" to orgnr,
                         "tilstandVirksomhetId" to tilstandVirksomhetId,
+                        "startTilstand" to startTilstand.name,
+                        "planlagtHendelse" to planlagtHendelse,
                         "nyTilstand" to nyTilstand.name,
                         "planlagtDato" to planlagtDato,
                     ),
@@ -172,6 +180,8 @@ class TilstandVirksomhetRepository(
             tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
             nesteTilstand = stringOrNull("ny_tilstand")?.let { nyTilstand ->
                 VirksomhetTilstandAutomatiskOppdateringDto(
+                    startTilstand = VirksomhetIATilstand.valueOf(string("start_tilstand")),
+                    planlagtHendelse = string("planlagt_hendelse"),
                     nyTilstand = VirksomhetIATilstand.valueOf(nyTilstand),
                     planlagtDato = localDate("planlagt_dato").toKotlinLocalDate(),
                 )
@@ -180,6 +190,8 @@ class TilstandVirksomhetRepository(
 
     private fun kotliquery.Row.tilVirksomhetTilstandAutomatiskOppdateringDto() =
         VirksomhetTilstandAutomatiskOppdateringDto(
+            startTilstand = VirksomhetIATilstand.valueOf(string("start_tilstand")),
+            planlagtHendelse = string("planlagt_hendelse"),
             nyTilstand = VirksomhetIATilstand.valueOf(string("ny_tilstand")),
             planlagtDato = localDate("planlagt_dato").toKotlinLocalDate(),
         )

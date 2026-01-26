@@ -11,6 +11,8 @@ class VirksomhetTilstandDto(
 
 @Serializable
 class VirksomhetTilstandAutomatiskOppdateringDto(
+    val startTilstand: VirksomhetIATilstand,
+    val planlagtHendelse: String,
     val nyTilstand: VirksomhetIATilstand,
     val planlagtDato: LocalDate,
 )
