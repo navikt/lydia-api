@@ -18,6 +18,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
@@ -227,7 +228,11 @@ sealed class Tilstand {
                             fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
                                 orgnr = iASakDto.orgnr,
                                 samarbeidsperiodeId = iASakDto.saksnummer,
-                                nyTilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+                                nyTilstand = if (hendelse.årsak.type == ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE) {
+                                    VirksomhetVurderes.tilVirksomhetIATilstand()
+                                } else {
+                                    VirksomhetKlarTilVurdering.tilVirksomhetIATilstand()
+                                },
                                 planlagtDato = if (hendelse.årsak.dato == null) {
                                     java.time.LocalDate.now().plusDays(90)
                                 } else {
