@@ -1,6 +1,8 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.api.dokument.SpørreundersøkelseInnholdIDokumentDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.MINIMUM_ANTALL_DELTAKERE
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
@@ -44,6 +46,13 @@ fun Spørreundersøkelse.tilResultatDto(): SpørreundersøkelseResultatDto =
         id = id.toString(),
         type = type.name.uppercase(),
         spørsmålMedSvarPerTema = temaer.map { it.tilResultatDto() },
+    )
+
+fun SpørreundersøkelseResultatDto.tilSpørreundersøkelseInnholdDto(fullførtTidspunkt: LocalDateTime): SpørreundersøkelseInnholdIDokumentDto =
+    SpørreundersøkelseInnholdIDokumentDto(
+        id = id,
+        fullførtTidspunkt = fullførtTidspunkt,
+        spørsmålMedSvarPerTema = spørsmålMedSvarPerTema,
     )
 
 fun Tema.tilResultatDto(): TemaResultatDto =

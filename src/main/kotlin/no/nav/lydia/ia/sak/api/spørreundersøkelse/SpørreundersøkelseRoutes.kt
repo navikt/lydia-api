@@ -3,16 +3,21 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
+import io.ktor.http.ContentDisposition
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
+import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toJavaLocalDateTime
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -33,9 +38,13 @@ import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.IATeamService
+import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
+import java.time.format.DateTimeFormatter
 
 const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 
@@ -44,6 +53,8 @@ fun Route.iaSakSpørreundersøkelse(
     spørreundersøkelseService: SpørreundersøkelseService,
     dokumentPubliseringService: DokumentPubliseringService,
     iaTeamService: IATeamService,
+    pdfgenService: PiaPdfgenService,
+    azureService: AzureService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
@@ -297,6 +308,55 @@ fun Route.iaSakSpørreundersøkelse(
             call.sendFeil(it)
         }
     }
+
+    get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/pdf") {
+        val spørreundersøkelseId = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
+
+        call.somLesebruker(adGrupper) { _ ->
+            spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId)
+                .flatMap { spørreundersøkelse ->
+
+                    runBlocking {
+                        azureService.hentNavenhet(call.objectId()).map { navenhet ->
+                            call.response.header(
+                                name = HttpHeaders.ContentDisposition,
+                                value = ContentDisposition.Attachment.withParameter(
+                                    key = ContentDisposition.Parameters.FileName,
+                                    value = spørreundersøkelse.filnavn(),
+                                ).toString(),
+                            )
+                            pdfgenService.hentPdfForKartleggingresultater(spørreundersøkelse, navenhet)
+                        }
+                    }
+                }
+        }.also { spørreundersøkelseEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = spørreundersøkelseEither,
+                orgnummer = call.orgnummer,
+                auditType = AuditType.access,
+                saksnummer = call.saksnummer,
+            )
+        }.mapLeft {
+            call.sendFeil(it)
+        }.map {
+            call.respond(message = it, status = HttpStatusCode.OK)
+        }
+    }
+}
+
+private fun Spørreundersøkelse.filnavn(): String {
+    val gjennomført =
+        (
+            fullførtTidspunkt
+                ?: endretTidspunkt
+                ?: opprettetTidspunkt
+        ).toJavaLocalDateTime().toLocalDate().format(DateTimeFormatter.ISO_DATE)
+    val filnavn =
+        """
+        ${type.name.lowercase().replaceFirstChar { it.uppercase() }}-$gjennomført.pdf
+        """.trimIndent()
+    return filnavn
 }
 
 fun <T> ApplicationCall.somFølgerAvSakIProsess(

@@ -5,7 +5,6 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
@@ -19,8 +18,8 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.SAMARBEIDSPL
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
 import no.nav.lydia.ia.sak.api.plan.erEtter
 import no.nav.lydia.ia.sak.api.plan.tilDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilSpørreundersøkelseInnholdDto
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.azure.NavEnhet
@@ -102,6 +101,7 @@ class DokumentPubliseringService(
         EVALUERING,
         BEHOVSVURDERING,
         -> publiserSpørreundersøkelse(dokumentReferanseId, dokumentType, opprettetAv, navEnhet)
+
         SAMARBEIDSPLAN -> publiserSamarbeidsplan(dokumentReferanseId, opprettetAv, navEnhet)
     }
 
@@ -222,13 +222,6 @@ class DokumentPubliseringService(
             )
         }
     }
-
-    private fun SpørreundersøkelseResultatDto.tilSpørreundersøkelseInnholdDto(fullførtTidspunkt: LocalDateTime): SpørreundersøkelseInnholdIDokumentDto =
-        SpørreundersøkelseInnholdIDokumentDto(
-            id = id,
-            fullførtTidspunkt = fullførtTidspunkt,
-            spørsmålMedSvarPerTema = spørsmålMedSvarPerTema,
-        )
 
     fun lagreKvittering(kvittering: KvitteringDto) = dokumentPubliseringRepository.lagreKvittering(kvittering)
 }
