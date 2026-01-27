@@ -11,6 +11,28 @@ class GyldigÅrsak(
     val begrunnelser: List<GyldigBegrunnelse>,
 ) {
     companion object {
+        val GYLDIGE_ÅRSAKER_FOR_VURDERES_SENERE = listOf(
+            GyldigÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                ).somGyldigeBegrunnelser(),
+            ),
+        )
+        val GYLDIGE_ÅRSAKER_FOR_FERDIG_VURDERT = listOf(
+            GyldigÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_IKKE_SVART,
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
+                    BegrunnelseType.FOR_FÅ_TAPTE_DAGSVERK,
+                    BegrunnelseType.INTERN_VURDERING_FØR_KONTAKT,
+                    BegrunnelseType.NAV_HAR_IKKE_KAPASITET,
+                ).somGyldigeBegrunnelser(),
+            ),
+        )
+
         val GYLDIGE_ÅRSAKER_FOR_IKKE_AKTUELL = listOf(
             GyldigÅrsak(
                 type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
@@ -52,6 +74,10 @@ class GyldigBegrunnelse(
 enum class ÅrsakType(
     val navn: String,
 ) {
+    VIRKSOMHETEN_SKAL_VURDERES_SENERE(navn = "Virksomheten ønsker samarbeid senere"),
+    VIRKSOMHETEN_ER_FERDIG_VURDERT(navn = "Virksomheten er ferdig vurdert"),
+
+    // -- Gammel saksflyt
     NAV_IGANGSETTER_IKKE_TILTAK(navn = "NAV har besluttet å ikke starte samarbeid"),
     VIRKSOMHETEN_TAKKET_NEI(navn = "Virksomheten har takket nei"),
 }
@@ -59,8 +85,16 @@ enum class ÅrsakType(
 enum class BegrunnelseType(
     val navn: String,
 ) {
-    IKKE_DIALOG_MELLOM_PARTENE(navn = "Det er ikke dokumentert dialog mellom partene på arbeidsplassen"),
+    VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE(navn = "Virksomheten ønsker samarbeid senere"),
+
+    VIRKSOMHETEN_HAR_IKKE_SVART(navn = "Virksomheten har ikke svart"),
+    VIRKSOMHETEN_HAR_TAKKET_NEI(navn = "Virksomheten har takket nei"),
+    IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE(navn = "Virksomheten har ikke dokumentert dialog mellom partene"),
     FOR_FÅ_TAPTE_DAGSVERK(navn = "Virksomheten har for få tapte dagsverk"),
+    INTERN_VURDERING_FØR_KONTAKT(navn = "Intern vurdering før kontakt med virksomhet "),
+    NAV_HAR_IKKE_KAPASITET(navn = "NAV har ikke tid eller kapasitet nå til å samarbeide med virksomheten"),
+
+    IKKE_DIALOG_MELLOM_PARTENE(navn = "Det er ikke dokumentert dialog mellom partene på arbeidsplassen"),
     SAKEN_ER_FEILREGISTRERT(navn = "Saken er feilregistrert"),
 
     VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID(navn = "Virksomheten ønsker ikke forpliktende samarbeid med NAV om IA"),

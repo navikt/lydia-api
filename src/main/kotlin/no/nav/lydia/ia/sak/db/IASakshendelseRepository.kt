@@ -188,15 +188,16 @@ class IASakshendelseRepository(
             id = row.string("id"),
             opprettetTidspunkt = row.localDateTime("opprettet"),
             saksnummer = row.string("saksnummer"),
+            hendelsesType = IASakshendelseType.valueOf(row.string("type")),
             orgnummer = row.string("orgnr"),
             opprettetAv = row.string("opprettet_av"),
             opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rolle.valueOf(it) },
-            valgtÅrsak = valgtÅrsak,
             navEnhet = NavEnhet(
                 enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
                 enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
             ),
             resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IASak.Status.valueOf(it) },
+            valgtÅrsak = valgtÅrsak,
         )
     }
 
