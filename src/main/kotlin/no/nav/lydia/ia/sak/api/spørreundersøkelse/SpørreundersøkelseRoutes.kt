@@ -17,7 +17,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.format
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
@@ -54,9 +53,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer.Companion.NAV_ENHET_FOR_MASKINELT_OPPDATERING
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
@@ -330,16 +327,16 @@ fun Route.iaSakSpørreundersøkelse(
                 .map { spørreundersøkelse ->
                     runBlocking {
                         val samarbeidsnavn = iaSamarbeidService.hentSamarbeid(spørreundersøkelse.samarbeidId)?.navn
-                        pdfgenService.genererPdfDokument(
-                            pdfType = PdfType.KARTLEGGINGRESULTAT,
-                            pdfDokumentDto = spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn),
-                        )
                         call.response.header(
                             name = HttpHeaders.ContentDisposition,
                             value = ContentDisposition.Attachment.withParameter(
                                 key = ContentDisposition.Parameters.FileName,
                                 value = spørreundersøkelse.filnavn(),
                             ).toString(),
+                        )
+                        pdfgenService.genererPdfDokument(
+                            pdfType = PdfType.KARTLEGGINGRESULTAT,
+                            pdfDokumentDto = spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn),
                         )
                     }
                 }
