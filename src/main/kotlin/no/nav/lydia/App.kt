@@ -599,6 +599,7 @@ private fun Application.lydiaRestApi(
                 dokumentPubliseringService = dokumentPubliseringService,
                 iaTeamService = iaTeamService,
                 pdfgenService = PiaPdfgenService(naisEnv),
+                iaSamarbeidService = samarbeidService,
             )
             iaSakPlan(
                 adGrupper = naisEnv.security.adGrupper,

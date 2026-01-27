@@ -3,10 +3,13 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
+import io.ktor.http.ContentDisposition
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
@@ -14,6 +17,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.format
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
@@ -25,6 +30,7 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidFeil
+import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
@@ -48,7 +54,10 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer.Companion.NAV_ENHET_FOR_MASKINELT_OPPDATERING
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 
@@ -58,6 +67,7 @@ fun Route.iaSakSpørreundersøkelse(
     dokumentPubliseringService: DokumentPubliseringService,
     iaTeamService: IATeamService,
     pdfgenService: PiaPdfgenService,
+    iaSamarbeidService: IASamarbeidService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
@@ -313,16 +323,23 @@ fun Route.iaSakSpørreundersøkelse(
     }
 
     get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/pdf") {
-        call.application.log.info("Sup!")
         val spørreundersøkelseId = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somLesebruker(adGrupper) { _ ->
             spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId)
                 .map { spørreundersøkelse ->
                     runBlocking {
+                        val samarbeidsnavn = iaSamarbeidService.hentSamarbeid(spørreundersøkelse.samarbeidId)?.navn
                         pdfgenService.genererPdfDokument(
-                            pdfType = spørreundersøkelse.type.tilPdfType(),
-                            pdfDokumentDto = spørreundersøkelse.tilPdfDokumentDto(),
+                            pdfType = PdfType.KARTLEGGINGRESULTAT,
+                            pdfDokumentDto = spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn),
+                        )
+                        call.response.header(
+                            name = HttpHeaders.ContentDisposition,
+                            value = ContentDisposition.Attachment.withParameter(
+                                key = ContentDisposition.Parameters.FileName,
+                                value = spørreundersøkelse.filnavn(),
+                            ).toString(),
                         )
                     }
                 }
@@ -342,22 +359,36 @@ fun Route.iaSakSpørreundersøkelse(
     }
 }
 
-private fun Spørreundersøkelse.tilPdfDokumentDto() =
+private fun Spørreundersøkelse.filnavn(): String {
+    val gjennomført =
+        (
+            fullførtTidspunkt
+                ?: endretTidspunkt
+                ?: opprettetTidspunkt
+        ).toJavaLocalDateTime().toLocalDate().format(DateTimeFormatter.ISO_DATE)
+    val filnavn =
+        """
+        ${type.name.lowercase().replaceFirstChar { it.uppercase() }}-$gjennomført.pdf
+        """.trimIndent()
+    return filnavn
+}
+
+private fun Spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn: String?) =
     PdfDokumentDto(
-        type = type.tilPdfType(),
+        type = PdfType.KARTLEGGINGRESULTAT,
         referanseId = id.toString(),
-        publiseringsdato = LocalDateTime.now().toKotlinLocalDateTime(), // TODO: Fjern fra dokument
+        publiseringsdato = LocalDateTime.now().toKotlinLocalDateTime(),
         virksomhet = VirksomhetDto(
             orgnummer = orgnummer,
             navn = virksomhetsNavn,
         ),
         sak = DokumentPubliseringSakDto(
             saksnummer = saksnummer,
-            navenhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING, // TODO: Fjern fra dette dokumentet
+            navenhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
         ),
         samarbeid = SamarbeidDto(
             id = samarbeidId,
-            navn = "",
+            navn = samarbeidsnavn ?: "",
         ),
         innhold = Json.encodeToJsonElement(
             tilResultatDto().tilSpørreundersøkelseInnholdDto(
@@ -365,12 +396,6 @@ private fun Spørreundersøkelse.tilPdfDokumentDto() =
             ),
         ).jsonObject,
     )
-
-private fun Spørreundersøkelse.Type.tilPdfType() =
-    when (this) {
-        Spørreundersøkelse.Type.Evaluering -> PdfType.EVALUERING
-        Spørreundersøkelse.Type.Behovsvurdering -> PdfType.BEHOVSVURDERING
-    }
 
 fun <T> ApplicationCall.somFølgerAvSakIProsess(
     iaSakService: IASakService,
@@ -458,10 +483,5 @@ object IASakSpørreundersøkelseError {
     val `ugyldig type` = Feil(
         "Ugyldig type spørreundersøkelse",
         HttpStatusCode.BadRequest,
-    )
-
-    val `ugyldig status for nedlasting` = Feil(
-        feilmelding = "Kan ikke laste ned spørreundersøkelse da den ikke har FULLFØRT status",
-        httpStatusCode = HttpStatusCode.BadRequest,
     )
 }
