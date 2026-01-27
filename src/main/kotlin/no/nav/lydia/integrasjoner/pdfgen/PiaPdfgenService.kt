@@ -13,15 +13,28 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import no.nav.fia.dokument.publisering.pdfgen.PdfDokumentDto
 import no.nav.fia.dokument.publisering.pdfgen.PdfType
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`DEV-GCP`
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`PROD-GCP`
+import no.nav.lydia.ia.sak.IASamarbeidService
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringSakDto
+import no.nav.lydia.ia.sak.api.dokument.SamarbeidDto
+import no.nav.lydia.ia.sak.api.dokument.VirksomhetDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilSpørreundersøkelseInnholdDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import org.productivity.java.syslog4j.util.Base64
+import java.time.LocalDateTime
 
 class PiaPdfgenService(
+    val iaSamarbeidService: IASamarbeidService,
     val naisEnvironment: NaisEnvironment,
 ) {
     val piaPdfgenUrl = naisEnvironment.integrasjoner.piaPdfgenUrl
@@ -42,7 +55,18 @@ class PiaPdfgenService(
         }
     }
 
-    suspend fun genererPdfDokument(
+    suspend fun hentPdfForKartleggingresultater(
+        spørreundersøkelse: Spørreundersøkelse,
+        navEnhet: NavEnhet,
+    ): ByteArray {
+        val samarbeidsnavn = iaSamarbeidService.hentSamarbeid(spørreundersøkelse.samarbeidId)?.navn
+        return genererPdfDokument(
+            pdfType = PdfType.KARTLEGGINGRESULTAT,
+            pdfDokumentDto = spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn, navEnhet),
+        )
+    }
+
+    private suspend fun genererPdfDokument(
         pdfType: PdfType,
         pdfDokumentDto: PdfDokumentDto,
     ): ByteArray =
@@ -66,6 +90,38 @@ class PiaPdfgenService(
             }
         }
 }
+
+private fun Spørreundersøkelse.tilPdfDokumentDto(
+    samarbeidsnavn: String?,
+    navEnhet: NavEnhet,
+) = PdfDokumentDto(
+    type = type.tilPdftype(),
+    referanseId = id.toString(),
+    publiseringsdato = LocalDateTime.now().toKotlinLocalDateTime(),
+    virksomhet = VirksomhetDto(
+        orgnummer = orgnummer,
+        navn = virksomhetsNavn,
+    ),
+    sak = DokumentPubliseringSakDto(
+        saksnummer = saksnummer,
+        navenhet = navEnhet,
+    ),
+    samarbeid = SamarbeidDto(
+        id = samarbeidId,
+        navn = samarbeidsnavn ?: "",
+    ),
+    innhold = Json.encodeToJsonElement(
+        tilResultatDto().tilSpørreundersøkelseInnholdDto(
+            fullførtTidspunkt = fullførtTidspunkt ?: endretTidspunkt ?: opprettetTidspunkt,
+        ),
+    ).jsonObject,
+)
+
+private fun Spørreundersøkelse.Type.tilPdftype() =
+    when (this) {
+        Spørreundersøkelse.Type.Evaluering -> PdfType.EVALUERING
+        Spørreundersøkelse.Type.Behovsvurdering -> PdfType.BEHOVSVURDERING
+    }
 
 val lokalTestPdf = Base64.decode(
     """

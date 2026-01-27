@@ -18,27 +18,17 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toJavaLocalDateTime
-import kotlinx.datetime.toKotlinLocalDateTime
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.jsonObject
-import no.nav.fia.dokument.publisering.pdfgen.PdfDokumentDto
-import no.nav.fia.dokument.publisering.pdfgen.PdfType
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidFeil
-import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringSakDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
-import no.nav.lydia.ia.sak.api.dokument.SamarbeidDto
-import no.nav.lydia.ia.sak.api.dokument.VirksomhetDto
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -48,12 +38,12 @@ import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.IATeamService
+import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
-import no.nav.lydia.vedlikehold.IASakStatusOppdaterer.Companion.NAV_ENHET_FOR_MASKINELT_OPPDATERING
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
@@ -64,7 +54,7 @@ fun Route.iaSakSpørreundersøkelse(
     dokumentPubliseringService: DokumentPubliseringService,
     iaTeamService: IATeamService,
     pdfgenService: PiaPdfgenService,
-    iaSamarbeidService: IASamarbeidService,
+    azureService: AzureService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
@@ -324,20 +314,19 @@ fun Route.iaSakSpørreundersøkelse(
 
         call.somLesebruker(adGrupper) { _ ->
             spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId)
-                .map { spørreundersøkelse ->
+                .flatMap { spørreundersøkelse ->
+
                     runBlocking {
-                        val samarbeidsnavn = iaSamarbeidService.hentSamarbeid(spørreundersøkelse.samarbeidId)?.navn
-                        call.response.header(
-                            name = HttpHeaders.ContentDisposition,
-                            value = ContentDisposition.Attachment.withParameter(
-                                key = ContentDisposition.Parameters.FileName,
-                                value = spørreundersøkelse.filnavn(),
-                            ).toString(),
-                        )
-                        pdfgenService.genererPdfDokument(
-                            pdfType = PdfType.KARTLEGGINGRESULTAT,
-                            pdfDokumentDto = spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn),
-                        )
+                        azureService.hentNavenhet(call.objectId()).map { navenhet ->
+                            call.response.header(
+                                name = HttpHeaders.ContentDisposition,
+                                value = ContentDisposition.Attachment.withParameter(
+                                    key = ContentDisposition.Parameters.FileName,
+                                    value = spørreundersøkelse.filnavn(),
+                                ).toString(),
+                            )
+                            pdfgenService.hentPdfForKartleggingresultater(spørreundersøkelse, navenhet)
+                        }
                     }
                 }
         }.also { spørreundersøkelseEither ->
@@ -369,36 +358,6 @@ private fun Spørreundersøkelse.filnavn(): String {
         """.trimIndent()
     return filnavn
 }
-
-private fun Spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn: String?) =
-    PdfDokumentDto(
-        type = type.tilPdftype(),
-        referanseId = id.toString(),
-        publiseringsdato = LocalDateTime.now().toKotlinLocalDateTime(),
-        virksomhet = VirksomhetDto(
-            orgnummer = orgnummer,
-            navn = virksomhetsNavn,
-        ),
-        sak = DokumentPubliseringSakDto(
-            saksnummer = saksnummer,
-            navenhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
-        ),
-        samarbeid = SamarbeidDto(
-            id = samarbeidId,
-            navn = samarbeidsnavn ?: "",
-        ),
-        innhold = Json.encodeToJsonElement(
-            tilResultatDto().tilSpørreundersøkelseInnholdDto(
-                fullførtTidspunkt = fullførtTidspunkt ?: endretTidspunkt ?: opprettetTidspunkt,
-            ),
-        ).jsonObject,
-    )
-
-private fun Spørreundersøkelse.Type.tilPdftype() =
-    when (this) {
-        Spørreundersøkelse.Type.Evaluering -> PdfType.EVALUERING
-        Spørreundersøkelse.Type.Behovsvurdering -> PdfType.BEHOVSVURDERING
-    }
 
 fun <T> ApplicationCall.somFølgerAvSakIProsess(
     iaSakService: IASakService,

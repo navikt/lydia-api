@@ -604,8 +604,8 @@ private fun Application.lydiaRestApi(
                 spørreundersøkelseService = spørreundersøkelseService,
                 dokumentPubliseringService = dokumentPubliseringService,
                 iaTeamService = iaTeamService,
-                pdfgenService = PiaPdfgenService(naisEnv),
-                iaSamarbeidService = samarbeidService,
+                pdfgenService = PiaPdfgenService(samarbeidService, naisEnv),
+                azureService = azureService,
             )
             iaSakPlan(
                 adGrupper = naisEnv.security.adGrupper,

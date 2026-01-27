@@ -620,6 +620,17 @@ class IASakSpørreundersøkelseHelper {
                 failure = { fail(it.message) },
             )
 
+        fun SpørreundersøkelseDto.hentKartleggingresultatPdf(
+            orgnr: String,
+            saksnummer: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/$id/pdf")
+            .authentication().bearer(token)
+            .response().third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
+
         fun hentSpørreundersøkelse(
             orgnr: String,
             saksnummer: String,
