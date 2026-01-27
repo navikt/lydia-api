@@ -372,7 +372,7 @@ private fun Spørreundersøkelse.filnavn(): String {
 
 private fun Spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn: String?) =
     PdfDokumentDto(
-        type = PdfType.KARTLEGGINGRESULTAT,
+        type = type.tilPdftype(),
         referanseId = id.toString(),
         publiseringsdato = LocalDateTime.now().toKotlinLocalDateTime(),
         virksomhet = VirksomhetDto(
@@ -393,6 +393,12 @@ private fun Spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn: String?) =
             ),
         ).jsonObject,
     )
+
+private fun Spørreundersøkelse.Type.tilPdftype() =
+    when (this) {
+        Spørreundersøkelse.Type.Evaluering -> PdfType.EVALUERING
+        Spørreundersøkelse.Type.Behovsvurdering -> PdfType.BEHOVSVURDERING
+    }
 
 fun <T> ApplicationCall.somFølgerAvSakIProsess(
     iaSakService: IASakService,
