@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
+import ia.felles.integrasjoner.jobbsender.Jobb
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
@@ -97,6 +98,38 @@ class NyFlytTest {
             samarbeidBigqueryKonsument.unsubscribe()
             samarbeidBigqueryKonsument.close()
         }
+    }
+
+    @Test
+    fun `automatisk oppdatering works like a charm`() {
+        // vurder
+        // avslutt vurdering (årsak= "Vurder senere", dato= i dag )
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                ),
+                dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
+            ),
+        )
+        // tilstand = vurdert
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "VurderVirksomhet"
+        virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+        virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+
+        // send jobbmelding
+        kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
+
+        // tilstand = vurderes
+        val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstandOppdatert.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
     }
 
     @Test

@@ -1,19 +1,7 @@
 package no.nav.lydia.integrasjoner.jobblytter
 
 import ia.felles.integrasjoner.jobbsender.Jobb
-import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidBigQueryEksport
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksportEttSamarbeid
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEksport
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
-import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
-import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
-import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
-import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSakerTørrKjør
-import ia.felles.integrasjoner.jobbsender.Jobb.spørreundersøkelseBigQueryEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.*
 import ia.felles.integrasjoner.jobbsender.JobbInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +20,7 @@ import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
+import no.nav.lydia.ia.eksport.ny.flyt.TilstandVirksomhetOppdaterer
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
@@ -67,6 +56,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer
     private lateinit var samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer
     private lateinit var iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer
+    private lateinit var tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer
     private lateinit var virksomhetService: VirksomhetService
     private lateinit var iaSakService: IASakService
     private val topic = Topic.JOBBLYTTER_TOPIC
@@ -92,6 +82,7 @@ object Jobblytter : CoroutineScope {
         spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
         samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
         iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
+        tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
         virksomhetService: VirksomhetService,
         iaSakService: IASakService,
     ) {
@@ -116,6 +107,7 @@ object Jobblytter : CoroutineScope {
         this.spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer
         this.samarbeidKafkaEksporterer = samarbeidKafkaEksporterer
         this.iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer
+        this.tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer
         this.virksomhetService = virksomhetService
         this.iaSakService = iaSakService
 
@@ -207,6 +199,10 @@ object Jobblytter : CoroutineScope {
 
                                     spørreundersøkelseBigQueryEksport -> {
                                         spørreundersøkelseBigqueryEksporterer.eksporter()
+                                    }
+
+                                    prosesserPlanlagteHendelser -> {
+                                        tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet()
                                     }
 
                                     else -> {
