@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
@@ -668,4 +669,10 @@ class NyFlytService(
         )
         return oppdatertTilstand?.tilstand?.tilTilstand()?.right() ?: Feil("kunne ikke oppdatere tilstand", HttpStatusCode.BadRequest).left()
     }
+
+    fun hentAlleVirksomhetTilstanderFiltrertPåPlanlagtDato(planlagtDato: LocalDate): List<VirksomhetTilstandDto> =
+        tilstandVirksomhetRepository.hentAlleVirksomhetTilstander()
+            .filter { it.nesteTilstand?.planlagtDato == planlagtDato }
+
+    fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
 }

@@ -11,6 +11,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
+import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSakerTørrKjør
 import ia.felles.integrasjoner.jobbsender.Jobb.spørreundersøkelseBigQueryEksport
@@ -21,6 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
@@ -32,6 +34,7 @@ import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
+import no.nav.lydia.ia.eksport.ny.flyt.TilstandVirksomhetOppdaterer
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
@@ -46,6 +49,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -67,6 +71,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer
     private lateinit var samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer
     private lateinit var iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer
+    private lateinit var tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer
     private lateinit var virksomhetService: VirksomhetService
     private lateinit var iaSakService: IASakService
     private val topic = Topic.JOBBLYTTER_TOPIC
@@ -92,6 +97,7 @@ object Jobblytter : CoroutineScope {
         spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
         samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
         iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
+        tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
         virksomhetService: VirksomhetService,
         iaSakService: IASakService,
     ) {
@@ -116,6 +122,7 @@ object Jobblytter : CoroutineScope {
         this.spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer
         this.samarbeidKafkaEksporterer = samarbeidKafkaEksporterer
         this.iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer
+        this.tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer
         this.virksomhetService = virksomhetService
         this.iaSakService = iaSakService
 
@@ -207,6 +214,19 @@ object Jobblytter : CoroutineScope {
 
                                     spørreundersøkelseBigQueryEksport -> {
                                         spørreundersøkelseBigqueryEksporterer.eksporter()
+                                    }
+
+                                    prosesserPlanlagteHendelser -> {
+                                        var antallDager = jobInfo.parameter
+                                        if (jobInfo.parameter.isNullOrEmpty()) {
+                                            logger.info(
+                                                "Jobb prosesserPlanlagteHendelser har ingen parameter, setter default til 1 dag",
+                                            )
+                                            antallDager = "1"
+                                        }
+                                        tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet(
+                                            planlagtDato = LocalDate.now().plusDays(antallDager.toLong()).toKotlinLocalDate(),
+                                        )
                                     }
 
                                     else -> {

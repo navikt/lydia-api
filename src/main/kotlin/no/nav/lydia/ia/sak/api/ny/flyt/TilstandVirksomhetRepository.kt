@@ -65,6 +65,23 @@ class TilstandVirksomhetRepository(
             )
         }
 
+    fun hentAlleVirksomhetTilstander(): List<VirksomhetTilstandDto> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT tv.*, tao.start_tilstand, tao.planlagt_hendelse, tao.ny_tilstand, tao.planlagt_dato
+                    FROM tilstand_virksomhet tv
+                    LEFT JOIN tilstand_automatisk_oppdatering tao 
+                        ON tv.id = tao.tilstand_virksomhet_id
+                    ORDER BY tv.sist_endret DESC
+                    """.trimIndent(),
+                ).map { row ->
+                    row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering()
+                }.asList,
+            )
+        }
+
     fun oppdaterVirksomhetTilstand(
         orgnr: String,
         samarbeidsperiodeId: String,
@@ -104,10 +121,7 @@ class TilstandVirksomhetRepository(
                         "orgnr" to orgnr,
                     ),
                 ).map { row ->
-                    VirksomhetTilstandDto(
-                        tilstand = VirksomhetIATilstand.valueOf(row.string("tilstand")),
-                        nesteTilstand = null, // TODO: Fiks
-                    )
+                    row.tilVirksomhetTilstandDto()
                 }.asSingle,
             )
         }
@@ -169,14 +183,33 @@ class TilstandVirksomhetRepository(
             )
         }
 
+    fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String): VirksomhetTilstandAutomatiskOppdateringDto? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    DELETE FROM tilstand_automatisk_oppdatering 
+                    WHERE orgnr = :orgnr
+                    """.trimIndent(),
+                    mapOf(
+                        "orgnr" to orgnr,
+                    ),
+                ).map { row ->
+                    row.tilVirksomhetTilstandAutomatiskOppdateringDto()
+                }.asSingle,
+            )
+        }
+
     private fun kotliquery.Row.tilVirksomhetTilstandDto() =
         VirksomhetTilstandDto(
+            orgnr = string("orgnr"),
             tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
-            nesteTilstand = null,
+            nesteTilstand = null, // TODO: Fiks
         )
 
     private fun kotliquery.Row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering(): VirksomhetTilstandDto =
         VirksomhetTilstandDto(
+            orgnr = string("orgnr"),
             tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
             nesteTilstand = stringOrNull("ny_tilstand")?.let { nyTilstand ->
                 VirksomhetTilstandAutomatiskOppdateringDto(

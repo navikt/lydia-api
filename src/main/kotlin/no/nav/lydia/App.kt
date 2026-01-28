@@ -47,6 +47,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.eksport.ny.flyt.IASakDtoProdusent
 import no.nav.lydia.ia.eksport.ny.flyt.IASakDtoStatistikkProdusent
+import no.nav.lydia.ia.eksport.ny.flyt.TilstandVirksomhetOppdaterer
 import no.nav.lydia.ia.sak.EierskapsendringObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
@@ -295,6 +296,15 @@ fun startLydiaBackend() {
 
     val iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
 
+    val tilstandVirksomhetOppdaterer = TilstandVirksomhetOppdaterer(
+        nyFlytService = nyFlytService,
+        iaSakService = iaSakService,
+        iASamarbeidService = samarbeidService,
+        dokumentPubliseringService = dokumentPubliseringService,
+        planService = planService,
+        tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+    )
+
     jobblytter(
         naisEnv = naisEnv,
         iaSakStatusOppdaterer = IASakStatusOppdaterer(iaSakService = iaSakService),
@@ -343,6 +353,7 @@ fun startLydiaBackend() {
         ),
         virksomhetService = virksomhetService,
         iaSakService = iaSakService,
+        tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
     )
 
     listOf(
@@ -466,6 +477,7 @@ private fun jobblytter(
     iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
+    tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
 ) {
     Jobblytter.apply {
         create(
@@ -484,6 +496,7 @@ private fun jobblytter(
             iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer,
             virksomhetService = virksomhetService,
             iaSakService = iaSakService,
+            tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
         )
         run()
     }
