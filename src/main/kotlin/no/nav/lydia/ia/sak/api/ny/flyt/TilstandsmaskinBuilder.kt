@@ -22,6 +22,7 @@ import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import java.time.LocalDate
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 
@@ -240,7 +241,7 @@ sealed class Tilstand {
                                 planlagtHendelse = planlagtHendelse,
                                 nyTilstand = nyTilstand,
                                 planlagtDato = if (hendelse.årsak.dato == null) {
-                                    java.time.LocalDate.now().plusDays(90)
+                                    LocalDate.now().plusDays(90)
                                 } else {
                                     hendelse.årsak.dato.toJavaLocalDate()
                                 },
@@ -291,14 +292,13 @@ sealed class Tilstand {
                     )
                 }
 
-                /*
                 is Hendelse.GjørVirksomhetKlarTilNyVurdering -> {
-                    fiaKontekst.nyFlytService.gjørVirksomhetKlarTilNyVurdering(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
+                    // TODO: Trenger vi å legge til en IASakHendelse her slik at den vises på historikk-siden?
+                    return Konsekvens(
+                        nyTilstand = VirksomhetKlarTilVurdering,
+                        endring = Either.Right(null),
                     )
                 }
-                 */
 
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
@@ -477,10 +477,11 @@ sealed class Tilstand {
                         saksbehandler = hendelse.saksbehandler,
                         navEnhet = hendelse.navEnhet,
                     )
-                    val harAktiveSamarbeid = harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
+                    // Når hendelsen mottas, har vi minst ett aktivt samarbeid, men nå som endringen er påført må vi sjekke det igjen
+                    val harIkkeLengerAktiveSamarbeid = !harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
                     Konsekvens(
                         endring = endring,
-                        nyTilstand = if (harAktiveSamarbeid) VirksomhetHarAktiveSamarbeid else AlleSamarbeidIVirksomhetErAvsluttet,
+                        nyTilstand = if (harIkkeLengerAktiveSamarbeid) AlleSamarbeidIVirksomhetErAvsluttet else VirksomhetHarAktiveSamarbeid,
                     )
                 }
 
@@ -508,14 +509,13 @@ sealed class Tilstand {
                     )
                 }
 
-                /*
                 is Hendelse.GjørVirksomhetKlarTilNyVurdering -> {
-                    fiaKontekst.nyFlytService.gjørVirksomhetKlarTilNyVurdering(
-                        orgnummer = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer!!,
+                    // TODO: Trenger vi å legge til en IASakHendelse her slik at den vises på historikk-siden?
+                    return Konsekvens(
+                        nyTilstand = VirksomhetKlarTilVurdering,
+                        endring = Either.Right(null),
                     )
                 }
-                 */
 
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
