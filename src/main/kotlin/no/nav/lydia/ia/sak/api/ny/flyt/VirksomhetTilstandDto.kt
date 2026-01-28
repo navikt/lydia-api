@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class VirksomhetTilstandDto(
+    val orgnr: String,
     val tilstand: VirksomhetIATilstand,
     val nesteTilstand: VirksomhetTilstandAutomatiskOppdateringDto? = null,
 )
@@ -24,11 +25,6 @@ enum class VirksomhetIATilstand {
     VirksomhetHarAktiveSamarbeid,
     AlleSamarbeidIVirksomhetErAvsluttet,
 }
-
-fun Tilstand.tilVirksomhetTilstandDto() =
-    VirksomhetTilstandDto(
-        tilstand = VirksomhetIATilstand.valueOf(navn()),
-    )
 
 fun Tilstand.tilVirksomhetIATilstand(): VirksomhetIATilstand = VirksomhetIATilstand.valueOf(navn())
 

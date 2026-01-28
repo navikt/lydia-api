@@ -101,9 +101,7 @@ class NyFlytTest {
     }
 
     @Test
-    fun `automatisk oppdatering works like a charm`() {
-        // vurder
-        // avslutt vurdering (årsak= "Vurder senere", dato= i dag )
+    fun `Batch jobb - automatisk oppdatering av virksomhet tilstand fra VirksomhetErVurdert til VirksomhetVurderes`() {
         val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
 
@@ -116,7 +114,6 @@ class NyFlytTest {
                 dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
             ),
         )
-        // tilstand = vurdert
         val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
