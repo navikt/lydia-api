@@ -65,7 +65,7 @@ class TilstandVirksomhetRepository(
             )
         }
 
-    fun hentAlleVirksomhetTilstand(): List<VirksomhetTilstandDto> =
+    fun hentAlleVirksomhetTilstander(): List<VirksomhetTilstandDto> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -74,7 +74,6 @@ class TilstandVirksomhetRepository(
                     FROM tilstand_virksomhet tv
                     LEFT JOIN tilstand_automatisk_oppdatering tao 
                         ON tv.id = tao.tilstand_virksomhet_id
-                    WHERE tv.orgnr = :orgnr
                     ORDER BY tv.sist_endret DESC
                     """.trimIndent(),
                 ).map { row ->
@@ -184,7 +183,7 @@ class TilstandVirksomhetRepository(
             )
         }
 
-    fun slettVirksomhetTilstandAutomatisk(orgnr: String): VirksomhetTilstandAutomatiskOppdateringDto? =
+    fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String): VirksomhetTilstandAutomatiskOppdateringDto? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -203,12 +202,14 @@ class TilstandVirksomhetRepository(
 
     private fun kotliquery.Row.tilVirksomhetTilstandDto() =
         VirksomhetTilstandDto(
+            orgnr = string("orgnr"),
             tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
             nesteTilstand = null, // TODO: Fiks
         )
 
     private fun kotliquery.Row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering(): VirksomhetTilstandDto =
         VirksomhetTilstandDto(
+            orgnr = string("orgnr"),
             tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
             nesteTilstand = stringOrNull("ny_tilstand")?.let { nyTilstand ->
                 VirksomhetTilstandAutomatiskOppdateringDto(

@@ -6,7 +6,6 @@ import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
@@ -43,7 +42,6 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
-import java.time.LocalDate.now
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -672,26 +670,9 @@ class NyFlytService(
         return oppdatertTilstand?.tilstand?.tilTilstand()?.right() ?: Feil("kunne ikke oppdatere tilstand", HttpStatusCode.BadRequest).left()
     }
 
-    fun prosesserPlanlagteHendelser() {
-        val alleVirksomhetTilstand = tilstandVirksomhetRepository.hentAlleVirksomhetTilstand()
+    fun hentAlleVirksomhetTilstanderFiltrertPåPlanlagtDato(planlagtDato: LocalDate): List<VirksomhetTilstandDto> =
+        tilstandVirksomhetRepository.hentAlleVirksomhetTilstander()
+            .filter { it.nesteTilstand?.planlagtDato == planlagtDato }
 
-      // gå gjennom alle virksomheter med tilstand.nesteTilstand.planlagtDato != null og returner orgnr
-        alleVirksomhetTilstand.forEach { virksomhetTilstand ->
-            val orgnr = virksomhetTilstand.orgnr
-
-        // hvis d finnes i til_au_opp
-        val tilstand = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = "") //TODO: hent orgnr
-
-        val iDag = now().toKotlinLocalDate()
-
-        if ((tilstand?.nesteTilstand != null) && (tilstand.nesteTilstand.planlagtDato == iDag)) {
-            tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
-                orgnr = orgnr,
-                samarbeidsperiodeId = "",
-                tilstand = tilstand.nesteTilstand.nyTilstand,
-            )
-
-            tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatisk(orgnr = orgnr)
-        }
-    }
+    fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
 }

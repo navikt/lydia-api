@@ -291,6 +291,15 @@ sealed class Tilstand {
                     )
                 }
 
+                /*
+                is Hendelse.GjørVirksomhetKlarTilNyVurdering -> {
+                    fiaKontekst.nyFlytService.gjørVirksomhetKlarTilNyVurdering(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                    )
+                }
+                 */
+
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 }
@@ -498,6 +507,15 @@ sealed class Tilstand {
                         navEnhet = hendelse.navEnhet,
                     )
                 }
+
+                /*
+                is Hendelse.GjørVirksomhetKlarTilNyVurdering -> {
+                    fiaKontekst.nyFlytService.gjørVirksomhetKlarTilNyVurdering(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                    )
+                }
+                 */
 
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))

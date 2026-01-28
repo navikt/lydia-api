@@ -1,7 +1,20 @@
 package no.nav.lydia.integrasjoner.jobblytter
 
 import ia.felles.integrasjoner.jobbsender.Jobb
-import ia.felles.integrasjoner.jobbsender.Jobb.*
+import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidBigQueryEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksportEttSamarbeid
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
+import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
+import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
+import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
+import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSakerTørrKjør
+import ia.felles.integrasjoner.jobbsender.Jobb.spørreundersøkelseBigQueryEksport
 import ia.felles.integrasjoner.jobbsender.JobbInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
@@ -35,6 +49,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -202,7 +217,16 @@ object Jobblytter : CoroutineScope {
                                     }
 
                                     prosesserPlanlagteHendelser -> {
-                                        tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet()
+                                        var antallDager = jobInfo.parameter
+                                        if (jobInfo.parameter.isNullOrEmpty()) {
+                                            logger.info(
+                                                "Jobb prosesserPlanlagteHendelser har ingen parameter, setter default til 1 dag",
+                                            )
+                                            antallDager = "1"
+                                        }
+                                        tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet(
+                                            planlagtDato = LocalDate.now().plusDays(antallDager.toLong()).toKotlinLocalDate(),
+                                        )
                                     }
 
                                     else -> {
