@@ -60,6 +60,7 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.time.LocalDate
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -127,6 +128,61 @@ class NyFlytTest {
         // tilstand = vurderes
         val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstandOppdatert.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+    }
+
+    @Test
+    fun `Batch jobb - automatisk oppdatering av virksomhet tilstand fra VirksomhetErVurdert til VirksomhetKlarTilVurdering`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
+                ),
+                dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
+            ),
+        )
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
+        virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+
+        // send jobbmelding
+        kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
+
+        // tilstand = vurderes
+        val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstandOppdatert.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+    }
+
+    @Ignore
+    fun `Batch jobb - automatisk oppdatering av virksomhet tilstand fra AlleSamarbeidIVirksomhetErAvsluttet til VirksomhetKlarTilVurdering`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand?.startTilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand?.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
+        virksomhetsTilstand.nesteTilstand?.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+
+        // send jobbmelding
+        kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
+
+        // tilstand = vurderes
+        val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstandOppdatert.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
     }
 
     @Test
