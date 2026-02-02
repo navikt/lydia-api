@@ -53,7 +53,7 @@ class TilstandVirksomhetOppdaterer(
             "VurderVirksomhet" -> Hendelse.VurderVirksomhet(
                 orgnr = orgnr,
                 superbruker = NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker(
-                    navIdent = "1234",
+                    navIdent = "Fia system",
                     navn = "Fia system",
                     token = "",
                     ansattesGrupper = emptySet(),

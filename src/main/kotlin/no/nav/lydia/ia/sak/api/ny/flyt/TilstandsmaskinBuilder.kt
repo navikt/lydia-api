@@ -293,7 +293,6 @@ sealed class Tilstand {
                 }
 
                 is Hendelse.GjørVirksomhetKlarTilNyVurdering -> {
-                    // TODO: Trenger vi å legge til en IASakHendelse her slik at den vises på historikk-siden?
                     return Konsekvens(
                         nyTilstand = VirksomhetKlarTilVurdering,
                         endring = Either.Right(null),
@@ -510,7 +509,6 @@ sealed class Tilstand {
                 }
 
                 is Hendelse.GjørVirksomhetKlarTilNyVurdering -> {
-                    // TODO: Trenger vi å legge til en IASakHendelse her slik at den vises på historikk-siden?
                     return Konsekvens(
                         nyTilstand = VirksomhetKlarTilVurdering,
                         endring = Either.Right(null),
