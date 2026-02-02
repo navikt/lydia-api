@@ -114,8 +114,9 @@ class TilstandVirksomhetRepository(
             session.run(
                 queryOf(
                     """
-                    DELETE FROM tilstand_virksomhet 
+                    DELETE FROM tilstand_virksomhet
                     WHERE orgnr = :orgnr
+                    RETURNING *
                     """.trimIndent(),
                     mapOf(
                         "orgnr" to orgnr,
@@ -188,8 +189,9 @@ class TilstandVirksomhetRepository(
             session.run(
                 queryOf(
                     """
-                    DELETE FROM tilstand_automatisk_oppdatering 
+                    DELETE FROM tilstand_automatisk_oppdatering
                     WHERE orgnr = :orgnr
+                    RETURNING *
                     """.trimIndent(),
                     mapOf(
                         "orgnr" to orgnr,

@@ -36,6 +36,7 @@ class TilstandVirksomhetOppdaterer(
             )
             log.info("Oppdatert tilstand for virksomhet ${it.orgnr}, ny tilstand: ${konsekvens.nyTilstand}")
             nyFlytService.slettVirksomhetTilstandAutomatiskOppdatering(it.orgnr)
+            log.info("Slettet planlagt tilstandsoppdatering for virksomhet ${it.orgnr}.")
         }
         log.info("Ferdig med å oppdatere alle tilstand virksomheter.")
     }
