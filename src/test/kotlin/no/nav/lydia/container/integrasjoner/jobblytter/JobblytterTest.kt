@@ -9,6 +9,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
+import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -89,5 +90,11 @@ class JobblytterTest {
     fun `skal ignorere irrelevante jobber`() {
         kafkaContainerHelper.sendJobbMelding(alleKategorierSykefraværsstatistikkDvhImport)
         applikasjon shouldContainLog "Jobb 'alleKategorierSykefraværsstatistikkDvhImport' ignorert".toRegex()
+    }
+
+    @Test
+    fun `skal kunne trigge prosesserPlanlagteHendelser via kafka`() {
+        kafkaContainerHelper.sendJobbMelding(prosesserPlanlagteHendelser, "")
+        applikasjon shouldContainLog "Ferdig med å oppdatere alle tilstand virksomheter.".toRegex()
     }
 }
