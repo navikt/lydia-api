@@ -1,0 +1,40 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/rest/journalpostapi/v1/journalpost",
+    "queryParameters": {
+      "forsoekFerdigstill": {
+        "equalTo": "true"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "contains": "Bearer"
+      }
+    },
+    "bodyPatterns": [
+      {"matchesJsonPath": "$.eksternReferanseId"},
+      {"matchesJsonPath": "$.tittel"},
+      {"matchesJsonPath": "$[?(@.tema == 'IAR')]"},
+      {"matchesJsonPath": "$.journalposttype"},
+      {"matchesJsonPath": "$.journalfoerendeEnhet"},
+      {"matchesJsonPath": "$.kanal"},
+      {"matchesJsonPath": "$.avsenderMottaker[?(@.idType == 'ORGNR')]"},
+      {"matchesJsonPath": "$.avsenderMottaker.id"},
+      {"matchesJsonPath": "$.avsenderMottaker.navn"},
+      {"matchesJsonPath": "$.bruker[?(@.idType == 'ORGNR')]"},
+      {"matchesJsonPath": "$.bruker.id"},
+      {"matchesJsonPath": "$.sak[?(@.sakstype == 'FAGSAK')]"},
+      {"matchesJsonPath": "$.sak[?(@.fagsaksystem == 'FIA')]"},
+      {"matchesJsonPath": "$.sak.fagsakId"},
+      {"matchesJsonPath": "$.dokumenter"}
+    ]
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "journalpost-response.json",
+    "headers" : {
+      "Content-Type" : "application/json"
+    }
+  }
+}

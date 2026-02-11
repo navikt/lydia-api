@@ -86,6 +86,7 @@ import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
+import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.kvittering.KvitteringConsumer
@@ -111,6 +112,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.sykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
+import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
@@ -610,6 +612,7 @@ private fun Application.lydiaRestApi(
                 iaSakService = iaSakService,
                 auditLog = auditLog,
             )
+            val pdfgenService = PiaPdfgenService(samarbeidService, naisEnv)
             iaSakSpørreundersøkelse(
                 iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
@@ -617,7 +620,8 @@ private fun Application.lydiaRestApi(
                 spørreundersøkelseService = spørreundersøkelseService,
                 dokumentPubliseringService = dokumentPubliseringService,
                 iaTeamService = iaTeamService,
-                pdfgenService = PiaPdfgenService(samarbeidService, naisEnv),
+                pdfgenService = pdfgenService,
+                journalpostService = JournalpostService(naisEnv, pdfgenService, OboTokenUtveksler(naisEnv)),
                 azureService = azureService,
             )
             iaSakPlan(
