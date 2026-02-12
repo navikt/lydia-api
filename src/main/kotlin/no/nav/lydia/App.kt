@@ -594,6 +594,7 @@ private fun Application.lydiaRestApi(
                 dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
                 tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+                virksomhetService = virksomhetService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,

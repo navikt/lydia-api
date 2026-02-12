@@ -50,6 +50,7 @@ import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.tilgangskontroll.somSuperbruker
+import no.nav.lydia.virksomhet.VirksomhetService
 import java.time.LocalDate
 
 const val NY_FLYT_PATH = "iasak/nyflyt"
@@ -61,6 +62,7 @@ fun Route.nyFlyt(
     dokumentPubliseringService: DokumentPubliseringService,
     planService: PlanService,
     tilstandVirksomhetRepository: TilstandVirksomhetRepository,
+    virksomhetService: VirksomhetService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
@@ -108,7 +110,21 @@ fun Route.nyFlyt(
             )
         }.map { virksomhetTilstandDto: VirksomhetTilstandDto? ->
             if (virksomhetTilstandDto == null) {
-                call.respond(status = HttpStatusCode.NotFound, message = "Fant ingen tilstand for virksomhet med orgnr $orgnr")
+                val virksomhetFinnes = virksomhetService.hentVirksomhet(orgnr) != null
+                if (!virksomhetFinnes) {
+                    call.respond(
+                        status = HttpStatusCode.NotFound,
+                        message = "Virksomheten finnes ikke for orgnr $orgnr",
+                    )
+                } else {
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = VirksomhetTilstandDto(
+                            orgnr = orgnr,
+                            tilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+                        ),
+                    )
+                }
             } else {
                 call.respond(status = HttpStatusCode.OK, message = virksomhetTilstandDto)
             }
