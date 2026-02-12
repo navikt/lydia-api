@@ -18,6 +18,7 @@ import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import org.slf4j.LoggerFactory
+import java.util.Base64
 import java.util.UUID
 
 class JournalpostService(
@@ -38,10 +39,10 @@ class JournalpostService(
         navEnhet: NavEnhet,
     ): Either<Feil, JournalpostResultatDto> =
         runBlocking {
-            val base64EnkodetPdf = pdfgenService.hentPdfForJournalføring(spørreundersøkelse, navEnhet)
+            val base64EnkodetPdf = pdfgenService.hentPdfForJournalføring(spørreundersøkelse, navEnhet).tilBase64()
 
             oboTokenUtveksler.hentOboTokenForScope(navAnsatt.token, scope).flatMap { oboToken ->
-                val journalpostDto = journalpostDto(spørreundersøkelse, navEnhet, base64EnkodetPdf.toString())
+                val journalpostDto = journalpostDto(spørreundersøkelse, navEnhet, base64EnkodetPdf)
                 journalfør(journalpostDto, oboToken.access_token)
             }
         }
@@ -52,8 +53,8 @@ class JournalpostService(
         pdf: String,
     ): JournalpostDto {
         val journalpostDto = JournalpostDto(
-            eksternReferanseId = UUID.randomUUID().toString(),
-            tittel = "IA-samarbeid",
+            eksternReferanseId = UUID.randomUUID().toString(), // TODO: Er dette riktig?
+            tittel = "Kartleggingsresultater",
             tema = JournalpostTema.IAR,
             journalposttype = JournalpostType.UTGAAENDE,
             journalfoerendeEnhet = navEnhet.enhetsnummer,
@@ -73,7 +74,7 @@ class JournalpostService(
             ),
             dokumenter = listOf(
                 Dokument(
-                    tittel = "IA-samarbeid",
+                    tittel = "Kartleggingsresultater",
                     dokumentvarianter = listOf(
                         DokumentVariant(
                             filtype = FilType.PDFA,
@@ -86,6 +87,8 @@ class JournalpostService(
         )
         return journalpostDto
     }
+
+    private fun ByteArray.tilBase64() = String(Base64.getEncoder().encode(this))
 
     private fun journalfør(
         journalpostDto: JournalpostDto,
@@ -108,10 +111,6 @@ class JournalpostService(
     object JournalpostFeil {
         val FeillendeJournalpost = Feil(
             feilmelding = "Klarte ikke å journalføre",
-            httpStatusCode = HttpStatusCode.InternalServerError,
-        )
-        val FantIkkeVirksomhet = Feil(
-            feilmelding = "Fant ikke virksomhet",
             httpStatusCode = HttpStatusCode.InternalServerError,
         )
     }
