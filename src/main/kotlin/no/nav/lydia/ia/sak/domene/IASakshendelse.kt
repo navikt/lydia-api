@@ -287,6 +287,9 @@ enum class IASakshendelseType {
     FULLFØR_BISTAND,
     SLETT_SAK,
 
+    // -- Migrering til ny flyt
+    MIGRERING_TIL_NY_FLYT,
+
     // -- Ny flyt
     VURDERING_FULLFØRT_UTEN_SAMARBEID,
     OPPRETT_KARTLEGGING,

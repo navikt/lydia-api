@@ -23,6 +23,7 @@ import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
 import no.nav.lydia.ia.sak.domene.IASak.Status.AVSLUTTET
 import no.nav.lydia.ia.sak.domene.IASak.Status.NY
@@ -42,6 +43,8 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -58,6 +61,8 @@ class NyFlytService(
     val iaSakObservers: List<Observer<IASakDto>>,
     val iaSamarbeidObservers: List<Observer<IASamarbeid>>,
 ) {
+    val log: Logger = LoggerFactory.getLogger(this.javaClass)
+
     private fun varsleIASakObservers(sakDto: IASakDto) {
         iaSakObservers.forEach { observer -> observer.receive(input = sakDto) }
     }
@@ -361,6 +366,52 @@ class NyFlytService(
             }
         }
 
+    fun oppdaterSakMedhendelse(
+        orgnummer: String,
+        saksnummer: String,
+        iaSakshendelseType: IASakshendelseType,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+        resulterendeStatus: IASak.Status,
+    ): Either<Feil, IASakDto> {
+        val iASakshendelse = IASakshendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = saksnummer,
+            hendelsesType = iaSakshendelseType,
+            orgnummer = orgnummer,
+            opprettetAv = saksbehandler.navIdent,
+            opprettetAvRolle = saksbehandler.rolle,
+            navEnhet = navEnhet,
+            resulterendeStatus = null,
+        )
+        iaSakshendelseRepository.lagreHendelse(
+            hendelse = iASakshendelse,
+            sistEndretAvHendelseId = null,
+            resulterendeStatus = resulterendeStatus,
+        )
+        return iaSakRepository.oppdaterStatusPåSak(
+            saksnummer = saksnummer,
+            status = resulterendeStatus,
+            endretAv = saksbehandler.navIdent,
+            endretAvHendelseId = iASakshendelse.id,
+        ).apply {
+            onRight { iASakDto ->
+                varsleIASakObservers(sakDto = iASakDto)
+                log.info(
+                    " ----- Oppdatert sak med saksnummer '$saksnummer' til status '${resulterendeStatus.name}' " +
+                        "basert på hendelse '${iaSakshendelseType.name}'",
+                )
+            }
+            onLeft {
+                log.warn(
+                    " ------ Feil ved oppdatering av sak med saksnummer '$saksnummer' til status '${resulterendeStatus.name}' " +
+                        "basert på hendelse '${iaSakshendelseType.name}'. Feilmelding: '${it.feilmelding}'",
+                )
+            }
+        }
+    }
+
     private fun loggKartleggingshendelse(
         orgnummer: String,
         saksnummer: String,
@@ -650,7 +701,7 @@ class NyFlytService(
 
     private fun IASakDto.settStatusTilSlettet(): IASakDto = this.copy(status = SLETTET, endretAvHendelseId = ULID.random())
 
-    private fun hentSamarbeid(saksnummer: String): Either<Feil, List<IASamarbeid>> =
+    fun hentSamarbeid(saksnummer: String): Either<Feil, List<IASamarbeid>> =
         Either.catch {
             iaSamarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
         }.mapLeft {
@@ -675,4 +726,15 @@ class NyFlytService(
             .filter { it.nesteTilstand?.planlagtDato == planlagtDato }
 
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
+
+    fun lagreEllerOppdaterVirksomhetTilstand(
+        orgnr: String,
+        samarbeidsperiodeId: String,
+        tilstand: VirksomhetIATilstand,
+    ): VirksomhetTilstandDto? =
+        tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
+            orgnr = orgnr,
+            samarbeidsperiodeId = samarbeidsperiodeId,
+            tilstand = tilstand,
+        )
 }

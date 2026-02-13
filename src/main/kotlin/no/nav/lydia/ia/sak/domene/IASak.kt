@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_KARTLEGGING
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.MIGRERING_TIL_NY_FLYT
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_KARTLEGGING
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
@@ -168,6 +169,7 @@ class IASak private constructor(
             }
 
             // -- Ny flyt:
+            MIGRERING_TIL_NY_FLYT,
             VURDERING_FULLFØRT_UTEN_SAMARBEID,
             OPPRETT_KARTLEGGING,
             START_KARTLEGGING,

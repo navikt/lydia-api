@@ -391,6 +391,8 @@ class IASakService(
 
     fun hentSakerForOrgnummer(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)
 
+    fun hentIASakDtoerForOrgnummer(orgnummer: String): List<IASakDto> = iaSakRepository.hentAlleSakerDtoForVirksomhet(orgnummer)
+
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> = iaSakshendelseRepository.hentHendelserForOrgnummer(orgnr = orgnr)
 
     fun hentIASakLeveranser(saksnummer: String): Either<Feil, List<IASakLeveranse>> =
