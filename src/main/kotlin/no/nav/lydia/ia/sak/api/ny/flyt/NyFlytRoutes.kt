@@ -30,6 +30,7 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
+import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
@@ -55,6 +56,7 @@ import no.nav.lydia.tilgangskontroll.somHøyestTilgang
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.tilgangskontroll.somSuperbruker
+import no.nav.lydia.virksomhet.VirksomhetService
 import java.time.LocalDate
 
 const val NY_FLYT_PATH = "iasak/nyflyt"
@@ -66,6 +68,7 @@ fun Route.nyFlyt(
     dokumentPubliseringService: DokumentPubliseringService,
     planService: PlanService,
     tilstandVirksomhetRepository: TilstandVirksomhetRepository,
+    virksomhetService: VirksomhetService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
@@ -113,7 +116,21 @@ fun Route.nyFlyt(
             )
         }.map { virksomhetTilstandDto: VirksomhetTilstandDto? ->
             if (virksomhetTilstandDto == null) {
-                call.respond(status = HttpStatusCode.NotFound, message = "Fant ingen tilstand for virksomhet med orgnr $orgnr")
+                val virksomhetFinnes = virksomhetService.hentVirksomhet(orgnr) != null
+                if (!virksomhetFinnes) {
+                    call.respond(
+                        status = HttpStatusCode.NotFound,
+                        message = "Virksomheten finnes ikke for orgnr $orgnr",
+                    )
+                } else {
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = VirksomhetTilstandDto(
+                            orgnr = orgnr,
+                            tilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+                        ),
+                    )
+                }
             } else {
                 call.respond(status = HttpStatusCode.OK, message = virksomhetTilstandDto)
             }
@@ -135,6 +152,26 @@ fun Route.nyFlyt(
                 orgnummer = orgnr,
                 auditType = AuditType.access,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}") {
+        val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
+        call.somHøyestTilgang(adGrupper = adGrupper) {
+            iaSakService.hentIASakDto(saksnummer)
+        }.also { either ->
+            auditLog.auditloggEither(
+                call = call,
+                either = either,
+                orgnummer = orgnr,
+                auditType = AuditType.access,
+                saksnummer = saksnummer,
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)

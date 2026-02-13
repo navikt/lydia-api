@@ -111,6 +111,36 @@ class NyFlytTest {
     }
 
     @Test
+    fun `hent tilstand for virksomhet som finnes, men ikke har tilstand i tilstand_virksomhet, returnerer VirksomhetKlarTilVurdering`() {
+        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        val virksomhet = TestVirksomhet.nyVirksomhet(
+            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+        )
+        lastInnNyVirksomhet(virksomhet)
+
+        val response = applikasjon.performGet("$NY_FLYT_PATH/${virksomhet.orgnr}/tilstand")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<VirksomhetTilstandDto>()
+
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+        val virksomhetTilstandDto = response.third.get()
+        virksomhetTilstandDto.orgnr shouldBe virksomhet.orgnr
+        virksomhetTilstandDto.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetTilstandDto.nesteTilstand shouldBe null
+    }
+
+    @Test
+    fun `hent tilstand for virksomhet som ikke finnes returnerer 404`() {
+        val orgnrSomIkkeFinnes = "999888777"
+
+        val response = applikasjon.performGet("$NY_FLYT_PATH/$orgnrSomIkkeFinnes/tilstand")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<VirksomhetTilstandDto>()
+
+        response.statuskode() shouldBe HttpStatusCode.NotFound.value
+    }
+
+    @Test
     fun `Batch jobb - automatisk oppdatering av virksomhet tilstand fra VirksomhetErVurdert til VirksomhetVurderes`() {
         val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES

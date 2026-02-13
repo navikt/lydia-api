@@ -1,17 +1,17 @@
-val ktorVersion = "3.3.3"
+val ktorVersion = "3.4.0"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
-val kotestVerstion = "6.0.7"
+val kotestVerstion = "6.1.3"
 val testcontainersVersion = "2.0.3"
-val logbackVersion = "1.5.24"
+val logbackVersion = "1.5.28"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.16.0-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm") version "2.3.0"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.2.21"
+    kotlin("plugin.serialization") version "2.3.0"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
@@ -50,12 +50,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.16.2")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.16.3")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.9")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:11.20.2")
+    implementation("org.flywaydb:flyway-database-postgresql:12.0.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -63,7 +63,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.2")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.10.2")
+    implementation("at.yawk.lz4:lz4-java:1.10.3")
     implementation("org.apache.kafka:kafka-clients:4.1.1") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
@@ -102,24 +102,13 @@ dependencies {
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
-    // -- validere pdfa
-    testImplementation("org.verapdf:validation-model:1.28.2")
-
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:3.0.1")
 
     constraints {
-        implementation("org.mozilla:rhino") {
-            version {
-                require("1.8.1")
-            }
-            because(
-                "versjonser < 1.8.1 har sårbarhet. inkludert i verapdf 1.28.2",
-            )
-        }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.9.Final")
+                require("4.2.10.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
