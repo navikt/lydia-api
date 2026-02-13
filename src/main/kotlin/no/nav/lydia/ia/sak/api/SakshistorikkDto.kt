@@ -43,13 +43,24 @@ class SakSnapshotDto(
     }
 }
 
-fun IASak.tilSakshistorikk(samarbeid: List<IASamarbeidDto>) =
+fun IASak.tilSakshistorikk(samarbeid: List<IASamarbeidDto>): SakshistorikkDto =
     SakshistorikkDto(
         saksnummer = this.saksnummer,
         opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
         sistEndret = this.endretTidspunkt?.toKotlinLocalDateTime()
             ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-        sakshendelser = hendelser.mapIndexed { index, hendelse ->
+        sakshendelser = hendelser.mapIndexed { _, hendelse: IASakshendelse ->
+            SakSnapshotDto.from(hendelse)
+        }.toList(),
+        samarbeid = samarbeid,
+    )
+
+fun IASakDto.tilSakshistorikk(samarbeid: List<IASamarbeidDto>): SakshistorikkDto =
+    SakshistorikkDto(
+        saksnummer = this.saksnummer,
+        opprettet = this.opprettetTidspunkt,
+        sistEndret = this.endretTidspunkt ?: this.opprettetTidspunkt,
+        sakshendelser = hendelser.mapIndexed { _, hendelse: IASakshendelse ->
             SakSnapshotDto.from(hendelse)
         }.toList(),
         samarbeid = samarbeid,

@@ -99,6 +99,15 @@ class NyFlytTest {
             samarbeidBigqueryKonsument.unsubscribe()
             samarbeidBigqueryKonsument.close()
         }
+
+        fun hentVirksomhetTilstand(
+            orgnr: String,
+            token: String = authContainerHelper.superbruker1.token,
+        ): VirksomhetTilstandDto {
+            val url = "$NY_FLYT_PATH/$orgnr/tilstand"
+            return applikasjon.performGet(url)
+                .authentication().bearer(token).tilSingelRespons<VirksomhetTilstandDto>().third.get()
+        }
     }
 
     @Test
@@ -1001,12 +1010,6 @@ class NyFlytTest {
             ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.get()
         return plan
     }
-
-    private fun hentVirksomhetTilstand(
-        orgnr: String,
-        token: String = authContainerHelper.superbruker1.token,
-    ) = applikasjon.performGet("$NY_FLYT_PATH/$orgnr/tilstand")
-        .authentication().bearer(token).tilSingelRespons<VirksomhetTilstandDto>().third.get()
 
     private fun IASakDto.opprettSamarbeid(
         token: String = authContainerHelper.superbruker1.token,

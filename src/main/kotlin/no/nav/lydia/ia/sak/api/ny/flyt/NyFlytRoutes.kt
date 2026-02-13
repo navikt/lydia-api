@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
@@ -26,6 +27,7 @@ import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -37,8 +39,10 @@ import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.api.tilSakshistorikk
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -200,6 +204,66 @@ fun Route.nyFlyt(
             )
         }.map {
             call.respond(status = HttpStatusCode.Created, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // Returnerer siste IA-SakDto (samarbeidsperiode) for en virksomhet
+    get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode") {
+        val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        call.somHøyestTilgang(adGrupper = adGrupper) { _: NavAnsatt ->
+            nyFlytService.hentSisteIASakDto(orgnummer = orgnummer).right()
+        }.also { either ->
+            auditLog.auditloggEither(
+                call = call,
+                either = either,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+            )
+        }.map {
+            val response = it ?: HttpStatusCode.NoContent
+            call.respond(response)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    get("$NY_FLYT_PATH/virksomhet/{orgnummer}/historikk") {
+        val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
+            iaSakService.hentIASakDtoerForOrgnummer(orgnummer = orgnummer)
+                .map { sak ->
+                    sak.addHendelser(hendelser = hendelser.filter { hendelse -> hendelse.saksnummer == sak.saksnummer })
+                }
+                .sortedByDescending { it.opprettetTidspunkt }
+                .map { iASakDto ->
+                    val samarbeid = nyFlytService.hentSamarbeid(iASakDto.saksnummer).getOrElse { emptyList() }
+                    iASakDto.tilSakshistorikk(samarbeid = samarbeid.tilDto())
+                }.right()
+        }.also { either: Either<Feil, List<SakshistorikkDto>> ->
+            if (either.isLeft()) {
+                auditLog.auditloggEither(
+                    call = call,
+                    either = either,
+                    orgnummer = orgnummer,
+                    auditType = AuditType.access,
+                )
+            } else {
+                val sakshistorikkDtoListe: List<SakshistorikkDto> = either.getOrElse { listOf() }
+                sakshistorikkDtoListe.forEach { sakshistorikkDto ->
+                    auditLog.auditloggEither(
+                        call = call,
+                        either = either,
+                        orgnummer = orgnummer,
+                        auditType = AuditType.access,
+                        saksnummer = sakshistorikkDto.saksnummer,
+                    )
+                }
+            }
+        }.map { historikk ->
+            call.respond(historikk).right()
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

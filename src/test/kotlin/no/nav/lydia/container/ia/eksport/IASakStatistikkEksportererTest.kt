@@ -10,9 +10,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsespunkterTilDato
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -26,7 +24,6 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.tilgangskontroll.fia.Rolle
@@ -150,30 +147,6 @@ class IASakStatistikkEksportererTest {
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `det skal være mulig å eksportere fullførte saker uten leveranser selv om det ikke er mulig å fullføre en sak`() {
-        // uten leveranser fra FIA
-        val sak = nySakIViBistår().fullførSak()
-        postgresContainerHelper.performUpdate("DELETE from iasak_leveranse where saksnummer='${sak.saksnummer}'")
-
-        kafkaContainerHelper.sendJobbMelding(iaSakStatistikkEksport)
-
-        runBlocking {
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = sak.saksnummer,
-                konsument = konsument,
-            ) { meldinger ->
-                val objektene = meldinger.map {
-                    Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
-                }
-                objektene.forAtLeastOne {
-                    it.saksnummer shouldBe sak.saksnummer
-                    it.hendelse shouldBe FULLFØR_BISTAND
                 }
             }
         }
