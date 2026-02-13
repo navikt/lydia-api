@@ -28,6 +28,7 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
+import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
@@ -47,6 +48,7 @@ import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.objectId
+import no.nav.lydia.tilgangskontroll.somHøyestTilgang
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.tilgangskontroll.somSuperbruker
@@ -146,6 +148,26 @@ fun Route.nyFlyt(
                 orgnummer = orgnr,
                 auditType = AuditType.access,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}") {
+        val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
+        call.somHøyestTilgang(adGrupper = adGrupper) {
+            iaSakService.hentIASakDto(saksnummer)
+        }.also { either ->
+            auditLog.auditloggEither(
+                call = call,
+                either = either,
+                orgnummer = orgnr,
+                auditType = AuditType.access,
+                saksnummer = saksnummer,
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)
