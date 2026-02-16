@@ -52,7 +52,6 @@ import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.objectId
-import no.nav.lydia.tilgangskontroll.somHøyestTilgang
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.tilgangskontroll.somSuperbruker
@@ -139,9 +138,29 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: Fjern denne når frontend er oppdatert til å bruke /virksomhet/{orgnummer}/samarbeidsperiode istedet
     get("$NY_FLYT_PATH/{orgnummer}") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        call.somLesebruker(adGrupper) {
+            nyFlytService.hentSisteIASakDto(orgnr)?.right()
+                ?: Feil(feilmelding = "Fant ingen aktiv sak på virksomheten", httpStatusCode = HttpStatusCode.NoContent).left()
+        }.also { iaSakEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSakEither,
+                orgnummer = orgnr,
+                auditType = AuditType.access,
+                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
 
+    get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode") {
+        val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper) {
             nyFlytService.hentSisteIASakDto(orgnr)?.right()
                 ?: Feil(feilmelding = "Fant ingen aktiv sak på virksomheten", httpStatusCode = HttpStatusCode.NoContent).left()
@@ -163,7 +182,7 @@ fun Route.nyFlyt(
     get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
-        call.somHøyestTilgang(adGrupper = adGrupper) {
+        call.somLesebruker(adGrupper = adGrupper) {
             iaSakService.hentIASakDto(saksnummer)
         }.also { either ->
             auditLog.auditloggEither(
@@ -175,55 +194,6 @@ fun Route.nyFlyt(
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    post("$NY_FLYT_PATH/{orgnummer}/vurder") {
-        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        call.somSuperbrukerMedNavenhet { superbruker, navEnhet ->
-            val hendelse = VurderVirksomhet(
-                orgnr = orgnr,
-                superbruker = superbruker,
-                navEnhet = navEnhet,
-            )
-            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = hendelse,
-            )
-            application.log.info("NyTilstand etter hendelse ${hendelse.navn()} er: '${konsekvens.nyTilstand}'")
-
-            konsekvens.endring.map { it as IASakDto }
-        }.also { iaSakEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = iaSakEither,
-                orgnummer = orgnr,
-                auditType = AuditType.create,
-                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.Created, message = it)
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    // Returnerer siste IA-SakDto (samarbeidsperiode) for en virksomhet
-    get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode") {
-        val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        call.somHøyestTilgang(adGrupper = adGrupper) { _: NavAnsatt ->
-            nyFlytService.hentSisteIASakDto(orgnummer = orgnummer).right()
-        }.also { either ->
-            auditLog.auditloggEither(
-                call = call,
-                either = either,
-                orgnummer = orgnummer,
-                auditType = AuditType.access,
-            )
-        }.map {
-            val response = it ?: HttpStatusCode.NoContent
-            call.respond(response)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -264,6 +234,35 @@ fun Route.nyFlyt(
             }
         }.map { historikk ->
             call.respond(historikk).right()
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    post("$NY_FLYT_PATH/{orgnummer}/vurder") {
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        call.somSuperbrukerMedNavenhet { superbruker, navEnhet ->
+            val hendelse = VurderVirksomhet(
+                orgnr = orgnr,
+                superbruker = superbruker,
+                navEnhet = navEnhet,
+            )
+            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
+                hendelse = hendelse,
+            )
+            application.log.info("NyTilstand etter hendelse ${hendelse.navn()} er: '${konsekvens.nyTilstand}'")
+
+            konsekvens.endring.map { it as IASakDto }
+        }.also { iaSakEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSakEither,
+                orgnummer = orgnr,
+                auditType = AuditType.create,
+                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
