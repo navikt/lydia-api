@@ -50,12 +50,15 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurdering
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.tilgangskontroll.somSuperbruker
 import no.nav.lydia.virksomhet.VirksomhetService
+import no.nav.lydia.virksomhet.api.VirksomhetFeil
+import no.nav.lydia.virksomhet.api.toDto
 import java.time.LocalDate
 
 const val NY_FLYT_PATH = "iasak/nyflyt"
@@ -135,6 +138,21 @@ fun Route.nyFlyt(
             }
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    get("$NY_FLYT_PATH/virksomhet/{orgnummer}") {
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+        call.somLesebruker(adGrupper = adGrupper) {
+            val aktivSakDto = nyFlytService.hentSisteIASakDto(orgnummer)
+            virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto(saksnummer = aktivSakDto?.saksnummer)
+                ?.right() ?: VirksomhetFeil.`fant ikke virksomhet`.left()
+        }.also {
+            auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
+        }.map {
+            call.respond(HttpStatusCode.OK, it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
 
