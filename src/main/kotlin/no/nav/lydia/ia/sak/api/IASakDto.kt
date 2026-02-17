@@ -3,8 +3,10 @@ package no.nav.lydia.ia.sak.api
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import no.nav.lydia.ia.sak.domene.GyldigHendelse
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 
@@ -22,6 +24,15 @@ data class IASakDto(
     val gyldigeNesteHendelser: List<GyldigHendelse>,
     val lukket: Boolean,
 ) {
+    @Transient
+    private val sakshendelser = mutableListOf<IASakshendelse>()
+    val hendelser get() = sakshendelser.toList()
+
+    fun addHendelser(hendelser: List<IASakshendelse>): IASakDto {
+        sakshendelser.addAll(hendelser)
+        return this
+    }
+
     companion object {
         fun List<IASak>.toDto(navAnsatt: NavAnsatt) = this.map { it.toDto(navAnsatt) }
 

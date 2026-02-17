@@ -46,6 +46,7 @@ import no.nav.lydia.ia.sak.api.SaksStatusDto
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
+import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
@@ -331,6 +332,41 @@ class SakHelper {
                     fail(it.stackTraceToString())
                 },
             )
+
+        fun hentSakNyFlyt(
+            orgnummer: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ): IASakDto {
+            val triple = applikasjon.performGet("$NY_FLYT_PATH/virksomhet/$orgnummer/samarbeidsperiode")
+                .authentication().bearer(token = token)
+                .responseObject(IASakDto.serializer())
+
+            if (triple.statuskode() == 200) {
+                return triple.third.get()
+            } else if (triple.statuskode() == 204) {
+                fail("Ingen aktive saker funnet")
+            } else {
+                fail(triple.third.toString())
+            }
+        }
+
+        fun hentSamarbeidshistorikkNyFlyt(
+            orgnummer: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = hentSamarbeidshistorikkNyFlytRespons(orgnummer = orgnummer, token = token).third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.stackTraceToString()) },
+        )
+
+        fun hentSamarbeidshistorikkNyFlytRespons(
+            orgnummer: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ): ResponseResultOf<List<SakshistorikkDto>> {
+            val url = "$NY_FLYT_PATH/virksomhet/$orgnummer/historikk"
+            return applikasjon.performGet(url)
+                .authentication().bearer(token = token)
+                .tilListeRespons<SakshistorikkDto>()
+        }
 
         fun hentSamarbeidshistorikk(
             orgnummer: String,

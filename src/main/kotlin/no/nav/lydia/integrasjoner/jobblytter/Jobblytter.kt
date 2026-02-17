@@ -10,6 +10,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEkspor
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
+import ia.felles.integrasjoner.jobbsender.Jobb.migrerEnVirksomhetTilNyFlyt
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
@@ -36,6 +37,7 @@ import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.ia.eksport.ny.flyt.TilstandVirksomhetOppdaterer
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
@@ -74,6 +76,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer
     private lateinit var virksomhetService: VirksomhetService
     private lateinit var iaSakService: IASakService
+    private lateinit var nyflytMigreringService: NyFlytMigreringService
     private val topic = Topic.JOBBLYTTER_TOPIC
 
     override val coroutineContext: CoroutineContext
@@ -100,6 +103,7 @@ object Jobblytter : CoroutineScope {
         tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
         virksomhetService: VirksomhetService,
         iaSakService: IASakService,
+        nyFlytMigreringService: NyFlytMigreringService,
     ) {
         logger.info("Creating kafka consumer job for ${topic.navn}")
         job = Job()
@@ -125,6 +129,7 @@ object Jobblytter : CoroutineScope {
         this.tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer
         this.virksomhetService = virksomhetService
         this.iaSakService = iaSakService
+        this.nyflytMigreringService = nyFlytMigreringService
 
         logger.info("Created kafka consumer job for ${topic.navn}")
     }
@@ -227,6 +232,17 @@ object Jobblytter : CoroutineScope {
                                         tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet(
                                             planlagtDato = LocalDate.now().plusDays(antallDager.toLong()).toKotlinLocalDate(),
                                         )
+                                    }
+
+                                    migrerEnVirksomhetTilNyFlyt -> {
+                                        if (jobInfo.parameter.isNullOrEmpty()) {
+                                            logger.info(
+                                                "Jobb migrerEnVirksomhetTilNyFlyt har ingen parameter, fikk null/empty parameter. Forventer orgnr. Avslutter",
+                                            )
+                                        } else {
+                                            logger.info("Migrerer virksomhet med orgnr ${jobInfo.parameter} til ny flyt")
+                                            nyflytMigreringService.migrer(orgnr = jobInfo.parameter)
+                                        }
                                     }
 
                                     else -> {

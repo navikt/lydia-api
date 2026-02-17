@@ -99,6 +99,45 @@ class NyFlytTest {
             samarbeidBigqueryKonsument.unsubscribe()
             samarbeidBigqueryKonsument.close()
         }
+
+        fun hentVirksomhetTilstand(
+            orgnr: String,
+            token: String = authContainerHelper.superbruker1.token,
+        ): VirksomhetTilstandDto {
+            val url = "$NY_FLYT_PATH/$orgnr/tilstand"
+            return applikasjon.performGet(url)
+                .authentication().bearer(token).tilSingelRespons<VirksomhetTilstandDto>().third.get()
+        }
+    }
+
+    @Test
+    fun `hent tilstand for virksomhet som finnes, men ikke har tilstand i tilstand_virksomhet, returnerer VirksomhetKlarTilVurdering`() {
+        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        val virksomhet = TestVirksomhet.nyVirksomhet(
+            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+        )
+        lastInnNyVirksomhet(virksomhet)
+
+        val response = applikasjon.performGet("$NY_FLYT_PATH/${virksomhet.orgnr}/tilstand")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<VirksomhetTilstandDto>()
+
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+        val virksomhetTilstandDto = response.third.get()
+        virksomhetTilstandDto.orgnr shouldBe virksomhet.orgnr
+        virksomhetTilstandDto.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetTilstandDto.nesteTilstand shouldBe null
+    }
+
+    @Test
+    fun `hent tilstand for virksomhet som ikke finnes returnerer 404`() {
+        val orgnrSomIkkeFinnes = "999888777"
+
+        val response = applikasjon.performGet("$NY_FLYT_PATH/$orgnrSomIkkeFinnes/tilstand")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<VirksomhetTilstandDto>()
+
+        response.statuskode() shouldBe HttpStatusCode.NotFound.value
     }
 
     @Test
@@ -971,12 +1010,6 @@ class NyFlytTest {
             ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.get()
         return plan
     }
-
-    private fun hentVirksomhetTilstand(
-        orgnr: String,
-        token: String = authContainerHelper.superbruker1.token,
-    ) = applikasjon.performGet("$NY_FLYT_PATH/$orgnr/tilstand")
-        .authentication().bearer(token).tilSingelRespons<VirksomhetTilstandDto>().third.get()
 
     private fun IASakDto.opprettSamarbeid(
         token: String = authContainerHelper.superbruker1.token,

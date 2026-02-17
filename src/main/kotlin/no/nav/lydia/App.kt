@@ -66,6 +66,7 @@ import no.nav.lydia.ia.sak.api.dokument.dokumentPublisering
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandVirksomhetRepository
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService
 import no.nav.lydia.ia.sak.api.ny.flyt.nyFlyt
 import no.nav.lydia.ia.sak.api.plan.iaSakPlan
 import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
@@ -356,6 +357,11 @@ fun startLydiaBackend() {
         virksomhetService = virksomhetService,
         iaSakService = iaSakService,
         tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
+        nyFlytMigreringService = NyFlytMigreringService(
+            nyFlytService = nyFlytService,
+            iaSakService = iaSakService,
+            samarbeidService = samarbeidService,
+        ),
     )
 
     listOf(
@@ -480,6 +486,7 @@ private fun jobblytter(
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
+    nyFlytMigreringService: NyFlytMigreringService,
 ) {
     Jobblytter.apply {
         create(
@@ -499,6 +506,7 @@ private fun jobblytter(
             virksomhetService = virksomhetService,
             iaSakService = iaSakService,
             tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
+            nyFlytMigreringService = nyFlytMigreringService,
         )
         run()
     }
@@ -596,6 +604,7 @@ private fun Application.lydiaRestApi(
                 dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
                 tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+                virksomhetService = virksomhetService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
