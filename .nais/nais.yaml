@@ -42,6 +42,7 @@ spec:
       rules:
         - application: pia-pdfgen
       external:
+        - host: {{journalpostHost}}
         - host: data.ssb.no
         - host: {{salesforceTokenHost}}
         - host: {{salesforceApiHost}}
@@ -91,3 +92,7 @@ spec:
       value: {{salesforceTokenBaseUrl}}
     - name: PIA_PDFGEN_URL
       value: http://pia-pdfgen
+    - name: JOURNALPOST_V1_URL
+      value: {{journalpostApi}}
+    - name: JOURNALPOST_SCOPE
+      value: {{journalpostOboScope}}

@@ -148,6 +148,8 @@ class Integrasjoner(
     val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL"),
     val salesforce: Salesforce = Salesforce(),
     val piaPdfgenUrl: String = getEnvVar("PIA_PDFGEN_URL"),
+    val journalpostUrl: String = getEnvVar("JOURNALPOST_V1_URL"),
+    val journalpostScope: String = getEnvVar("JOURNALPOST_SCOPE"),
 )
 
 enum class Topic(

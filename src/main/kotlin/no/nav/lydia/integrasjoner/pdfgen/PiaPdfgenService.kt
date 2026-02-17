@@ -66,6 +66,17 @@ class PiaPdfgenService(
         )
     }
 
+    suspend fun hentPdfForJournalføring(
+        spørreundersøkelse: Spørreundersøkelse,
+        navEnhet: NavEnhet,
+    ): ByteArray {
+        val samarbeidsnavn = iaSamarbeidService.hentSamarbeid(spørreundersøkelse.samarbeidId)?.navn
+        return genererPdfDokument(
+            pdfType = spørreundersøkelse.type.tilPdftype(),
+            pdfDokumentDto = spørreundersøkelse.tilPdfDokumentDto(samarbeidsnavn, navEnhet),
+        )
+    }
+
     private suspend fun genererPdfDokument(
         pdfType: PdfType,
         pdfDokumentDto: PdfDokumentDto,

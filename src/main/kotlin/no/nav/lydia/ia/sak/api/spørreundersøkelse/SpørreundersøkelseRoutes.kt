@@ -39,6 +39,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.objectId
@@ -54,6 +55,7 @@ fun Route.iaSakSpørreundersøkelse(
     dokumentPubliseringService: DokumentPubliseringService,
     iaTeamService: IATeamService,
     pdfgenService: PiaPdfgenService,
+    journalpostService: JournalpostService,
     azureService: AzureService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
@@ -312,7 +314,7 @@ fun Route.iaSakSpørreundersøkelse(
     get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/pdf") {
         val spørreundersøkelseId = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
-        call.somLesebruker(adGrupper) { _ ->
+        call.somLesebruker(adGrupper) { navansatt ->
             spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId)
                 .flatMap { spørreundersøkelse ->
 
@@ -325,7 +327,15 @@ fun Route.iaSakSpørreundersøkelse(
                                     value = spørreundersøkelse.filnavn(),
                                 ).toString(),
                             )
-                            pdfgenService.hentPdfForKartleggingresultater(spørreundersøkelse, navenhet)
+
+                            // lag en pdf for deling til arbeidsgiver
+                            val delePdf = pdfgenService.hentPdfForKartleggingresultater(spørreundersøkelse, navenhet)
+
+                            // send journalpost til joark
+                            journalpostService.journalfør(spørreundersøkelse, navansatt, navenhet)
+
+                            // returner "dele pdf"
+                            delePdf
                         }
                     }
                 }
