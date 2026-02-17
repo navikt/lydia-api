@@ -60,7 +60,6 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.time.LocalDate
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -194,13 +193,53 @@ class NyFlytTest {
         // send jobbmelding
         kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
 
-        // tilstand = vurderes
         val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstandOppdatert.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
     }
 
-    @Ignore
-    fun `Batch jobb - automatisk oppdatering av virksomhet tilstand fra AlleSamarbeidIVirksomhetErAvsluttet til VirksomhetKlarTilVurdering`() {
+    @Test
+    fun `Batch jobb - automatisk oppdatering av tilstand fra AlleSamarbeidIVirksomhetErAvsluttet til VirksomhetKlarTilVurdering ved slettSamarbeid`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
+        val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
+        samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
+        samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr)
+
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand?.startTilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand?.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
+        virksomhetsTilstand.nesteTilstand?.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+
+        // Oppdater planlagt_dato til i morgen slik at batch jobben vil prosessere hendelsen
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE tilstand_automatisk_oppdatering 
+            SET planlagt_dato = CURRENT_DATE + INTERVAL '1 day'
+            WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+
+        val oppdatertTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        oppdatertTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+
+        // send jobbmelding
+        kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
+
+        val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstandOppdatert.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+    }
+
+    @Test
+    fun `Batch jobb - automatisk oppdatering av tilstand fra AlleSamarbeidIVirksomhetErAvsluttet til VirksomhetKlarTilVurdering ved avsluttSamarbeid`() {
         val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
@@ -214,12 +253,23 @@ class NyFlytTest {
         virksomhetsTilstand.nesteTilstand?.startTilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
         virksomhetsTilstand.nesteTilstand?.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
         virksomhetsTilstand.nesteTilstand?.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
-        virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+        virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+
+        // Oppdater planlagt_dato til i morgen slik at batch jobben vil prosessere hendelsen
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE tilstand_automatisk_oppdatering 
+            SET planlagt_dato = CURRENT_DATE + INTERVAL '1 day'
+            WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+
+        val oppdatertTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        oppdatertTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
 
         // send jobbmelding
         kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
 
-        // tilstand = vurderes
         val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstandOppdatert.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
     }

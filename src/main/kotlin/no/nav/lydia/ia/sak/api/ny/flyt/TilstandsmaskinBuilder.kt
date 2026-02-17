@@ -12,6 +12,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDoku
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harAktiveSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harSamarbeidOgAlleErAvsluttet
+import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -47,6 +48,27 @@ class TilstandsmaskinBuilder private constructor(
             val alleSamarbeid = fiaKontekst.iASamarbeidService.hentAlleSamarbeid(saksnummer = saksnummer)
             return alleSamarbeid.isNotEmpty() && alleSamarbeid
                 .all { it.status == IASamarbeid.Status.AVBRUTT || it.status == IASamarbeid.Status.FULLFØRT }
+        }
+
+        fun oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
+            orgnr: String,
+            saksnummer: String,
+            fiaKontekst: FiaKontekst,
+        ) {
+            fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
+                orgnr = orgnr,
+                samarbeidsperiodeId = saksnummer,
+                tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet.tilVirksomhetIATilstand(),
+            )?.also {
+                fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
+                    orgnr = orgnr,
+                    samarbeidsperiodeId = saksnummer,
+                    startTilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet.tilVirksomhetIATilstand(),
+                    planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
+                    nyTilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+                    planlagtDato = LocalDate.now().plusDays(90),
+                )
+            }
         }
     }
 
@@ -457,6 +479,15 @@ sealed class Tilstand {
 
                     val harAktiveSamarbeid = harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
                     val harSamarbeidOgAlleErAvsluttet = harSamarbeidOgAlleErAvsluttet(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
+
+                    if (harSamarbeidOgAlleErAvsluttet && endring.isRight()) {
+                        oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
+                            orgnr = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer,
+                            fiaKontekst = fiaKontekst,
+                        )
+                    }
+
                     Konsekvens(
                         endring = endring,
                         nyTilstand = when {
@@ -478,6 +509,15 @@ sealed class Tilstand {
                     )
                     // Når hendelsen mottas, har vi minst ett aktivt samarbeid, men nå som endringen er påført må vi sjekke det igjen
                     val harIkkeLengerAktiveSamarbeid = !harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = fiaKontekst.saksnummer)
+
+                    if (harIkkeLengerAktiveSamarbeid && endring.isRight()) {
+                        oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
+                            orgnr = hendelse.orgnr,
+                            saksnummer = fiaKontekst.saksnummer,
+                            fiaKontekst = fiaKontekst,
+                        )
+                    }
+
                     Konsekvens(
                         endring = endring,
                         nyTilstand = if (harIkkeLengerAktiveSamarbeid) AlleSamarbeidIVirksomhetErAvsluttet else VirksomhetHarAktiveSamarbeid,
