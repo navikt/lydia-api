@@ -336,6 +336,29 @@ class NyFlytTest {
     }
 
     @Test
+    fun `Hendelse AngreVurdering fra Tilstand VirksomhetVurderes for en sak med følgere skal være forbudt`() {
+        val eierAvSak = authContainerHelper.superbruker1
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        val sak = vurderVirksomhet(
+            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+            token = eierAvSak.token,
+        )
+        sak.status shouldBe IASak.Status.VURDERES
+
+        val oppdatertSak = sak.leggTilFolger(token = følgerAvSak.token)
+
+        val angreVurderRes = applikasjon.performPost("$NY_FLYT_PATH/${oppdatertSak.orgnr}/angre-vurdering")
+            .authentication().bearer(eierAvSak.token)
+            .tilSingelRespons<IASakDto>()
+        angreVurderRes.second.statusCode shouldBe HttpStatusCode.BadRequest.value
+
+        oppdatertSak.status shouldBe IASak.Status.VURDERES
+
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = oppdatertSak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+    }
+
+    @Test
     fun `vurder virksomhet returnerer 201 - CREATED`() {
         val virksomhet = lastInnNyVirksomhet()
         val orgnummer = virksomhet.orgnr
