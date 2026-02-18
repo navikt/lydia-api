@@ -275,6 +275,67 @@ class NyFlytTest {
     }
 
     @Test
+    fun `nesteTilstand skal være null ved Hendelse vurderVirksomhet fra tilstand VirksomhetErVurdert`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
+                ),
+                dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
+            ),
+        )
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
+        virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+
+        val nySak = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<IASakDto>().third.get()
+
+        nySak.orgnr shouldBe sak.orgnr
+
+        val oppdatertTilstand = hentVirksomhetTilstand(orgnr = nySak.orgnr)
+        oppdatertTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+        oppdatertTilstand.nesteTilstand shouldBe null
+    }
+
+    @Test
+    fun `nesteTilstand skal være null ved Hendelse vurderVirksomhet fra tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand?.startTilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand?.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
+        virksomhetsTilstand.nesteTilstand?.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+
+        val nySak = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<IASakDto>().third.get()
+
+        nySak.orgnr shouldBe sak.orgnr
+
+        val oppdatertTilstand = hentVirksomhetTilstand(orgnr = nySak.orgnr)
+        oppdatertTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+        oppdatertTilstand.nesteTilstand shouldBe null
+    }
+
+    @Test
     fun `vurder virksomhet returnerer 201 - CREATED`() {
         val virksomhet = lastInnNyVirksomhet()
         val orgnummer = virksomhet.orgnr

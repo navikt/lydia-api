@@ -311,7 +311,11 @@ sealed class Tilstand {
                         orgnummer = hendelse.orgnr,
                         superbruker = hendelse.superbruker,
                         navEnhet = hendelse.navEnhet,
-                    )
+                    ).also {
+                        fiaKontekst.nyFlytService.slettVirksomhetTilstandAutomatiskOppdatering(
+                            orgnr = hendelse.orgnr,
+                        )
+                    }
                 }
 
                 is Hendelse.GjørVirksomhetKlarTilNyVurdering -> {
@@ -545,7 +549,11 @@ sealed class Tilstand {
                         orgnummer = hendelse.orgnr,
                         superbruker = hendelse.superbruker,
                         navEnhet = hendelse.navEnhet,
-                    )
+                    ).also {
+                        fiaKontekst.nyFlytService.slettVirksomhetTilstandAutomatiskOppdatering(
+                            orgnr = hendelse.orgnr,
+                        )
+                    }
                 }
 
                 is Hendelse.GjørVirksomhetKlarTilNyVurdering -> {
