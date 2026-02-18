@@ -413,7 +413,7 @@ class IASakService(
 
     fun hentSaksStatus(saksnummer: String): Either<Feil, SaksStatusDto> {
         val årsaker = mutableListOf<ÅrsakTilAtSakIkkeKanAvsluttes>()
-        val sak = hentIASak(saksnummer).getOrNull()
+        val sak = hentIASakDto(saksnummer).getOrNull()
             ?: return IASakError.`generell feil under uthenting`.left()
         val samarbeid = samarbeidService.hentSamarbeid(sak.saksnummer).getOrNull()
             ?: return IASamarbeidFeil.`feil ved henting av samarbeid`.left()

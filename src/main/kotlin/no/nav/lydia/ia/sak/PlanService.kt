@@ -11,10 +11,10 @@ import no.nav.lydia.appstatus.PlanHendelseType
 import no.nav.lydia.appstatus.PlanHendelseType.ENDRE_STATUS
 import no.nav.lydia.appstatus.PlanHendelseType.OPPRETT
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.db.PlanRepository
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
@@ -34,12 +34,12 @@ class PlanService(
     fun hentPlan(samarbeidId: Int): Either<Feil, Plan> = planRepository.hentPlan(samarbeidId = samarbeidId)?.right() ?: PlanFeil.`fant ikke plan`.left()
 
     fun opprettPlan(
-        iaSak: IASak,
+        iaSak: IASakDto,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         prosessId: Int,
         mal: PlanMalDto,
     ): Either<Feil, Plan> =
-        samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { samarbeid ->
+        samarbeidService.hentSamarbeid(iaSak.saksnummer, prosessId).flatMap { samarbeid ->
             opprettPlan(
                 samarbeidId = samarbeid.id,
                 saksbehandler = saksbehandler,

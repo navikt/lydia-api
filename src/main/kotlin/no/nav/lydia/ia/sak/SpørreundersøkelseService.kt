@@ -13,6 +13,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companio
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.eksport.tilTemaResultatKafkaDto
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
@@ -22,7 +23,8 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.*
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Behovsvurdering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Evaluering
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -98,12 +100,12 @@ class SpørreundersøkelseService(
 
     fun opprettSpørreundersøkelse(
         orgnummer: String,
-        iaSak: IASak,
+        iaSak: IASakDto,
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         type: Spørreundersøkelse.Type,
     ): Either<Feil, Spørreundersøkelse> =
-        samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { samarbeid ->
+        samarbeidService.hentSamarbeid(iaSak.saksnummer, prosessId).flatMap { samarbeid ->
             opprettSpørreundersøkelse(
                 orgnummer = orgnummer,
                 saksnummer = iaSak.saksnummer,
@@ -214,11 +216,11 @@ class SpørreundersøkelseService(
     }
 
     fun hentSpørreundersøkelser(
-        sak: IASak,
+        sak: IASakDto,
         prosessId: Int,
     ): Either<Feil, List<Spørreundersøkelse>> =
         try {
-            samarbeidService.hentSamarbeid(sak, prosessId).map {
+            samarbeidService.hentSamarbeid(sak.saksnummer, prosessId).map {
                 spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = it, type = Behovsvurdering) +
                     spørreundersøkelseRepository.hentSpørreundersøkelser(it, Evaluering)
             }
@@ -342,7 +344,7 @@ class SpørreundersøkelseService(
             return IASakSpørreundersøkelseError.`publisert, kan ikke bytte samarbeid`.left()
         }
 
-        val oppdatertBehovsvurdering = iaSakService.hentIASak(saksnummer = behovsvurdering.saksnummer).flatMap {
+        val oppdatertBehovsvurdering = iaSakService.hentIASakDto(saksnummer = behovsvurdering.saksnummer).flatMap {
             samarbeidService.hentSamarbeid(saksnummer = it.saksnummer)
         }.map { prosess ->
             prosess.map { it.id }

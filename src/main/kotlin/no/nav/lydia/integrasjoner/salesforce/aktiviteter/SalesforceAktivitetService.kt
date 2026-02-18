@@ -19,12 +19,15 @@ class SalesforceAktivitetService(
             "Created", "Updated" -> {
                 lagreAktivitet(aktivitet)
             }
+
             "Deleted" -> {
                 oppdaterSlettetStatus(aktivitet, slettet = true)
             }
+
             "Undeleted" -> {
                 oppdaterSlettetStatus(aktivitet, slettet = false)
             }
+
             else -> {
                 logger.warn("Mottok uventet EventType__c: ${aktivitetDto.EventType__c} for aktivitet: ${aktivitetDto.Id__c}")
             }
@@ -42,7 +45,7 @@ class SalesforceAktivitetService(
     }
 
     private fun verifisertAktivitet(aktivitet: SalesforceAktivitet): Boolean {
-        val iaSak = iaSakRepository.hentIASak(aktivitet.saksnummer)
+        val iaSak = iaSakRepository.hentIASakDto(aktivitet.saksnummer)
         val samarbeid = aktivitet.samarbeidsId?.let { samarbeidRepository.hentSamarbeid(aktivitet.saksnummer, it) }
         return iaSak != null && samarbeid != null
     }

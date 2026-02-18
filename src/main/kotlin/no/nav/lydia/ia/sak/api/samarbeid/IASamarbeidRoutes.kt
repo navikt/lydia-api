@@ -35,7 +35,7 @@ fun Route.iaSamarbeid(
         val statusEndring = call.parameters["status"] ?: return@get call.sendFeil(Feil("mangler status", HttpStatusCode.BadRequest))
 
         call.somSaksbehandler(adGrupper) {
-            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+            iaSakService.hentIASakDto(saksnummer = saksnummer).flatMap { iaSak ->
                 when (statusEndring) {
                     "fullfores" -> samarbeidService.kanFullføreSamarbeid(saksnummer = iaSak.saksnummer, samarbeidId = samarbeid).right()
                     "slettes" -> samarbeidService.kanSletteSamarbeid(saksnummer = iaSak.saksnummer, samarbeidId = samarbeid).right()

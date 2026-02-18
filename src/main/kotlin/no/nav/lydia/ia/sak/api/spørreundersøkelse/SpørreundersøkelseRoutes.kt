@@ -25,6 +25,7 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
@@ -97,7 +98,7 @@ fun Route.iaSakSpørreundersøkelse(
         val prosessId = call.prosessId ?: return@get call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+            iaSakService.hentIASakDto(saksnummer = saksnummer).flatMap { iaSak ->
                 spørreundersøkelseService.hentSpørreundersøkelser(
                     sak = iaSak,
                     prosessId = prosessId,
@@ -165,7 +166,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.type ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { _ ->
+            iaSakService.hentIASakDto(saksnummer = saksnummer).flatMap { _ ->
                 spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = id)
             }
         }.also { spørreundersøkelseEither ->
@@ -280,7 +281,7 @@ fun Route.iaSakSpørreundersøkelse(
         val input = call.receive<OppdaterBehovsvurderingDto>()
 
         call.somSaksbehandler(adGrupper) { saksbehandler ->
-            val iaSak = iaSakService.hentIASak(saksnummer = input.saksnummer).getOrNull()
+            val iaSak = iaSakService.hentIASakDto(saksnummer = input.saksnummer).getOrNull()
                 ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
 
             if (!iaTeamService.erEierEllerFølgerAvSak(
@@ -373,11 +374,11 @@ fun <T> ApplicationCall.somFølgerAvSakIProsess(
     iaSakService: IASakService,
     iaTeamService: IATeamService,
     adGrupper: ADGrupper,
-    block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>,
+    block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASakDto) -> Either<Feil, T>,
 ) = somSaksbehandler(adGrupper) { saksbehandler ->
     val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
     val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
-    val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
+    val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).getOrNull()
         ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
     if (iaSak.orgnr != orgnummer) {
         IASakError.`ugyldig orgnummer`.left()
