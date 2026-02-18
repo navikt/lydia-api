@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
@@ -218,6 +219,11 @@ class NyFlytService(
         slettSak(sakDto).also { iaSakEither ->
             iaSakEither.onRight { varsleIASakObservers(it) }
         }
+
+    fun sakHarFølgere(saksnummer: String): Boolean =
+        iaTeamService.hentBrukereITeam(saksnummer = saksnummer)
+            .getOrElse { emptyList() }
+            .isNotEmpty()
 
     fun opprettNyttSamarbeid(
         orgnummer: String,
