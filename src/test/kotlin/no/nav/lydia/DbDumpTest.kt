@@ -2,6 +2,7 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import no.nav.lydia.helper.DokumentPubliseringHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
@@ -21,7 +22,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaDto
@@ -41,6 +44,8 @@ class DbDumpTest {
 
         opprettVirksomheterIForskjelligeStatuser()
 
+        opprettSlettedeVirksomheter()
+
         opprettVirksomhetMedKartlegginger()
 
         opprettVirksomhetMedFlereSaker()
@@ -55,6 +60,20 @@ class DbDumpTest {
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .start()
             .waitFor()
+    }
+
+    private fun opprettSlettedeVirksomheter() {
+        val slettetVirksomhetUtenAktivitet = lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "SLETTET VIRKSOMHET AS"),
+        )
+        VirksomhetHelper.sendSlettingForVirksomhet(virksomhet = slettetVirksomhetUtenAktivitet)
+
+        val slettetVirksomhetMedAktivitet = lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "SLETTET VIRKSOMHET MED AKTIVITET AS"),
+        )
+        SakHelper.nySakIViBistår(orgnummer = slettetVirksomhetMedAktivitet.orgnr)
+            .fullførSak()
+        VirksomhetHelper.sendSlettingForVirksomhet(slettetVirksomhetMedAktivitet)
     }
 
     private fun opprettVirksomhetMedFlereSaker() {
@@ -97,6 +116,23 @@ class DbDumpTest {
 
         // -- fullført behovsvurdering alle temaer besvart med 10 svar
         sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 10, type = Behovsvurdering)
+
+        // -- fullført behovsvurdering alle temaer besvart med 10 svar, PUBLISERT
+        val publisertBehovsvurdering = sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 10, type = Behovsvurdering)
+        val dok = DokumentPubliseringHelper.publiserDokument(
+            dokumentReferanseId = publisertBehovsvurdering.id,
+            dokumentType = DokumentPubliseringDto.Type.BEHOVSVURDERING,
+            token = authContainerHelper.saksbehandler1.token,
+        ).third.get()
+        DokumentPubliseringHelper.sendKvittering(dokument = dok, sak.hentAlleSamarbeid().first().id)
+
+        // -- fullført behovsvurdering alle temaer besvart med 10 svar, PUBLISERER
+        val publisererBehovsvurdering = sak.kartleggingAlleSpørsmålBesvart(antallSvarPåSpørsmål = 10, type = Behovsvurdering)
+        DokumentPubliseringHelper.publiserDokument(
+            dokumentReferanseId = publisererBehovsvurdering.id,
+            dokumentType = DokumentPubliseringDto.Type.BEHOVSVURDERING,
+            token = authContainerHelper.saksbehandler1.token,
+        )
 
         // -- fullført behovsvurdering kun ett tema full besvart
         sak.kartleggingFørsteTemaBesvart(antallSvarPåSpørsmål = 10, type = Behovsvurdering)
@@ -154,20 +190,18 @@ class DbDumpTest {
     private fun IASakDto.kartleggingAlleSpørsmålBesvart(
         antallSvarPåSpørsmål: Int = 3,
         type: Spørreundersøkelse.Type,
-    ) {
-        behovsVurderingMedTemaerBesvart(antallSvarPåSpørsmål, type) { it.temaer }
-    }
+    ): SpørreundersøkelseDto = behovsVurderingMedTemaerBesvart(antallSvarPåSpørsmål, type) { it.temaer }
 
     private fun IASakDto.behovsVurderingMedTemaerBesvart(
         antallSvarPåSpørsmål: Int,
         type: Spørreundersøkelse.Type,
         block: (SpørreundersøkelseDto) -> List<TemaDto>,
-    ) {
+    ): SpørreundersøkelseDto {
         val sesjonsIder = (1..antallSvarPåSpørsmål).map { UUID.randomUUID().toString() }
         val behovsvurdering = this.opprettKartlegging(type = type)
         behovsvurdering.start(orgnummer = orgnr, saksnummer = this.saksnummer)
         besvarSpørsmålITemaer(block(behovsvurdering), sesjonsIder, behovsvurdering.id)
-        behovsvurdering.avslutt(orgnummer = orgnr, saksnummer = this.saksnummer)
+        return behovsvurdering.avslutt(orgnummer = orgnr, saksnummer = this.saksnummer)
     }
 
     private fun besvarSpørsmålITemaer(
