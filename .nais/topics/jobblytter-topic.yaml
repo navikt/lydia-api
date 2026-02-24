@@ -33,3 +33,6 @@ spec:
     - team: pia
       application: pia-jobbsender-rydde-urorte-saker
       access: write
+    - team: pia
+      application: pia-jobbsender-prosesser-planlagte-hendelser
+      access: write
