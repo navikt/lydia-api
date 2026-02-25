@@ -11,7 +11,7 @@ import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.utleddPeriodeForStatistikk
+import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.utledPeriodeForStatistikk
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
@@ -44,7 +44,7 @@ class IASakDtoStatistikkProdusent(
         val fylkesnummer = virksomhet?.let { geografiService.finnFylke(it.kommunenummer) }?.nummer
 
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)
-        val periode = hendelse?.utleddPeriodeForStatistikk(allPubliseringsinfo = allPubliseringsinfo)
+        val periode = hendelse?.utledPeriodeForStatistikk(allPubliseringsinfo = allPubliseringsinfo)
 
         val virksomhetsstatistikkSiste4Kvartal = sykefraværsstatistikkService.takeIf { periode == gjeldendePeriode }
             ?.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr)

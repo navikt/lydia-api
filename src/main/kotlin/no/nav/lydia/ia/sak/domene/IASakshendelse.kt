@@ -105,7 +105,7 @@ open class IASakshendelse(
             resulterendeStatus = null,
         )
 
-        fun IASakshendelse.utleddPeriodeForStatistikk(allPubliseringsinfo: List<PubliseringsinfoDto>): Periode {
+        fun IASakshendelse.utledPeriodeForStatistikk(allPubliseringsinfo: List<PubliseringsinfoDto>): Periode {
             val hendelseDato = opprettetTidspunkt.toLocalDate()
             return allPubliseringsinfo
                 .sortedWith(compareByDescending<PubliseringsinfoDto> { it.gjeldendePeriode.årstall }.thenByDescending { it.gjeldendePeriode.kvartal })
