@@ -2,7 +2,6 @@ package no.nav.lydia.ia.eksport.ny.flyt
 
 import ia.felles.definisjoner.bransjer.Bransje
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
@@ -12,11 +11,11 @@ import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.utleddPeriodeForStatistikk
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
-import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
 import no.nav.lydia.tilgangskontroll.fia.Rolle
@@ -45,14 +44,7 @@ class IASakDtoStatistikkProdusent(
         val fylkesnummer = virksomhet?.let { geografiService.finnFylke(it.kommunenummer) }?.nummer
 
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)
-        val periode = hendelse?.let {
-            allPubliseringsinfo.filter { info ->
-                hendelse.opprettetTidspunkt.toLocalDate().isAfter(info.sistePubliseringsdato.toJavaLocalDate()) &&
-                    hendelse.opprettetTidspunkt.toLocalDate().isBefore(info.nestePubliseringsdato.toJavaLocalDate())
-            }.map {
-                it.gjeldendePeriode.tilPeriode()
-            }.firstOrNull() ?: Periode.fraDato(hendelse.opprettetTidspunkt)
-        }
+        val periode = hendelse?.utleddPeriodeForStatistikk(allPubliseringsinfo = allPubliseringsinfo)
 
         val virksomhetsstatistikkSiste4Kvartal = sykefraværsstatistikkService.takeIf { periode == gjeldendePeriode }
             ?.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr)

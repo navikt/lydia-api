@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
@@ -22,6 +23,8 @@ import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.sykefraværsstatistikk.PubliseringsinfoDto
+import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
@@ -101,6 +104,16 @@ open class IASakshendelse(
             navEnhet = navEnhet,
             resulterendeStatus = null,
         )
+
+        fun IASakshendelse.utleddPeriodeForStatistikk(allPubliseringsinfo: List<PubliseringsinfoDto>): Periode {
+            val hendelseDato = opprettetTidspunkt.toLocalDate()
+            return allPubliseringsinfo
+                .sortedWith(compareByDescending<PubliseringsinfoDto> { it.gjeldendePeriode.årstall }.thenByDescending { it.gjeldendePeriode.kvartal })
+                .firstOrNull { info ->
+                    !hendelseDato.isBefore(info.sistePubliseringsdato.toJavaLocalDate()) &&
+                        !hendelseDato.isAfter(info.nestePubliseringsdato.toJavaLocalDate())
+                }?.gjeldendePeriode?.tilPeriode() ?: Periode.fraDato(opprettetTidspunkt)
+        }
     }
 
     @Serializable
