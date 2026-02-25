@@ -2,7 +2,7 @@ package no.nav.lydia.ia.sak.domene
 
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
-import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.utleddPeriodeForStatistikk
+import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.utledPeriodeForStatistikk
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.sykefraværsstatistikk.PeriodeDto
 import no.nav.lydia.sykefraværsstatistikk.PubliseringsinfoDto
@@ -16,7 +16,7 @@ class IASakshendelseUnitTest {
     @Test
     fun `skal utlede riktig periode når hendelse faller på publiseringsdato`() {
         val hendelse = lagHendelse(opprettetTidspunkt = LocalDateTime.of(2025, Month.NOVEMBER, 27, 10, 0))
-        val statistikkPeriodeForHendelse = hendelse.utleddPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo())
+        val statistikkPeriodeForHendelse = hendelse.utledPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo())
 
         statistikkPeriodeForHendelse shouldBe Periode(kvartal = 3, årstall = 2025)
     }
@@ -25,7 +25,7 @@ class IASakshendelseUnitTest {
     fun `skal utlede riktig periode når hendelse faller på publiseringsdato, uavhengig av rekkefølge i lista av publiseringsinfo`() {
         val hendelse = lagHendelse(opprettetTidspunkt = LocalDateTime.of(2025, Month.NOVEMBER, 27, 10, 0))
         val allPubliseringsinfoIHvilkenSomHelstRekkefølge = lagAllPubliseringsinfo().shuffled()
-        val statistikkPeriodeForHendelse = hendelse.utleddPeriodeForStatistikk(allPubliseringsinfo = allPubliseringsinfoIHvilkenSomHelstRekkefølge)
+        val statistikkPeriodeForHendelse = hendelse.utledPeriodeForStatistikk(allPubliseringsinfo = allPubliseringsinfoIHvilkenSomHelstRekkefølge)
 
         statistikkPeriodeForHendelse shouldBe Periode(kvartal = 3, årstall = 2025)
     }
@@ -34,7 +34,7 @@ class IASakshendelseUnitTest {
     fun `skal utlede riktig periode når hendelse faller på publiseringsdato før og etter publisering`() {
         // Vi bruker allPubliseringsinfo som har siste publiseringsdato 27. november 2025 og neste publiseringsdato 26. februar 2026 for periode 2025K3
         val hendelse = lagHendelse(opprettetTidspunkt = LocalDateTime.of(2026, Month.FEBRUARY, 26, 10, 0))
-        val statistikkPeriodeForHendelseFørPublisering = hendelse.utleddPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo())
+        val statistikkPeriodeForHendelseFørPublisering = hendelse.utledPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo())
 
         statistikkPeriodeForHendelseFørPublisering shouldBe Periode(kvartal = 3, årstall = 2025)
 
@@ -45,7 +45,7 @@ class IASakshendelseUnitTest {
         )
         // Legger til en ny "publiseringsinfo" på samme dato som hendelsen, så hendelsen nå faller etter ny publiseringsdato er lagret i databasen
         val statistikkPeriodeForHendelseEtterPublisering =
-            hendelse.utleddPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo().plus(publiseringsinfo2025K4))
+            hendelse.utledPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo().plus(publiseringsinfo2025K4))
 
         statistikkPeriodeForHendelseEtterPublisering shouldBe Periode(kvartal = 4, årstall = 2025)
     }
@@ -53,7 +53,7 @@ class IASakshendelseUnitTest {
     @Test
     fun `skal utlede riktig periode når hendelse er mellom to publiseringsdatoer`() {
         val hendelse = lagHendelse(opprettetTidspunkt = LocalDateTime.of(2026, Month.FEBRUARY, 25, 10, 0))
-        val statistikkPeriodeForHendelse = hendelse.utleddPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo())
+        val statistikkPeriodeForHendelse = hendelse.utledPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo())
 
         statistikkPeriodeForHendelse shouldBe Periode(kvartal = 3, årstall = 2025)
     }
@@ -61,7 +61,7 @@ class IASakshendelseUnitTest {
     @Test
     fun `skal falle tilbake til Periode fraDato når ingen publiseringsinfo matcher`() {
         val hendelse = lagHendelse(opprettetTidspunkt = LocalDateTime.of(2024, 2, 20, 10, 0))
-        val statistikkPeriodeForHendelse = hendelse.utleddPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo())
+        val statistikkPeriodeForHendelse = hendelse.utledPeriodeForStatistikk(allPubliseringsinfo = lagAllPubliseringsinfo())
 
         // Periode.fraDato for feb 2024 => kvartal 1 2024, deretter forrigePeriode => kvartal 4 2023
         statistikkPeriodeForHendelse shouldBe Periode(kvartal = 4, årstall = 2023)

@@ -7,7 +7,7 @@ import kotlin.test.Test
 
 class NæringsgruppeTest {
     @Test
-    fun `utledder bransje ut i fra næringsundergruppe`() {
+    fun `utleder bransje ut i fra næringsundergruppe`() {
         Næringsgruppe(navn = "Kanskje Barnehager", kode = "85100").tilBransje() shouldBe Bransje.BARNEHAGER
         Næringsgruppe(navn = "Kanskje Sykehus", kode = "86105").tilBransje() shouldBe Bransje.SYKEHUS
         Næringsgruppe(navn = "Ukjent", kode = "99999").tilBransje() shouldBe null
@@ -15,7 +15,7 @@ class NæringsgruppeTest {
     }
 
     @Test
-    fun `utledder bransje ut i fra næringskode`() {
+    fun `utleder bransje ut i fra næringskode`() {
         Næringsgruppe(navn = "Kanskje Bygg", kode = "41").tilBransje() shouldBe Bransje.BYGG
         Næringsgruppe(
             navn = "Kanskje Næringsmiddelindustri",
