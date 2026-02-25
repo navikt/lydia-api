@@ -10,6 +10,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
+import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.endrePlanlagtDatoForNesteTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harAktiveSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harSamarbeidOgAlleErAvsluttet
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering
@@ -67,6 +68,34 @@ class TilstandsmaskinBuilder private constructor(
                     planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                     nyTilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
                     planlagtDato = LocalDate.now().plusDays(90),
+                )
+            }
+        }
+
+        fun endrePlanlagtDatoForNesteTilstand(
+            hendelse: Hendelse.EndrePlanlagtDatoForNesteTilstand,
+            fiaKontekst: FiaKontekst,
+            nåværendeTilstand: Tilstand,
+        ): Konsekvens {
+            if (!hendelse.nyPlanlagtDato.isAfter(LocalDate.now())) {
+                return Konsekvens(
+                    nyTilstand = nåværendeTilstand,
+                    endring = Either.Left(Feil("Planlagt dato må være etter dagens dato", HttpStatusCode.BadRequest)),
+                )
+            }
+            val automatiskOppdatering = fiaKontekst.tilstandVirksomhetRepository.endrePlanlagtDatoForNesteTilstand(
+                orgnr = hendelse.orgnr,
+                nyPlanlagtDato = hendelse.nyPlanlagtDato,
+            )
+            return if (automatiskOppdatering != null) {
+                Konsekvens(
+                    nyTilstand = nåværendeTilstand,
+                    endring = Either.Right(automatiskOppdatering),
+                )
+            } else {
+                Konsekvens(
+                    nyTilstand = nåværendeTilstand,
+                    endring = Either.Left(Feil("Fant ingen planlagt tilstandsoppdatering for virksomhet ${hendelse.orgnr}", HttpStatusCode.NotFound)),
                 )
             }
         }
@@ -333,6 +362,10 @@ sealed class Tilstand {
                     )
                 }
 
+                is Hendelse.EndrePlanlagtDatoForNesteTilstand -> {
+                    return endrePlanlagtDatoForNesteTilstand(hendelse, fiaKontekst, VirksomhetErVurdert)
+                }
+
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 }
@@ -571,6 +604,10 @@ sealed class Tilstand {
                     )
                 }
 
+                is Hendelse.EndrePlanlagtDatoForNesteTilstand -> {
+                    return endrePlanlagtDatoForNesteTilstand(hendelse, fiaKontekst, AlleSamarbeidIVirksomhetErAvsluttet)
+                }
+
                 else -> {
                     Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 }
@@ -679,6 +716,11 @@ sealed class Hendelse {
 
     data class GjørVirksomhetKlarTilNyVurdering(
         override val orgnr: String,
+    ) : Hendelse()
+
+    data class EndrePlanlagtDatoForNesteTilstand(
+        override val orgnr: String,
+        val nyPlanlagtDato: LocalDate,
     ) : Hendelse()
 }
 

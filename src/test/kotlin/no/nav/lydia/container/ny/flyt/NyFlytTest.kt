@@ -28,6 +28,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
@@ -43,6 +44,7 @@ import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -356,6 +358,107 @@ class NyFlytTest {
 
         val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = oppdatertSak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+    }
+
+    @Test
+    fun `Hendelse EndrePlanlagtDatoForNesteTilstand fra Tilstand AlleSamarbeidIVirksomhetErAvsluttet skal gi en nyPlanlagtDato`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        val tilstandFørEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandFørEndring.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        tilstandFørEndring.nesteTilstand shouldNotBe null
+        tilstandFørEndring.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+
+        val nyPlanlagtDato = LocalDate.now().plusDays(30).toKotlinLocalDate()
+        val response = endrePlanlagtDato(
+            orgnr = sak.orgnr,
+            nesteTilstand = tilstandFørEndring.nesteTilstand,
+            nyPlanlagtDato = nyPlanlagtDato,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+        val oppdatertAutomatiskOppdatering = response.third.get()
+        oppdatertAutomatiskOppdatering.planlagtDato shouldBe nyPlanlagtDato
+        oppdatertAutomatiskOppdatering.startTilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        oppdatertAutomatiskOppdatering.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+
+        val tilstandEtterEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandEtterEndring.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        tilstandEtterEndring.nesteTilstand!!.planlagtDato shouldBe nyPlanlagtDato
+    }
+
+    @Test
+    fun `Hendelse EndrePlanlagtDatoForNesteTilstand fra Tilstand VirksomhetErVurdert skal gi en nyPlanlagtDato`() {
+        val sak = vurderVirksomhet()
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                ),
+                dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
+            ),
+        )
+
+        val tilstandFørEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandFørEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        tilstandFørEndring.nesteTilstand shouldNotBe null
+        tilstandFørEndring.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+
+        val nyPlanlagtDato = LocalDate.now().plusDays(14).toKotlinLocalDate()
+        val response = endrePlanlagtDato(
+            orgnr = sak.orgnr,
+            nesteTilstand = tilstandFørEndring.nesteTilstand,
+            nyPlanlagtDato = nyPlanlagtDato,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+        val automatiskOppdatering = response.third.get()
+        automatiskOppdatering.planlagtDato shouldBe nyPlanlagtDato
+        automatiskOppdatering.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        automatiskOppdatering.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+
+        val tilstandEtterEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandEtterEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        tilstandEtterEndring.nesteTilstand!!.planlagtDato shouldBe nyPlanlagtDato
+    }
+
+    @Test
+    fun `Hendelse EndrePlanlagtDatoForNesteTilstand skal ikke fungere dersom nyPlanlagtDato settes til i dag`() {
+        val sak = vurderVirksomhet()
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                ),
+                dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
+            ),
+        )
+
+        val tilstandFørEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandFørEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        tilstandFørEndring.nesteTilstand shouldNotBe null
+        tilstandFørEndring.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+
+        val nyPlanlagtDato = LocalDate.now().toKotlinLocalDate()
+        val response = endrePlanlagtDato(
+            orgnr = sak.orgnr,
+            nesteTilstand = tilstandFørEndring.nesteTilstand,
+            nyPlanlagtDato = nyPlanlagtDato,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.BadRequest.value
+
+        val tilstandEtterEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandEtterEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        tilstandEtterEndring.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
     }
 
     @Test
@@ -1195,4 +1298,22 @@ class NyFlytTest {
 
         return res.third.get()
     }
+
+    private fun endrePlanlagtDato(
+        orgnr: String,
+        nesteTilstand: VirksomhetTilstandAutomatiskOppdateringDto,
+        nyPlanlagtDato: kotlinx.datetime.LocalDate,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performPut("$NY_FLYT_PATH/virksomhet/$orgnr/endre-planlagt-dato")
+        .authentication().bearer(token)
+        .jsonBody(
+            Json.encodeToString(
+                VirksomhetTilstandAutomatiskOppdateringDto(
+                    startTilstand = nesteTilstand.startTilstand,
+                    planlagtHendelse = nesteTilstand.planlagtHendelse,
+                    nyTilstand = nesteTilstand.nyTilstand,
+                    planlagtDato = nyPlanlagtDato,
+                ),
+            ),
+        ).tilSingelRespons<VirksomhetTilstandAutomatiskOppdateringDto>()
 }

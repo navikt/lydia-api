@@ -15,6 +15,7 @@ import io.ktor.server.routing.application
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
@@ -622,6 +623,34 @@ fun Route.nyFlyt(
                 either = iaSamarbeidDtoEither,
                 orgnummer = orgnr,
                 auditType = AuditType.delete,
+                saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    put("$NY_FLYT_PATH/virksomhet/{orgnummer}/endre-planlagt-dato") {
+        val orgnr = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val virksomhetTilstandAutomatiskOppdateringDto = call.receive<VirksomhetTilstandAutomatiskOppdateringDto>()
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+
+        call.somSaksbehandlerMedNavenhet { _, _ ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.EndrePlanlagtDatoForNesteTilstand(
+                    orgnr = orgnr,
+                    nyPlanlagtDato = virksomhetTilstandAutomatiskOppdateringDto.planlagtDato.toJavaLocalDate(),
+                ),
+            )
+            konsekvens.endring.map { it as VirksomhetTilstandAutomatiskOppdateringDto }
+        }.also { either ->
+            auditLog.auditloggEither(
+                call = call,
+                either = either,
+                orgnummer = orgnr,
+                auditType = AuditType.update,
                 saksnummer = tilstandsmaskin.saksnummer,
             )
         }.map {

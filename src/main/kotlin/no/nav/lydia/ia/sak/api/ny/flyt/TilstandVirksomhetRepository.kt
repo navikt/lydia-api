@@ -202,6 +202,29 @@ class TilstandVirksomhetRepository(
             )
         }
 
+    fun endrePlanlagtDatoForNesteTilstand(
+        orgnr: String,
+        nyPlanlagtDato: java.time.LocalDate,
+    ): VirksomhetTilstandAutomatiskOppdateringDto? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE tilstand_automatisk_oppdatering
+                    SET planlagt_dato = :nyPlanlagtDato
+                    WHERE orgnr = :orgnr
+                    RETURNING *
+                    """.trimIndent(),
+                    mapOf(
+                        "orgnr" to orgnr,
+                        "nyPlanlagtDato" to nyPlanlagtDato,
+                    ),
+                ).map { row ->
+                    row.tilVirksomhetTilstandAutomatiskOppdateringDto()
+                }.asSingle,
+            )
+        }
+
     private fun kotliquery.Row.tilVirksomhetTilstandDto() =
         VirksomhetTilstandDto(
             orgnr = string("orgnr"),
