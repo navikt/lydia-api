@@ -34,10 +34,12 @@ class NyFlytMigreringService(
                         return
                     }
                 }
+                val resulterendeStatusAvMigrering = IASak.Status.AKTIV
+                val resulterendeTilstandAvMigrering = Tilstand.VirksomhetHarAktiveSamarbeid
 
-                nyFlytService.oppdaterSakMedhendelse(
+                nyFlytService.lagreHendelseOgOppdaterIaSakDto(
                     orgnummer = iaSakDto.orgnr,
-                    iaSakshendelseType = IASakshendelseType.MIGRERING_TIL_NY_FLYT,
+                    hendelsesType = IASakshendelseType.MIGRERING_TIL_NY_FLYT,
                     saksbehandler = NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker(
                         navIdent = "Fia system",
                         navn = "Fia system",
@@ -46,16 +48,17 @@ class NyFlytMigreringService(
                     ),
                     saksnummer = iaSakDto.saksnummer,
                     navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
-                    resulterendeStatus = IASak.Status.AKTIV,
+                    resulterendeSakStatus = resulterendeStatusAvMigrering,
+                    oppdaterSistEndretPåSak = false,
                 ).apply {
                     onRight { migrertSakDto ->
                         nyFlytService.lagreEllerOppdaterVirksomhetTilstand(
                             orgnr = iaSakDto.orgnr,
                             samarbeidsperiodeId = iaSakDto.saksnummer,
-                            tilstand = Tilstand.VirksomhetHarAktiveSamarbeid.tilVirksomhetIATilstand(),
+                            tilstand = resulterendeTilstandAvMigrering.tilVirksomhetIATilstand(),
                         ).let { tilstand ->
                             log.info(
-                                "[Migrering] Oppdatert sak '${migrertSakDto.saksnummer}' på virksomhet med orgnr '${migrertSakDto.orgnr}' " +
+                                "Oppdatert sak '${migrertSakDto.saksnummer}' på virksomhet med orgnr '${migrertSakDto.orgnr}' " +
                                     "fra status '${iaSakDto.status.name}' til status'${migrertSakDto.status.name}', " +
                                     "og opprettet tilstand '${tilstand?.tilstand}'",
                             )
@@ -63,7 +66,7 @@ class NyFlytMigreringService(
                     }
                     onLeft { feil ->
                         log.error(
-                            "[Migrering] Feil ved migrering av sak '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}': ${feil.feilmelding}",
+                            "Feil ved migrering av sak '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}': ${feil.feilmelding}",
                         )
                     }
                 }

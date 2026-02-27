@@ -131,9 +131,10 @@ class IASakRepository(
         status: IASak.Status,
         endretAv: String,
         endretAvHendelseId: String,
-        sistEndret: LocalDateTime = LocalDateTime.now(),
-    ): Either<Feil, IASakDto> =
-        using(sessionOf(dataSource)) { session ->
+        oppdaterSistEndretPåSak: Boolean = true,
+    ): Either<Feil, IASakDto> {
+        val sistEndret: LocalDateTime = LocalDateTime.now()
+        return using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
                     queryOf(
@@ -142,8 +143,7 @@ class IASakRepository(
                         SET
                             status = :status,
                             endret_av = :endret_av,
-                            endret = :endret,
-                            endret_av_hendelse = :endret_av_hendelse
+                            endret_av_hendelse = :endret_av_hendelse ${if (oppdaterSistEndretPåSak) ", endret = :endret" else ""}                           
                         WHERE saksnummer = :saksnummer
                         RETURNING *
                         """.trimMargin(),
@@ -158,6 +158,7 @@ class IASakRepository(
                 )?.right() ?: IASakError.`fikk ikke oppdatert sak`.left()
             }
         }
+    }
 
     fun slettSak(
         saksnummer: String,

@@ -6,6 +6,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
@@ -33,7 +34,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
 
-class NyFlytMigreringTest {
+class NyFlytMigreringSakKartleggesTest {
     // Rad #6
     @Test
     fun `sak med status KARTLEGGES og et aktivt samarbeid migreres til AKTIV status`() {
@@ -43,7 +44,7 @@ class NyFlytMigreringTest {
         )
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
         val iaSakDto = SakHelper.nySakIKartlegges(virksomhet.orgnr)
-        iaSakDto.opprettNyttSamarbeid()
+        val sistEndretAvBruker = iaSakDto.opprettNyttSamarbeid().endretTidspunkt
 
         // konsummer kafka meldinger som er sent før migrering for å "tømme" topicene, slik at vi kun får med meldinger som er sendt som følge av migreringen
         runBlocking {
@@ -59,7 +60,11 @@ class NyFlytMigreringTest {
 
         // tilstand = vurderes
         val migrertSak: IASakDto = SakHelper.hentSakNyFlyt(orgnummer = iaSakDto.orgnr)
+        val sistEndretEtterMigrering = migrertSak.endretTidspunkt
         migrertSak.status shouldBe IASak.Status.AKTIV
+
+        // Sjekk at tidspunkt for sist endret på sak IKKE er oppdatert til migreringstidspunkt
+        sistEndretEtterMigrering!! shouldBeEqualComparingTo sistEndretAvBruker!!
 
         // tilstand = VirksomhetHarAktiveSamarbeid
         val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = iaSakDto.orgnr)
@@ -87,9 +92,6 @@ class NyFlytMigreringTest {
                 IASakshendelseType.NY_PROSESS,
                 IASakshendelseType.MIGRERING_TIL_NY_FLYT,
             )
-            // TODO: sjekk at vi IKKE oppdaterer sist endret tidspunkt ved migrering
-            // sakshistorikk.sistEndret shouldBeLessThan iaSakDto.endretTidspunkt!!
-            // sakshistorikk.sistEndret shouldBe sakshistorikk.sakshendelser.sortedBy { it.tidspunktForSnapshot }.last()
         }
 
         // Sjekk avhengigheter er varslet

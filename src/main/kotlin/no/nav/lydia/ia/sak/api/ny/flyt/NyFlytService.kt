@@ -297,7 +297,7 @@ class NyFlytService(
             saksbehandler = saksbehandler,
         ).apply {
             onRight {
-                loggKartleggingshendelse(
+                lagreHendelseUtenEndringIStatusPåSak(
                     orgnummer = orgnummer,
                     saksnummer = saksnummer,
                     hendelsesType = IASakshendelseType.OPPRETT_KARTLEGGING,
@@ -319,7 +319,7 @@ class NyFlytService(
             statusViSkalEndreTil = Spørreundersøkelse.Status.PÅBEGYNT,
         ).apply {
             onRight {
-                loggKartleggingshendelse(
+                lagreHendelseUtenEndringIStatusPåSak(
                     orgnummer = orgnummer,
                     saksnummer = saksnummer,
                     hendelsesType = IASakshendelseType.START_KARTLEGGING,
@@ -341,7 +341,7 @@ class NyFlytService(
             statusViSkalEndreTil = Spørreundersøkelse.Status.AVSLUTTET,
         ).apply {
             onRight {
-                loggKartleggingshendelse(
+                lagreHendelseUtenEndringIStatusPåSak(
                     orgnummer = orgnummer,
                     saksnummer = saksnummer,
                     hendelsesType = IASakshendelseType.FULLFØR_KARTLEGGING,
@@ -362,7 +362,7 @@ class NyFlytService(
             spørreundersøkelseId = spørreundersøkelseId,
         ).apply {
             onRight {
-                loggKartleggingshendelse(
+                lagreHendelseUtenEndringIStatusPåSak(
                     orgnummer = orgnummer,
                     saksnummer = saksnummer,
                     hendelsesType = IASakshendelseType.SLETT_KARTLEGGING,
@@ -372,59 +372,35 @@ class NyFlytService(
             }
         }
 
-    fun oppdaterSakMedhendelse(
-        orgnummer: String,
-        saksnummer: String,
-        iaSakshendelseType: IASakshendelseType,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-        resulterendeStatus: IASak.Status,
-    ): Either<Feil, IASakDto> {
-        val iASakshendelse = IASakshendelse(
-            id = ULID.random(),
-            opprettetTidspunkt = LocalDateTime.now(),
-            saksnummer = saksnummer,
-            hendelsesType = iaSakshendelseType,
-            orgnummer = orgnummer,
-            opprettetAv = saksbehandler.navIdent,
-            opprettetAvRolle = saksbehandler.rolle,
-            navEnhet = navEnhet,
-            resulterendeStatus = null,
-        )
-        iaSakshendelseRepository.lagreHendelse(
-            hendelse = iASakshendelse,
-            sistEndretAvHendelseId = null,
-            resulterendeStatus = resulterendeStatus,
-        )
-        return iaSakRepository.oppdaterStatusPåSak(
-            saksnummer = saksnummer,
-            status = resulterendeStatus,
-            endretAv = saksbehandler.navIdent,
-            endretAvHendelseId = iASakshendelse.id,
-        ).apply {
-            onRight { iASakDto ->
-                varsleIASakObservers(sakDto = iASakDto)
-                log.info(
-                    " ----- Oppdatert sak med saksnummer '$saksnummer' til status '${resulterendeStatus.name}' " +
-                        "basert på hendelse '${iaSakshendelseType.name}'",
-                )
-            }
-            onLeft {
-                log.warn(
-                    " ------ Feil ved oppdatering av sak med saksnummer '$saksnummer' til status '${resulterendeStatus.name}' " +
-                        "basert på hendelse '${iaSakshendelseType.name}'. Feilmelding: '${it.feilmelding}'",
-                )
-            }
-        }
-    }
-
-    private fun loggKartleggingshendelse(
+    private fun lagreHendelseUtenEndringIStatusPåSak(
         orgnummer: String,
         saksnummer: String,
         hendelsesType: IASakshendelseType,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         navEnhet: NavEnhet,
-    ) {
+        oppdaterSistEndretPåSak: Boolean = true,
+    ): Either<Feil, IASakDto> =
+        iaSakRepository.hentIASakDto(saksnummer = saksnummer)?.let { sakDto ->
+            lagreHendelseOgOppdaterIaSakDto(
+                orgnummer = orgnummer,
+                saksnummer = saksnummer,
+                hendelsesType = hendelsesType,
+                saksbehandler = saksbehandler,
+                navEnhet = navEnhet,
+                resulterendeSakStatus = sakDto.status,
+                oppdaterSistEndretPåSak = oppdaterSistEndretPåSak,
+            )
+        } ?: Feil(feilmelding = "Fant ikke sak med saksnummer $saksnummer", httpStatusCode = HttpStatusCode.NotFound).left()
+
+    fun lagreHendelseOgOppdaterIaSakDto(
+        orgnummer: String,
+        saksnummer: String,
+        hendelsesType: IASakshendelseType,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+        resulterendeSakStatus: IASak.Status,
+        oppdaterSistEndretPåSak: Boolean = true,
+    ): Either<Feil, IASakDto> {
         val iASakshendelse = IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -439,13 +415,14 @@ class NyFlytService(
         iaSakshendelseRepository.lagreHendelse(
             hendelse = iASakshendelse,
             sistEndretAvHendelseId = null,
-            resulterendeStatus = AKTIV,
+            resulterendeStatus = resulterendeSakStatus,
         )
-        iaSakRepository.oppdaterStatusPåSak(
+        return iaSakRepository.oppdaterStatusPåSak(
             saksnummer = saksnummer,
-            status = AKTIV,
+            status = resulterendeSakStatus,
             endretAv = saksbehandler.navIdent,
             endretAvHendelseId = iASakshendelse.id,
+            oppdaterSistEndretPåSak = oppdaterSistEndretPåSak,
         ).onRight(::varsleIASakObservers)
     }
 
