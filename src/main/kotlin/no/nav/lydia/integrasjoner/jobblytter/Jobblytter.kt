@@ -38,6 +38,8 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.ia.eksport.ny.flyt.TilstandVirksomhetOppdaterer
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.tilOrgnr
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.tørrKjør
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
@@ -237,11 +239,11 @@ object Jobblytter : CoroutineScope {
                                     migrerEnVirksomhetTilNyFlyt -> {
                                         if (jobInfo.parameter.isNullOrEmpty()) {
                                             logger.info(
-                                                "Jobb migrerEnVirksomhetTilNyFlyt har ingen parameter, fikk null/empty parameter. Forventer orgnr. Avslutter",
+                                                "Jobb migrerEnVirksomhetTilNyFlyt har ingen parameter, fikk null/empty parameter. Forventer orgnr + flag. Avslutter",
                                             )
                                         } else {
                                             logger.info("Migrerer virksomhet med orgnr ${jobInfo.parameter} til ny flyt")
-                                            nyflytMigreringService.migrer(orgnr = jobInfo.parameter)
+                                            nyflytMigreringService.migrer(orgnr = jobInfo.parameter.tilOrgnr(), tørrKjør = jobInfo.parameter.tørrKjør())
                                         }
                                     }
 

@@ -181,6 +181,15 @@ class NyFlytService(
         return oppdatertSak
     }
 
+    fun hentAlleAndreIASakDto(
+        orgnummer: String,
+        saksnummer: String,
+    ): List<IASakDto> =
+        iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer)
+            .sortedByDescending { it.opprettetTidspunkt }
+            .filter { it.status.regnesSomAvsluttet() }
+            .filterNot { it.saksnummer == saksnummer }
+
     fun hentSisteIASakDto(orgnummer: String): IASakDto? =
         iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer).maxByOrNull { it.opprettetTidspunkt }
 

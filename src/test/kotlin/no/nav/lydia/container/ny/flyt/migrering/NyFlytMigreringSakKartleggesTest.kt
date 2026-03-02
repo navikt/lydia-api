@@ -52,11 +52,12 @@ class NyFlytMigreringSakKartleggesTest {
         val iaSakDtoTilbakeIKartlegges = iaSakDto.fullførSamarbeid().nyHendelse(IASakshendelseType.TILBAKE)
 
         tømmKafkaTopics(iaSakDto)
-        sendMigreringOgVerifiserSak(
+        sendMigreringsmeldingOgVerifiserSak(
             iaSakDto = iaSakDtoTilbakeIKartlegges,
             sistEndretAvBruker = iaSakDtoTilbakeIKartlegges.endretTidspunkt,
             forventetStatus = IASak.Status.KARTLEGGES,
             forventetTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+            migrer = false,
         )
         shouldFail {
             postgresContainerHelper.hentEnkelKolonne<String>(
@@ -72,7 +73,7 @@ class NyFlytMigreringSakKartleggesTest {
         val iaSakDto = nySakIKartlegges()
 
         tømmKafkaTopics(iaSakDto)
-        sendMigreringOgVerifiserSak(
+        sendMigreringsmeldingOgVerifiserSak(
             iaSakDto = iaSakDto,
             sistEndretAvBruker = iaSakDto.endretTidspunkt,
             forventetStatus = IASak.Status.VURDERES,
@@ -108,7 +109,7 @@ class NyFlytMigreringSakKartleggesTest {
         val sistEndretAvBruker = iaSakDto.opprettNyttSamarbeid().endretTidspunkt
 
         tømmKafkaTopics(iaSakDto)
-        sendMigreringOgVerifiserSak(
+        sendMigreringsmeldingOgVerifiserSak(
             iaSakDto = iaSakDto,
             sistEndretAvBruker = sistEndretAvBruker,
             forventetStatus = IASak.Status.AKTIV,
@@ -146,7 +147,7 @@ class NyFlytMigreringSakKartleggesTest {
         val sistEndretAvBruker = iaSakDto.opprettNyttSamarbeid().slettSamarbeid().endretTidspunkt
 
         tømmKafkaTopics(iaSakDto)
-        sendMigreringOgVerifiserSak(
+        sendMigreringsmeldingOgVerifiserSak(
             iaSakDto = iaSakDto,
             sistEndretAvBruker = sistEndretAvBruker,
             forventetStatus = IASak.Status.VURDERES,
@@ -186,7 +187,7 @@ class NyFlytMigreringSakKartleggesTest {
         val sistEndretAvBruker = iaSakDto.opprettNyttSamarbeid().avbrytSamarbeid().endretTidspunkt
 
         tømmKafkaTopics(iaSakDto)
-        sendMigreringOgVerifiserSak(
+        sendMigreringsmeldingOgVerifiserSak(
             iaSakDto = iaSakDto,
             sistEndretAvBruker = sistEndretAvBruker,
             forventetStatus = IASak.Status.AVSLUTTET,
@@ -263,13 +264,14 @@ class NyFlytMigreringSakKartleggesTest {
             }
         }
 
-        private fun sendMigreringOgVerifiserSak(
+        private fun sendMigreringsmeldingOgVerifiserSak(
             iaSakDto: IASakDto,
             sistEndretAvBruker: LocalDateTime?,
             forventetStatus: IASak.Status,
             forventetTilstand: VirksomhetIATilstand,
+            migrer: Boolean = true,
         ) {
-            kafkaContainerHelper.sendJobbMelding(Jobb.migrerEnVirksomhetTilNyFlyt, parameter = iaSakDto.orgnr)
+            kafkaContainerHelper.sendJobbMelding(Jobb.migrerEnVirksomhetTilNyFlyt, parameter = "${iaSakDto.orgnr}:$migrer")
 
             val migrertSak = SakHelper.hentSakNyFlyt(orgnummer = iaSakDto.orgnr)
             migrertSak.status shouldBe forventetStatus
