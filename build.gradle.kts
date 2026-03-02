@@ -9,9 +9,9 @@ val opentelemetryLogbackMdcVersion = "2.16.0-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.3.0"
+    kotlin("jvm") version "2.3.10"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.3.0"
+    kotlin("plugin.serialization") version "2.3.10"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
