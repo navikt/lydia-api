@@ -311,6 +311,7 @@ enum class IASakshendelseType {
     SLETT_KARTLEGGING,
     OPPRETT_SAMARBEIDSPLAN,
     SLETT_SAMARBEIDSPLAN,
+    ENDRE_PLANLAGT_DATO,
 }
 
 @Serializable

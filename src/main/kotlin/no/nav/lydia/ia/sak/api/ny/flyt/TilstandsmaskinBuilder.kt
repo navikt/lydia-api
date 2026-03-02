@@ -10,7 +10,6 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
-import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.endrePlanlagtDatoForNesteTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harAktiveSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harSamarbeidOgAlleErAvsluttet
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering
@@ -68,34 +67,6 @@ class TilstandsmaskinBuilder private constructor(
                     planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                     nyTilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
                     planlagtDato = LocalDate.now().plusDays(90),
-                )
-            }
-        }
-
-        fun endrePlanlagtDatoForNesteTilstand(
-            hendelse: Hendelse.EndrePlanlagtDatoForNesteTilstand,
-            fiaKontekst: FiaKontekst,
-            nåværendeTilstand: Tilstand,
-        ): Konsekvens {
-            if (!hendelse.nyPlanlagtDato.isAfter(LocalDate.now())) {
-                return Konsekvens(
-                    nyTilstand = nåværendeTilstand,
-                    endring = Either.Left(Feil("Planlagt dato må være etter dagens dato", HttpStatusCode.BadRequest)),
-                )
-            }
-            val automatiskOppdatering = fiaKontekst.tilstandVirksomhetRepository.endrePlanlagtDatoForNesteTilstand(
-                orgnr = hendelse.orgnr,
-                nyPlanlagtDato = hendelse.nyPlanlagtDato,
-            )
-            return if (automatiskOppdatering != null) {
-                Konsekvens(
-                    nyTilstand = nåværendeTilstand,
-                    endring = Either.Right(automatiskOppdatering),
-                )
-            } else {
-                Konsekvens(
-                    nyTilstand = nåværendeTilstand,
-                    endring = Either.Left(Feil("Fant ingen planlagt tilstandsoppdatering for virksomhet ${hendelse.orgnr}", HttpStatusCode.NotFound)),
                 )
             }
         }
@@ -363,7 +334,18 @@ sealed class Tilstand {
                 }
 
                 is Hendelse.EndrePlanlagtDatoForNesteTilstand -> {
-                    return endrePlanlagtDatoForNesteTilstand(hendelse, fiaKontekst, VirksomhetErVurdert)
+                    val endring = fiaKontekst.nyFlytService.endrePlanlagtDatoForNesteTilstand(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        nyPlanlagtDato = hendelse.nyPlanlagtDato,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                        resulterendeSakStatus = Status.VURDERT,
+                    )
+                    return Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetErVurdert,
+                    )
                 }
 
                 else -> {
@@ -569,6 +551,21 @@ sealed class Tilstand {
                     )
                 }
 
+                is Hendelse.EndreSamarbeidsNavn -> {
+                    val endring = fiaKontekst.nyFlytService.endreSamarbeidsNavn(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        samarbeidId = hendelse.samarbeidId,
+                        nyttNavn = hendelse.navn,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                    )
+                }
+
                 else -> {
                     val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                     Konsekvens(
@@ -605,7 +602,18 @@ sealed class Tilstand {
                 }
 
                 is Hendelse.EndrePlanlagtDatoForNesteTilstand -> {
-                    return endrePlanlagtDatoForNesteTilstand(hendelse, fiaKontekst, AlleSamarbeidIVirksomhetErAvsluttet)
+                    val endring = fiaKontekst.nyFlytService.endrePlanlagtDatoForNesteTilstand(
+                        orgnummer = hendelse.orgnr,
+                        saksnummer = fiaKontekst.saksnummer!!,
+                        nyPlanlagtDato = hendelse.nyPlanlagtDato,
+                        saksbehandler = hendelse.saksbehandler,
+                        navEnhet = hendelse.navEnhet,
+                        resulterendeSakStatus = Status.AVSLUTTET,
+                    )
+                    return Konsekvens(
+                        endring = endring,
+                        nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
+                    )
                 }
 
                 else -> {
@@ -718,9 +726,19 @@ sealed class Hendelse {
         override val orgnr: String,
     ) : Hendelse()
 
+    data class EndreSamarbeidsNavn(
+        override val orgnr: String,
+        val samarbeidId: Int,
+        val navn: String,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
+    ) : Hendelse()
+
     data class EndrePlanlagtDatoForNesteTilstand(
         override val orgnr: String,
         val nyPlanlagtDato: LocalDate,
+        val saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        val navEnhet: NavEnhet,
     ) : Hendelse()
 }
 

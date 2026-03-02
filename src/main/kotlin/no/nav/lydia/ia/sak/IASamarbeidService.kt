@@ -160,7 +160,7 @@ class IASamarbeidService(
         }
     }
 
-    private fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid? {
+    fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid? {
         samarbeidRepository.oppdaterNavnPåSamarbeid(samarbeidDto = samarbeidDto)
         return samarbeidRepository.hentSamarbeid(
             saksnummer = samarbeidDto.saksnummer,

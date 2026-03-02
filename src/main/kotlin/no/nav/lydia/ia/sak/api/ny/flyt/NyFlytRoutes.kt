@@ -632,16 +632,50 @@ fun Route.nyFlyt(
         }
     }
 
+    put("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeid/{samarbeidId}/oppdater") {
+        val orgnr = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val samarbeidId = call.samarbeidId ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val iaSamarbeidDto = call.receive<IASamarbeidDto>()
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = Hendelse.EndreSamarbeidsNavn(
+                    orgnr = orgnr,
+                    samarbeidId = samarbeidId,
+                    navn = iaSamarbeidDto.navn,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { it as IASamarbeidDto }
+        }.also { iaSamarbeidDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSamarbeidDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.update,
+                saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
     put("$NY_FLYT_PATH/virksomhet/{orgnummer}/endre-planlagt-dato") {
         val orgnr = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val virksomhetTilstandAutomatiskOppdateringDto = call.receive<VirksomhetTilstandAutomatiskOppdateringDto>()
         val tilstandsmaskin = tilstandsmaskin(orgnr)
 
-        call.somSaksbehandlerMedNavenhet { _, _ ->
+        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = Hendelse.EndrePlanlagtDatoForNesteTilstand(
                     orgnr = orgnr,
                     nyPlanlagtDato = virksomhetTilstandAutomatiskOppdateringDto.planlagtDato.toJavaLocalDate(),
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
                 ),
             )
             konsekvens.endring.map { it as VirksomhetTilstandAutomatiskOppdateringDto }

@@ -6,6 +6,7 @@ import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PLANLAGT_DATO
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_KARTLEGGING
@@ -177,6 +178,7 @@ class IASak private constructor(
             SLETT_KARTLEGGING,
             OPPRETT_SAMARBEIDSPLAN,
             SLETT_SAMARBEIDSPLAN,
+            ENDRE_PLANLAGT_DATO,
             -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }

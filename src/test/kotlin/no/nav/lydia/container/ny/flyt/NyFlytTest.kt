@@ -21,6 +21,7 @@ import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companio
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -459,6 +460,89 @@ class NyFlytTest {
         val tilstandEtterEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
         tilstandEtterEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         tilstandEtterEndring.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+    }
+
+    @Test
+    fun `EndrePlanlagtDato fra VirksomhetErVurdert lagrer IASakshendelse med type ENDRE_PLANLAGT_DATO og status VURDERT`() {
+        val sak = vurderVirksomhet()
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI),
+                dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
+            ),
+        )
+
+        val tilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+
+        val nyPlanlagtDato = LocalDate.now().plusDays(30).toKotlinLocalDate()
+        val response = endrePlanlagtDato(
+            orgnr = sak.orgnr,
+            nesteTilstand = tilstand.nesteTilstand!!,
+            nyPlanlagtDato = nyPlanlagtDato,
+        )
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+        val sisteHendelse = historikk.flatMap { it.sakshendelser }.last()
+        sisteHendelse.hendelsestype shouldBe IASakshendelseType.ENDRE_PLANLAGT_DATO
+        sisteHendelse.status shouldBe IASak.Status.VURDERT
+    }
+
+    @Test
+    fun `EndrePlanlagtDato fra AlleSamarbeidIVirksomhetErAvsluttet lagrer IASakshendelse med type ENDRE_PLANLAGT_DATO og status AVSLUTTET`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        val tilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstand.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+
+        val nyPlanlagtDato = LocalDate.now().plusDays(30).toKotlinLocalDate()
+        val response = endrePlanlagtDato(
+            orgnr = sak.orgnr,
+            nesteTilstand = tilstand.nesteTilstand!!,
+            nyPlanlagtDato = nyPlanlagtDato,
+        )
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+        val sisteHendelse = historikk.flatMap { it.sakshendelser }.last()
+        sisteHendelse.hendelsestype shouldBe IASakshendelseType.ENDRE_PLANLAGT_DATO
+        sisteHendelse.status shouldBe IASak.Status.AVSLUTTET
+    }
+
+    @Test
+    fun `Hendelse EndreSamarbeidsNavn fra Tilstand VirksomhetHarAktiveSamarbeid skal gi et nytt samarbeidsNavn og lagre IASakshendelseType ENDRE_PROSESS`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Opprinnelig navn")
+
+        val tilstandFørEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandFørEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        val nyttNavn = "Nytt navn 123"
+        val response = endreSamarbeidsNavn(
+            orgnr = sak.orgnr,
+            samarbeidId = samarbeid.id,
+            saksnummer = sak.saksnummer,
+            nyttNavn = nyttNavn,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+        response.third.get().navn shouldBe nyttNavn
+
+        val tilstandEtterEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandEtterEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+        val sisteHendelse = historikk.flatMap { it.sakshendelser }.last()
+        sisteHendelse.hendelsestype shouldBe IASakshendelseType.ENDRE_PROSESS
+        sisteHendelse.status shouldBe IASak.Status.AKTIV
     }
 
     @Test
@@ -1316,4 +1400,22 @@ class NyFlytTest {
                 ),
             ),
         ).tilSingelRespons<VirksomhetTilstandAutomatiskOppdateringDto>()
+
+    private fun endreSamarbeidsNavn(
+        orgnr: String,
+        samarbeidId: Int,
+        saksnummer: String,
+        nyttNavn: String,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performPut("$NY_FLYT_PATH/virksomhet/$orgnr/samarbeid/$samarbeidId/oppdater")
+        .authentication().bearer(token)
+        .jsonBody(
+            Json.encodeToString(
+                IASamarbeidDto(
+                    id = samarbeidId,
+                    saksnummer = saksnummer,
+                    navn = nyttNavn,
+                ),
+            ),
+        ).tilSingelRespons<IASamarbeidDto>()
 }
