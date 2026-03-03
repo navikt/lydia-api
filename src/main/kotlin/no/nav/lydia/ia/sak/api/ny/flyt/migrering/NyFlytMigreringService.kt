@@ -180,6 +180,22 @@ class NyFlytMigreringService(
                 }
             }
 
+            IASak.Status.VI_BISTÅR -> {
+                when (samarbeidListe.getSamarbeidUseCase()) {
+                    SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID -> MigreringsPlan.Gjennomførbar(
+                        nåværendeSakStatus = iaSakDto.status,
+                        resulterendeSakStatus = IASak.Status.AKTIV,
+                        tilstand = Tilstand.VirksomhetHarAktiveSamarbeid,
+                    )
+
+                    SamarbeidUseCase.INGEN_SAMARBEID,
+                    SamarbeidUseCase.ALLE_SAMARBEID_ER_SLETTET,
+                    SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ET_AVBRYTT_SAMARBEID,
+                    SamarbeidUseCase.ALLE_SAMARBEID_ER_AVSLUTTET,
+                    -> MigreringsPlan.IkkeGjennomførbar
+                }
+            }
+
             else -> {
                 MigreringsPlan.IkkeGjennomførbar
             }
