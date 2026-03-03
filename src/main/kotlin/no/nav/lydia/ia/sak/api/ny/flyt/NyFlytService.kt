@@ -249,7 +249,7 @@ class NyFlytService(
             return Either.Left(IASakError.`er ikke følger av sak`)
         }
 
-        val alleSamarbeid = hentSamarbeid(saksnummer = saksnummer)
+        val alleSamarbeid = hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
 
         if (navn.trim().isEmpty() || navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
             return Either.Left(IASamarbeidFeil.`ugyldig samarbeidsnavn`)
@@ -539,7 +539,7 @@ class NyFlytService(
                 resulterendeStatus = null,
             )
 
-            val alleSamarbeid = iaSamarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
+            val alleSamarbeid = iaSamarbeidRepository.hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
             val ingenAndreSamarbeid = alleSamarbeid.isEmpty()
             val alleAndreSamarbeidErAvsluttet = alleSamarbeid
                 .all { it.status == IASamarbeid.Status.AVBRUTT || it.status == IASamarbeid.Status.FULLFØRT }
@@ -639,7 +639,7 @@ class NyFlytService(
             return IASamarbeidFeil.`ugyldig samarbeidsnavn`.left()
         }
 
-        val alleSamarbeid = hentSamarbeid(saksnummer = saksnummer)
+        val alleSamarbeid = hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
 
         alleSamarbeid.getOrNull()?.find { it.navn.equals(nyttNavn, ignoreCase = true) }
             ?.let { return IASamarbeidFeil.`samarbeidsnavn finnes allerede`.left() }
@@ -769,9 +769,9 @@ class NyFlytService(
 
     private fun IASakDto.settStatusTilSlettet(): IASakDto = this.copy(status = SLETTET, endretAvHendelseId = ULID.random())
 
-    fun hentSamarbeid(saksnummer: String): Either<Feil, List<IASamarbeid>> =
+    fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): Either<Feil, List<IASamarbeid>> =
         Either.catch {
-            iaSamarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
+            iaSamarbeidRepository.hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
         }.mapLeft {
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }

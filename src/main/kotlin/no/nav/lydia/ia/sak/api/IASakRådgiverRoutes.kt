@@ -110,7 +110,7 @@ fun Route.iaSakRådgiver(
                 }
                 .sortedByDescending { it.opprettetTidspunkt }
                 .map { sak ->
-                    val samarbeid = samarbeidService.hentSamarbeid(sak.saksnummer).getOrElse { emptyList() }
+                    val samarbeid = samarbeidService.hentSamarbeidSomIkkeErSlettet(sak.saksnummer).getOrElse { emptyList() }
                     sak.tilSakshistorikk(samarbeid = samarbeid.tilDto())
                 }
                 .right()

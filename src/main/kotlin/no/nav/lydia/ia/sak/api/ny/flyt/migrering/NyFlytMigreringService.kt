@@ -68,7 +68,7 @@ class NyFlytMigreringService(
             return null
         }
 
-        samarbeidService.hentSamarbeid(saksnummer = iaSakDto.saksnummer).apply {
+        samarbeidService.hentSamarbeidSomIkkeErSlettet(saksnummer = iaSakDto.saksnummer).apply {
             onRight { samarbeidListe ->
                 val migreringsPlan = utledMigreringsPlan(iaSakDto = iaSakDto, samarbeidListe = samarbeidListe)
 
@@ -87,21 +87,14 @@ class NyFlytMigreringService(
                         log.info(
                             "[Migrering][TørrKjør=$tørrKjør] Saken '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
                                 "er håndtert som en use-case til migrering, og vil derfor bli migrert. " +
-                                "Saken har status '${iaSakDto.status.name}' og ${samarbeidListe.size} samarbeid.",
+                                "Saken har status '${iaSakDto.status.name}' og ${samarbeidListe.size} samarbeid. " +
+                                "Saken blir migrert til status '${migreringsPlan.resulterendeSakStatus.name}'" +
+                                " og virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}'",
                         )
                     }
                 }
-
                 val resulterendeStatusAvMigrering = migreringsPlan.resulterendeSakStatus
                 val resulterendeTilstandAvMigrering = migreringsPlan.tilstand
-
-                log.info(
-                    "[Migrering][TørrKjør=$tørrKjør] Saken '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
-                        "er håndtert som en use-case til migrering, og vil derfor bli migrert. " +
-                        "Saken har status '${iaSakDto.status.name}' og ${samarbeidListe.size} samarbeid. " +
-                        "Saken blir migrert til status '${resulterendeStatusAvMigrering.name}'" +
-                        " og virksomhet vil få tilstand '${resulterendeTilstandAvMigrering.tilVirksomhetIATilstand()}'",
-                )
 
                 if (tørrKjør) return null
 
@@ -151,7 +144,7 @@ class NyFlytMigreringService(
             IASak.Status.KARTLEGGES -> {
                 // Rad 6 til 9
                 when (samarbeidListe.getSamarbeidUseCase()) {
-                    SamarbeidUseCase.INGEN_SAMARBEID -> MigreringsPlan.Gjennomførbar(
+                    SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.VURDERES,
                         tilstand = Tilstand.VirksomhetVurderes,
@@ -161,12 +154,6 @@ class NyFlytMigreringService(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AKTIV,
                         tilstand = Tilstand.VirksomhetHarAktiveSamarbeid,
-                    )
-
-                    SamarbeidUseCase.ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.VURDERES,
-                        tilstand = Tilstand.VirksomhetVurderes,
                     )
 
                     SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ET_AVBRYTT_SAMARBEID -> MigreringsPlan.Gjennomførbar(
@@ -182,14 +169,18 @@ class NyFlytMigreringService(
 
             IASak.Status.VI_BISTÅR -> {
                 when (samarbeidListe.getSamarbeidUseCase()) {
+                    SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
+                        nåværendeSakStatus = iaSakDto.status,
+                        resulterendeSakStatus = IASak.Status.VURDERES,
+                        tilstand = Tilstand.VirksomhetVurderes,
+                    )
+
                     SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AKTIV,
                         tilstand = Tilstand.VirksomhetHarAktiveSamarbeid,
                     )
 
-                    SamarbeidUseCase.INGEN_SAMARBEID,
-                    SamarbeidUseCase.ALLE_SAMARBEID_ER_SLETTET,
                     SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ET_AVBRYTT_SAMARBEID,
                     SamarbeidUseCase.ALLE_SAMARBEID_ER_AVSLUTTET,
                     -> MigreringsPlan.IkkeGjennomførbar
@@ -219,9 +210,8 @@ class NyFlytMigreringService(
     }
 
     enum class SamarbeidUseCase {
-        INGEN_SAMARBEID,
+        INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET,
         MINST_ETT_AKTIVT_SAMARBEID,
-        ALLE_SAMARBEID_ER_SLETTET,
         ALLE_SAMARBEID_ER_AVSLUTTET,
         INGEN_AKTIVE_SAMARBEID_MEN_MINST_ET_AVBRYTT_SAMARBEID,
     }
@@ -230,16 +220,14 @@ class NyFlytMigreringService(
      Status samarbeid:
          - AKTIV,
          - FULLFØRT,
-         - SLETTET,
+         - SLETTET,  --> samarbeid som er slettet hentes aldri ut
          - AVBRUTT,
      */
     fun List<IASamarbeid>.getSamarbeidUseCase(): SamarbeidUseCase =
         when {
-            this.isEmpty() -> SamarbeidUseCase.INGEN_SAMARBEID
+            this.isEmpty() -> SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET
 
             this.any { it.status == IASamarbeid.Status.AKTIV } -> SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID
-
-            this.all { it.status == IASamarbeid.Status.SLETTET } -> SamarbeidUseCase.ALLE_SAMARBEID_ER_SLETTET
 
             this.all { it.status == IASamarbeid.Status.FULLFØRT } -> SamarbeidUseCase.ALLE_SAMARBEID_ER_AVSLUTTET
 

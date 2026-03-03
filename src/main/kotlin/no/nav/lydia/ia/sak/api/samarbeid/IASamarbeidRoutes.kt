@@ -54,7 +54,7 @@ fun Route.iaSamarbeid(
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         call.somLesebruker(adGrupper) {
-            samarbeidService.hentSamarbeid(saksnummer = saksnummer)
+            samarbeidService.hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
         }.also {
             auditLog.auditloggEither(
                 call = call,

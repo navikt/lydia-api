@@ -45,7 +45,7 @@ class TilstandsmaskinBuilder private constructor(
             fiaKontekst: FiaKontekst,
             saksnummer: String,
         ): Boolean {
-            val alleSamarbeid = fiaKontekst.iASamarbeidService.hentAlleSamarbeid(saksnummer = saksnummer)
+            val alleSamarbeid = fiaKontekst.iASamarbeidService.hentAlleSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
             return alleSamarbeid.isNotEmpty() && alleSamarbeid
                 .all { it.status == IASamarbeid.Status.AVBRUTT || it.status == IASamarbeid.Status.FULLFØRT }
         }

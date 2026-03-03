@@ -228,7 +228,7 @@ fun Route.nyFlyt(
                 }
                 .sortedByDescending { it.opprettetTidspunkt }
                 .map { iASakDto ->
-                    val samarbeid = nyFlytService.hentSamarbeid(iASakDto.saksnummer).getOrElse { emptyList() }
+                    val samarbeid = nyFlytService.hentSamarbeidSomIkkeErSlettet(iASakDto.saksnummer).getOrElse { emptyList() }
                     iASakDto.tilSakshistorikk(samarbeid = samarbeid.tilDto())
                 }.right()
         }.also { either: Either<Feil, List<SakshistorikkDto>> ->

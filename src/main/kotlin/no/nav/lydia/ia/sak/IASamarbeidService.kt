@@ -75,23 +75,18 @@ class IASamarbeidService(
 
     fun hentSamarbeid(samarbeidId: Int) = samarbeidRepository.hentSamarbeid(samarbeidId = samarbeidId)
 
-    fun hentSamarbeid(saksnummer: String): Either<Feil, List<IASamarbeid>> =
+    fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): Either<Feil, List<IASamarbeid>> =
         Either.catch {
-            samarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
+            samarbeidRepository.hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
         }.mapLeft {
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
 
     fun hentAktiveSamarbeid(sak: IASak): List<IASamarbeid> = samarbeidRepository.hentAktiveSamarbeid(saksnummer = sak.saksnummer)
 
-    fun hentAlleSamarbeid(saksnummer: String): List<IASamarbeid> = samarbeidRepository.hentSamarbeid(saksnummer = saksnummer)
+    fun hentAlleSamarbeidSomIkkeErSlettet(saksnummer: String): List<IASamarbeid> = samarbeidRepository.hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
 
     fun hentAktiveSamarbeid(saksnummer: String): List<IASamarbeid> = samarbeidRepository.hentAktiveSamarbeid(saksnummer = saksnummer)
-
-    fun hentSamarbeid(
-        sak: IASak,
-        samarbeidId: Int,
-    ): Either<Feil, IASamarbeid> = hentSamarbeid(saksnummer = sak.saksnummer, samarbeidId = samarbeidId)
 
     fun hentSamarbeid(
         saksnummer: String,

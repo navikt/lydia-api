@@ -345,7 +345,7 @@ class SpørreundersøkelseService(
         }
 
         val oppdatertBehovsvurdering = iaSakService.hentIASakDto(saksnummer = behovsvurdering.saksnummer).flatMap {
-            samarbeidService.hentSamarbeid(saksnummer = it.saksnummer)
+            samarbeidService.hentSamarbeidSomIkkeErSlettet(saksnummer = it.saksnummer)
         }.map { prosess ->
             prosess.map { it.id }
         }.flatMap { prosesserISak ->

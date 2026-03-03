@@ -59,7 +59,7 @@ class IASamarbeidRepository(
             )
         }
 
-    fun hentSamarbeid(saksnummer: String): List<IASamarbeid> =
+    fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): List<IASamarbeid> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(

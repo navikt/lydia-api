@@ -171,7 +171,7 @@ class IASakService(
             IASakshendelseType.ENDRE_PROSESS, IASakshendelseType.NY_PROSESS -> {
                 val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(saksnummer = hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
-                val alleProsesser = samarbeidService.hentSamarbeid(aktivSak.saksnummer)
+                val alleProsesser = samarbeidService.hentSamarbeidSomIkkeErSlettet(aktivSak.saksnummer)
 
                 if (samarbeidDto.navn.trim().isEmpty() || samarbeidDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
                     return IASamarbeidFeil.`ugyldig samarbeidsnavn`.left()
@@ -301,7 +301,7 @@ class IASakService(
 
     fun avbrytMaskineltSamarbeidIIkkeAktuelleSaker(tørrKjør: Boolean): Int =
         iaSakRepository.hentIkkeAktuelleSakerMedAktiveSamarbeid().map { iaSak ->
-            val alleAktiveSamarbeidPåSak = samarbeidService.hentSamarbeid(iaSak.saksnummer).getOrElse { emptyList() }
+            val alleAktiveSamarbeidPåSak = samarbeidService.hentSamarbeidSomIkkeErSlettet(iaSak.saksnummer).getOrElse { emptyList() }
                 .filter { it.status == IASamarbeid.Status.AKTIV }
 
             if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
@@ -415,7 +415,7 @@ class IASakService(
         val årsaker = mutableListOf<ÅrsakTilAtSakIkkeKanAvsluttes>()
         val sak = hentIASakDto(saksnummer).getOrNull()
             ?: return IASakError.`generell feil under uthenting`.left()
-        val samarbeid = samarbeidService.hentSamarbeid(sak.saksnummer).getOrNull()
+        val samarbeid = samarbeidService.hentSamarbeidSomIkkeErSlettet(sak.saksnummer).getOrNull()
             ?: return IASamarbeidFeil.`feil ved henting av samarbeid`.left()
 
         samarbeid.forEach { prosess ->
