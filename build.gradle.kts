@@ -1,9 +1,9 @@
 val ktorVersion = "3.4.0"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
-val kotestVerstion = "6.1.3"
+val kotestVerstion = "6.1.4"
 val testcontainersVersion = "2.0.3"
-val logbackVersion = "1.5.28"
+val logbackVersion = "1.5.32"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.16.0-alpha"
 
@@ -53,9 +53,9 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.16.3")
 
     // Database
-    implementation("org.postgresql:postgresql:42.7.9")
+    implementation("org.postgresql:postgresql:42.7.10")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:12.0.0")
+    implementation("org.flywaydb:flyway-database-postgresql:12.0.3")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -63,8 +63,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.2")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.10.3")
-    implementation("org.apache.kafka:kafka-clients:4.1.1") {
+    implementation("at.yawk.lz4:lz4-java:1.10.4")
+    implementation("org.apache.kafka:kafka-clients:4.2.0") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
     }
@@ -83,7 +83,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.7")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.8")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
