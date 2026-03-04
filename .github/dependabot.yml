@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    cooldown:
+      default-days: 7
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    groups:
+      all-actions:
+        patterns: [ "*" ]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    cooldown:
+      default-days: 7
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    groups:
+      all-deps:
+        patterns: [ "*" ]
