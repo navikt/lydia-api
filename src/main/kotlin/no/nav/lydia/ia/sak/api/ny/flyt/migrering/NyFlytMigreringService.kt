@@ -4,8 +4,12 @@ import kotlinx.datetime.toJavaLocalDateTime
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.Tilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
+import no.nav.lydia.ia.sak.api.ny.flyt.tilTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -14,6 +18,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class NyFlytMigreringService(
@@ -100,7 +105,7 @@ class NyFlytMigreringService(
             )
         }?.let {
             nyFlytService.hentAlleAndreIASakDto(orgnummer = it.orgnr, saksnummer = it.saksnummer).forEach { gammelIaSakDto ->
-                migrerGammelSak(
+                logMenIkkeMigrerGammelSak(
                     iaSakDto = gammelIaSakDto,
                     tørrKjør = tørrKjør,
                 )
@@ -108,7 +113,7 @@ class NyFlytMigreringService(
         }
     }
 
-    fun migrerGammelSak(
+    fun logMenIkkeMigrerGammelSak(
         iaSakDto: IASakDto,
         tørrKjør: Boolean,
     ) {
@@ -176,8 +181,9 @@ class NyFlytMigreringService(
                         log.info(
                             "[Migrering][${migreringsPlan.javaClass.simpleName}][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' " +
                                 "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' er en gyldig use-case til migrering. " +
-                                "Saken blir migrert til status '${migreringsPlan.resulterendeSakStatus.name}'" +
-                                " og virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}'. " +
+                                "Saken blir migrert til status '${migreringsPlan.resulterendeSakStatus.name}' " +
+                                "og virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}', " +
+                                "og automatisk oppdatering (VirksomhetKlarTilVurdering om 90 dager): ${migreringsPlan.gjørVirksomhetKlarTilVurderingSenere} " +
                                 "Bakgrunn for migrering er: '$bakgrunnForMigrering'. ",
                         )
                     }
@@ -206,12 +212,44 @@ class NyFlytMigreringService(
                             orgnr = iaSakDto.orgnr,
                             samarbeidsperiodeId = iaSakDto.saksnummer,
                             tilstand = resulterendeTilstandAvMigrering.tilVirksomhetIATilstand(),
-                        ).let { tilstand ->
+                        ).let { tilstand: VirksomhetTilstandDto? ->
                             log.info(
                                 "[Migrering] Oppdatert sak '${migrertSakDto.saksnummer}' på virksomhet med orgnr '${migrertSakDto.orgnr}' " +
                                     "fra status '${iaSakDto.status.name}' til status'${migrertSakDto.status.name}', " +
                                     "og opprettet tilstand '${tilstand?.tilstand}'",
                             )
+                            if (migreringsPlan.gjørVirksomhetKlarTilVurderingSenere &&
+                                tilstand != null &&
+                                tilstand.tilstand.tilTilstand().kanUtføreAutomatiskTransisjon()
+
+                            ) {
+                                nyFlytService.opprettAutomatiskOppdatering(
+                                    orgnr = migrertSakDto.orgnr,
+                                    samarbeidsperiodeId = migrertSakDto.saksnummer,
+                                    startTilstand = migreringsPlan.tilstand,
+                                    planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
+                                    nyTilstand = Tilstand.VirksomhetKlarTilVurdering,
+                                    planlagtDato = LocalDate.now().plusDays(90),
+                                ).let { automatiskOppdatering: VirksomhetTilstandAutomatiskOppdateringDto? ->
+                                    if (automatiskOppdatering != null) {
+                                        log.info(
+                                            "[Migrering] Opprettet automatisk oppdatering for sak '${migrertSakDto.saksnummer}' " +
+                                                "på virksomhet med orgnr '${migrertSakDto.orgnr}' " +
+                                                "med start tilstand '${automatiskOppdatering.startTilstand}', " +
+                                                "planlagt hendelse '${automatiskOppdatering.planlagtHendelse}', " +
+                                                "ny tilstand '${automatiskOppdatering.nyTilstand}' og " +
+                                                "planlagt dato '${automatiskOppdatering.planlagtDato}'",
+                                        )
+                                    } else {
+                                        log.warn(
+                                            "[Migrering] Det oppsto en feil ved opprettelse av automatisk oppdatering for sak '${migrertSakDto.saksnummer}' " +
+                                                "på virksomhet med orgnr '${migrertSakDto.orgnr}'. Virksomhet har tilstand '${tilstand.tilstand}', " +
+                                                "men fikk ikke opprettet automatisk oppdatering " +
+                                                "til tilstand '${Tilstand.VirksomhetKlarTilVurdering::class.simpleName}'",
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                     onLeft { feil ->
@@ -251,6 +289,7 @@ class NyFlytMigreringService(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AVSLUTTET,
                         tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                        gjørVirksomhetKlarTilVurderingSenere = true,
                     )
                 }
             }
@@ -281,6 +320,7 @@ class NyFlytMigreringService(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AVSLUTTET,
                         tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                        gjørVirksomhetKlarTilVurderingSenere = true,
                     )
                 }
             }
@@ -302,6 +342,7 @@ class NyFlytMigreringService(
                             nåværendeSakStatus = iaSakDto.status,
                             resulterendeSakStatus = IASak.Status.AVSLUTTET,
                             tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                            gjørVirksomhetKlarTilVurderingSenere = true,
                         )
                     }
 
@@ -323,7 +364,7 @@ class NyFlytMigreringService(
             val nåværendeSakStatus: IASak.Status,
             val resulterendeSakStatus: IASak.Status,
             val tilstand: Tilstand,
-            val tilAutomatiskOppdatering: Tilstand? = null,
+            val gjørVirksomhetKlarTilVurderingSenere: Boolean = false,
         ) : MigreringsPlan() {
             override fun kanGjennomføres(): Boolean = true
         }

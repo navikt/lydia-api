@@ -8,7 +8,9 @@ import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
+import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDateTime
@@ -27,6 +29,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -118,6 +121,7 @@ class MigreringTestUtils {
             sistEndretAvBruker: LocalDateTime?,
             forventetStatus: IASak.Status,
             forventetTilstand: VirksomhetIATilstand,
+            forventetAutomatiskOppdatering: VirksomhetTilstandAutomatiskOppdateringDto? = null,
             migrer: Boolean = true,
         ) {
             kafkaContainerHelper.sendJobbMelding(Jobb.migrerEnVirksomhetTilNyFlyt, parameter = "${iaSakDto.orgnr}:$migrer")
@@ -128,6 +132,16 @@ class MigreringTestUtils {
 
             val virksomhetsTilstand: VirksomhetTilstandDto = hentVirksomhetTilstand(orgnr = iaSakDto.orgnr)
             virksomhetsTilstand.tilstand shouldBe forventetTilstand
+
+            if (forventetAutomatiskOppdatering != null) {
+                virksomhetsTilstand.nesteTilstand shouldNotBe null
+                virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe forventetAutomatiskOppdatering.startTilstand
+                virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe forventetAutomatiskOppdatering.nyTilstand
+                virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe forventetAutomatiskOppdatering.planlagtHendelse
+                virksomhetsTilstand.nesteTilstand.planlagtDato shouldBeGreaterThanOrEqualTo forventetAutomatiskOppdatering.planlagtDato
+            } else {
+                virksomhetsTilstand.nesteTilstand shouldBe null
+            }
         }
 
         fun verifiserHistorikk(

@@ -805,4 +805,21 @@ class NyFlytService(
             samarbeidsperiodeId = samarbeidsperiodeId,
             tilstand = tilstand,
         )
+
+    fun opprettAutomatiskOppdatering(
+        orgnr: String,
+        samarbeidsperiodeId: String,
+        startTilstand: Tilstand,
+        planlagtHendelse: String,
+        nyTilstand: Tilstand,
+        planlagtDato: java.time.LocalDate,
+    ): VirksomhetTilstandAutomatiskOppdateringDto? =
+        tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
+            orgnr = orgnr,
+            samarbeidsperiodeId = samarbeidsperiodeId,
+            startTilstand = startTilstand.tilVirksomhetIATilstand(),
+            planlagtHendelse = planlagtHendelse,
+            nyTilstand = nyTilstand.tilVirksomhetIATilstand(),
+            planlagtDato = planlagtDato,
+        )
 }

@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ny.flyt.migrering
 
 import io.kotest.assertions.shouldFail
+import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIKartlegges
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserSak
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.tømmKafkaTopics
@@ -17,7 +18,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.opprettNyttSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
@@ -177,7 +180,7 @@ class NyFlytMigreringSakKartleggesTest {
     }
 
     @Test
-    fun `Rad #9 sak med status KARTLEGGES uten aktive samarbeid men hvor det er minst ett avbryt samarbeid migreres til VURDERES status`() {
+    fun `Rad #9 sak med status KARTLEGGES uten aktive samarbeid men hvor det er minst ett avbryt samarbeid migreres til AVSLUTTET status`() {
         val iaSakDto = migreringSakIKartlegges()
         val sistEndretAvBruker = iaSakDto.opprettNyttSamarbeid().avbrytSamarbeid().endretTidspunkt
 
@@ -187,6 +190,12 @@ class NyFlytMigreringSakKartleggesTest {
             sistEndretAvBruker = sistEndretAvBruker,
             forventetStatus = IASak.Status.AVSLUTTET,
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+            forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
+                startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
+                nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+                planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
+            ),
         )
 
         verifiserHistorikk(

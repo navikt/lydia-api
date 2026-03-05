@@ -186,6 +186,8 @@ data class Konsekvens(
 sealed class Tilstand {
     fun navn(): String = this.javaClass.simpleName
 
+    fun kanUtføreAutomatiskTransisjon(): Boolean = this is VirksomhetErVurdert || this is AlleSamarbeidIVirksomhetErAvsluttet
+
     abstract fun utførTransisjon(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,

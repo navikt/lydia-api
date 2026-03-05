@@ -4,6 +4,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.mirgeringSakIViBistår
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserSak
@@ -16,7 +17,9 @@ import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -202,6 +205,12 @@ class NyFlytMigreringSakViBistårTest {
             sistEndretAvBruker = iaSakDto.endretTidspunkt,
             forventetStatus = IASak.Status.AVSLUTTET,
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+            forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
+                startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
+                nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+                planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
+            ),
         )
 
         verifiserHistorikk(
