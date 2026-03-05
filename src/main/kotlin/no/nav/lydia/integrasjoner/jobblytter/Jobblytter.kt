@@ -239,10 +239,10 @@ object Jobblytter : CoroutineScope {
                                     migrerEnVirksomhetTilNyFlyt -> {
                                         if (jobInfo.parameter.isNullOrEmpty()) {
                                             logger.info(
-                                                "Jobb migrerEnVirksomhetTilNyFlyt har ingen parameter, fikk null/empty parameter. Forventer orgnr + flag. Avslutter",
+                                                "Jobb '${jobInfo.jobb}' har ingen parameter, fikk null/empty parameter. Forventer orgnr + flag. Avslutter",
                                             )
                                         } else {
-                                            logger.info("Migrerer virksomhet med orgnr ${jobInfo.parameter} til ny flyt")
+                                            logger.info("Jobb '${jobInfo.jobb}' med input param '${jobInfo.parameter}' startet")
                                             nyflytMigreringService.migrer(orgnr = jobInfo.parameter.tilOrgnr(), tørrKjør = jobInfo.parameter.tørrKjør())
                                         }
                                     }

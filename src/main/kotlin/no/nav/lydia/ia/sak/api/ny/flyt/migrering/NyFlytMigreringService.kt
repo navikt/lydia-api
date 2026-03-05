@@ -29,16 +29,73 @@ class NyFlytMigreringService(
         fun String.tilOrgnr() = this.split(":").get(0)
 
         fun String.tørrKjør() = this.length <= 9 || !this.contains(":") || this.split(":").get(1) == "false"
+
+        fun List<IASamarbeid>.getSamarbeidUseCase(migreringsDato: LocalDateTime): SamarbeidUseCase =
+            when {
+                this.isEmpty() -> SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET
+
+                this.any { it.status == IASamarbeid.Status.AKTIV } -> SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID
+
+                this.none {
+                    it.status == IASamarbeid.Status.AKTIV
+                } && this.any {
+                    it.erAvsluttetEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
+                } -> SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN
+
+                this.none {
+                    it.status == IASamarbeid.Status.AKTIV
+                } && this.any {
+                    it.erAvsluttetFør(dato = migreringsDato, tilbakeIAntallDager = 10)
+                } -> SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN
+
+                else -> throw IllegalStateException("Ukjent samarbeid use-case for samarbeidListe: $this")
+            }
+
+        fun IASakDto.getFullførtSakUseCase(migreringsDato: LocalDateTime): FullførtSakUseCase =
+            when {
+                this.status != IASak.Status.FULLFØRT -> FullførtSakUseCase.IKKE_EN_FULLFØRT_SAK
+
+                this.erSistEndretEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
+                -> FullførtSakUseCase.FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MINDRE_ENN_10_DAGER_SIDEN
+
+                else
+                -> FullførtSakUseCase.FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MER_ENN_10_DAGER_SIDEN
+            }
+
+        fun IASamarbeid.erAvsluttetEtter(
+            dato: LocalDateTime,
+            tilbakeIAntallDager: Long,
+        ): Boolean =
+            this.sistEndret != null &&
+                (this.status == IASamarbeid.Status.FULLFØRT || this.status == IASamarbeid.Status.AVBRUTT) &&
+                this.sistEndret.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
+
+        fun IASamarbeid.erAvsluttetFør(
+            dato: LocalDateTime,
+            tilbakeIAntallDager: Long,
+        ): Boolean =
+            this.sistEndret != null &&
+                (this.status == IASamarbeid.Status.FULLFØRT || this.status == IASamarbeid.Status.AVBRUTT) &&
+                !this.sistEndret.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
+
+        fun IASakDto.erSistEndretEtter(
+            dato: LocalDateTime,
+            tilbakeIAntallDager: Long,
+        ): Boolean =
+            this.endretTidspunkt != null &&
+                this.endretTidspunkt.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
     }
 
     fun migrer(
         orgnr: String,
         tørrKjør: Boolean,
     ) {
+        val migreringsDato: LocalDateTime = LocalDateTime.now().toLocalDate().atStartOfDay()
         nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iaSakDto ->
             migrerSisteSak(
                 iaSakDto = iaSakDto,
                 orgnummer = orgnr,
+                migreringsDato = migreringsDato,
                 tørrKjør = tørrKjør,
             )
         }?.let {
@@ -63,6 +120,7 @@ class NyFlytMigreringService(
     fun migrerSisteSak(
         iaSakDto: IASakDto?,
         orgnummer: String,
+        migreringsDato: LocalDateTime,
         tørrKjør: Boolean,
     ): IASakDto? {
         if (iaSakDto == null) {
@@ -72,33 +130,55 @@ class NyFlytMigreringService(
 
         samarbeidService.hentSamarbeidSomIkkeErSlettet(saksnummer = iaSakDto.saksnummer).apply {
             onRight { samarbeidListe ->
-                val samarbeidUseCase = samarbeidListe.getSamarbeidUseCase()
+                val samarbeidUseCase = samarbeidListe.getSamarbeidUseCase(migreringsDato = migreringsDato)
+                val fullførtSakUseCase = iaSakDto.getFullførtSakUseCase(migreringsDato = migreringsDato)
                 val migreringsPlan = utledMigreringsPlan(
                     iaSakDto = iaSakDto,
                     samarbeidUseCase = samarbeidUseCase,
+                    fullførtSakUseCase = fullførtSakUseCase,
                 )
                 val samarbeidDetaljer =
                     samarbeidListe.joinToString(separator = "; ", prefix = "[", postfix = "]") { samarbeid ->
-                        "samarbeid #${samarbeid.id}, status '${samarbeid.status?.name}', sist endret '${samarbeid.sistEndret}', avbrutt '${samarbeid.avbrutt}'"
+                        "samarbeid #${samarbeid.id}, status '${samarbeid.status?.name}', " +
+                            "opprettet '${samarbeid.opprettet}', " +
+                            "sist endret '${samarbeid.sistEndret}', " +
+                            "fullført '${samarbeid.fullført}', " +
+                            "avbrutt '${samarbeid.avbrutt}'"
                     }
 
+                val samarbeidEllerFullførtSakUsecase = when (iaSakDto.status) {
+                    IASak.Status.FULLFØRT -> fullførtSakUseCase.name
+                    else -> samarbeidUseCase.name
+                }
                 when (migreringsPlan) {
                     is MigreringsPlan.IkkeGjennomførbar -> {
                         log.info(
-                            "[Migrering][TørrKjør=$tørrKjør] Saken '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
-                                "er ikke håndtert som en use-case til migrering enda (use-case: '${samarbeidUseCase.name}'), og vil derfor ikke bli migrert. " +
-                                "Saken har status '${iaSakDto.status.name}' og ${samarbeidListe.size} samarbeid. Detaljer om samarbeid: '$samarbeidDetaljer'. ",
+                            "[Migrering][${migreringsPlan.javaClass.simpleName}][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' " +
+                                "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
+                                "er ikke håndtert som en use-case til migrering og vil derfor ikke bli migrert. " +
+                                "Følgende use-case '$samarbeidEllerFullførtSakUsecase' er ikke håndtert for status '${iaSakDto.status.name}'. " +
+                                "Det finnes ${samarbeidListe.size} samarbeid på saken. Detaljer om samarbeid: '$samarbeidDetaljer'. ",
                         )
                         return null
                     }
 
                     is MigreringsPlan.Gjennomførbar -> {
+                        val bakgrunnForMigrering = when (iaSakDto.status) {
+                            IASak.Status.FULLFØRT -> {
+                                "'$fullførtSakUseCase' med status på sak '${iaSakDto.status}' " +
+                                    "og sist endret dato '${iaSakDto.endretTidspunkt}'"
+                            }
+
+                            else -> {
+                                "'$samarbeidUseCase' og ${samarbeidListe.size} samarbeid på saken. Detaljer om samarbeid: '$samarbeidDetaljer'. "
+                            }
+                        }
                         log.info(
-                            "[Migrering][TørrKjør=$tørrKjør] Saken '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
-                                "er håndtert som en use-case til migrering (use-case: '${samarbeidUseCase.name}'), og vil derfor bli migrert. " +
-                                "Saken har status '${iaSakDto.status.name}' og ${samarbeidListe.size} samarbeid. Detaljer om samarbeid: '$samarbeidDetaljer'. " +
+                            "[Migrering][${migreringsPlan.javaClass.simpleName}][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' " +
+                                "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' er en gyldig use-case til migrering. " +
                                 "Saken blir migrert til status '${migreringsPlan.resulterendeSakStatus.name}'" +
-                                " og virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}'",
+                                " og virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}'. " +
+                                "Bakgrunn for migrering er: '$bakgrunnForMigrering'. ",
                         )
                     }
                 }
@@ -148,10 +228,10 @@ class NyFlytMigreringService(
     private fun utledMigreringsPlan(
         iaSakDto: IASakDto,
         samarbeidUseCase: SamarbeidUseCase,
+        fullførtSakUseCase: FullførtSakUseCase,
     ): MigreringsPlan =
         when (iaSakDto.status) {
             IASak.Status.KARTLEGGES -> {
-                // Rad 6 til 9
                 when (samarbeidUseCase) {
                     SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
@@ -205,6 +285,32 @@ class NyFlytMigreringService(
                 }
             }
 
+            IASak.Status.FULLFØRT -> {
+                when (fullførtSakUseCase) {
+                    FullførtSakUseCase.FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MER_ENN_10_DAGER_SIDEN,
+                    -> {
+                        MigreringsPlan.Gjennomførbar(
+                            nåværendeSakStatus = iaSakDto.status,
+                            resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                            tilstand = Tilstand.VirksomhetKlarTilVurdering,
+                        )
+                    }
+
+                    FullførtSakUseCase.FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MINDRE_ENN_10_DAGER_SIDEN,
+                    -> {
+                        MigreringsPlan.Gjennomførbar(
+                            nåværendeSakStatus = iaSakDto.status,
+                            resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                            tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                        )
+                    }
+
+                    else -> {
+                        MigreringsPlan.IkkeGjennomførbar
+                    }
+                }
+            }
+
             else -> {
                 MigreringsPlan.IkkeGjennomførbar
             }
@@ -234,47 +340,9 @@ class NyFlytMigreringService(
         INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
     }
 
-    /*
-     Status samarbeid:
-         - AKTIV,
-         - FULLFØRT,
-         - SLETTET,  --> samarbeid som er slettet hentes aldri ut
-         - AVBRUTT,
-     */
-    fun List<IASamarbeid>.getSamarbeidUseCase(migreringsDato: LocalDateTime = LocalDateTime.now().toLocalDate().atStartOfDay()): SamarbeidUseCase =
-        when {
-            this.isEmpty() -> SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET
-
-            this.any { it.status == IASamarbeid.Status.AKTIV } -> SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID
-
-            this.none {
-                it.status == IASamarbeid.Status.AKTIV
-            } && this.any {
-                it.erAvsluttetEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
-            } -> SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN
-
-            this.none {
-                it.status == IASamarbeid.Status.AKTIV
-            } && this.any {
-                it.erAvsluttetFør(dato = migreringsDato, tilbakeIAntallDager = 10)
-            } -> SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN
-
-            else -> throw IllegalStateException("Ukjent samarbeid use-case for samarbeidListe: $this")
-        }
-
-    private fun IASamarbeid.erAvsluttetEtter(
-        dato: LocalDateTime,
-        tilbakeIAntallDager: Long,
-    ): Boolean =
-        this.sistEndret != null &&
-            (this.status == IASamarbeid.Status.FULLFØRT || this.status == IASamarbeid.Status.AVBRUTT) &&
-            this.sistEndret.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
-
-    private fun IASamarbeid.erAvsluttetFør(
-        dato: LocalDateTime,
-        tilbakeIAntallDager: Long,
-    ): Boolean =
-        this.avbrutt != null &&
-            (this.status == IASamarbeid.Status.FULLFØRT || this.status == IASamarbeid.Status.AVBRUTT) &&
-            !this.avbrutt.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
+    enum class FullførtSakUseCase {
+        IKKE_EN_FULLFØRT_SAK,
+        FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MER_ENN_10_DAGER_SIDEN,
+        FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MINDRE_ENN_10_DAGER_SIDEN,
+    }
 }

@@ -27,6 +27,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
@@ -83,7 +84,7 @@ class MigreringTestUtils {
         }
 
         fun tømmKafkaTopics(iaSakDto: IASakDto) {
-            val hentetSakStatus = hentSak(orgnummer = iaSakDto.orgnr).status
+            val hentetSakStatus = hentSak(orgnummer = iaSakDto.orgnr, saksnummer = iaSakDto.saksnummer).status
 
             runBlocking {
                 kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -125,7 +126,7 @@ class MigreringTestUtils {
             migrertSak.status shouldBe forventetStatus
             migrertSak.endretTidspunkt!! shouldBeEqualComparingTo sistEndretAvBruker!!
 
-            val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = iaSakDto.orgnr)
+            val virksomhetsTilstand: VirksomhetTilstandDto = hentVirksomhetTilstand(orgnr = iaSakDto.orgnr)
             virksomhetsTilstand.tilstand shouldBe forventetTilstand
         }
 
