@@ -1,6 +1,8 @@
 package no.nav.lydia.container.ny.flyt.migrering
 
-import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.mirgeringSakIViBistår
+import io.kotest.matchers.shouldBe
+import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIKartlegges
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserSak
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.tømmKafkaTopics
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.utilsSetUp
@@ -10,12 +12,14 @@ import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.ver
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
+import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import kotlin.test.Ignore
+import kotlin.test.Test
 
 class NyFlytMigreringSakIkkeAktuellTest {
     companion object {
@@ -32,9 +36,12 @@ class NyFlytMigreringSakIkkeAktuellTest {
         }
     }
 
-    @Ignore
+    @Test
     fun `Rad #16 sak IKKE_AKTUELL ingen samarbeid status FULLFØRT for mindre enn 10d siden migreres til AVSLUTTET og VirksomhetErVurdert`() {
-        val iaSakDtoUnderArbeid = mirgeringSakIViBistår().nyIkkeAktuellHendelse()
+        // val iaSakDtoUnderArbeid = mirgeringSakIViBistår().avbrytSamarbeid().nyIkkeAktuellHendelse()
+        val iaSakDtoUnderArbeid = migreringSakIKartlegges().nyIkkeAktuellHendelse()
+        iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
+
         postgresContainerHelper.performUpdate(
             "UPDATE ia_sak " +
                 "SET " +
@@ -49,7 +56,13 @@ class NyFlytMigreringSakIkkeAktuellTest {
             iaSakDto = iaSakDto,
             sistEndretAvBruker = iaSakDto.endretTidspunkt,
             forventetStatus = IASak.Status.AVSLUTTET,
-            forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+            forventetTilstand = VirksomhetIATilstand.VirksomhetErVurdert,
+            forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
+                startTilstand = VirksomhetIATilstand.VirksomhetErVurdert,
+                planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
+                nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+                planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
+            ),
         )
 
         verifiserHistorikk(
@@ -60,10 +73,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
                 IASak.Status.VURDERES,
                 IASak.Status.KONTAKTES,
                 IASak.Status.KARTLEGGES,
-                IASak.Status.KARTLEGGES,
-                IASak.Status.VI_BISTÅR,
-                IASak.Status.VI_BISTÅR,
-                IASak.Status.FULLFØRT,
+                IASak.Status.IKKE_AKTUELL,
                 IASak.Status.AVSLUTTET,
             ),
             forventedeHendelsestyper = listOf(
@@ -72,10 +82,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
                 IASakshendelseType.TA_EIERSKAP_I_SAK,
                 IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
                 IASakshendelseType.VIRKSOMHET_KARTLEGGES,
-                IASakshendelseType.NY_PROSESS,
-                IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS,
-                IASakshendelseType.FULLFØR_PROSESS,
-                IASakshendelseType.FULLFØR_BISTAND,
+                IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL,
                 IASakshendelseType.MIGRERING_TIL_NY_FLYT,
             ),
         )

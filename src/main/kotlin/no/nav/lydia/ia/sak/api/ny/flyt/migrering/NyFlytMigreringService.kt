@@ -56,15 +56,15 @@ class NyFlytMigreringService(
                 else -> throw IllegalStateException("Ukjent samarbeid use-case for samarbeidListe: $this")
             }
 
-        fun IASakDto.getFullførtSakUseCase(migreringsDato: LocalDateTime): FullførtSakUseCase =
+        fun IASakDto.getSakUseCase(migreringsDato: LocalDateTime): SakUseCase =
             when {
-                this.status != IASak.Status.FULLFØRT -> FullførtSakUseCase.IKKE_EN_FULLFØRT_SAK
+                this.status != IASak.Status.FULLFØRT && this.status != IASak.Status.IKKE_AKTUELL -> SakUseCase.IKKE_EN_FULLFØRT_ELLER_IKKE_AKTUELL_SAK
 
                 this.erSistEndretEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
-                -> FullførtSakUseCase.FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MINDRE_ENN_10_DAGER_SIDEN
+                -> SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN
 
                 else
-                -> FullførtSakUseCase.FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MER_ENN_10_DAGER_SIDEN
+                -> SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN
             }
 
         fun IASamarbeid.erAvsluttetEtter(
@@ -136,11 +136,11 @@ class NyFlytMigreringService(
         samarbeidService.hentSamarbeidSomIkkeErSlettet(saksnummer = iaSakDto.saksnummer).apply {
             onRight { samarbeidListe ->
                 val samarbeidUseCase = samarbeidListe.getSamarbeidUseCase(migreringsDato = migreringsDato)
-                val fullførtSakUseCase = iaSakDto.getFullførtSakUseCase(migreringsDato = migreringsDato)
+                val sakUseCase = iaSakDto.getSakUseCase(migreringsDato = migreringsDato)
                 val migreringsPlan = utledMigreringsPlan(
                     iaSakDto = iaSakDto,
                     samarbeidUseCase = samarbeidUseCase,
-                    fullførtSakUseCase = fullførtSakUseCase,
+                    sakSakUseCase = sakUseCase,
                 )
                 val samarbeidDetaljer =
                     samarbeidListe.joinToString(separator = "; ", prefix = "[", postfix = "]") { samarbeid ->
@@ -151,8 +151,8 @@ class NyFlytMigreringService(
                             "avbrutt '${samarbeid.avbrutt}'"
                     }
 
-                val samarbeidEllerFullførtSakUsecase = when (iaSakDto.status) {
-                    IASak.Status.FULLFØRT -> fullførtSakUseCase.name
+                val samarbeidEllerSakBasertUsecase = when (iaSakDto.status) {
+                    IASak.Status.FULLFØRT, IASak.Status.IKKE_AKTUELL -> sakUseCase.name
                     else -> samarbeidUseCase.name
                 }
                 when (migreringsPlan) {
@@ -161,7 +161,7 @@ class NyFlytMigreringService(
                             "[Migrering][${migreringsPlan.javaClass.simpleName}][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' " +
                                 "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
                                 "er ikke håndtert som en use-case til migrering og vil derfor ikke bli migrert. " +
-                                "Følgende use-case '$samarbeidEllerFullførtSakUsecase' er ikke håndtert for status '${iaSakDto.status.name}'. " +
+                                "Følgende use-case '$samarbeidEllerSakBasertUsecase' er ikke håndtert for status '${iaSakDto.status.name}'. " +
                                 "Det finnes ${samarbeidListe.size} samarbeid på saken. Detaljer om samarbeid: '$samarbeidDetaljer'. ",
                         )
                         return null
@@ -170,7 +170,7 @@ class NyFlytMigreringService(
                     is MigreringsPlan.Gjennomførbar -> {
                         val bakgrunnForMigrering = when (iaSakDto.status) {
                             IASak.Status.FULLFØRT -> {
-                                "'$fullførtSakUseCase' med status på sak '${iaSakDto.status}' " +
+                                "'$sakUseCase' med status på sak '${iaSakDto.status}' " +
                                     "og sist endret dato '${iaSakDto.endretTidspunkt}'"
                             }
 
@@ -215,7 +215,7 @@ class NyFlytMigreringService(
                         ).let { tilstand: VirksomhetTilstandDto? ->
                             log.info(
                                 "[Migrering] Oppdatert sak '${migrertSakDto.saksnummer}' på virksomhet med orgnr '${migrertSakDto.orgnr}' " +
-                                    "fra status '${iaSakDto.status.name}' til status'${migrertSakDto.status.name}', " +
+                                    "fra status '${iaSakDto.status.name}' til status '${migrertSakDto.status.name}', " +
                                     "og opprettet tilstand '${tilstand?.tilstand}'",
                             )
                             if (migreringsPlan.gjørVirksomhetKlarTilVurderingSenere &&
@@ -266,7 +266,7 @@ class NyFlytMigreringService(
     private fun utledMigreringsPlan(
         iaSakDto: IASakDto,
         samarbeidUseCase: SamarbeidUseCase,
-        fullførtSakUseCase: FullførtSakUseCase,
+        sakSakUseCase: SakUseCase,
     ): MigreringsPlan =
         when (iaSakDto.status) {
             IASak.Status.KARTLEGGES -> {
@@ -326,8 +326,8 @@ class NyFlytMigreringService(
             }
 
             IASak.Status.FULLFØRT -> {
-                when (fullførtSakUseCase) {
-                    FullførtSakUseCase.FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MER_ENN_10_DAGER_SIDEN,
+                when (sakSakUseCase) {
+                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
                     -> {
                         MigreringsPlan.Gjennomførbar(
                             nåværendeSakStatus = iaSakDto.status,
@@ -336,12 +336,41 @@ class NyFlytMigreringService(
                         )
                     }
 
-                    FullførtSakUseCase.FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MINDRE_ENN_10_DAGER_SIDEN,
+                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,
                     -> {
                         MigreringsPlan.Gjennomførbar(
                             nåværendeSakStatus = iaSakDto.status,
                             resulterendeSakStatus = IASak.Status.AVSLUTTET,
                             tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                            gjørVirksomhetKlarTilVurderingSenere = true,
+                        )
+                    }
+
+                    else -> {
+                        MigreringsPlan.IkkeGjennomførbar
+                    }
+                }
+            }
+
+            IASak.Status.IKKE_AKTUELL -> {
+                when (sakSakUseCase) {
+                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
+                    -> {
+                        /*
+                        MigreringsPlan.Gjennomførbar(
+                            nåværendeSakStatus = iaSakDto.status,
+                            resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                            tilstand = Tilstand.VirksomhetKlarTilVurdering,
+                        )*/
+                        MigreringsPlan.IkkeGjennomførbar
+                    }
+
+                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,
+                    -> {
+                        MigreringsPlan.Gjennomførbar(
+                            nåværendeSakStatus = iaSakDto.status,
+                            resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                            tilstand = Tilstand.VirksomhetErVurdert,
                             gjørVirksomhetKlarTilVurderingSenere = true,
                         )
                     }
@@ -381,9 +410,9 @@ class NyFlytMigreringService(
         INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
     }
 
-    enum class FullførtSakUseCase {
-        IKKE_EN_FULLFØRT_SAK,
-        FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MER_ENN_10_DAGER_SIDEN,
-        FULLFØRT_SAK_MED_SIST_ENDRET_DATO_FOR_MINDRE_ENN_10_DAGER_SIDEN,
+    enum class SakUseCase {
+        IKKE_EN_FULLFØRT_ELLER_IKKE_AKTUELL_SAK,
+        SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
+        SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,
     }
 }
