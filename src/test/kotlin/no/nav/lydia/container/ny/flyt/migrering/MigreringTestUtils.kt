@@ -22,7 +22,10 @@ import no.nav.lydia.container.ny.flyt.NyFlytTest.Companion.hentVirksomhetTilstan
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
+import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.forExactlyOne
@@ -86,6 +89,32 @@ class MigreringTestUtils {
             return iaSakDto
         }
 
+        fun migreringSakIVurderes(medEier: Boolean = false): IASakDto {
+            val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+            val nyVirksomhet = TestVirksomhet.nyVirksomhet(
+                næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+            )
+            val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
+            val iaSakDto = SakHelper.opprettSakForVirksomhet(virksomhet.orgnr)
+
+            return if (medEier) {
+                iaSakDto.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK)
+            } else {
+                iaSakDto
+            }
+        }
+
+        fun migreringSakIKontaktes(): IASakDto {
+            val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+            val nyVirksomhet = TestVirksomhet.nyVirksomhet(
+                næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+            )
+            val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
+            return SakHelper.opprettSakForVirksomhet(virksomhet.orgnr)
+                .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK)
+                .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+        }
+
         fun tømmKafkaTopics(iaSakDto: IASakDto) {
             val hentetSakStatus = hentSak(orgnummer = iaSakDto.orgnr, saksnummer = iaSakDto.saksnummer).status
 
@@ -114,6 +143,19 @@ class MigreringTestUtils {
                     }
                 }
             }
+        }
+
+        fun sendMigreringsmeldingOgVerifiserSakIkkeBlirMigrert(
+            iaSakDto: IASakDto,
+            migrer: Boolean = true,
+        ) {
+            kafkaContainerHelper.sendJobbMelding(Jobb.migrerEnVirksomhetTilNyFlyt, parameter = "${iaSakDto.orgnr}:$migrer")
+            applikasjon.shouldContainLog(
+                (
+                    "Sak '${iaSakDto.saksnummer}' med status 'SLETTET' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
+                        "er ikke håndtert som en use-case til migrering"
+                ).toRegex(),
+            )
         }
 
         fun sendMigreringsmeldingOgVerifiserSak(

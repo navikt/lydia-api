@@ -269,6 +269,22 @@ class NyFlytMigreringService(
         sakSakUseCase: SakUseCase,
     ): MigreringsPlan =
         when (iaSakDto.status) {
+            IASak.Status.VURDERES -> {
+                MigreringsPlan.Gjennomførbar(
+                    nåværendeSakStatus = iaSakDto.status,
+                    resulterendeSakStatus = IASak.Status.VURDERES,
+                    tilstand = Tilstand.VirksomhetVurderes,
+                )
+            }
+
+            IASak.Status.KONTAKTES -> {
+                MigreringsPlan.Gjennomførbar(
+                    nåværendeSakStatus = iaSakDto.status,
+                    resulterendeSakStatus = IASak.Status.VURDERES,
+                    tilstand = Tilstand.VirksomhetVurderes,
+                )
+            }
+
             IASak.Status.KARTLEGGES -> {
                 when (samarbeidUseCase) {
                     SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
