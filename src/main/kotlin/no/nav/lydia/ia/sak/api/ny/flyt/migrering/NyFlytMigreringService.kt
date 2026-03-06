@@ -356,13 +356,11 @@ class NyFlytMigreringService(
                 when (sakSakUseCase) {
                     SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
                     -> {
-                        /*
                         MigreringsPlan.Gjennomførbar(
                             nåværendeSakStatus = iaSakDto.status,
                             resulterendeSakStatus = IASak.Status.AVSLUTTET,
                             tilstand = Tilstand.VirksomhetKlarTilVurdering,
-                        )*/
-                        MigreringsPlan.IkkeGjennomførbar
+                        )
                     }
 
                     SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,

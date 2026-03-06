@@ -89,4 +89,52 @@ class NyFlytMigreringSakIkkeAktuellTest {
 
         verifiserKafkaMeldinger(iaSakDto, forventetStatus = IASak.Status.AVSLUTTET)
     }
+
+    @Test
+    fun `Rad #17 sak IKKE_AKTUELL ingen samarbeid status FULLFØRT for mer enn 10d siden migreres til AVSLUTTET og VirksomhetErVurdert`() {
+        val iaSakDtoUnderArbeid = migreringSakIKartlegges().nyIkkeAktuellHendelse()
+        iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
+
+        postgresContainerHelper.performUpdate(
+            "UPDATE ia_sak " +
+                "SET " +
+                "opprettet = opprettet - INTERVAL '11 days', " +
+                "endret = endret - INTERVAL '11 days' " +
+                "where saksnummer = '${iaSakDtoUnderArbeid.saksnummer}' and orgnr = '${iaSakDtoUnderArbeid.orgnr}'",
+        )
+        val iaSakDto = hentSak(iaSakDtoUnderArbeid.orgnr, iaSakDtoUnderArbeid.saksnummer)
+
+        tømmKafkaTopics(iaSakDto)
+        sendMigreringsmeldingOgVerifiserSak(
+            iaSakDto = iaSakDto,
+            sistEndretAvBruker = iaSakDto.endretTidspunkt,
+            forventetStatus = IASak.Status.AVSLUTTET,
+            forventetTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+            forventetAutomatiskOppdatering = null,
+        )
+
+        verifiserHistorikk(
+            orgnummer = iaSakDto.orgnr,
+            forventedeStatuser = listOf(
+                IASak.Status.NY,
+                IASak.Status.VURDERES,
+                IASak.Status.VURDERES,
+                IASak.Status.KONTAKTES,
+                IASak.Status.KARTLEGGES,
+                IASak.Status.IKKE_AKTUELL,
+                IASak.Status.AVSLUTTET,
+            ),
+            forventedeHendelsestyper = listOf(
+                IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
+                IASakshendelseType.VIRKSOMHET_VURDERES,
+                IASakshendelseType.TA_EIERSKAP_I_SAK,
+                IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
+                IASakshendelseType.VIRKSOMHET_KARTLEGGES,
+                IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL,
+                IASakshendelseType.MIGRERING_TIL_NY_FLYT,
+            ),
+        )
+
+        verifiserKafkaMeldinger(iaSakDto, forventetStatus = IASak.Status.AVSLUTTET)
+    }
 }
