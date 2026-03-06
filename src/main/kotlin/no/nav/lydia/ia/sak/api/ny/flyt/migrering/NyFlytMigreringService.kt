@@ -58,8 +58,6 @@ class NyFlytMigreringService(
 
         fun IASakDto.getSakUseCase(migreringsDato: LocalDateTime): SakUseCase =
             when {
-                this.status != IASak.Status.FULLFØRT && this.status != IASak.Status.IKKE_AKTUELL -> SakUseCase.IKKE_EN_FULLFØRT_ELLER_IKKE_AKTUELL_SAK
-
                 this.erSistEndretEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
                 -> SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN
 
@@ -152,7 +150,8 @@ class NyFlytMigreringService(
                     }
 
                 val samarbeidEllerSakBasertUsecase = when (iaSakDto.status) {
-                    IASak.Status.FULLFØRT, IASak.Status.IKKE_AKTUELL -> sakUseCase.name
+                    IASak.Status.FULLFØRT -> sakUseCase.name
+                    IASak.Status.IKKE_AKTUELL -> "${sakUseCase.name} og ${samarbeidUseCase.name}"
                     else -> samarbeidUseCase.name
                 }
                 when (migreringsPlan) {
@@ -345,36 +344,57 @@ class NyFlytMigreringService(
                             gjørVirksomhetKlarTilVurderingSenere = true,
                         )
                     }
-
-                    else -> {
-                        MigreringsPlan.IkkeGjennomførbar
-                    }
                 }
             }
 
             IASak.Status.IKKE_AKTUELL -> {
                 when (sakSakUseCase) {
-                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
-                    -> {
-                        MigreringsPlan.Gjennomførbar(
-                            nåværendeSakStatus = iaSakDto.status,
-                            resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                            tilstand = Tilstand.VirksomhetKlarTilVurdering,
-                        )
-                    }
-
                     SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,
                     -> {
-                        MigreringsPlan.Gjennomførbar(
-                            nåværendeSakStatus = iaSakDto.status,
-                            resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                            tilstand = Tilstand.VirksomhetErVurdert,
-                            gjørVirksomhetKlarTilVurderingSenere = true,
-                        )
+                        when (samarbeidUseCase) {
+                            SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET,
+                            -> {
+                                MigreringsPlan.Gjennomførbar(
+                                    nåværendeSakStatus = iaSakDto.status,
+                                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                                    tilstand = Tilstand.VirksomhetErVurdert,
+                                    gjørVirksomhetKlarTilVurderingSenere = true,
+                                )
+                            }
+
+                            SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN,
+                            SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
+                            -> {
+                                MigreringsPlan.Gjennomførbar(
+                                    nåværendeSakStatus = iaSakDto.status,
+                                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                                    tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                                    gjørVirksomhetKlarTilVurderingSenere = true,
+                                )
+                            }
+
+                            else -> {
+                                MigreringsPlan.IkkeGjennomførbar
+                            }
+                        }
                     }
 
-                    else -> {
-                        MigreringsPlan.IkkeGjennomførbar
+                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
+                    -> {
+                        when (samarbeidUseCase) {
+                            SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET,
+                            -> {
+                                MigreringsPlan.Gjennomførbar(
+                                    nåværendeSakStatus = iaSakDto.status,
+                                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                                    tilstand = Tilstand.VirksomhetKlarTilVurdering,
+                                )
+                            }
+
+                            else -> {
+                                MigreringsPlan.IkkeGjennomførbar
+                            }
+                        }
                     }
                 }
             }
@@ -409,7 +429,6 @@ class NyFlytMigreringService(
     }
 
     enum class SakUseCase {
-        IKKE_EN_FULLFØRT_ELLER_IKKE_AKTUELL_SAK,
         SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
         SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,
     }
