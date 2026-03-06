@@ -180,9 +180,10 @@ class NyFlytMigreringService(
                         log.info(
                             "[Migrering][${migreringsPlan.javaClass.simpleName}][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' " +
                                 "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' er en gyldig use-case til migrering. " +
-                                "Saken blir migrert til status '${migreringsPlan.resulterendeSakStatus.name}' " +
-                                "og virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}', " +
-                                "og automatisk oppdatering (VirksomhetKlarTilVurdering om 90 dager): ${migreringsPlan.gjørVirksomhetKlarTilVurderingSenere} " +
+                                "Saken blir migrert til status '${migreringsPlan.resulterendeSakStatus.name}', " +
+                                "virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}', " +
+                                "og automatisk oppdatering (VirksomhetKlarTilVurdering om 90 dager): " +
+                                "'${migreringsPlan.gjørVirksomhetKlarTilVurderingSenere}'. " +
                                 "Bakgrunn for migrering er: '$bakgrunnForMigrering'. ",
                         )
                     }
@@ -383,6 +384,16 @@ class NyFlytMigreringService(
                     -> {
                         when (samarbeidUseCase) {
                             SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET,
+                            -> {
+                                MigreringsPlan.Gjennomførbar(
+                                    nåværendeSakStatus = iaSakDto.status,
+                                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                                    tilstand = Tilstand.VirksomhetKlarTilVurdering,
+                                )
+                            }
+
+                            SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN,
+                            SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
                             -> {
                                 MigreringsPlan.Gjennomførbar(
                                     nåværendeSakStatus = iaSakDto.status,
