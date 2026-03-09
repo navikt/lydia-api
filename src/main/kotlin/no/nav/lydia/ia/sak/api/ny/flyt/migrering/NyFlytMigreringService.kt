@@ -131,6 +131,22 @@ class NyFlytMigreringService(
             return null
         }
 
+        val tilstandVirksomhet = nyFlytService.hentTilstandVirksomhet(orgnummer = iaSakDto.orgnr)
+        if (tilstandVirksomhet != null) {
+            val loggForNyTilstand = if (tilstandVirksomhet.nesteTilstand?.nyTilstand != null) {
+                "neste tilstand '${tilstandVirksomhet.nesteTilstand.nyTilstand}' med planlagt hendelse '${tilstandVirksomhet.nesteTilstand.planlagtHendelse}' " +
+                    "og planlagt dato '${tilstandVirksomhet.nesteTilstand.planlagtDato}'"
+            } else {
+                "ingen neste tilstand"
+            }
+            log.info(
+                "[Migrering][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
+                    "er allerede migrert. Virksomhet har tilstand '${tilstandVirksomhet.tilstand}', og eventuelt ny tilstand til senere oppdatering: " +
+                    "'$loggForNyTilstand'. Det er derfor ingen sak å migrere.",
+            )
+            return null
+        }
+
         samarbeidService.hentSamarbeidSomIkkeErSlettet(saksnummer = iaSakDto.saksnummer).apply {
             onRight { samarbeidListe ->
                 val samarbeidUseCase = samarbeidListe.getSamarbeidUseCase(migreringsDato = migreringsDato)

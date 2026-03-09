@@ -210,6 +210,8 @@ class NyFlytService(
         ).right()
     }
 
+    fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
+
     private fun slettVirksomhetTilstand(orgnr: String): Either<Feil, VirksomhetTilstandDto?> =
         try {
             val slettetTilstand = tilstandVirksomhetRepository.slettVirksomhetTilstand(orgnr = orgnr)

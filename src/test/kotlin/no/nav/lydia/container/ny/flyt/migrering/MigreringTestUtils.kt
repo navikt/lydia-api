@@ -145,17 +145,13 @@ class MigreringTestUtils {
             }
         }
 
-        fun sendMigreringsmeldingOgVerifiserSakIkkeBlirMigrert(
+        fun sendMigreringsmeldingOgVerifiserLogg(
             iaSakDto: IASakDto,
+            loggmelding: Regex,
             migrer: Boolean = true,
         ) {
             kafkaContainerHelper.sendJobbMelding(Jobb.migrerEnVirksomhetTilNyFlyt, parameter = "${iaSakDto.orgnr}:$migrer")
-            applikasjon.shouldContainLog(
-                (
-                    "Sak '${iaSakDto.saksnummer}' med status 'SLETTET' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
-                        "er ikke håndtert som en use-case til migrering"
-                ).toRegex(),
-            )
+            applikasjon.shouldContainLog(regex = loggmelding)
         }
 
         fun sendMigreringsmeldingOgVerifiserSak(
