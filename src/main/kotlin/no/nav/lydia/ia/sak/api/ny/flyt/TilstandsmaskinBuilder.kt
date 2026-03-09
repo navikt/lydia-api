@@ -227,22 +227,18 @@ sealed class Tilstand {
             when (hendelse) {
                 is Hendelse.AngreVurderVirksomhet -> {
                     val sakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)!!
-                    val harFølgere = fiaKontekst.nyFlytService.sakHarFølgere(saksnummer = sakDto.saksnummer)
-                    if (harFølgere) {
-                        Konsekvens(
-                            endring = Either.Left(Feil("Kan ikke angre vurdering når saken har følgere", HttpStatusCode.BadRequest)),
-                            nyTilstand = VirksomhetVurderes,
-                        )
-                    } else {
-                        fiaKontekst.nyFlytService.slettEllerOppdaterTilstandVirksomhet(
-                            orgnummer = hendelse.orgnr,
-                        )
-                        val endring = fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
-                        Konsekvens(
-                            endring = endring,
-                            nyTilstand = VirksomhetKlarTilVurdering,
-                        )
+                    fiaKontekst.nyFlytService.slettEllerOppdaterTilstandVirksomhet(
+                        orgnummer = hendelse.orgnr,
+                    )
+                    if (fiaKontekst.nyFlytService.sakHarFølgere(sakDto.saksnummer)) {
+                        fiaKontekst.nyFlytService.slettAlleFølgereForSak(sakDto.saksnummer)
                     }
+                    // TODO: if (nyFlytService.harSamarbeid) nyFlytService.slettAlleSamarbeid (ia_prosess)
+                    val endring = fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
+                    Konsekvens(
+                        endring = endring,
+                        nyTilstand = VirksomhetKlarTilVurdering,
+                    )
                 }
 
                 is Hendelse.AvsluttVurdering -> {

@@ -63,6 +63,7 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.time.LocalDate
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -339,29 +340,6 @@ class NyFlytTest {
     }
 
     @Test
-    fun `Hendelse AngreVurdering fra Tilstand VirksomhetVurderes for en sak med følgere skal være forbudt`() {
-        val eierAvSak = authContainerHelper.superbruker1
-        val følgerAvSak = authContainerHelper.saksbehandler2
-        val sak = vurderVirksomhet(
-            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
-            token = eierAvSak.token,
-        )
-        sak.status shouldBe IASak.Status.VURDERES
-
-        val oppdatertSak = sak.leggTilFolger(token = følgerAvSak.token)
-
-        val angreVurderRes = applikasjon.performPost("$NY_FLYT_PATH/${oppdatertSak.orgnr}/angre-vurdering")
-            .authentication().bearer(eierAvSak.token)
-            .tilSingelRespons<IASakDto>()
-        angreVurderRes.second.statusCode shouldBe HttpStatusCode.BadRequest.value
-
-        oppdatertSak.status shouldBe IASak.Status.VURDERES
-
-        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = oppdatertSak.orgnr)
-        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
-    }
-
-    @Test
     fun `Hendelse EndrePlanlagtDatoForNesteTilstand fra Tilstand AlleSamarbeidIVirksomhetErAvsluttet skal gi en nyPlanlagtDato`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
@@ -618,9 +596,7 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
-        val angreVurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/angre-vurdering")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .tilSingelRespons<IASakDto>()
+        val angreVurderRes = sak.angreVurdering()
         angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
 
         val sakenErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
@@ -662,6 +638,108 @@ class NyFlytTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `skal kunne angre vurdering med en virksomhet som har en følger`() {
+        val eierAvSak = authContainerHelper.superbruker1
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        val sak = vurderVirksomhet(
+            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+            token = eierAvSak.token,
+        )
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.leggTilFolger(token = følgerAvSak.token)
+
+        val harFølgereFør = postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT count(*) > 0
+                 FROM ia_sak_team
+                 WHERE saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
+        )
+        harFølgereFør.shouldBeTrue()
+
+        val angreVurderRes = sak.angreVurdering(token = eierAvSak.token)
+        angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
+
+        val sakenErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT count(*) = 0
+                 FROM ia_sak
+                 WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+        sakenErSlettet.shouldBeTrue()
+
+        val følgereErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT count(*) = 0
+                 FROM ia_sak_team
+                 WHERE saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
+        )
+        følgereErSlettet.shouldBeTrue()
+    }
+
+    @Test
+    fun `skal kunne angre vurdering med en virksomhet som har flere følgere`() {
+        val eierAvSak = authContainerHelper.superbruker1
+        val sak = vurderVirksomhet(
+            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+            token = eierAvSak.token,
+        )
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.leggTilFolger(token = authContainerHelper.saksbehandler1.token)
+        sak.leggTilFolger(token = authContainerHelper.saksbehandler2.token)
+
+        val angreVurderRes = sak.angreVurdering(token = eierAvSak.token)
+        angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
+
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+
+        val følgereErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT count(*) = 0
+                 FROM ia_sak_team
+                 WHERE saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
+        )
+        følgereErSlettet.shouldBeTrue()
+    }
+
+    // TODO: Implementer logikk for angre vurdering slik at denne testen blir grønn
+    @Ignore
+    fun `skal kunne angre vurdering etter å ha opprettet og slettet et samarbeid`() {
+        val eierAvSak = authContainerHelper.superbruker1
+        val sak = vurderVirksomhet(
+            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+            token = eierAvSak.token,
+        )
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+
+        val samarbeid = sak.opprettSamarbeid(token = eierAvSak.token)
+        samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = eierAvSak.token)
+
+        val angreVurderRes = sak.angreVurdering(token = eierAvSak.token)
+        angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
+
+        val sakenErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT count(*) = 0
+                 FROM ia_sak
+                 WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+        sakenErSlettet.shouldBeTrue()
+
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
     }
 
     @Test
@@ -1347,6 +1425,11 @@ class NyFlytTest {
                     ),
                 ),
             ).tilSingelRespons<IASamarbeidDto>().third.get()
+
+    private fun IASakDto.angreVurdering(token: String = authContainerHelper.superbruker1.token) =
+        applikasjon.performPost("$NY_FLYT_PATH/$orgnr/angre-vurdering")
+            .authentication().bearer(token)
+            .tilSingelRespons<IASakDto>()
 
     private fun IASakDto.avsluttVurdering(
         token: String = authContainerHelper.superbruker1.token,

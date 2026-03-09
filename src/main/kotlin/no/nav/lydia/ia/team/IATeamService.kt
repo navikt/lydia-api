@@ -60,6 +60,10 @@ class IATeamService(
         iaTeamRepository.slettBrukerFraTeam(saksnummer = iaSakDto.saksnummer, navAnsatt = navAnsatt)?.right()
             ?: Feil("Feil ved fjerning av bruker som følger sak", HttpStatusCode.BadRequest).left()
 
+    fun slettAlleFølgereForSak(saksnummer: String) {
+        iaTeamRepository.slettAlleFølgereForSak(saksnummer = saksnummer)
+    }
+
     fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<Pair<IASakDto, String>>> =
         try {
             iaTeamRepository.hentSakerBrukerEierEllerFølger(navAnsatt = navAnsatt).right()

@@ -236,6 +236,10 @@ class NyFlytService(
             .getOrElse { emptyList() }
             .isNotEmpty()
 
+    fun slettAlleFølgereForSak(saksnummer: String) {
+        iaTeamService.slettAlleFølgereForSak(saksnummer = saksnummer)
+    }
+
     fun opprettNyttSamarbeid(
         orgnummer: String,
         saksnummer: String,

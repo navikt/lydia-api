@@ -86,6 +86,21 @@ class IATeamRepository(
         )
     }
 
+    fun slettAlleFølgereForSak(saksnummer: String): Int =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        DELETE FROM ia_sak_team
+                        WHERE saksnummer = :saksnummer
+                    """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                    ),
+                ).asUpdate,
+            )
+        }
+
     fun hentSakerBrukerEierEllerFølger(navAnsatt: NavAnsatt): List<Pair<IASakDto, String>> =
         using(sessionOf(dataSource)) { session ->
             session.run(
