@@ -370,6 +370,23 @@ class IASakRepository(
             )
         }
 
+    fun hentAlleSakerDtoForKommune(kommunenummer: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_sak join virksomhet on ia_sak.orgnr = virksomhet.orgnr
+                    WHERE kommunenummer = :kommunenummer
+                    order by endret
+                    """.trimMargin(),
+                    mapOf(
+                        "kommunenummer" to kommunenummer,
+                    ),
+                ).map(this::mapRowToIASakDto).asList,
+            )
+        }
+
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(
             saksnummer: String,

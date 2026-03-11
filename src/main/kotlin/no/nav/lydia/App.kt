@@ -361,6 +361,7 @@ fun startLydiaBackend() {
             nyFlytService = nyFlytService,
             iaSakService = iaSakService,
             samarbeidService = samarbeidService,
+            geografiService = GeografiService(),
         ),
     )
 

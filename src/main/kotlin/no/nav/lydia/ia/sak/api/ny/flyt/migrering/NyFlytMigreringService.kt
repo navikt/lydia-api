@@ -14,17 +14,20 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
 
 class NyFlytMigreringService(
     val nyFlytService: NyFlytService,
     val iaSakService: IASakService,
     val samarbeidService: IASamarbeidService,
+    val geografiService: GeografiService,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -33,7 +36,9 @@ class NyFlytMigreringService(
         // Siste del av strengen indikerer om migrering blir gjennomført eller ikke. Default verdi er "false"
         fun String.tilOrgnr() = this.split(":").get(0)
 
-        fun String.tørrKjør() = this.length <= 9 || !this.contains(":") || this.split(":").get(1) == "false"
+        fun String.tilFylkenummer() = this.split(":").get(0)
+
+        fun String.faktiskMigrer() = this.contains(":") && this.split(":").get(1) == "true"
 
         fun List<IASamarbeid>.getSamarbeidUseCase(migreringsDato: LocalDateTime): SamarbeidUseCase =
             when {
@@ -89,9 +94,101 @@ class NyFlytMigreringService(
                 this.endretTidspunkt.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
     }
 
+    fun migrerAlle(
+        fylkenummer: String = "ALLE",
+        faktiskMigrer: Boolean,
+    ): Triple<Int, Int, Int> {
+        val startTidspunkt = LocalDateTime.now()
+        val antallMigrerbareSakerFunnet = AtomicInteger(0) //
+        val antallGamleSakerFunnet = AtomicInteger(0)
+        val antallForsøktMigrerteSaker = AtomicInteger(0)
+        val antallProsessert = AtomicInteger(0)
+
+        val fylkerOgKommuner = if (fylkenummer == "ALLE") {
+            geografiService.hentFylkerOgKommuner()
+        } else {
+            geografiService.hentFylkerOgKommuner().filter { it.fylke.nummer == fylkenummer }
+        }
+
+        // For en fylke
+        fylkerOgKommuner.flatMap { fylke ->
+            val antallMigrerbareSakerIFylke = AtomicInteger(0)
+            val antallGamleSakerIFylke = AtomicInteger(0)
+            val antallForsøktMigrerteSakerIFylke = AtomicInteger(0)
+            val antallProsesserteSakerIFylke = AtomicInteger(0)
+
+            log.info("[Migrering] Starter migrering av saker for fylke '${fylke.fylke.navn}'. faktiskMigrer: $faktiskMigrer")
+
+            // for en kommune i fylke
+            fylke.kommuner.flatMap { kommune ->
+                val antallMigrerbareSakerIKommune = AtomicInteger(0)
+                val antallProsesserteSakerIKommune = AtomicInteger(0)
+                val antallGamleSakerIKommune = AtomicInteger(0)
+                val antallForsøktMigrerteSakerIKommune = AtomicInteger(0)
+
+                val alleMigrerbareSakerIKommunne = nyFlytService.hentAlleSisteIASakDtoForKommune(kommune.nummer)
+                antallMigrerbareSakerIKommune.addAndGet(alleMigrerbareSakerIKommunne.size)
+                log.debug(
+                    "[Migrering] funnet ${alleMigrerbareSakerIKommunne.size} siste saker for kommune '${kommune.nummer}' " +
+                        "i fylke '${fylke.fylke.navn}'. faktiskMigrer: $faktiskMigrer",
+                )
+
+                alleMigrerbareSakerIKommunne.map { iaSakDto ->
+                    antallProsesserteSakerIKommune.incrementAndGet()
+                    if (faktiskMigrer) {
+                        antallForsøktMigrerteSakerIKommune.incrementAndGet()
+                    }
+                    migrerSisteSak(
+                        iaSakDto = iaSakDto,
+                        orgnummer = iaSakDto.orgnr,
+                        migreringsDato = LocalDateTime.now().toLocalDate().atStartOfDay(),
+                        faktiskMigrer = faktiskMigrer,
+                    )?.also {
+                        val gamleSakerIVirksomhet = nyFlytService.hentAlleAndreIASakDto(orgnummer = it.orgnr, saksnummer = it.saksnummer)
+                        antallGamleSakerIKommune.addAndGet(gamleSakerIVirksomhet.size)
+
+                        gamleSakerIVirksomhet.forEach { gammelIaSakDto ->
+                            logMenIkkeMigrerGammelSak(
+                                iaSakDto = gammelIaSakDto,
+                                faktiskMigrer = faktiskMigrer,
+                            )
+                        }
+                    }
+                }.also {
+                    antallMigrerbareSakerIFylke.addAndGet(antallMigrerbareSakerIKommune.get())
+                    antallForsøktMigrerteSakerIFylke.addAndGet(antallForsøktMigrerteSakerIKommune.get())
+                    antallGamleSakerIFylke.addAndGet(antallGamleSakerIKommune.get())
+                    antallProsesserteSakerIFylke.addAndGet(antallProsesserteSakerIKommune.get())
+                }
+            }.also {
+                antallProsessert.addAndGet(antallProsesserteSakerIFylke.get())
+                antallMigrerbareSakerFunnet.addAndGet(antallMigrerbareSakerIFylke.get())
+                antallGamleSakerFunnet.addAndGet(antallGamleSakerIFylke.get())
+                if (faktiskMigrer) antallForsøktMigrerteSaker.addAndGet(antallForsøktMigrerteSakerIFylke.get())
+                log.info(
+                    "[Migrering] Ferdig med migrering av saker for fylke '${fylke.fylke.navn}'. faktiskMigrer: $faktiskMigrer. " +
+                        "Antall migrerbare saker i fylke: ${antallProsesserteSakerIFylke.get()}, " +
+                        "Antall prosesserte saker i fylke: ${antallProsesserteSakerIFylke.get()}, " +
+                        "antall forsøkt migrerte saker i fylke: ${antallForsøktMigrerteSakerIFylke.get()}, " +
+                        "antall gamle saker (som ikke migreres) i fylke: ${antallGamleSakerIFylke.get()}. " +
+                        "Prosesseringstid: ${java.time.Duration.between(startTidspunkt, LocalDateTime.now()).toSeconds()} sekunder.",
+                )
+            }
+        }
+
+        log.info(
+            "[Migrering] Ferdig med migrering av saker for angitt parameter '$fylkenummer'. faktiskMigrer: $faktiskMigrer. " +
+                "Antall prosesserte saker: ${antallProsessert.get()}, " +
+                "antall forsøkt migrerte saker: ${antallForsøktMigrerteSaker.get()}, " +
+                "antall gamle saker (som ikke migreres): ${antallGamleSakerFunnet.get()}. " +
+                "Prosesseringstid: ${java.time.Duration.between(startTidspunkt, LocalDateTime.now()).toSeconds()} sekunder.",
+        )
+        return Triple(antallProsessert.toInt(), antallForsøktMigrerteSaker.toInt(), antallGamleSakerFunnet.toInt())
+    }
+
     fun migrer(
         orgnr: String,
-        tørrKjør: Boolean,
+        faktiskMigrer: Boolean,
     ) {
         val migreringsDato: LocalDateTime = LocalDateTime.now().toLocalDate().atStartOfDay()
         nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iaSakDto ->
@@ -99,13 +196,13 @@ class NyFlytMigreringService(
                 iaSakDto = iaSakDto,
                 orgnummer = orgnr,
                 migreringsDato = migreringsDato,
-                tørrKjør = tørrKjør,
+                faktiskMigrer = faktiskMigrer,
             )
         }?.let {
             nyFlytService.hentAlleAndreIASakDto(orgnummer = it.orgnr, saksnummer = it.saksnummer).forEach { gammelIaSakDto ->
                 logMenIkkeMigrerGammelSak(
                     iaSakDto = gammelIaSakDto,
-                    tørrKjør = tørrKjør,
+                    faktiskMigrer = faktiskMigrer,
                 )
             }
         }
@@ -113,10 +210,10 @@ class NyFlytMigreringService(
 
     fun logMenIkkeMigrerGammelSak(
         iaSakDto: IASakDto,
-        tørrKjør: Boolean,
+        faktiskMigrer: Boolean,
     ) {
         log.info(
-            "[Migrering][TørrKjør=$tørrKjør] Funnet eldre sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' på virksomhet med orgnr '${iaSakDto.orgnr}' ",
+            "[Migrering][faktiskMigrer=$faktiskMigrer] Funnet eldre sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' på virksomhet med orgnr '${iaSakDto.orgnr}' ",
         )
     }
 
@@ -124,7 +221,7 @@ class NyFlytMigreringService(
         iaSakDto: IASakDto?,
         orgnummer: String,
         migreringsDato: LocalDateTime,
-        tørrKjør: Boolean,
+        faktiskMigrer: Boolean,
     ): IASakDto? {
         if (iaSakDto == null) {
             log.info("Fant ingen sak for virksomhet med orgnr '$orgnummer', og det er derfor ingen sak å migrere.")
@@ -134,13 +231,14 @@ class NyFlytMigreringService(
         val tilstandVirksomhet = nyFlytService.hentTilstandVirksomhet(orgnummer = iaSakDto.orgnr)
         if (tilstandVirksomhet != null) {
             val loggForNyTilstand = if (tilstandVirksomhet.nesteTilstand?.nyTilstand != null) {
-                "neste tilstand '${tilstandVirksomhet.nesteTilstand.nyTilstand}' med planlagt hendelse '${tilstandVirksomhet.nesteTilstand.planlagtHendelse}' " +
+                "neste tilstand '${tilstandVirksomhet.nesteTilstand.nyTilstand}' " +
+                    "med planlagt hendelse '${tilstandVirksomhet.nesteTilstand.planlagtHendelse}' " +
                     "og planlagt dato '${tilstandVirksomhet.nesteTilstand.planlagtDato}'"
             } else {
                 "ingen neste tilstand"
             }
             log.info(
-                "[Migrering][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
+                "[Migrering][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
                     "er allerede migrert. Virksomhet har tilstand '${tilstandVirksomhet.tilstand}', og eventuelt ny tilstand til senere oppdatering: " +
                     "'$loggForNyTilstand'. Det er derfor ingen sak å migrere.",
             )
@@ -173,7 +271,7 @@ class NyFlytMigreringService(
                 when (migreringsPlan) {
                     is MigreringsPlan.IkkeGjennomførbar -> {
                         log.info(
-                            "[Migrering][${migreringsPlan.javaClass.simpleName}][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' " +
+                            "[Migrering][${migreringsPlan.javaClass.simpleName}][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' " +
                                 "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
                                 "er ikke håndtert som en use-case til migrering og vil derfor ikke bli migrert. " +
                                 "Følgende use-case '$samarbeidEllerSakBasertUsecase' er ikke håndtert for status '${iaSakDto.status.name}'. " +
@@ -194,7 +292,7 @@ class NyFlytMigreringService(
                             }
                         }
                         log.info(
-                            "[Migrering][${migreringsPlan.javaClass.simpleName}][TørrKjør=$tørrKjør] Sak '${iaSakDto.saksnummer}' " +
+                            "[Migrering][${migreringsPlan.javaClass.simpleName}][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' " +
                                 "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' er en gyldig use-case til migrering. " +
                                 "Saken blir migrert til status '${migreringsPlan.resulterendeSakStatus.name}', " +
                                 "virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}', " +
@@ -207,7 +305,7 @@ class NyFlytMigreringService(
                 val resulterendeStatusAvMigrering = migreringsPlan.resulterendeSakStatus
                 val resulterendeTilstandAvMigrering = migreringsPlan.tilstand
 
-                if (tørrKjør) return null
+                if (!faktiskMigrer) return null
 
                 nyFlytService.lagreHendelseOgOppdaterIaSakDto(
                     orgnummer = iaSakDto.orgnr,

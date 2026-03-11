@@ -10,6 +10,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEkspor
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
+import ia.felles.integrasjoner.jobbsender.Jobb.migrerAlleVirksomheterTilNyFlyt
 import ia.felles.integrasjoner.jobbsender.Jobb.migrerEnVirksomhetTilNyFlyt
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
@@ -38,8 +39,9 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.ia.eksport.ny.flyt.TilstandVirksomhetOppdaterer
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.faktiskMigrer
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.tilFylkenummer
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.tilOrgnr
-import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.tørrKjør
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
@@ -239,11 +241,28 @@ object Jobblytter : CoroutineScope {
                                     migrerEnVirksomhetTilNyFlyt -> {
                                         if (jobInfo.parameter.isNullOrEmpty()) {
                                             logger.info(
-                                                "Jobb '${jobInfo.jobb}' har ingen parameter, fikk null/empty parameter. Forventer orgnr + flag. Avslutter",
+                                                "Jobb '${jobInfo.jobb}' har ingen parameter, fikk null/empty parameter. Forventer 'orgnr:faktisk-migrer-flag'. Avslutter",
                                             )
                                         } else {
                                             logger.info("Jobb '${jobInfo.jobb}' med input param '${jobInfo.parameter}' startet")
-                                            nyflytMigreringService.migrer(orgnr = jobInfo.parameter.tilOrgnr(), tørrKjør = jobInfo.parameter.tørrKjør())
+                                            nyflytMigreringService.migrer(
+                                                orgnr = jobInfo.parameter.tilOrgnr(),
+                                                faktiskMigrer = jobInfo.parameter.faktiskMigrer(),
+                                            )
+                                        }
+                                    }
+
+                                    migrerAlleVirksomheterTilNyFlyt -> {
+                                        if (jobInfo.parameter.isNullOrEmpty()) {
+                                            logger.info(
+                                                "Jobb '${jobInfo.jobb}' har ingen parameter, fikk null/empty parameter. Forventer 'fylkenummer|ALLE:faktisk-migrer-flag'. Avslutter",
+                                            )
+                                        } else {
+                                            logger.info("Jobb '${jobInfo.jobb}' med input param '${jobInfo.parameter}' startet")
+                                            nyflytMigreringService.migrerAlle(
+                                                fylkenummer = jobInfo.parameter.tilFylkenummer(),
+                                                faktiskMigrer = jobInfo.parameter.faktiskMigrer(),
+                                            )
                                         }
                                     }
 

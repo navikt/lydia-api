@@ -27,6 +27,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
+import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
@@ -36,6 +38,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDt
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.integrasjoner.brreg.Adresse
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer.Companion.NAV_ENHET_FOR_MASKINELT_OPPDATERING
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -69,30 +72,55 @@ class MigreringTestUtils {
             iaSakStatistikkKonsument.close()
         }
 
-        fun mirgeringSakIViBistår(): IASakDto {
-            val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        fun mirgeringSakIViBistår(
+            beliggenhet: Adresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
+            næringer: List<Næringsgruppe> = listOf(
+                Næringsgruppe(
+                    kode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+                    navn = "Bygging av jernbaner og undergrunnsbaner",
+                ),
+            ),
+        ): IASakDto {
             val nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+                beliggenhet = beliggenhet,
+                næringer = næringer,
             )
             val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
             val iaSakDto = SakHelper.nySakIViBistår(virksomhet.orgnr)
             return iaSakDto
         }
 
-        fun migreringSakIKartlegges(): IASakDto {
-            val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        fun migreringSakIKartlegges(
+            beliggenhet: Adresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
+            næringer: List<Næringsgruppe> = listOf(
+                Næringsgruppe(
+                    kode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+                    navn = "Bygging av jernbaner og undergrunnsbaner",
+                ),
+            ),
+        ): IASakDto {
             val nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+                næringer = næringer,
+                beliggenhet = beliggenhet,
             )
             val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
             val iaSakDto = SakHelper.nySakIKartlegges(virksomhet.orgnr)
             return iaSakDto
         }
 
-        fun migreringSakIVurderes(medEier: Boolean = false): IASakDto {
-            val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        fun migreringSakIVurderes(
+            medEier: Boolean = false,
+            beliggenhet: Adresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
+            næringer: List<Næringsgruppe> = listOf(
+                Næringsgruppe(
+                    kode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+                    navn = "Bygging av jernbaner og undergrunnsbaner",
+                ),
+            ),
+        ): IASakDto {
             val nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+                næringer = næringer,
+                beliggenhet = beliggenhet,
             )
             val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
             val iaSakDto = SakHelper.opprettSakForVirksomhet(virksomhet.orgnr)
@@ -104,10 +132,18 @@ class MigreringTestUtils {
             }
         }
 
-        fun migreringSakIKontaktes(): IASakDto {
-            val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
+        fun migreringSakIKontaktes(
+            beliggenhet: Adresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
+            næringer: List<Næringsgruppe> = listOf(
+                Næringsgruppe(
+                    kode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
+                    navn = "Bygging av jernbaner og undergrunnsbaner",
+                ),
+            ),
+        ): IASakDto {
             val nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner")),
+                næringer = næringer,
+                beliggenhet = beliggenhet,
             )
             val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
             return SakHelper.opprettSakForVirksomhet(virksomhet.orgnr)
@@ -151,6 +187,15 @@ class MigreringTestUtils {
             migrer: Boolean = true,
         ) {
             kafkaContainerHelper.sendJobbMelding(Jobb.migrerEnVirksomhetTilNyFlyt, parameter = "${iaSakDto.orgnr}:$migrer")
+            applikasjon.shouldContainLog(regex = loggmelding)
+        }
+
+        fun sendMigreringsmeldingOgVerifiserLogg(
+            fylkenummer: String,
+            loggmelding: Regex,
+            migrer: Boolean = true,
+        ) {
+            kafkaContainerHelper.sendJobbMelding(Jobb.migrerAlleVirksomheterTilNyFlyt, parameter = "$fylkenummer:$migrer")
             applikasjon.shouldContainLog(regex = loggmelding)
         }
 

@@ -22,11 +22,11 @@ data class TestVirksomhet(
         private val brukteOrnummere = mutableSetOf<Int>()
 
         private val NÆRINGER_LISTE = listOf(DYRKING_AV_RIS, SCENEKUNST, BEDRIFTSRÅDGIVNING)
-        private val KOMMUNE_OSLO = Kommune(navn = "OSLO", nummer = "0301")
-        private val KOMMUNE_BERGEN = Kommune(navn = "BERGEN", nummer = "4601")
+        val KOMMUNE_OSLO = Kommune(navn = "OSLO", nummer = "0301")
+        val KOMMUNE_BERGEN = Kommune(navn = "BERGEN", nummer = "4601")
         val INDRE_ØSTFOLD = Kommune(navn = "Indre Østfold", nummer = "3014")
         val LUNNER = Kommune(navn = "Lunner", nummer = "3054")
-        private val SANDNES = Kommune(navn = "Sandnes", nummer = "1108")
+        val SANDNES = Kommune(navn = "Sandnes", nummer = "1108")
 
         val OSLO = TestVirksomhet(
             orgnr = "987654321",
