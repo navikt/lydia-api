@@ -2,8 +2,8 @@ package no.nav.lydia.container.ny.flyt.migrering
 
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIViBistår
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIVurderes
-import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.mirgeringSakIViBistår
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserLogg
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserSak
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.tømmKafkaTopics
@@ -86,7 +86,7 @@ class NyFlytMigreringEdgeCaseTest {
 
     @Test
     fun `en virksomhet som allerede er migrert med planlagt automatisk endring av tilstand skal ikke migreres heller`() {
-        val iaSakDto = mirgeringSakIViBistår().avbrytSamarbeid()
+        val iaSakDto = migreringSakIViBistår().avbrytSamarbeid()
 
         tømmKafkaTopics(iaSakDto)
         sendMigreringsmeldingOgVerifiserSak(

@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.mirgeringSakIViBistår
+import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIViBistår
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserSak
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.tømmKafkaTopics
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.utilsSetUp
@@ -44,7 +44,7 @@ class NyFlytMigreringSakViBistårTest {
 
     @Test
     fun `Rad #10 sak med status VI_BISTÅR med minst et aktivt samarbeid migreres til AKTIV status og VirksomhetHarAktiveSamarbeid tilstand`() {
-        val iaSakDto = mirgeringSakIViBistår()
+        val iaSakDto = migreringSakIViBistår()
 
         tømmKafkaTopics(iaSakDto)
         sendMigreringsmeldingOgVerifiserSak(
@@ -83,7 +83,7 @@ class NyFlytMigreringSakViBistårTest {
 
     @Test
     fun `Rad #11 sak med status VI_BISTÅR hvor alle samarbeid er slettet migreres til AKTIV status og VirksomhetHarAktiveSamarbeid tilstand`() {
-        val iaSakDto = mirgeringSakIViBistår().slettSamarbeid()
+        val iaSakDto = migreringSakIViBistår().slettSamarbeid()
 
         tømmKafkaTopics(iaSakDto)
         sendMigreringsmeldingOgVerifiserSak(
@@ -124,7 +124,7 @@ class NyFlytMigreringSakViBistårTest {
 
     @Test
     fun `Rad #12 status VI_BISTÅR uten aktive samarbeid og minst et avsluttet samarbeid over 10 dager migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
-        val iaSakDto = mirgeringSakIViBistår().avbrytSamarbeid()
+        val iaSakDto = migreringSakIViBistår().avbrytSamarbeid()
         val iASamarbeidDto = iaSakDto.hentAlleSamarbeid().first()
         postgresContainerHelper.performUpdate(
             "UPDATE ia_prosess " +
@@ -181,7 +181,7 @@ class NyFlytMigreringSakViBistårTest {
 
     @Test
     fun `Rad #13 VI_BISTÅR uten aktive samarb, minst ett avsluttet samarbeid under 10 dager migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
-        val iaSakDto = mirgeringSakIViBistår().avbrytSamarbeid()
+        val iaSakDto = migreringSakIViBistår().avbrytSamarbeid()
         val iASamarbeidDto = iaSakDto.hentAlleSamarbeid().first()
         postgresContainerHelper.performUpdate(
             "UPDATE ia_prosess " +

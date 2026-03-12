@@ -4,7 +4,6 @@ import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
 import ia.felles.integrasjoner.jobbsender.Jobb
 import io.kotest.inspectors.forAll
-import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
@@ -72,7 +71,7 @@ class MigreringTestUtils {
             iaSakStatistikkKonsument.close()
         }
 
-        fun mirgeringSakIViBistår(
+        fun migreringSakIViBistår(
             beliggenhet: Adresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
             næringer: List<Næringsgruppe> = listOf(
                 Næringsgruppe(
@@ -80,11 +79,20 @@ class MigreringTestUtils {
                     navn = "Bygging av jernbaner og undergrunnsbaner",
                 ),
             ),
+            orgnr: String? = null,
         ): IASakDto {
-            val nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                beliggenhet = beliggenhet,
-                næringer = næringer,
-            )
+            val nyVirksomhet = if (orgnr != null) {
+                TestVirksomhet.nyVirksomhet(
+                    orgnr = orgnr,
+                    beliggenhet = beliggenhet,
+                    næringer = næringer,
+                )
+            } else {
+                TestVirksomhet.nyVirksomhet(
+                    beliggenhet = beliggenhet,
+                    næringer = næringer,
+                )
+            }
             val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
             val iaSakDto = SakHelper.nySakIViBistår(virksomhet.orgnr)
             return iaSakDto
@@ -155,14 +163,14 @@ class MigreringTestUtils {
             val hentetSakStatus = hentSak(orgnummer = iaSakDto.orgnr, saksnummer = iaSakDto.saksnummer).status
 
             runBlocking {
-                kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                kafkaContainerHelper.tømTopicForMeldinger(
                     key = iaSakDto.saksnummer,
                     konsument = iaSakKonsument,
                 ) { meldinger ->
-                    meldinger.forAtLeastOne { hendelse: String ->
-                        hendelse shouldContain iaSakDto.orgnr
-                        hendelse shouldContain iaSakDto.saksnummer
-                        hendelse shouldContain hentetSakStatus.name
+                    meldinger.any { hendelse: String ->
+                        hendelse.contains(iaSakDto.orgnr) &&
+                            hendelse.contains(iaSakDto.saksnummer) &&
+                            hendelse.contains(hentetSakStatus.name)
                     }
                 }
                 kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -172,10 +180,10 @@ class MigreringTestUtils {
                     val objektene = meldinger.map {
                         Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
                     }
-                    objektene.forAtLeastOne {
-                        it.orgnr shouldBe iaSakDto.orgnr
-                        it.saksnummer shouldBe iaSakDto.saksnummer
-                        it.status shouldBe hentetSakStatus
+                    objektene.any {
+                        it.orgnr == iaSakDto.orgnr &&
+                            it.saksnummer == iaSakDto.saksnummer &&
+                            it.status == hentetSakStatus
                     }
                 }
             }

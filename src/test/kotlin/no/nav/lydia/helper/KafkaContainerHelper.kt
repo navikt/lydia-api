@@ -325,6 +325,36 @@ class KafkaContainerHelper(
         }
     }
 
+    suspend fun tømTopicForMeldinger(
+        key: String,
+        konsument: KafkaConsumer<String, String>,
+        søkFunksjon: (meldinger: List<String>) -> Boolean,
+    ) {
+        withTimeout(Duration.ofSeconds(5)) {
+            launch {
+                delay(20) // -- vent noen millisec fordi vi vet at det er forventet at noe skal ligge i kafka
+                val harKonsumertMeldingerMinstEnGang = AtomicBoolean()
+                val søketErOppfylt = AtomicBoolean()
+                val alleMeldinger = mutableListOf<String>()
+
+                while (
+                    this.isActive && !søketErOppfylt.get()
+                ) {
+                    val records = konsument.poll(Duration.ofMillis(1))
+                    val meldinger = records
+                        .filter { it.key() == key }
+                        .map { it.value() }
+                    if (meldinger.isNotEmpty()) {
+                        harKonsumertMeldingerMinstEnGang.set(true)
+                        alleMeldinger.addAll(meldinger)
+                        søketErOppfylt.set(søkFunksjon(alleMeldinger))
+                        konsument.commitSync()
+                    }
+                }
+            }
+        }
+    }
+
     suspend fun ventOgKonsumerKafkaMeldinger(
         keys: List<String>,
         konsument: KafkaConsumer<String, String>,

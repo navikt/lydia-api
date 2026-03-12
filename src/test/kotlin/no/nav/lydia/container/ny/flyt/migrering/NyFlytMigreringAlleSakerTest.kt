@@ -1,7 +1,7 @@
 package no.nav.lydia.container.ny.flyt.migrering
 
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIKartlegges
-import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.mirgeringSakIViBistår
+import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIViBistår
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserLogg
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.utilsSetUp
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.utilsTearDown
@@ -15,6 +15,9 @@ import kotlin.test.Test
 
 class NyFlytMigreringAlleSakerTest {
     companion object {
+        private val FYLKESNUMMER_OSLO = "03"
+        private val FYLKESNUMMER_VESTLAND = "46"
+
         @BeforeClass
         @JvmStatic
         fun setUp() {
@@ -30,12 +33,12 @@ class NyFlytMigreringAlleSakerTest {
 
     @Test
     fun `skal kunne migrere alle saker`() {
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))).fullførSak()
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))).fullførSak()
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
         migreringSakIKartlegges(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
         migreringSakIKartlegges(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
 
@@ -49,20 +52,46 @@ class NyFlytMigreringAlleSakerTest {
 
     @Test
     fun `skal kunne migrere alle saker i et fylke`() {
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))).fullførSak()
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
-        mirgeringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))).fullførSak()
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
         migreringSakIKartlegges(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
         migreringSakIKartlegges(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
 
         sendMigreringsmeldingOgVerifiserLogg(
-            fylkenummer = "03", // Oslo
+            fylkenummer = FYLKESNUMMER_OSLO, // Oslo
             (
                 "Ferdig med migrering av saker for fylke 'Oslo'. faktiskMigrer: true. "
             ).toRegex(),
+            migrer = true,
+        )
+    }
+
+    @Test
+    fun `skal kunne migrere alle saker i et fylke med faktiskMigrer er false`() {
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")))
+
+        val virksomhetMedEnGammelSak = migreringSakIViBistår(
+            beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")),
+        ).fullførSak().orgnr
+        println("Virksomhet med en gammel sak: $virksomhetMedEnGammelSak")
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")), orgnr = virksomhetMedEnGammelSak)
+        migreringSakIViBistår(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
+        migreringSakIKartlegges(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
+        migreringSakIKartlegges(beliggenhet = beliggenhet(kommune = KOMMUNE_BERGEN, adresse = listOf("adresse")))
+
+        sendMigreringsmeldingOgVerifiserLogg(
+            fylkenummer = FYLKESNUMMER_VESTLAND, // Bergen
+            (
+                "Ferdig med migrering av saker for fylke 'Vestland'. faktiskMigrer: false. "
+            ).toRegex(),
+            migrer = false,
         )
     }
 }

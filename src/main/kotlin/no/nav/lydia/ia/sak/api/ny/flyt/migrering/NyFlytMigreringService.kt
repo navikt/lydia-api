@@ -238,11 +238,11 @@ class NyFlytMigreringService(
                 "ingen neste tilstand"
             }
             log.info(
-                "[Migrering][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
-                    "er allerede migrert. Virksomhet har tilstand '${tilstandVirksomhet.tilstand}', og eventuelt ny tilstand til senere oppdatering: " +
-                    "'$loggForNyTilstand'. Det er derfor ingen sak å migrere.",
+                "[Migrering][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' " +
+                    "på virksomhet med orgnr '${iaSakDto.orgnr}' er allerede migrert. Virksomhet har tilstand '${tilstandVirksomhet.tilstand}', " +
+                    "og eventuelt ny tilstand til senere oppdatering: '$loggForNyTilstand'. Det er derfor ingen sak å migrere.",
             )
-            return null
+            return iaSakDto
         }
 
         samarbeidService.hentSamarbeidSomIkkeErSlettet(saksnummer = iaSakDto.saksnummer).apply {
@@ -277,7 +277,7 @@ class NyFlytMigreringService(
                                 "Følgende use-case '$samarbeidEllerSakBasertUsecase' er ikke håndtert for status '${iaSakDto.status.name}'. " +
                                 "Det finnes ${samarbeidListe.size} samarbeid på saken. Detaljer om samarbeid: '$samarbeidDetaljer'. ",
                         )
-                        return null
+                        return iaSakDto
                     }
 
                     is MigreringsPlan.Gjennomførbar -> {
@@ -305,7 +305,7 @@ class NyFlytMigreringService(
                 val resulterendeStatusAvMigrering = migreringsPlan.resulterendeSakStatus
                 val resulterendeTilstandAvMigrering = migreringsPlan.tilstand
 
-                if (!faktiskMigrer) return null
+                if (!faktiskMigrer) return iaSakDto
 
                 nyFlytService.lagreHendelseOgOppdaterIaSakDto(
                     orgnummer = iaSakDto.orgnr,
@@ -372,6 +372,12 @@ class NyFlytMigreringService(
                         )
                     }
                 }
+            }
+            onLeft { feil ->
+                log.warn(
+                    "[Migrering] Feil ved innhenting av samarbeid for sak '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}': ${feil.feilmelding}",
+                )
+                return iaSakDto
             }
         }
         return iaSakDto

@@ -1,7 +1,7 @@
 package no.nav.lydia.container.ny.flyt.migrering
 
 import kotlinx.datetime.toKotlinLocalDate
-import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.mirgeringSakIViBistår
+import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIViBistår
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserSak
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.tømmKafkaTopics
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.utilsSetUp
@@ -37,7 +37,7 @@ class NyFlytMigreringSakFullførtTest {
 
     @Test
     fun `Rad #14 sak FULLFØRT for mindre enn 10 dager siden og alle samarbeid avsluttet migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
-        val iaSakDtoUnderArbeid = mirgeringSakIViBistår().fullførSak()
+        val iaSakDtoUnderArbeid = migreringSakIViBistår().fullførSak()
         postgresContainerHelper.performUpdate(
             "UPDATE ia_sak " +
                 "SET " +
@@ -94,7 +94,7 @@ class NyFlytMigreringSakFullførtTest {
 
     @Test
     fun `Rad #15 sak FULLFØRT for mer enn 10 dager siden og alle samarbeid er avsluttet migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
-        val iaSakDtoUnderArbeid = mirgeringSakIViBistår().fullførSak()
+        val iaSakDtoUnderArbeid = migreringSakIViBistår().fullførSak()
         postgresContainerHelper.performUpdate(
             "UPDATE ia_sak " +
                 "SET " +
