@@ -1108,6 +1108,78 @@ class NyFlytTest {
     }
 
     @Test
+    fun `Opprett kartlegging aksepterer SCREAMING_CASE type`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+
+        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "BEHOVSVURDERING")
+        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
+
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "EVALUERING")
+        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
+    }
+
+    @Test
+    fun `Opprett kartlegging aksepterer lowercase type`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+
+        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "behovsvurdering")
+        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
+
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "evaluering")
+        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
+    }
+
+    @Test
+    fun `Opprett kartlegging aksepterer Pascalcase type`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+
+        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "Behovsvurdering")
+        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
+
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "Evaluering")
+        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
+    }
+
+    @Test
+    fun `Opprett kartlegging aksepterer type med tilfeldig sammensetning av stor og liten bokstav`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+
+        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "BeHoVsVuRDERINg")
+        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
+
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "EVALuering")
+        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
+    }
+
+    @Test
+    fun `Opprett kartlegging avviser ugyldig type`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+
+        val respons = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/${samarbeid.id}/opprett-kartlegging/UGYLDIG_TYPE")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<SpørreundersøkelseDto>()
+        respons.statuskode() shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
     fun `Opprettelse av behovsvurdering skal ikke endre status`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
@@ -1347,7 +1419,13 @@ class NyFlytTest {
         orgnr: String,
         type: Spørreundersøkelse.Type,
         token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/opprett-kartlegging/${type.name}")
+    ) = opprettKartleggingMedRåType(orgnr = orgnr, råType = type.name, token = token)
+
+    private fun IASamarbeidDto.opprettKartleggingMedRåType(
+        orgnr: String,
+        råType: String,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/opprett-kartlegging/$råType")
         .authentication().bearer(token)
         .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },

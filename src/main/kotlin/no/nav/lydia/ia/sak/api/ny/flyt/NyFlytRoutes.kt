@@ -35,7 +35,6 @@ import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
-import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
@@ -47,6 +46,7 @@ import no.nav.lydia.ia.sak.api.tilSakshistorikk
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurdering
 import no.nav.lydia.integrasjoner.azure.AzureService
@@ -386,7 +386,9 @@ fun Route.nyFlyt(
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val samarbeidId = call.samarbeidId ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val tilstandsmaskin = tilstandsmaskin(orgnr)
-        val type = call.type ?: return@post call.respond(IASakSpørreundersøkelseError.`ugyldig type`)
+        val type = call.parameters["type"]?.let { param ->
+            Spørreundersøkelse.Type.entries.firstOrNull { it.name.equals(param, ignoreCase = true) }
+        } ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
