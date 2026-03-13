@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 val ktorVersion = "3.4.0"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
@@ -156,4 +158,8 @@ tasks {
 
 kotlin {
     jvmToolchain(21)
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-Xcontext-parameters"))
 }
