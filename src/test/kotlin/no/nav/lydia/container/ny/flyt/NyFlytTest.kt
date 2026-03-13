@@ -547,9 +547,8 @@ class NyFlytTest {
                     hendelse shouldContain sak.saksnummer
                     hendelse shouldContain sak.orgnr
                 }
-                meldinger shouldHaveSize 2
-                meldinger[0] shouldContain IASak.Status.NY.name
-                meldinger[1] shouldContain IASak.Status.VURDERES.name
+                meldinger shouldHaveSize 1
+                meldinger[0] shouldContain IASak.Status.VURDERES.name
             }
             // IASakStatistikkProdusent
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -559,7 +558,6 @@ class NyFlytTest {
                 val objektene = meldinger.map {
                     Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
                 }
-                objektene shouldHaveSize 2
                 objektene.forExactlyOne {
                     it.orgnr shouldBe sak.orgnr
                     it.saksnummer shouldBe sak.saksnummer
@@ -616,10 +614,9 @@ class NyFlytTest {
                     hendelse shouldContain sak.saksnummer
                     hendelse shouldContain sak.orgnr
                 }
-                meldinger shouldHaveSize 3
-                meldinger[0] shouldContain IASak.Status.NY.name
-                meldinger[1] shouldContain IASak.Status.VURDERES.name
-                meldinger[2] shouldContain IASak.Status.SLETTET.name
+                meldinger shouldHaveSize 2
+                meldinger[0] shouldContain IASak.Status.VURDERES.name
+                meldinger[1] shouldContain IASak.Status.SLETTET.name
             }
             // IASakStatistikkProdusent
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -629,7 +626,7 @@ class NyFlytTest {
                 val objektene = meldinger.map {
                     Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
                 }
-                objektene shouldHaveSize 3
+                objektene shouldHaveSize 2
                 objektene.forExactlyOne {
                     it.orgnr shouldBe sak.orgnr
                     it.saksnummer shouldBe sak.saksnummer
@@ -766,10 +763,9 @@ class NyFlytTest {
                     hendelse shouldContain oppdatertSakDto.saksnummer
                     hendelse shouldContain oppdatertSakDto.orgnr
                 }
-                meldinger shouldHaveSize 3
-                meldinger[0] shouldContain IASak.Status.NY.name
-                meldinger[1] shouldContain IASak.Status.VURDERES.name
-                meldinger[2] shouldContain IASak.Status.VURDERT.name
+                meldinger shouldHaveSize 2
+                meldinger[0] shouldContain IASak.Status.VURDERES.name
+                meldinger[1] shouldContain IASak.Status.VURDERT.name
             }
 
             // IASakStatistikkProdusent
@@ -780,7 +776,7 @@ class NyFlytTest {
                 val objektene = meldinger.map {
                     Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
                 }
-                objektene shouldHaveSize 3
+                objektene shouldHaveSize 2
                 objektene.forExactlyOne {
                     it.orgnr shouldBe oppdatertSakDto.orgnr
                     it.saksnummer shouldBe oppdatertSakDto.saksnummer

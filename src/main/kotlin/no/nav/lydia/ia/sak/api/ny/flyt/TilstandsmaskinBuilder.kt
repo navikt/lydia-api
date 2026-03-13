@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
+import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ia.sak.IASakService
@@ -181,6 +182,7 @@ class Tilstandsmaskin(
 data class Konsekvens(
     val nyTilstand: Tilstand,
     val endring: Either<Feil, Any?>,
+    val sideEffect: SideEffect<*> = IngenSideEffect,
 )
 
 sealed class Tilstand {
@@ -198,24 +200,23 @@ sealed class Tilstand {
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
         ): Konsekvens {
-            val endring: Either<Feil, IASakDto> = when (hendelse) {
-                is Hendelse.VurderVirksomhet -> {
-                    fiaKontekst.nyFlytService.opprettSakOgMerkSomVurdert(
-                        orgnummer = hendelse.orgnr,
-                        superbruker = hendelse.superbruker,
-                        navEnhet = hendelse.navEnhet,
-                    )
-                }
+            val sideEffect = when (hendelse) {
+                is Hendelse.VurderVirksomhet -> VirksomhetVurderesSideEffect(
+                    orgnummer = hendelse.orgnr,
+                    superbruker = hendelse.superbruker,
+                    navEnhet = hendelse.navEnhet,
+                )
 
-                else -> {
-                    Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
-                }
+                else -> IngenSideEffect
             }
 
-            return Konsekvens(
-                nyTilstand = if (endring.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
-                endring = endring,
-            )
+            with(fiaKontekst.nyFlytService) {
+                val retur = sideEffect.apply()
+                return Konsekvens(
+                    nyTilstand = if (sideEffect is IngenSideEffect) VirksomhetKlarTilVurdering else VirksomhetVurderes,
+                    endring = retur.right(),
+                )
+            }
         }
     }
 
