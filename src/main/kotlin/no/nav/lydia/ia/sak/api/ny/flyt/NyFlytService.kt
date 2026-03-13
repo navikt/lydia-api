@@ -8,7 +8,9 @@ import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.Observer
+import no.nav.lydia.createDataSource
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
@@ -48,6 +50,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.UUID
+import javax.sql.DataSource
 
 class NyFlytService(
     val tilstandVirksomhetRepository: TilstandVirksomhetRepository,
@@ -63,12 +66,13 @@ class NyFlytService(
     val iaSamarbeidObservers: List<Observer<IASamarbeid>>,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
+    val dataSource: DataSource = createDataSource(NaisEnvironment().database)
 
-    private fun varsleIASakObservers(sakDto: IASakDto) {
+    fun varsleIASakObservers(sakDto: IASakDto) {
         iaSakObservers.forEach { observer -> observer.receive(input = sakDto) }
     }
 
-    private fun IASakDto.nyHendelseBasertPåSak(
+    fun IASakDto.nyHendelseBasertPåSak(
         hendelsestype: IASakshendelseType,
         superbruker: Superbruker,
         navEnhet: NavEnhet,
@@ -104,6 +108,7 @@ class NyFlytService(
         superbruker: Superbruker,
         navEnhet: NavEnhet,
     ): Either<Feil, IASakDto> {
+        // TODO: Denne valideringen må flyttes ut til tilstandsmaskinbuilder eller noe. Vi bør ikke ha valiederinger her.
         if (!iaSakRepository.hentAlleSakerDtoForVirksomhet(orgnummer).all { it.status.regnesSomAvsluttet() }) {
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
