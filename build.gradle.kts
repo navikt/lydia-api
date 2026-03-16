@@ -1,7 +1,7 @@
 val ktorVersion = "3.4.0"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
-val kotestVerstion = "6.1.4"
+val kotestVerstion = "6.1.5"
 val testcontainersVersion = "2.0.3"
 val logbackVersion = "1.5.32"
 val logstashLogbackEncoderVersion = "9.0"
@@ -73,7 +73,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:2.2.1.1")
+    implementation("io.arrow-kt:arrow-core:2.2.2")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
