@@ -32,7 +32,6 @@ class Transaction(
 context(tx: TransactionalSession)
 fun lagreEllerOppdaterVirksomhetTilstand(
     orgnr: String,
-    samarbeidsperiodeId: String,
     tilstand: VirksomhetIATilstand,
 ): VirksomhetTilstandDto? =
     tx.run(
@@ -40,23 +39,19 @@ fun lagreEllerOppdaterVirksomhetTilstand(
             """
             INSERT INTO tilstand_virksomhet (
                 orgnr,
-                samarbeidsperiode_id,
                 tilstand
             )
             VALUES (
                 :orgnr,
-                :samarbeidsperiodeId,
                 :tilstand
             )
             ON CONFLICT ON CONSTRAINT tilstand_virksomhet_orgnr_unique DO UPDATE SET
-                samarbeidsperiode_id = :samarbeidsperiodeId,
                 tilstand = :tilstand,
                 sist_endret = now()
             RETURNING *
             """.trimIndent(),
             mapOf(
                 "orgnr" to orgnr,
-                "samarbeidsperiodeId" to samarbeidsperiodeId,
                 "tilstand" to tilstand.name,
             ),
         ).map { row ->
@@ -234,7 +229,6 @@ fun slettVirksomhetTilstand(orgnr: String): VirksomhetTilstandDto? =
 context(tx: TransactionalSession)
 fun oppdaterVirksomhetTilstand(
     orgnr: String,
-    samarbeidsperiodeId: String,
     tilstand: VirksomhetIATilstand,
 ): VirksomhetTilstandDto? =
     tx.run(
@@ -242,14 +236,12 @@ fun oppdaterVirksomhetTilstand(
             """
             UPDATE tilstand_virksomhet
             SET tilstand = :tilstand,
-                samarbeidsperiode_id = :samarbeidsperiodeId,
                 sist_endret = current_timestamp
             WHERE orgnr = :orgnr
             RETURNING *
             """.trimIndent(),
             mapOf(
                 "orgnr" to orgnr,
-                "samarbeidsperiodeId" to samarbeidsperiodeId,
                 "tilstand" to tilstand.name,
             ),
         ).map { row -> row.tilVirksomhetTilstandDto() }.asSingle,

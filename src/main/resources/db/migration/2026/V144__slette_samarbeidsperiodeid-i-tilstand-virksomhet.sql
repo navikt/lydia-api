@@ -1,0 +1,2 @@
+alter table tilstand_virksomhet drop constraint fk_ia_sak_saksnummer__samarbeidsperiode_id;
+alter table tilstand_virksomhet drop column samarbeidsperiode_id;

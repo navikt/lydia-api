@@ -11,7 +11,6 @@ class TilstandVirksomhetRepository(
 ) {
     fun lagreEllerOppdaterVirksomhetTilstand(
         orgnr: String,
-        samarbeidsperiodeId: String,
         tilstand: VirksomhetIATilstand,
     ): VirksomhetTilstandDto? =
         using(sessionOf(dataSource)) { session ->
@@ -20,23 +19,19 @@ class TilstandVirksomhetRepository(
                     """
                     INSERT INTO tilstand_virksomhet (
                         orgnr,
-                        samarbeidsperiode_id,
                         tilstand
                     )
                     VALUES (
                         :orgnr,
-                        :samarbeidsperiodeId,
                         :tilstand
                     )
                     ON CONFLICT ON CONSTRAINT tilstand_virksomhet_orgnr_unique DO UPDATE SET
-                        samarbeidsperiode_id = :samarbeidsperiodeId,
                         tilstand = :tilstand,
                         sist_endret = now()
                     RETURNING *
                     """.trimIndent(),
                     mapOf(
                         "orgnr" to orgnr,
-                        "samarbeidsperiodeId" to samarbeidsperiodeId,
                         "tilstand" to tilstand.name,
                     ),
                 ).map { row ->
@@ -84,7 +79,6 @@ class TilstandVirksomhetRepository(
 
     fun oppdaterVirksomhetTilstand(
         orgnr: String,
-        samarbeidsperiodeId: String,
         tilstand: VirksomhetIATilstand,
     ): VirksomhetTilstandDto? =
         using(sessionOf(dataSource)) { session ->
@@ -93,14 +87,12 @@ class TilstandVirksomhetRepository(
                     """
                     UPDATE tilstand_virksomhet
                     SET tilstand = :tilstand,
-                        samarbeidsperiode_id = :samarbeidsperiodeId,
                         sist_endret = current_timestamp
                     WHERE orgnr = :orgnr
                     RETURNING *
                     """.trimIndent(),
                     mapOf(
                         "orgnr" to orgnr,
-                        "samarbeidsperiodeId" to samarbeidsperiodeId,
                         "tilstand" to tilstand.name,
                     ),
                 ).map { row ->
@@ -129,7 +121,6 @@ class TilstandVirksomhetRepository(
 
     fun opprettAutomatiskOppdatering(
         orgnr: String,
-        samarbeidsperiodeId: String,
         startTilstand: VirksomhetIATilstand,
         planlagtHendelse: String,
         nyTilstand: VirksomhetIATilstand,
@@ -140,11 +131,10 @@ class TilstandVirksomhetRepository(
                 queryOf(
                     """
                     SELECT id FROM tilstand_virksomhet
-                    WHERE orgnr = :orgnr AND samarbeidsperiode_id = :samarbeidsperiodeId
+                    WHERE orgnr = :orgnr
                     """.trimIndent(),
                     mapOf(
                         "orgnr" to orgnr,
-                        "samarbeidsperiodeId" to samarbeidsperiodeId,
                     ),
                 ).map { it.int("id") }.asSingle,
             ) ?: return@using null

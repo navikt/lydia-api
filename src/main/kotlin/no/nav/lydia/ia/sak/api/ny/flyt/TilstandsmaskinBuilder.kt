@@ -52,17 +52,14 @@ class TilstandsmaskinBuilder private constructor(
 
         fun oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
             orgnr: String,
-            saksnummer: String,
             fiaKontekst: FiaKontekst,
         ) {
             fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
                 orgnr = orgnr,
-                samarbeidsperiodeId = saksnummer,
                 tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet.tilVirksomhetIATilstand(),
             )?.also {
                 fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
                     orgnr = orgnr,
-                    samarbeidsperiodeId = saksnummer,
                     startTilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet.tilVirksomhetIATilstand(),
                     planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                     nyTilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
@@ -171,7 +168,6 @@ class Tilstandsmaskin(
             ) {
                 fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
                     orgnr = nåværendeSakDto.orgnr,
-                    samarbeidsperiodeId = nåværendeSakDto.saksnummer,
                     tilstand = konsekvensAvUtførtTransisjon.nyTilstand.tilVirksomhetIATilstand(),
                 )
             }
@@ -261,7 +257,6 @@ sealed class Tilstand {
                     ).onRight { iASakDto ->
                         fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
                             orgnr = iASakDto.orgnr,
-                            samarbeidsperiodeId = iASakDto.saksnummer,
                             tilstand = VirksomhetErVurdert.tilVirksomhetIATilstand(),
                         )?.also {
                             val nyTilstand = when (hendelse.årsak.type) {
@@ -274,7 +269,6 @@ sealed class Tilstand {
                             }
                             fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
                                 orgnr = iASakDto.orgnr,
-                                samarbeidsperiodeId = iASakDto.saksnummer,
                                 startTilstand = VirksomhetErVurdert.tilVirksomhetIATilstand(),
                                 planlagtHendelse = planlagtHendelse,
                                 nyTilstand = nyTilstand,
@@ -518,7 +512,6 @@ sealed class Tilstand {
                     if (harSamarbeidOgAlleErAvsluttet && endring.isRight()) {
                         oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
                             orgnr = hendelse.orgnr,
-                            saksnummer = fiaKontekst.saksnummer,
                             fiaKontekst = fiaKontekst,
                         )
                     }
@@ -548,7 +541,6 @@ sealed class Tilstand {
                     if (harIkkeLengerAktiveSamarbeid && endring.isRight()) {
                         oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
                             orgnr = hendelse.orgnr,
-                            saksnummer = fiaKontekst.saksnummer,
                             fiaKontekst = fiaKontekst,
                         )
                     }

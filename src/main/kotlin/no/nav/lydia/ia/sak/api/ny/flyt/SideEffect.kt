@@ -69,7 +69,6 @@ class VirksomhetVurderesSideEffect(
                     )
                     lagreEllerOppdaterVirksomhetTilstand(
                         orgnr = orgnummer,
-                        samarbeidsperiodeId = iaSakDto.saksnummer,
                         tilstand = VirksomhetIATilstand.VirksomhetVurderes,
                     )
                     oppdatertIaSakDto
@@ -99,7 +98,6 @@ class AngreVurderVirksomhetSideEffect(
                     if (nestSisteSakDto != null) {
                         oppdaterVirksomhetTilstand(
                             orgnr = orgnummer,
-                            samarbeidsperiodeId = nestSisteSakDto.saksnummer,
                             tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
                         )
                     } else {
