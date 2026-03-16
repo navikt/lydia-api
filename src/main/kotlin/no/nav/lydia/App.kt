@@ -270,6 +270,7 @@ fun startLydiaBackend() {
     )
 
     val nyFlytService = NyFlytService(
+        dataSource = dataSource,
         tilstandVirksomhetRepository = tilstandVirksomhetRepository,
         iaSakRepository = iaSakRepository,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),

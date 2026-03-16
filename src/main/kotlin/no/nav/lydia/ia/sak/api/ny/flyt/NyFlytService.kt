@@ -8,9 +8,7 @@ import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.Observer
-import no.nav.lydia.createDataSource
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
@@ -53,6 +51,7 @@ import java.util.UUID
 import javax.sql.DataSource
 
 class NyFlytService(
+    val dataSource: DataSource,
     val tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     val iaSakRepository: IASakRepository,
     val iaSakshendelseRepository: IASakshendelseRepository,
@@ -66,7 +65,6 @@ class NyFlytService(
     val iaSamarbeidObservers: List<Observer<IASamarbeid>>,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
-    val dataSource: DataSource = createDataSource(NaisEnvironment().database)
 
     fun varsleIASakObservers(sakDto: IASakDto) {
         iaSakObservers.forEach { observer -> observer.receive(input = sakDto) }

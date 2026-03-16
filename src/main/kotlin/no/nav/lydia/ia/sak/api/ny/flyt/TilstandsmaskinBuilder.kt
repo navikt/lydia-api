@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
-import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ia.sak.IASakService
@@ -161,17 +160,21 @@ class Tilstandsmaskin(
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
         val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
 
-        val nåværendeSakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)
-        val harFortsattMinstEnSamarbeidsperiode = nåværendeSakDto != null // samarbeidsperiode = IASak
+        val sideEffectHarLagretTilstand = konsekvensAvUtførtTransisjon.sideEffect != null
 
-        if (harFortsattMinstEnSamarbeidsperiode &&
-            konsekvensAvUtførtTransisjon.endring.isRight()
-        ) {
-            fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
-                orgnr = nåværendeSakDto.orgnr,
-                samarbeidsperiodeId = nåværendeSakDto.saksnummer,
-                tilstand = konsekvensAvUtførtTransisjon.nyTilstand.tilVirksomhetIATilstand(),
-            )
+        if (!sideEffectHarLagretTilstand) {
+            val nåværendeSakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)
+            val harFortsattMinstEnSamarbeidsperiode = nåværendeSakDto != null
+
+            if (harFortsattMinstEnSamarbeidsperiode &&
+                konsekvensAvUtførtTransisjon.endring.isRight()
+            ) {
+                fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = nåværendeSakDto.orgnr,
+                    samarbeidsperiodeId = nåværendeSakDto.saksnummer,
+                    tilstand = konsekvensAvUtførtTransisjon.nyTilstand.tilVirksomhetIATilstand(),
+                )
+            }
         }
 
         nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
@@ -182,7 +185,7 @@ class Tilstandsmaskin(
 data class Konsekvens(
     val nyTilstand: Tilstand,
     val endring: Either<Feil, Any?>,
-    val sideEffect: SideEffect<*> = IngenSideEffect,
+    val sideEffect: SideEffect<*>? = null,
 )
 
 sealed class Tilstand {
@@ -199,25 +202,33 @@ sealed class Tilstand {
         override fun utførTransisjon(
             hendelse: Hendelse,
             fiaKontekst: FiaKontekst,
-        ): Konsekvens {
-            val sideEffect = when (hendelse) {
-                is Hendelse.VurderVirksomhet -> VirksomhetVurderesSideEffect(
-                    orgnummer = hendelse.orgnr,
-                    superbruker = hendelse.superbruker,
-                    navEnhet = hendelse.navEnhet,
-                )
+        ): Konsekvens =
+            when (hendelse) {
+                is Hendelse.VurderVirksomhet -> {
+                    val sideEffect = VirksomhetVurderesSideEffect(
+                        orgnummer = hendelse.orgnr,
+                        superbruker = hendelse.superbruker,
+                        navEnhet = hendelse.navEnhet,
+                    )
+                    with(fiaKontekst.nyFlytService) {
+                        val resultat = sideEffect.apply()
+                        Konsekvens(
+                            nyTilstand = if (resultat.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
+                            endring = resultat,
+                            sideEffect = sideEffect,
+                        )
+                    }
+                }
 
-                else -> IngenSideEffect
+                else -> {
+                    Konsekvens(
+                        nyTilstand = VirksomhetKlarTilVurdering,
+                        endring = Either.Left(
+                            Feil("'$hendelse' er ikke gjennomførbar for '${VirksomhetKlarTilVurdering.tilVirksomhetIATilstand()}'", HttpStatusCode.BadRequest),
+                        ),
+                    )
+                }
             }
-
-            with(fiaKontekst.nyFlytService) {
-                val retur = sideEffect.apply()
-                return Konsekvens(
-                    nyTilstand = if (sideEffect is IngenSideEffect) VirksomhetKlarTilVurdering else VirksomhetVurderes,
-                    endring = retur.right(),
-                )
-            }
-        }
     }
 
     object VirksomhetVurderes : Tilstand() { // VURDERES
@@ -227,19 +238,17 @@ sealed class Tilstand {
         ): Konsekvens =
             when (hendelse) {
                 is Hendelse.AngreVurderVirksomhet -> {
-                    val sakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)!!
-                    fiaKontekst.nyFlytService.slettEllerOppdaterTilstandVirksomhet(
+                    val sideEffect = AngreVurderVirksomhetSideEffect(
                         orgnummer = hendelse.orgnr,
                     )
-                    if (fiaKontekst.nyFlytService.sakHarFølgere(sakDto.saksnummer)) {
-                        fiaKontekst.nyFlytService.slettAlleFølgereForSak(sakDto.saksnummer)
+                    with(fiaKontekst.nyFlytService) {
+                        val resultat = sideEffect.apply()
+                        Konsekvens(
+                            nyTilstand = if (resultat.isRight()) VirksomhetKlarTilVurdering else VirksomhetVurderes,
+                            endring = resultat,
+                            sideEffect = sideEffect,
+                        )
                     }
-                    // TODO: if (nyFlytService.harSamarbeid) nyFlytService.slettAlleSamarbeid (ia_prosess)
-                    val endring = fiaKontekst.nyFlytService.slettSakOgVarsleObservers(sakDto)
-                    Konsekvens(
-                        endring = endring,
-                        nyTilstand = VirksomhetKlarTilVurdering,
-                    )
                 }
 
                 is Hendelse.AvsluttVurdering -> {

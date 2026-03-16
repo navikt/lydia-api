@@ -191,6 +191,117 @@ fun oppdaterStatusPåSak(
 
 private fun mapRowToIASakDto(row: Row): IASakDto = row.tilIASakDto()
 
+context(tx: TransactionalSession)
+fun hentSisteIASakDto(orgnummer: String): IASakDto? =
+    tx.run(
+        queryOf(
+            """
+            SELECT * FROM ia_sak
+            WHERE orgnr = :orgnr
+            ORDER BY opprettet DESC
+            LIMIT 1
+            """.trimIndent(),
+            mapOf("orgnr" to orgnummer),
+        ).map { mapRowToIASakDto(it) }.asSingle,
+    )
+
+context(tx: TransactionalSession)
+fun hentAlleSakerDtoForVirksomhet(orgnummer: String): List<IASakDto> =
+    tx.run(
+        queryOf(
+            """
+            SELECT * FROM ia_sak
+            WHERE orgnr = :orgnr
+            ORDER BY opprettet DESC
+            """.trimIndent(),
+            mapOf("orgnr" to orgnummer),
+        ).map { mapRowToIASakDto(it) }.asList,
+    )
+
+context(tx: TransactionalSession)
+fun slettVirksomhetTilstand(orgnr: String): VirksomhetTilstandDto? =
+    tx.run(
+        queryOf(
+            """
+            DELETE FROM tilstand_virksomhet
+            WHERE orgnr = :orgnr
+            RETURNING *
+            """.trimIndent(),
+            mapOf("orgnr" to orgnr),
+        ).map { row -> row.tilVirksomhetTilstandDto() }.asSingle,
+    )
+
+context(tx: TransactionalSession)
+fun oppdaterVirksomhetTilstand(
+    orgnr: String,
+    samarbeidsperiodeId: String,
+    tilstand: VirksomhetIATilstand,
+): VirksomhetTilstandDto? =
+    tx.run(
+        queryOf(
+            """
+            UPDATE tilstand_virksomhet
+            SET tilstand = :tilstand,
+                samarbeidsperiode_id = :samarbeidsperiodeId,
+                sist_endret = current_timestamp
+            WHERE orgnr = :orgnr
+            RETURNING *
+            """.trimIndent(),
+            mapOf(
+                "orgnr" to orgnr,
+                "samarbeidsperiodeId" to samarbeidsperiodeId,
+                "tilstand" to tilstand.name,
+            ),
+        ).map { row -> row.tilVirksomhetTilstandDto() }.asSingle,
+    )
+
+context(tx: TransactionalSession)
+fun slettAlleFølgereForSak(saksnummer: String): Int =
+    tx.run(
+        queryOf(
+            """
+            DELETE FROM ia_sak_team
+            WHERE saksnummer = :saksnummer
+            """.trimIndent(),
+            mapOf("saksnummer" to saksnummer),
+        ).asUpdate,
+    )
+
+context(tx: TransactionalSession)
+fun sakHarFølgere(saksnummer: String): Boolean =
+    tx.run(
+        queryOf(
+            """
+            SELECT COUNT(*) as antall FROM ia_sak_team
+            WHERE saksnummer = :saksnummer
+            """.trimIndent(),
+            mapOf("saksnummer" to saksnummer),
+        ).map { it.int("antall") }.asSingle,
+    )?.let { it > 0 } ?: false
+
+context(tx: TransactionalSession)
+fun slettSak(saksnummer: String) {
+    tx.validerAtSakHarRiktigEndretAvHendelse(saksnummer, null)
+    tx.run(
+        queryOf(
+            """
+            DELETE FROM ia_sak
+            WHERE saksnummer = :saksnummer
+            """.trimIndent(),
+            mapOf("saksnummer" to saksnummer),
+        ).asUpdate,
+    )
+    tx.run(
+        queryOf(
+            """
+            DELETE FROM ia_sak_hendelse
+            WHERE saksnummer = :saksnummer
+            """.trimIndent(),
+            mapOf("saksnummer" to saksnummer),
+        ).asUpdate,
+    )
+}
+
 fun IASakDto.nyHendelseBasertPåSak(
     hendelsestype: IASakshendelseType,
     superbruker: Superbruker,
