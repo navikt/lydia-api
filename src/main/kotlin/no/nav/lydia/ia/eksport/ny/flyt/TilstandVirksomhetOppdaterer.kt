@@ -6,10 +6,12 @@ import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.ny.flyt.FiaKontekst
-import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandVirksomhetRepository
-import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.TilstandsmaskinBuilder
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
@@ -46,11 +48,11 @@ class TilstandVirksomhetOppdaterer(
         orgnr: String,
     ): Hendelse =
         when (hendelse) {
-            "GjørVirksomhetKlarTilNyVurdering" -> Hendelse.GjørVirksomhetKlarTilNyVurdering(
+            "GjørVirksomhetKlarTilNyVurdering" -> `GjørVirksomhetKlarTilNyVurdering`(
                 orgnr = orgnr,
             )
 
-            "VurderVirksomhet" -> Hendelse.VurderVirksomhet(
+            "VurderVirksomhet" -> VurderVirksomhet(
                 orgnr = orgnr,
                 superbruker = NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker(
                     navIdent = "Fia system",

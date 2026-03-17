@@ -16,6 +16,8 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.Tilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -198,6 +200,23 @@ class NyFlytService(
     fun hentAlleSisteIASakDtoForKommune(nummer: String): List<IASakDto> {
         val sakerGruppertPåOrgnr: Map<String, List<IASakDto>> = iaSakRepository.hentAlleSakerDtoForKommune(kommunenummer = nummer).groupBy { it.orgnr }
         return sakerGruppertPåOrgnr.map { it.value.maxBy { it.opprettetTidspunkt } }.toList()
+    }
+
+    fun slettEllerOppdaterTilstandVirksomhet(orgnummer: String): Either<Feil, VirksomhetTilstandDto?> {
+        tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
+            ?: return Feil(
+                "kunne ikke finne tilstand for virksomhet",
+                HttpStatusCode.BadRequest,
+            ).left()
+
+        val nestSisteSakDto: IASakDto = hentNestSisteIASakDto(orgnummer = orgnummer)
+            ?: return slettVirksomhetTilstand(orgnr = orgnummer)
+
+        return tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
+            orgnr = orgnummer,
+            samarbeidsperiodeId = nestSisteSakDto.saksnummer,
+            tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+        ).right()
     }
 
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)

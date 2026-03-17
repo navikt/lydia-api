@@ -11,9 +11,9 @@ import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.ver
 import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.junit.AfterClass
@@ -55,7 +55,7 @@ class NyFlytMigreringSakFullførtTest {
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
             forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
                 startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
-                planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
+                planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
                 nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
             ),

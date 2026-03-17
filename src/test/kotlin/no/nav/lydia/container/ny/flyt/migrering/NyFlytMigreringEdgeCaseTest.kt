@@ -12,9 +12,9 @@ import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.uti
 import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.domene.IASak
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -96,7 +96,7 @@ class NyFlytMigreringEdgeCaseTest {
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
             forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
                 startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
-                planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
+                planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
                 nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
             ),
