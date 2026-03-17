@@ -4,13 +4,18 @@ import kotlinx.datetime.toJavaLocalDateTime
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
-import no.nav.lydia.ia.sak.api.ny.flyt.Tilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.api.ny.flyt.tilTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.AlleSamarbeidIVirksomhetErAvsluttet
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.Tilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetErVurdert
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetHarAktiveSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetVurderes
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -341,8 +346,8 @@ class NyFlytMigreringService(
                                     orgnr = migrertSakDto.orgnr,
                                     samarbeidsperiodeId = migrertSakDto.saksnummer,
                                     startTilstand = migreringsPlan.tilstand,
-                                    planlagtHendelse = Hendelse.GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
-                                    nyTilstand = Tilstand.VirksomhetKlarTilVurdering,
+                                    planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
+                                    nyTilstand = VirksomhetKlarTilVurdering,
                                     planlagtDato = LocalDate.now().plusDays(90),
                                 ).let { automatiskOppdatering: VirksomhetTilstandAutomatiskOppdateringDto? ->
                                     if (automatiskOppdatering != null) {
@@ -359,7 +364,7 @@ class NyFlytMigreringService(
                                             "[Migrering] Det oppsto en feil ved opprettelse av automatisk oppdatering for sak '${migrertSakDto.saksnummer}' " +
                                                 "på virksomhet med orgnr '${migrertSakDto.orgnr}'. Virksomhet har tilstand '${tilstand.tilstand}', " +
                                                 "men fikk ikke opprettet automatisk oppdatering " +
-                                                "til tilstand '${Tilstand.VirksomhetKlarTilVurdering::class.simpleName}'",
+                                                "til tilstand '${VirksomhetKlarTilVurdering::class.simpleName}'",
                                         )
                                     }
                                 }
@@ -393,7 +398,7 @@ class NyFlytMigreringService(
                 MigreringsPlan.Gjennomførbar(
                     nåværendeSakStatus = iaSakDto.status,
                     resulterendeSakStatus = IASak.Status.VURDERES,
-                    tilstand = Tilstand.VirksomhetVurderes,
+                    tilstand = VirksomhetVurderes,
                 )
             }
 
@@ -401,7 +406,7 @@ class NyFlytMigreringService(
                 MigreringsPlan.Gjennomførbar(
                     nåværendeSakStatus = iaSakDto.status,
                     resulterendeSakStatus = IASak.Status.VURDERES,
-                    tilstand = Tilstand.VirksomhetVurderes,
+                    tilstand = VirksomhetVurderes,
                 )
             }
 
@@ -410,13 +415,13 @@ class NyFlytMigreringService(
                     SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.VURDERES,
-                        tilstand = Tilstand.VirksomhetVurderes,
+                        tilstand = VirksomhetVurderes,
                     )
 
                     SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AKTIV,
-                        tilstand = Tilstand.VirksomhetHarAktiveSamarbeid,
+                        tilstand = VirksomhetHarAktiveSamarbeid,
                     )
 
                     SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
@@ -424,7 +429,7 @@ class NyFlytMigreringService(
                     -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                        tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                        tilstand = AlleSamarbeidIVirksomhetErAvsluttet,
                         gjørVirksomhetKlarTilVurderingSenere = true,
                     )
                 }
@@ -435,27 +440,27 @@ class NyFlytMigreringService(
                     SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.VURDERES,
-                        tilstand = Tilstand.VirksomhetVurderes,
+                        tilstand = VirksomhetVurderes,
                     )
 
                     SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AKTIV,
-                        tilstand = Tilstand.VirksomhetHarAktiveSamarbeid,
+                        tilstand = VirksomhetHarAktiveSamarbeid,
                     )
 
                     SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
                     -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                        tilstand = Tilstand.VirksomhetKlarTilVurdering,
+                        tilstand = VirksomhetKlarTilVurdering,
                     )
 
                     SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN,
                     -> MigreringsPlan.Gjennomførbar(
                         nåværendeSakStatus = iaSakDto.status,
                         resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                        tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                        tilstand = AlleSamarbeidIVirksomhetErAvsluttet,
                         gjørVirksomhetKlarTilVurderingSenere = true,
                     )
                 }
@@ -468,7 +473,7 @@ class NyFlytMigreringService(
                         MigreringsPlan.Gjennomførbar(
                             nåværendeSakStatus = iaSakDto.status,
                             resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                            tilstand = Tilstand.VirksomhetKlarTilVurdering,
+                            tilstand = VirksomhetKlarTilVurdering,
                         )
                     }
 
@@ -477,7 +482,7 @@ class NyFlytMigreringService(
                         MigreringsPlan.Gjennomførbar(
                             nåværendeSakStatus = iaSakDto.status,
                             resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                            tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                            tilstand = AlleSamarbeidIVirksomhetErAvsluttet,
                             gjørVirksomhetKlarTilVurderingSenere = true,
                         )
                     }
@@ -494,7 +499,7 @@ class NyFlytMigreringService(
                                 MigreringsPlan.Gjennomførbar(
                                     nåværendeSakStatus = iaSakDto.status,
                                     resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                                    tilstand = Tilstand.VirksomhetErVurdert,
+                                    tilstand = VirksomhetErVurdert,
                                     gjørVirksomhetKlarTilVurderingSenere = true,
                                 )
                             }
@@ -505,7 +510,7 @@ class NyFlytMigreringService(
                                 MigreringsPlan.Gjennomførbar(
                                     nåværendeSakStatus = iaSakDto.status,
                                     resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                                    tilstand = Tilstand.AlleSamarbeidIVirksomhetErAvsluttet,
+                                    tilstand = AlleSamarbeidIVirksomhetErAvsluttet,
                                     gjørVirksomhetKlarTilVurderingSenere = true,
                                 )
                             }
@@ -524,7 +529,7 @@ class NyFlytMigreringService(
                                 MigreringsPlan.Gjennomførbar(
                                     nåværendeSakStatus = iaSakDto.status,
                                     resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                                    tilstand = Tilstand.VirksomhetKlarTilVurdering,
+                                    tilstand = VirksomhetKlarTilVurdering,
                                 )
                             }
 
@@ -534,7 +539,7 @@ class NyFlytMigreringService(
                                 MigreringsPlan.Gjennomførbar(
                                     nåværendeSakStatus = iaSakDto.status,
                                     resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                                    tilstand = Tilstand.VirksomhetKlarTilVurdering,
+                                    tilstand = VirksomhetKlarTilVurdering,
                                 )
                             }
 

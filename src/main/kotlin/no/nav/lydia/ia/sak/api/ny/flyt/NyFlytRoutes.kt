@@ -35,7 +35,21 @@ import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
-import no.nav.lydia.ia.sak.api.ny.flyt.Hendelse.VurderVirksomhet
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.TilstandsmaskinBuilder
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.AngreVurderVirksomhet
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.AvsluttSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.AvsluttVurdering
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndrePlanlagtDatoForNesteTilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndreSamarbeidsNavn
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.FullførKartleggingForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettKartleggingForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettNyttSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettPlanForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -292,7 +306,7 @@ fun Route.nyFlyt(
 
         call.somSuperbruker(adGrupper = adGrupper) {
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = Hendelse.AngreVurderVirksomhet(orgnr = orgnr),
+                hendelse = AngreVurderVirksomhet(orgnr = orgnr),
             )
             konsekvens.endring.map { it as IASakDto }
         }.also { iaSakEither ->
@@ -330,7 +344,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = Hendelse.AvsluttVurdering(
+                hendelse = AvsluttVurdering(
                     orgnr = orgnr,
                     årsak = årsak,
                     saksbehandler = saksbehandler,
@@ -359,7 +373,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = Hendelse.OpprettNyttSamarbeid(
+                hendelse = OpprettNyttSamarbeid(
                     orgnr = orgnr,
                     samarbeidsnavn = iaSamarbeidDto.navn,
                     saksbehandler = saksbehandler,
@@ -392,7 +406,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.OpprettKartleggingForSamarbeid(
+                hendelse = OpprettKartleggingForSamarbeid(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
                     type = type,
@@ -423,7 +437,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.StartKartleggingForSamarbeid(
+                hendelse = StartKartleggingForSamarbeid(
                     orgnr = orgnr,
                     spørreundersøkelseId = spørreundersøkelseId,
                     saksbehandler = saksbehandler,
@@ -453,7 +467,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.FullførKartleggingForSamarbeid(
+                hendelse = `FullførKartleggingForSamarbeid`(
                     orgnr = orgnr,
                     spørreundersøkelseId = spørreundersøkelseId,
                     saksbehandler = saksbehandler,
@@ -483,7 +497,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.SlettKartleggingForSamarbeid(
+                hendelse = SlettKartleggingForSamarbeid(
                     orgnr = orgnr,
                     spørreundersøkelseId = spørreundersøkelseId,
                     saksbehandler = saksbehandler,
@@ -514,7 +528,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.OpprettPlanForSamarbeid(
+                hendelse = OpprettPlanForSamarbeid(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
                     plan = plan,
@@ -545,7 +559,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.SlettPlanForSamarbeid(
+                hendelse = SlettPlanForSamarbeid(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
                     saksbehandler = saksbehandler,
@@ -575,7 +589,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.SlettSamarbeid(
+                hendelse = SlettSamarbeid(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
                     saksbehandler = saksbehandler,
@@ -610,7 +624,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.AvsluttSamarbeid(
+                hendelse = AvsluttSamarbeid(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
                     typeAvslutning = typeAvslutning,
@@ -642,7 +656,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.EndreSamarbeidsNavn(
+                hendelse = EndreSamarbeidsNavn(
                     orgnr = orgnr,
                     samarbeidId = samarbeidId,
                     navn = iaSamarbeidDto.navn,
@@ -673,7 +687,7 @@ fun Route.nyFlyt(
 
         call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = Hendelse.EndrePlanlagtDatoForNesteTilstand(
+                hendelse = EndrePlanlagtDatoForNesteTilstand(
                     orgnr = orgnr,
                     nyPlanlagtDato = virksomhetTilstandAutomatiskOppdateringDto.planlagtDato.toJavaLocalDate(),
                     saksbehandler = saksbehandler,

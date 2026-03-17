@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.ny.flyt.sideeffect
+package no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect
 
 import arrow.core.Either
 import io.ktor.http.HttpStatusCode

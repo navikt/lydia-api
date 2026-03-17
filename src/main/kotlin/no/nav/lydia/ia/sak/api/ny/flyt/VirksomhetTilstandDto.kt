@@ -2,6 +2,12 @@ package no.nav.lydia.ia.sak.api.ny.flyt
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.AlleSamarbeidIVirksomhetErAvsluttet
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.Tilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetErVurdert
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetHarAktiveSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetVurderes
 
 @Serializable
 class VirksomhetTilstandDto(
@@ -30,9 +36,9 @@ fun Tilstand.tilVirksomhetIATilstand(): VirksomhetIATilstand = VirksomhetIATilst
 
 fun VirksomhetIATilstand.tilTilstand(): Tilstand =
     when (this) {
-        VirksomhetIATilstand.VirksomhetKlarTilVurdering -> Tilstand.VirksomhetKlarTilVurdering
-        VirksomhetIATilstand.VirksomhetVurderes -> Tilstand.VirksomhetVurderes
-        VirksomhetIATilstand.VirksomhetErVurdert -> Tilstand.VirksomhetErVurdert
-        VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid -> Tilstand.VirksomhetHarAktiveSamarbeid
-        VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet -> Tilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        VirksomhetIATilstand.VirksomhetKlarTilVurdering -> VirksomhetKlarTilVurdering
+        VirksomhetIATilstand.VirksomhetVurderes -> VirksomhetVurderes
+        VirksomhetIATilstand.VirksomhetErVurdert -> VirksomhetErVurdert
+        VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
+        VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
     }

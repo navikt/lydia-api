@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.ny.flyt.sideeffect
+package no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect
 
 import arrow.core.Either
 import arrow.core.left
@@ -7,7 +7,6 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
-import no.nav.lydia.ia.sak.api.ny.flyt.Tilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.Transaction
 import no.nav.lydia.ia.sak.api.ny.flyt.hentAlleSakerDtoForVirksomhet
 import no.nav.lydia.ia.sak.api.ny.flyt.hentSisteIASakDto
@@ -17,6 +16,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.slettAlleFølgereForSak
 import no.nav.lydia.ia.sak.api.ny.flyt.slettSak
 import no.nav.lydia.ia.sak.api.ny.flyt.slettVirksomhetTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
 import no.nav.lydia.ia.sak.domene.IASak
 
 class AngreVurderVirksomhetSideEffect(
@@ -40,7 +40,7 @@ class AngreVurderVirksomhetSideEffect(
                         oppdaterVirksomhetTilstand(
                             orgnr = orgnummer,
                             samarbeidsperiodeId = nestSisteSakDto.saksnummer,
-                            tilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+                            tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
                         )
                     } else {
                         slettVirksomhetTilstand(orgnr = orgnummer)

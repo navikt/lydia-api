@@ -17,6 +17,8 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.Tilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -214,7 +216,7 @@ class NyFlytService(
         return tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
             orgnr = orgnummer,
             samarbeidsperiodeId = nestSisteSakDto.saksnummer,
-            tilstand = Tilstand.VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+            tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
         ).right()
     }
 
