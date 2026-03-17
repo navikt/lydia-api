@@ -47,7 +47,6 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                 ).onRight { iASakDto ->
                     fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
                         orgnr = iASakDto.orgnr,
-                        samarbeidsperiodeId = iASakDto.saksnummer,
                         tilstand = VirksomhetErVurdert.tilVirksomhetIATilstand(),
                     )?.also {
                         val nyTilstand = when (hendelse.årsak.type) {
@@ -60,7 +59,6 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                         }
                         fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
                             orgnr = iASakDto.orgnr,
-                            samarbeidsperiodeId = iASakDto.saksnummer,
                             startTilstand = VirksomhetErVurdert.tilVirksomhetIATilstand(),
                             planlagtHendelse = planlagtHendelse,
                             nyTilstand = nyTilstand,
@@ -93,7 +91,7 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
             }
 
             else -> {
-                val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.Companion.BadRequest))
+                val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 Konsekvens(
                     endring = endring,
                     nyTilstand = VirksomhetVurderes,
