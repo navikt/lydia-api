@@ -13,6 +13,9 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harAktiveSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.harSamarbeidOgAlleErAvsluttet
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandsmaskinBuilder.Companion.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering
+import no.nav.lydia.ia.sak.api.ny.flyt.sideeffect.AngreVurderVirksomhetSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.sideeffect.SideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.sideeffect.VirksomhetVurderesSideEffect
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
