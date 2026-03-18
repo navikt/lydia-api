@@ -31,7 +31,6 @@ import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakProdusent
-import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
@@ -314,12 +313,7 @@ fun startLydiaBackend() {
         iaSakStatusOppdaterer = IASakStatusOppdaterer(iaSakService = iaSakService),
         iaSakEksporterer = IASakEksporterer(
             iaSakRepository = iaSakRepository,
-            iaSakProdusent = iaSakProdusent,
-        ),
-        iaSakStatistikkEksporterer = IASakStatistikkEksporterer(
-            iaSakRepository = iaSakRepository,
-            iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-            iaSakStatistikkProdusent = iaSakStatistikkProdusent,
+            iaSakDtoProdusent = iaSakDtoProdusent,
         ),
         næringsDownloader = NæringsDownloader(
             url = naisEnv.integrasjoner.ssbNæringsUrl,
@@ -475,7 +469,6 @@ private fun jobblytter(
     naisEnv: NaisEnvironment,
     iaSakStatusOppdaterer: IASakStatusOppdaterer,
     iaSakEksporterer: IASakEksporterer,
-    iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
     næringsDownloader: NæringsDownloader,
     statistikkViewOppdaterer: StatistikkViewOppdaterer,
     iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
@@ -495,7 +488,6 @@ private fun jobblytter(
             kafka = naisEnv.kafka,
             iaSakStatusOppdaterer = iaSakStatusOppdaterer,
             iaSakEksporterer = iaSakEksporterer,
-            iaSakStatistikkEksporterer = iaSakStatistikkEksporterer,
             næringsDownloader = næringsDownloader,
             statistikkViewOppdaterer = statistikkViewOppdaterer,
             iaSakhendelseStatusJobb = iaSakhendelseStatusJobb,

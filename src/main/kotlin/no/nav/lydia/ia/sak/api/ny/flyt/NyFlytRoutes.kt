@@ -304,9 +304,13 @@ fun Route.nyFlyt(
     post("$NY_FLYT_PATH/{orgnummer}/angre-vurdering") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
 
-        call.somSuperbruker(adGrupper = adGrupper) {
+        call.somSuperbrukerMedNavenhet { superbruker, enhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = AngreVurderVirksomhet(orgnr = orgnr),
+                hendelse = AngreVurderVirksomhet(
+                    orgnr = orgnr,
+                    superbruker = superbruker,
+                    navEnhet = enhet,
+                ),
             )
             konsekvens.endring.map { it as IASakDto }
         }.also { iaSakEither ->

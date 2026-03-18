@@ -43,7 +43,7 @@ class NyFlytMigreringEdgeCaseTest {
         postgresContainerHelper.performUpdate(
             "UPDATE ia_sak " +
                 "SET " +
-                "status = 'SLETTET'" +
+                "status = 'NY'" +
                 "where saksnummer = '${iaSakDtoUnderArbeid.saksnummer}' and orgnr = '${iaSakDtoUnderArbeid.orgnr}'",
         )
 
@@ -51,7 +51,7 @@ class NyFlytMigreringEdgeCaseTest {
             sendMigreringsmeldingOgVerifiserLogg(
                 iaSakDto = iaSakDtoUnderArbeid,
                 loggmelding = (
-                    "Sak '${iaSakDtoUnderArbeid.saksnummer}' med status 'SLETTET' på virksomhet med orgnr '${iaSakDtoUnderArbeid.orgnr}' " +
+                    "Sak '${iaSakDtoUnderArbeid.saksnummer}' med status 'NY' på virksomhet med orgnr '${iaSakDtoUnderArbeid.orgnr}' " +
                         "er ikke håndtert som en use-case til migrering"
                 ).toRegex(),
             )

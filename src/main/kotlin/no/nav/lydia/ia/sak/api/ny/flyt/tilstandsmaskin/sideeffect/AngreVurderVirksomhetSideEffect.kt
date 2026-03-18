@@ -10,17 +10,22 @@ import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.Transaction
 import no.nav.lydia.ia.sak.api.ny.flyt.hentAlleSakerDtoForVirksomhet
 import no.nav.lydia.ia.sak.api.ny.flyt.hentSisteIASakDto
+import no.nav.lydia.ia.sak.api.ny.flyt.lagreHendelse
+import no.nav.lydia.ia.sak.api.ny.flyt.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterVirksomhetTilstand
-import no.nav.lydia.ia.sak.api.ny.flyt.sakHarFølgere
-import no.nav.lydia.ia.sak.api.ny.flyt.slettAlleFølgereForSak
-import no.nav.lydia.ia.sak.api.ny.flyt.slettSak
+import no.nav.lydia.ia.sak.api.ny.flyt.settSakTilSlettet
 import no.nav.lydia.ia.sak.api.ny.flyt.slettVirksomhetTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
 class AngreVurderVirksomhetSideEffect(
     val orgnummer: String,
+    val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
+    val navEnhet: NavEnhet,
 ) : SideEffect<IASakDto>() {
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASakDto> =
@@ -45,13 +50,20 @@ class AngreVurderVirksomhetSideEffect(
                         slettVirksomhetTilstand(orgnr = orgnummer)
                     }
 
-                    if (`sakHarFølgere`(saksnummer = sakDto.saksnummer)) {
-                        `slettAlleFølgereForSak`(saksnummer = sakDto.saksnummer)
-                    }
+                    val angreVurdering = lagreHendelse(
+                        hendelse = sakDto.nyHendelseBasertPåSak(
+                            hendelsestype = IASakshendelseType.SLETT_SAK,
+                            superbruker = superbruker,
+                            navEnhet = navEnhet,
+                        ),
+                        sistEndretAvHendelseId = null,
+                        resulterendeStatus = IASak.Status.SLETTET,
+                    )
 
-                    // TODO: if (nyFlytService.harSamarbeid) nyFlytService.slettAlleSamarbeid (ia_prosess)
-
-                    slettSak(saksnummer = sakDto.saksnummer)
+                    settSakTilSlettet(
+                        saksnummer = sakDto.saksnummer,
+                        hendelse = angreVurdering,
+                    )
                     sakDto.copy(status = IASak.Status.SLETTET)
                 }
             }.also { nyFlytService.varsleIASakObservers(it) }

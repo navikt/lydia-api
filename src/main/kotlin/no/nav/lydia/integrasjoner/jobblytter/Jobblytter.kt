@@ -30,7 +30,6 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.eksport.IASakEksporterer
-import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
@@ -67,7 +66,6 @@ object Jobblytter : CoroutineScope {
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
     private lateinit var iaSakStatusOppdaterer: IASakStatusOppdaterer
     private lateinit var iaSakEksporterer: IASakEksporterer
-    private lateinit var iaSakStatistikkEksporterer: IASakStatistikkEksporterer
     private lateinit var næringsDownloader: NæringsDownloader
     private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
     private lateinit var iaSakhendelseStatusJobb: IaSakhendelseStatusJobb
@@ -94,7 +92,6 @@ object Jobblytter : CoroutineScope {
         kafka: Kafka,
         iaSakStatusOppdaterer: IASakStatusOppdaterer,
         iaSakEksporterer: IASakEksporterer,
-        iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
         næringsDownloader: NæringsDownloader,
         statistikkViewOppdaterer: StatistikkViewOppdaterer,
         iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
@@ -120,7 +117,6 @@ object Jobblytter : CoroutineScope {
         )
         this.iaSakStatusOppdaterer = iaSakStatusOppdaterer
         this.iaSakEksporterer = iaSakEksporterer
-        this.iaSakStatistikkEksporterer = iaSakStatistikkEksporterer
         this.næringsDownloader = næringsDownloader
         this.statistikkViewOppdaterer = statistikkViewOppdaterer
         this.iaSakhendelseStatusJobb = iaSakhendelseStatusJobb
@@ -182,7 +178,7 @@ object Jobblytter : CoroutineScope {
                                     }
 
                                     iaSakStatistikkEksport -> {
-                                        iaSakStatistikkEksporterer.eksporter()
+                                        logger.warn("Jobben 'iaSakStatistikkEksport' skal ikke brukes lenger. Vil ikke gjennomføre.")
                                     }
 
                                     næringsImport -> {

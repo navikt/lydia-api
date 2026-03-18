@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.eksport
 
+import no.nav.lydia.ia.eksport.ny.flyt.IASakDtoProdusent
 import no.nav.lydia.ia.sak.db.IASakRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -7,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class IASakEksporterer(
     val iaSakRepository: IASakRepository,
-    val iaSakProdusent: IASakProdusent,
+    val iaSakDtoProdusent: IASakDtoProdusent,
 ) {
     companion object {
         val KJØRER_SAKS_EKSPORT = AtomicBoolean(false)
@@ -19,7 +20,7 @@ class IASakEksporterer(
         KJØRER_SAKS_EKSPORT.set(true)
         iaSakRepository.hentAlleSaker()
             .forEach { iaSak ->
-                iaSakProdusent.receive(iaSak)
+                iaSakDtoProdusent.receive(iaSak)
             }
         KJØRER_SAKS_EKSPORT.set(false)
     }
@@ -28,8 +29,8 @@ class IASakEksporterer(
         KJØRER_SAKS_EKSPORT.set(true)
         log.info("Starter eksport av enkel sak, med saksnummer: '$saksnummer'")
 
-        iaSakRepository.hentIASak(saksnummer = saksnummer)?.let { iaSak ->
-            iaSakProdusent.receive(iaSak)
+        iaSakRepository.hentIASakDto(saksnummer = saksnummer)?.let { iaSak ->
+            iaSakDtoProdusent.receive(iaSak)
         } ?: log.warn("Eksport av enkel sak, med saksnummer: '$saksnummer' feilet. Sak ikke funnet")
 
         KJØRER_SAKS_EKSPORT.set(false)

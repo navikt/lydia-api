@@ -248,48 +248,28 @@ fun oppdaterVirksomhetTilstand(
     )
 
 context(tx: TransactionalSession)
-fun slettAlleFølgereForSak(saksnummer: String): Int =
+fun settSakTilSlettet(
+    saksnummer: String,
+    hendelse: IASakshendelse,
+) {
     tx.run(
         queryOf(
             """
-            DELETE FROM ia_sak_team
-            WHERE saksnummer = :saksnummer
-            """.trimIndent(),
-            mapOf("saksnummer" to saksnummer),
-        ).asUpdate,
-    )
-
-context(tx: TransactionalSession)
-fun sakHarFølgere(saksnummer: String): Boolean =
-    tx.run(
-        queryOf(
-            """
-            SELECT COUNT(*) as antall FROM ia_sak_team
-            WHERE saksnummer = :saksnummer
-            """.trimIndent(),
-            mapOf("saksnummer" to saksnummer),
-        ).map { it.int("antall") }.asSingle,
-    )?.let { it > 0 } ?: false
-
-context(tx: TransactionalSession)
-fun slettSak(saksnummer: String) {
-    tx.validerAtSakHarRiktigEndretAvHendelse(saksnummer, null)
-    tx.run(
-        queryOf(
-            """
-            DELETE FROM ia_sak
-            WHERE saksnummer = :saksnummer
-            """.trimIndent(),
-            mapOf("saksnummer" to saksnummer),
-        ).asUpdate,
-    )
-    tx.run(
-        queryOf(
-            """
-            DELETE FROM ia_sak_hendelse
-            WHERE saksnummer = :saksnummer
-            """.trimIndent(),
-            mapOf("saksnummer" to saksnummer),
+                        UPDATE ia_sak 
+                        SET
+                            status = :statusSlettet,
+                            endret_av = :endret_av,
+                            endret_av_hendelse = :endret_av_hendelse,
+                            endret = :endret                           
+                        WHERE saksnummer = :saksnummer
+            """.trimMargin(),
+            mapOf(
+                "saksnummer" to saksnummer,
+                "statusSlettet" to IASak.Status.SLETTET.name,
+                "endret_av" to hendelse.opprettetAv,
+                "endret_av_hendelse" to hendelse.id,
+                "endret" to hendelse.opprettetTidspunkt,
+            ),
         ).asUpdate,
     )
 }

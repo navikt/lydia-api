@@ -935,19 +935,12 @@ class SykefraværsstatistikkApiTest {
             },
         )
         hentSykefravær(
-            token = testBruker1.token,
-            iaStatus = IASak.Status.VURDERES.name,
+            token = testBruker2.token,
+            eiere = testBruker2.navIdent,
             success = { response ->
-                val sfStatistikk = response.data
-                sfStatistikk
-                    .forAtLeastOne {
-                        it.eidAv shouldBe testBruker1.navIdent
-                        it.orgnr shouldBe ornummer1
-                    }
-                    .forAtLeastOne {
-                        it.eidAv shouldBe testBruker2.navIdent
-                        it.orgnr shouldBe ornummer2
-                    }
+                response.data.forAll {
+                    it.eidAv shouldBe testBruker2.navIdent
+                }
             },
         )
     }
