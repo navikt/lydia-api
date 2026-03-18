@@ -6,7 +6,6 @@ import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
@@ -27,8 +26,6 @@ import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
 import no.nav.lydia.ia.sak.domene.IASak.Status.AVSLUTTET
-import no.nav.lydia.ia.sak.domene.IASak.Status.NY
-import no.nav.lydia.ia.sak.domene.IASak.Status.SLETTET
 import no.nav.lydia.ia.sak.domene.IASak.Status.VURDERES
 import no.nav.lydia.ia.sak.domene.IASak.Status.VURDERT
 import no.nav.lydia.ia.sak.domene.IASakshendelse
@@ -43,7 +40,6 @@ import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -68,82 +64,6 @@ class NyFlytService(
 
     fun varsleIASakObservers(sakDto: IASakDto) {
         iaSakObservers.forEach { observer -> observer.receive(input = sakDto) }
-    }
-
-    fun IASakDto.nyHendelseBasertPåSak(
-        hendelsestype: IASakshendelseType,
-        superbruker: Superbruker,
-        navEnhet: NavEnhet,
-    ) = IASakshendelse(
-        id = ULID.random(),
-        opprettetTidspunkt = LocalDateTime.now(),
-        saksnummer = this.saksnummer,
-        hendelsesType = hendelsestype,
-        orgnummer = this.orgnr,
-        opprettetAv = superbruker.navIdent,
-        opprettetAvRolle = superbruker.rolle,
-        navEnhet = navEnhet,
-        resulterendeStatus = null,
-    )
-
-    private fun fraFørsteHendelse(hendelse: IASakshendelse): IASakDto =
-        IASakDto(
-            saksnummer = hendelse.saksnummer,
-            orgnr = hendelse.orgnummer,
-            opprettetTidspunkt = hendelse.opprettetTidspunkt.toKotlinLocalDateTime(),
-            opprettetAv = hendelse.opprettetAv,
-            eidAv = null,
-            endretTidspunkt = null,
-            endretAv = null,
-            endretAvHendelseId = hendelse.id,
-            status = NY,
-            gyldigeNesteHendelser = emptyList(),
-            lukket = false,
-        )
-
-    fun opprettSakOgMerkSomVurdert(
-        orgnummer: String,
-        superbruker: Superbruker,
-        navEnhet: NavEnhet,
-    ): Either<Feil, IASakDto> {
-        // TODO: Denne valideringen må flyttes ut til tilstandsmaskinbuilder eller noe. Vi bør ikke ha valiederinger her.
-        if (!iaSakRepository.hentAlleSakerDtoForVirksomhet(orgnummer).all { it.status.regnesSomAvsluttet() }) {
-            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
-        }
-
-        // Steg #1 lagre i DB en ny hendelse OPPRETT_SAK_FOR_VIRKSOMHET, og en ny SakDto med status NY
-        val iaSakHendelseOpprettSak = IASakshendelse.nyFørsteHendelse(
-            orgnummer = orgnummer,
-            superbruker = superbruker,
-            navEnhet = navEnhet,
-        )
-        iaSakshendelseRepository.lagreHendelse(
-            hendelse = iaSakHendelseOpprettSak,
-            sistEndretAvHendelseId = null,
-            resulterendeStatus = NY,
-        )
-        val iaSakDto: IASakDto = iaSakRepository.opprettSak(
-            iaSakDto = fraFørsteHendelse(iaSakHendelseOpprettSak),
-        ).also(::varsleIASakObservers)
-
-        // Steg #2 lagre i DB en ny hendelse VIRKSOMHET_VURDERES, og oppdatere SakDto til status VURDERES
-        val iaSakshendelseVurderes = iaSakshendelseRepository.lagreHendelse(
-            hendelse = iaSakDto.nyHendelseBasertPåSak(
-                hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
-                superbruker = superbruker,
-                navEnhet = navEnhet,
-            ),
-            sistEndretAvHendelseId = null,
-            resulterendeStatus = VURDERES,
-        )
-        val oppdatertIaSakDto = iaSakRepository.oppdaterStatusPåSak(
-            saksnummer = iaSakDto.saksnummer,
-            status = VURDERES,
-            endretAv = superbruker.navIdent,
-            endretAvHendelseId = iaSakshendelseVurderes.id,
-        ).onRight(::varsleIASakObservers)
-
-        return oppdatertIaSakDto
     }
 
     fun avsluttVurderingAvVirksomhetUtenSamarbeid(
@@ -727,8 +647,6 @@ class NyFlytService(
             )
         }
     }
-
-    private fun IASakDto.settStatusTilSlettet(): IASakDto = this.copy(status = SLETTET, endretAvHendelseId = ULID.random())
 
     fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): Either<Feil, List<IASamarbeid>> =
         Either.catch {
