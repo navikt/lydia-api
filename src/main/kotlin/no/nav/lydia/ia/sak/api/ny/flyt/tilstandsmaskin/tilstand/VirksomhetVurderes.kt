@@ -26,6 +26,8 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
             is AngreVurderVirksomhet -> {
                 val sideEffect = AngreVurderVirksomhetSideEffect(
                     orgnummer = hendelse.orgnr,
+                    superbruker = hendelse.superbruker,
+                    navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
                     val resultat = sideEffect.apply()

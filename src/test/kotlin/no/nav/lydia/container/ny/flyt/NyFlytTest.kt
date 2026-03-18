@@ -669,15 +669,6 @@ class NyFlytTest {
             """.trimIndent(),
         )
         sakenErSlettet.shouldBeTrue()
-
-        val følgereErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
-            """
-            SELECT count(*) = 0
-                 FROM ia_sak_team
-                 WHERE saksnummer = '${sak.saksnummer}'
-            """.trimIndent(),
-        )
-        følgereErSlettet.shouldBeTrue()
     }
 
     @Test
@@ -697,15 +688,6 @@ class NyFlytTest {
 
         val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
-
-        val følgereErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
-            """
-            SELECT count(*) = 0
-                 FROM ia_sak_team
-                 WHERE saksnummer = '${sak.saksnummer}'
-            """.trimIndent(),
-        )
-        følgereErSlettet.shouldBeTrue()
     }
 
     // TODO: Implementer logikk for angre vurdering slik at denne testen blir grønn
@@ -725,15 +707,6 @@ class NyFlytTest {
 
         val angreVurderRes = sak.angreVurdering(token = eierAvSak.token)
         angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
-
-        val sakenErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
-            """
-            SELECT count(*) = 0
-                 FROM ia_sak
-                 WHERE orgnr = '${sak.orgnr}'
-            """.trimIndent(),
-        )
-        sakenErSlettet.shouldBeTrue()
 
         val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering

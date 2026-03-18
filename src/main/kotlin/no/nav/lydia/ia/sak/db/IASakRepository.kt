@@ -296,10 +296,10 @@ class IASakRepository(
             )
         }
 
-    fun hentAlleSaker(): List<IASak> =
+    fun hentAlleSaker(): List<IASakDto> =
         using(sessionOf(dataSource)) { session ->
             session.run(
-                queryOf("SELECT * FROM ia_sak").map(this::mapRowToIASak).asList,
+                queryOf("SELECT * FROM ia_sak").map(this::mapRowToIASakDto).asList,
             )
         }
 
