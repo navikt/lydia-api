@@ -65,7 +65,6 @@ class VirksomhetVurderesSideEffect(
                     )
                     lagreEllerOppdaterVirksomhetTilstand(
                         orgnr = orgnummer,
-                        samarbeidsperiodeId = iaSakDto.saksnummer,
                         tilstand = VirksomhetIATilstand.VirksomhetVurderes,
                     )
                     oppdatertIaSakDto

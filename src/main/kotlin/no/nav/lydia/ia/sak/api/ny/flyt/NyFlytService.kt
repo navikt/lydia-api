@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
@@ -18,7 +17,6 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.Tilstand
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -203,52 +201,7 @@ class NyFlytService(
         return sakerGruppertPåOrgnr.map { it.value.maxBy { it.opprettetTidspunkt } }.toList()
     }
 
-    fun slettEllerOppdaterTilstandVirksomhet(orgnummer: String): Either<Feil, VirksomhetTilstandDto?> {
-        tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
-            ?: return Feil(
-                "kunne ikke finne tilstand for virksomhet",
-                HttpStatusCode.BadRequest,
-            ).left()
-
-        val nestSisteSakDto: IASakDto = hentNestSisteIASakDto(orgnummer = orgnummer)
-            ?: return slettVirksomhetTilstand(orgnr = orgnummer)
-
-        return tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
-            orgnr = orgnummer,
-            samarbeidsperiodeId = nestSisteSakDto.saksnummer,
-            tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
-        ).right()
-    }
-
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
-
-    private fun slettVirksomhetTilstand(orgnr: String): Either<Feil, VirksomhetTilstandDto?> =
-        try {
-            val slettetTilstand = tilstandVirksomhetRepository.slettVirksomhetTilstand(orgnr = orgnr)
-            Either.Right(slettetTilstand)
-        } catch (_: Exception) {
-            Either.Left(Feil("kunne ikke slette tilstand for virksomhet", HttpStatusCode.BadRequest))
-        }
-
-    private fun hentNestSisteIASakDto(orgnummer: String): IASakDto? {
-        val alleSaker = iaSakRepository.hentAlleSakerDtoForVirksomhet(orgnummer = orgnummer).sortedByDescending { it.opprettetTidspunkt }
-        if (alleSaker.size < 2) return null
-        return alleSaker[alleSaker.size - 2]
-    }
-
-    fun slettSakOgVarsleObservers(sakDto: IASakDto): Either<Feil, IASakDto> =
-        slettSak(sakDto).also { iaSakEither ->
-            iaSakEither.onRight { varsleIASakObservers(it) }
-        }
-
-    fun sakHarFølgere(saksnummer: String): Boolean =
-        iaTeamService.hentBrukereITeam(saksnummer = saksnummer)
-            .getOrElse { emptyList() }
-            .isNotEmpty()
-
-    fun slettAlleFølgereForSak(saksnummer: String) {
-        iaTeamService.slettAlleFølgereForSak(saksnummer = saksnummer)
-    }
 
     fun opprettNyttSamarbeid(
         orgnummer: String,
@@ -775,14 +728,6 @@ class NyFlytService(
         }
     }
 
-    private fun slettSak(sakDto: IASakDto): Either<Feil, IASakDto> =
-        try {
-            iaSakRepository.slettSak(saksnummer = sakDto.saksnummer, sistEndretAvHendelseId = null)
-            Either.Right(sakDto.settStatusTilSlettet())
-        } catch (_: Exception) {
-            Either.Left(IASakError.`fikk ikke slettet sak`)
-        }
-
     private fun IASakDto.settStatusTilSlettet(): IASakDto = this.copy(status = SLETTET, endretAvHendelseId = ULID.random())
 
     fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): Either<Feil, List<IASamarbeid>> =
@@ -792,19 +737,6 @@ class NyFlytService(
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
 
-    fun oppdaterTilstandOgSamarbeidsperiode(
-        orgnr: String,
-        nySamarbeidsperiodeId: String,
-        nyTilstand: Tilstand,
-    ): Either<Feil, Tilstand> {
-        val oppdatertTilstand = tilstandVirksomhetRepository.oppdaterVirksomhetTilstand(
-            orgnr = orgnr,
-            samarbeidsperiodeId = nySamarbeidsperiodeId,
-            tilstand = nyTilstand.tilVirksomhetIATilstand(),
-        )
-        return oppdatertTilstand?.tilstand?.tilTilstand()?.right() ?: Feil("kunne ikke oppdatere tilstand", HttpStatusCode.BadRequest).left()
-    }
-
     fun hentAlleVirksomhetTilstanderFiltrertPåPlanlagtDato(planlagtDato: LocalDate): List<VirksomhetTilstandDto> =
         tilstandVirksomhetRepository.hentAlleVirksomhetTilstander()
             .filter { it.nesteTilstand?.planlagtDato == planlagtDato }
@@ -813,18 +745,15 @@ class NyFlytService(
 
     fun lagreEllerOppdaterVirksomhetTilstand(
         orgnr: String,
-        samarbeidsperiodeId: String,
         tilstand: VirksomhetIATilstand,
     ): VirksomhetTilstandDto? =
         tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
             orgnr = orgnr,
-            samarbeidsperiodeId = samarbeidsperiodeId,
             tilstand = tilstand,
         )
 
     fun opprettAutomatiskOppdatering(
         orgnr: String,
-        samarbeidsperiodeId: String,
         startTilstand: Tilstand,
         planlagtHendelse: String,
         nyTilstand: Tilstand,
@@ -832,7 +761,6 @@ class NyFlytService(
     ): VirksomhetTilstandAutomatiskOppdateringDto? =
         tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
             orgnr = orgnr,
-            samarbeidsperiodeId = samarbeidsperiodeId,
             startTilstand = startTilstand.tilVirksomhetIATilstand(),
             planlagtHendelse = planlagtHendelse,
             nyTilstand = nyTilstand.tilVirksomhetIATilstand(),

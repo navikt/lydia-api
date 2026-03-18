@@ -39,7 +39,6 @@ class AngreVurderVirksomhetSideEffect(
                     if (nestSisteSakDto != null) {
                         oppdaterVirksomhetTilstand(
                             orgnr = orgnummer,
-                            samarbeidsperiodeId = nestSisteSakDto.saksnummer,
                             tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
                         )
                     } else {
@@ -58,6 +57,6 @@ class AngreVurderVirksomhetSideEffect(
             }.also { nyFlytService.varsleIASakObservers(it) }
                 .right()
         } catch (e: Exception) {
-            Feil("Feil ved angring av vurdering: ${e.message}", HttpStatusCode.Companion.InternalServerError).left()
+            Feil("Feil ved angring av vurdering: ${e.message}", HttpStatusCode.InternalServerError).left()
         }
 }

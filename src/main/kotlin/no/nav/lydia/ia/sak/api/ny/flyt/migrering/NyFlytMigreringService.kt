@@ -329,7 +329,6 @@ class NyFlytMigreringService(
                     onRight { migrertSakDto ->
                         nyFlytService.lagreEllerOppdaterVirksomhetTilstand(
                             orgnr = iaSakDto.orgnr,
-                            samarbeidsperiodeId = iaSakDto.saksnummer,
                             tilstand = resulterendeTilstandAvMigrering.tilVirksomhetIATilstand(),
                         ).let { tilstand: VirksomhetTilstandDto? ->
                             log.info(
@@ -344,7 +343,6 @@ class NyFlytMigreringService(
                             ) {
                                 nyFlytService.opprettAutomatiskOppdatering(
                                     orgnr = migrertSakDto.orgnr,
-                                    samarbeidsperiodeId = migrertSakDto.saksnummer,
                                     startTilstand = migreringsPlan.tilstand,
                                     planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
                                     nyTilstand = VirksomhetKlarTilVurdering,

@@ -49,7 +49,6 @@ class Tilstandsmaskin(
             ) {
                 fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
                     orgnr = nåværendeSakDto.orgnr,
-                    samarbeidsperiodeId = nåværendeSakDto.saksnummer,
                     tilstand = konsekvensAvUtførtTransisjon.nyTilstand.tilVirksomhetIATilstand(),
                 )
             }
@@ -85,17 +84,14 @@ class TilstandsmaskinBuilder private constructor(
 
         fun oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
             orgnr: String,
-            saksnummer: String,
             fiaKontekst: FiaKontekst,
         ) {
             fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
                 orgnr = orgnr,
-                samarbeidsperiodeId = saksnummer,
                 tilstand = AlleSamarbeidIVirksomhetErAvsluttet.tilVirksomhetIATilstand(),
             )?.also {
                 fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
                     orgnr = orgnr,
-                    samarbeidsperiodeId = saksnummer,
                     startTilstand = AlleSamarbeidIVirksomhetErAvsluttet.tilVirksomhetIATilstand(),
                     planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
                     nyTilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),

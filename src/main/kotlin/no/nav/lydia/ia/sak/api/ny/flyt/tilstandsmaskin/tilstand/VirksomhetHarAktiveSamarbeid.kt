@@ -164,19 +164,18 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
 
-                val harAktiveSamarbeid = TilstandsmaskinBuilder.Companion.harAktiveSamarbeid(
+                val harAktiveSamarbeid = TilstandsmaskinBuilder.harAktiveSamarbeid(
                     fiaKontekst = fiaKontekst,
                     saksnummer = fiaKontekst.saksnummer,
                 )
-                val harSamarbeidOgAlleErAvsluttet = TilstandsmaskinBuilder.Companion.harSamarbeidOgAlleErAvsluttet(
+                val harSamarbeidOgAlleErAvsluttet = TilstandsmaskinBuilder.harSamarbeidOgAlleErAvsluttet(
                     fiaKontekst = fiaKontekst,
                     saksnummer = fiaKontekst.saksnummer,
                 )
 
                 if (harSamarbeidOgAlleErAvsluttet && endring.isRight()) {
-                    TilstandsmaskinBuilder.Companion.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
+                    TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
                         orgnr = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer,
                         fiaKontekst = fiaKontekst,
                     )
                 }
@@ -201,15 +200,14 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 // Når hendelsen mottas, har vi minst ett aktivt samarbeid, men nå som endringen er påført må vi sjekke det igjen
-                val harIkkeLengerAktiveSamarbeid = !TilstandsmaskinBuilder.Companion.harAktiveSamarbeid(
+                val harIkkeLengerAktiveSamarbeid = !TilstandsmaskinBuilder.harAktiveSamarbeid(
                     fiaKontekst = fiaKontekst,
                     saksnummer = fiaKontekst.saksnummer,
                 )
 
                 if (harIkkeLengerAktiveSamarbeid && endring.isRight()) {
-                    TilstandsmaskinBuilder.Companion.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
+                    TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
                         orgnr = hendelse.orgnr,
-                        saksnummer = fiaKontekst.saksnummer,
                         fiaKontekst = fiaKontekst,
                     )
                 }
@@ -236,7 +234,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
             }
 
             else -> {
-                val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.Companion.BadRequest))
+                val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
                 Konsekvens(
                     endring = endring,
                     nyTilstand = VirksomhetVurderes,
