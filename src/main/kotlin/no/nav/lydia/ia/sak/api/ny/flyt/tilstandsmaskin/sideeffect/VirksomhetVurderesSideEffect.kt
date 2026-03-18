@@ -15,6 +15,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.lagreHendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterStatusPåSak
 import no.nav.lydia.ia.sak.api.ny.flyt.opprettSak
+import no.nav.lydia.ia.sak.api.ny.flyt.slettVirksomhetTilstandAutomatiskOppdatering
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.NY
 import no.nav.lydia.ia.sak.domene.IASakshendelse
@@ -33,7 +34,7 @@ class VirksomhetVurderesSideEffect(
             Transaction(nyFlytService.dataSource).transactional { tx ->
                 with(tx) {
                     // Steg #1 lagre i DB en ny hendelse OPPRETT_SAK_FOR_VIRKSOMHET, og en ny SakDto med status NY
-                    val iaSakHendelseOpprettSak = IASakshendelse.Companion.nyFørsteHendelse(
+                    val iaSakHendelseOpprettSak = IASakshendelse.nyFørsteHendelse(
                         orgnummer = orgnummer,
                         superbruker = superbruker,
                         navEnhet = navEnhet,
@@ -41,7 +42,7 @@ class VirksomhetVurderesSideEffect(
                     lagreHendelse(
                         hendelse = iaSakHendelseOpprettSak,
                         sistEndretAvHendelseId = null,
-                        resulterendeStatus = IASak.Status.NY,
+                        resulterendeStatus = NY,
                     )
                     val iaSakDto: IASakDto = opprettSak(
                         iaSakDto = iaSakHendelseOpprettSak.tilIASakDto(),
@@ -67,12 +68,17 @@ class VirksomhetVurderesSideEffect(
                         orgnr = orgnummer,
                         tilstand = VirksomhetIATilstand.VirksomhetVurderes,
                     )
+
+                    slettVirksomhetTilstandAutomatiskOppdatering(
+                        orgnr = orgnummer,
+                    )
+
                     oppdatertIaSakDto
                 }
             }.also { nyFlytService.varsleIASakObservers(it) }
                 .right()
         } catch (e: Exception) {
-            Feil("Feil ved vurdering av virksomhet: ${e.message}", HttpStatusCode.Companion.InternalServerError).left()
+            Feil("Feil ved vurdering av virksomhet: ${e.message}", HttpStatusCode.InternalServerError).left()
         }
 }
 

@@ -10,6 +10,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndrePlanlagtDat
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.VirksomhetVurderesSideEffect
 import no.nav.lydia.ia.sak.domene.IASak
 
 object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
@@ -19,13 +20,17 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
     ): Konsekvens {
         val endring: Either<Feil, IASakDto> = when (hendelse) {
             is VurderVirksomhet -> {
-                fiaKontekst.nyFlytService.opprettSakOgMerkSomVurdert(
+                val sideEffect = VirksomhetVurderesSideEffect(
                     orgnummer = hendelse.orgnr,
                     superbruker = hendelse.superbruker,
                     navEnhet = hendelse.navEnhet,
-                ).also {
-                    fiaKontekst.nyFlytService.slettVirksomhetTilstandAutomatiskOppdatering(
-                        orgnr = hendelse.orgnr,
+                )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    return Konsekvens(
+                        nyTilstand = if (resultat.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
+                        endring = resultat,
+                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -53,7 +58,7 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
             }
 
             else -> {
-                Either.Left(Feil("Something odd happened", HttpStatusCode.Companion.BadRequest))
+                Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
             }
         }
 

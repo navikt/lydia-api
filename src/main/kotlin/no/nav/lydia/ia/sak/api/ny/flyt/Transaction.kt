@@ -30,6 +30,20 @@ class Transaction(
 }
 
 context(tx: TransactionalSession)
+fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) =
+    tx.run(
+        queryOf(
+            """
+            DELETE FROM tilstand_automatisk_oppdatering
+            WHERE orgnr = :orgnr
+            """.trimIndent(),
+            mapOf(
+                "orgnr" to orgnr,
+            ),
+        ).asUpdate,
+    )
+
+context(tx: TransactionalSession)
 fun lagreEllerOppdaterVirksomhetTilstand(
     orgnr: String,
     tilstand: VirksomhetIATilstand,
