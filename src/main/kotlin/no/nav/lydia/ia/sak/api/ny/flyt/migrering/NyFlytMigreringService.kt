@@ -5,26 +5,12 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
-import no.nav.lydia.ia.sak.api.ny.flyt.tilTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.AlleSamarbeidIVirksomhetErAvsluttet
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.Tilstand
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetErVurdert
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetHarAktiveSamarbeid
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetVurderes
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
-import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -35,69 +21,6 @@ class NyFlytMigreringService(
     val geografiService: GeografiService,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
-
-    companion object {
-        // Eksempel på orgnr som skal migreres: "123456789", "123456789:false" eller "123456789:true".
-        // Siste del av strengen indikerer om migrering blir gjennomført eller ikke. Default verdi er "false"
-        fun String.tilOrgnr() = this.split(":").get(0)
-
-        fun String.tilFylkenummer() = this.split(":").get(0)
-
-        fun String.faktiskMigrer() = this.contains(":") && this.split(":").get(1) == "true"
-
-        fun List<IASamarbeid>.getSamarbeidUseCase(migreringsDato: LocalDateTime): SamarbeidUseCase =
-            when {
-                this.isEmpty() -> SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET
-
-                this.any { it.status == IASamarbeid.Status.AKTIV } -> SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID
-
-                this.none {
-                    it.status == IASamarbeid.Status.AKTIV
-                } && this.any {
-                    it.erAvsluttetEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
-                } -> SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN
-
-                this.none {
-                    it.status == IASamarbeid.Status.AKTIV
-                } && this.any {
-                    it.erAvsluttetFør(dato = migreringsDato, tilbakeIAntallDager = 10)
-                } -> SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN
-
-                else -> throw IllegalStateException("Ukjent samarbeid use-case for samarbeidListe: $this")
-            }
-
-        fun IASakDto.getSakUseCase(migreringsDato: LocalDateTime): SakUseCase =
-            when {
-                this.erSistEndretEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
-                -> SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN
-
-                else
-                -> SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN
-            }
-
-        fun IASamarbeid.erAvsluttetEtter(
-            dato: LocalDateTime,
-            tilbakeIAntallDager: Long,
-        ): Boolean =
-            this.sistEndret != null &&
-                (this.status == IASamarbeid.Status.FULLFØRT || this.status == IASamarbeid.Status.AVBRUTT) &&
-                this.sistEndret.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
-
-        fun IASamarbeid.erAvsluttetFør(
-            dato: LocalDateTime,
-            tilbakeIAntallDager: Long,
-        ): Boolean =
-            this.sistEndret != null &&
-                (this.status == IASamarbeid.Status.FULLFØRT || this.status == IASamarbeid.Status.AVBRUTT) &&
-                !this.sistEndret.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
-
-        fun IASakDto.erSistEndretEtter(
-            dato: LocalDateTime,
-            tilbakeIAntallDager: Long,
-        ): Boolean =
-            this.endretTidspunkt != null &&
-                this.endretTidspunkt.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
-    }
 
     fun migrerAlle(
         fylkenummer: String = "ALLE",
@@ -115,16 +38,13 @@ class NyFlytMigreringService(
             geografiService.hentFylkerOgKommuner().filter { it.fylke.nummer == fylkenummer }
         }
 
-        // For en fylke
         fylkerOgKommuner.flatMap { fylke ->
             val antallMigrerbareSakerIFylke = AtomicInteger(0)
             val antallGamleSakerIFylke = AtomicInteger(0)
             val antallForsøktMigrerteSakerIFylke = AtomicInteger(0)
             val antallProsesserteSakerIFylke = AtomicInteger(0)
-
             log.info("[Migrering] Starter migrering av saker for fylke '${fylke.fylke.navn}'. faktiskMigrer: $faktiskMigrer")
 
-            // for en kommune i fylke
             fylke.kommuner.flatMap { kommune ->
                 val antallMigrerbareSakerIKommune = AtomicInteger(0)
                 val antallProsesserteSakerIKommune = AtomicInteger(0)
@@ -140,9 +60,8 @@ class NyFlytMigreringService(
 
                 alleMigrerbareSakerIKommunne.map { iaSakDto ->
                     antallProsesserteSakerIKommune.incrementAndGet()
-                    if (faktiskMigrer) {
-                        antallForsøktMigrerteSakerIKommune.incrementAndGet()
-                    }
+                    if (faktiskMigrer) antallForsøktMigrerteSakerIKommune.incrementAndGet()
+
                     migrerSisteSak(
                         iaSakDto = iaSakDto,
                         orgnummer = iaSakDto.orgnr,
@@ -213,7 +132,7 @@ class NyFlytMigreringService(
         }
     }
 
-    fun logMenIkkeMigrerGammelSak(
+    private fun logMenIkkeMigrerGammelSak(
         iaSakDto: IASakDto,
         faktiskMigrer: Boolean,
     ) {
@@ -222,7 +141,7 @@ class NyFlytMigreringService(
         )
     }
 
-    fun migrerSisteSak(
+    private fun migrerSisteSak(
         iaSakDto: IASakDto?,
         orgnummer: String,
         migreringsDato: LocalDateTime,
@@ -254,7 +173,7 @@ class NyFlytMigreringService(
             onRight { samarbeidListe ->
                 val samarbeidUseCase = samarbeidListe.getSamarbeidUseCase(migreringsDato = migreringsDato)
                 val sakUseCase = iaSakDto.getSakUseCase(migreringsDato = migreringsDato)
-                val migreringsPlan = utledMigreringsPlan(
+                val migreringsplan = Migreringsplan.utledMigreringsplan(
                     iaSakDto = iaSakDto,
                     samarbeidUseCase = samarbeidUseCase,
                     sakSakUseCase = sakUseCase,
@@ -273,10 +192,10 @@ class NyFlytMigreringService(
                     IASak.Status.IKKE_AKTUELL -> "${sakUseCase.name} og ${samarbeidUseCase.name}"
                     else -> samarbeidUseCase.name
                 }
-                when (migreringsPlan) {
-                    is MigreringsPlan.IkkeGjennomførbar -> {
+                when (migreringsplan) {
+                    is Migreringsplan.IkkeGjennomførbar -> {
                         log.info(
-                            "[Migrering][${migreringsPlan.javaClass.simpleName}][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' " +
+                            "[Migrering][${migreringsplan.javaClass.simpleName}][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' " +
                                 "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
                                 "er ikke håndtert som en use-case til migrering og vil derfor ikke bli migrert. " +
                                 "Følgende use-case '$samarbeidEllerSakBasertUsecase' er ikke håndtert for status '${iaSakDto.status.name}'. " +
@@ -285,7 +204,7 @@ class NyFlytMigreringService(
                         return iaSakDto
                     }
 
-                    is MigreringsPlan.Gjennomførbar -> {
+                    is Migreringsplan.Gjennomførbar -> {
                         val bakgrunnForMigrering = when (iaSakDto.status) {
                             IASak.Status.FULLFØRT -> {
                                 "'$sakUseCase' med status på sak '${iaSakDto.status}' " +
@@ -297,289 +216,105 @@ class NyFlytMigreringService(
                             }
                         }
                         log.info(
-                            "[Migrering][${migreringsPlan.javaClass.simpleName}][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' " +
+                            "[Migrering][${migreringsplan.javaClass.simpleName}][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' " +
                                 "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' er en gyldig use-case til migrering. " +
-                                "Saken blir migrert til status '${migreringsPlan.resulterendeSakStatus.name}', " +
-                                "virksomhet vil få tilstand '${migreringsPlan.tilstand.tilVirksomhetIATilstand()}', " +
+                                "Saken blir migrert til status '${migreringsplan.resulterendeSakStatus.name}', " +
+                                "virksomhet vil få tilstand '${migreringsplan.tilstand.tilVirksomhetIATilstand()}', " +
                                 "og automatisk oppdatering (VirksomhetKlarTilVurdering om 90 dager): " +
-                                "'${migreringsPlan.gjørVirksomhetKlarTilVurderingSenere}'. " +
+                                "'${migreringsplan.gjørVirksomhetKlarTilVurderingSenere}'. " +
                                 "Bakgrunn for migrering er: '$bakgrunnForMigrering'. ",
                         )
                     }
                 }
-                val resulterendeStatusAvMigrering = migreringsPlan.resulterendeSakStatus
-                val resulterendeTilstandAvMigrering = migreringsPlan.tilstand
 
                 if (!faktiskMigrer) return iaSakDto
 
-                nyFlytService.lagreHendelseOgOppdaterIaSakDto(
-                    orgnummer = iaSakDto.orgnr,
-                    hendelsesType = IASakshendelseType.MIGRERING_TIL_NY_FLYT,
-                    saksbehandler = NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker(
-                        navIdent = "Fia system",
-                        navn = "Fia system",
-                        token = "",
-                        ansattesGrupper = emptySet(),
-                    ),
-                    saksnummer = iaSakDto.saksnummer,
-                    navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
-                    resulterendeSakStatus = resulterendeStatusAvMigrering,
-                    oppdaterSistEndretPåSak = false,
-                ).apply {
-                    onRight { migrertSakDto ->
-                        nyFlytService.lagreEllerOppdaterVirksomhetTilstand(
-                            orgnr = iaSakDto.orgnr,
-                            tilstand = resulterendeTilstandAvMigrering.tilVirksomhetIATilstand(),
-                        ).let { tilstand: VirksomhetTilstandDto? ->
-                            log.info(
-                                "[Migrering] Oppdatert sak '${migrertSakDto.saksnummer}' på virksomhet med orgnr '${migrertSakDto.orgnr}' " +
-                                    "fra status '${iaSakDto.status.name}' til status '${migrertSakDto.status.name}', " +
-                                    "og opprettet tilstand '${tilstand?.tilstand}'",
-                            )
-                            if (migreringsPlan.gjørVirksomhetKlarTilVurderingSenere &&
-                                tilstand != null &&
-                                tilstand.tilstand.tilTilstand().kanUtføreAutomatiskTransisjon()
+                val transactionalMigrering = TransactionalMigrering(
+                    iaSakDto = iaSakDto,
+                    migreringsplan = migreringsplan,
+                )
 
-                            ) {
-                                nyFlytService.opprettAutomatiskOppdatering(
-                                    orgnr = migrertSakDto.orgnr,
-                                    startTilstand = migreringsPlan.tilstand,
-                                    planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
-                                    nyTilstand = VirksomhetKlarTilVurdering,
-                                    planlagtDato = LocalDate.now().plusDays(90),
-                                ).let { automatiskOppdatering: VirksomhetTilstandAutomatiskOppdateringDto? ->
-                                    if (automatiskOppdatering != null) {
-                                        log.info(
-                                            "[Migrering] Opprettet automatisk oppdatering for sak '${migrertSakDto.saksnummer}' " +
-                                                "på virksomhet med orgnr '${migrertSakDto.orgnr}' " +
-                                                "med start tilstand '${automatiskOppdatering.startTilstand}', " +
-                                                "planlagt hendelse '${automatiskOppdatering.planlagtHendelse}', " +
-                                                "ny tilstand '${automatiskOppdatering.nyTilstand}' og " +
-                                                "planlagt dato '${automatiskOppdatering.planlagtDato}'",
-                                        )
-                                    } else {
-                                        log.warn(
-                                            "[Migrering] Det oppsto en feil ved opprettelse av automatisk oppdatering for sak '${migrertSakDto.saksnummer}' " +
-                                                "på virksomhet med orgnr '${migrertSakDto.orgnr}'. Virksomhet har tilstand '${tilstand.tilstand}', " +
-                                                "men fikk ikke opprettet automatisk oppdatering " +
-                                                "til tilstand '${VirksomhetKlarTilVurdering::class.simpleName}'",
-                                        )
-                                    }
-                                }
-                            }
+                with(receiver = nyFlytService) {
+                    transactionalMigrering.apply().apply {
+                        onLeft { feil ->
+                            log.warn(
+                                "[Migrering] Feil ved migrering av sak '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}': ${feil.feilmelding}",
+                            )
+                        }
+                        onRight { oppdatertIASakDto: IASakDto ->
+                            log.info(
+                                "[Migrering] Oppdatert sak '${oppdatertIASakDto.saksnummer}' på virksomhet med orgnr '${oppdatertIASakDto.orgnr}' " +
+                                    "fra status '${oppdatertIASakDto.status.name}' til status '${oppdatertIASakDto.status.name}', " +
+                                    "og opprettet tilstand '${migreringsplan.tilstand.tilVirksomhetIATilstand()}'",
+                            )
                         }
                     }
-                    onLeft { feil ->
-                        log.warn(
-                            "[Migrering] Feil ved migrering av sak '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}': ${feil.feilmelding}",
-                        )
-                    }
                 }
-            }
-            onLeft { feil ->
-                log.warn(
-                    "[Migrering] Feil ved innhenting av samarbeid for sak '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}': ${feil.feilmelding}",
-                )
-                return iaSakDto
             }
         }
         return iaSakDto
     }
 
-    private fun utledMigreringsPlan(
-        iaSakDto: IASakDto,
-        samarbeidUseCase: SamarbeidUseCase,
-        sakSakUseCase: SakUseCase,
-    ): MigreringsPlan =
-        when (iaSakDto.status) {
-            IASak.Status.VURDERES -> {
-                MigreringsPlan.Gjennomførbar(
-                    nåværendeSakStatus = iaSakDto.status,
-                    resulterendeSakStatus = IASak.Status.VURDERES,
-                    tilstand = VirksomhetVurderes,
-                )
+    companion object {
+        // Eksempel på orgnr som skal migreres: "123456789", "123456789:false" eller "123456789:true".
+        // Siste del av strengen indikerer om migrering blir gjennomført eller ikke. Default verdi er "false"
+        fun String.tilOrgnr() = this.split(":").get(0)
+
+        fun String.tilFylkenummer() = this.split(":").get(0)
+
+        fun String.faktiskMigrer() = this.contains(":") && this.split(":").get(1) == "true"
+
+        fun List<IASamarbeid>.getSamarbeidUseCase(migreringsDato: LocalDateTime): SamarbeidUseCase =
+            when {
+                this.isEmpty() -> SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET
+
+                this.any { it.status == IASamarbeid.Status.AKTIV } -> SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID
+
+                this.none {
+                    it.status == IASamarbeid.Status.AKTIV
+                } && this.any {
+                    it.erAvsluttetEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
+                } -> SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN
+
+                this.none {
+                    it.status == IASamarbeid.Status.AKTIV
+                } && this.any {
+                    it.erAvsluttetFør(dato = migreringsDato, tilbakeIAntallDager = 10)
+                } -> SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN
+
+                else -> throw IllegalStateException("Ukjent samarbeid use-case for samarbeidListe: $this")
             }
 
-            IASak.Status.KONTAKTES -> {
-                MigreringsPlan.Gjennomførbar(
-                    nåværendeSakStatus = iaSakDto.status,
-                    resulterendeSakStatus = IASak.Status.VURDERES,
-                    tilstand = VirksomhetVurderes,
-                )
+        fun IASakDto.getSakUseCase(migreringsDato: LocalDateTime): SakUseCase =
+            when {
+                this.erSistEndretEtter(dato = migreringsDato, tilbakeIAntallDager = 10)
+                -> SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN
+
+                else
+                -> SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN
             }
 
-            IASak.Status.KARTLEGGES -> {
-                when (samarbeidUseCase) {
-                    SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.VURDERES,
-                        tilstand = VirksomhetVurderes,
-                    )
+        fun IASamarbeid.erAvsluttetEtter(
+            dato: LocalDateTime,
+            tilbakeIAntallDager: Long,
+        ): Boolean =
+            this.sistEndret != null &&
+                (this.status == IASamarbeid.Status.FULLFØRT || this.status == IASamarbeid.Status.AVBRUTT) &&
+                this.sistEndret.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
 
-                    SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID -> MigreringsPlan.Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.AKTIV,
-                        tilstand = VirksomhetHarAktiveSamarbeid,
-                    )
+        fun IASamarbeid.erAvsluttetFør(
+            dato: LocalDateTime,
+            tilbakeIAntallDager: Long,
+        ): Boolean =
+            this.sistEndret != null &&
+                (this.status == IASamarbeid.Status.FULLFØRT || this.status == IASamarbeid.Status.AVBRUTT) &&
+                !this.sistEndret.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
 
-                    SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
-                    SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN,
-                    -> MigreringsPlan.Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                        tilstand = AlleSamarbeidIVirksomhetErAvsluttet,
-                        gjørVirksomhetKlarTilVurderingSenere = true,
-                    )
-                }
-            }
-
-            IASak.Status.VI_BISTÅR -> {
-                when (samarbeidUseCase) {
-                    SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> MigreringsPlan.Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.VURDERES,
-                        tilstand = VirksomhetVurderes,
-                    )
-
-                    SamarbeidUseCase.MINST_ETT_AKTIVT_SAMARBEID -> MigreringsPlan.Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.AKTIV,
-                        tilstand = VirksomhetHarAktiveSamarbeid,
-                    )
-
-                    SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
-                    -> MigreringsPlan.Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                        tilstand = VirksomhetKlarTilVurdering,
-                    )
-
-                    SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN,
-                    -> MigreringsPlan.Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                        tilstand = AlleSamarbeidIVirksomhetErAvsluttet,
-                        gjørVirksomhetKlarTilVurderingSenere = true,
-                    )
-                }
-            }
-
-            IASak.Status.FULLFØRT -> {
-                when (sakSakUseCase) {
-                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
-                    -> {
-                        MigreringsPlan.Gjennomførbar(
-                            nåværendeSakStatus = iaSakDto.status,
-                            resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                            tilstand = VirksomhetKlarTilVurdering,
-                        )
-                    }
-
-                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,
-                    -> {
-                        MigreringsPlan.Gjennomførbar(
-                            nåværendeSakStatus = iaSakDto.status,
-                            resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                            tilstand = AlleSamarbeidIVirksomhetErAvsluttet,
-                            gjørVirksomhetKlarTilVurderingSenere = true,
-                        )
-                    }
-                }
-            }
-
-            IASak.Status.IKKE_AKTUELL -> {
-                when (sakSakUseCase) {
-                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,
-                    -> {
-                        when (samarbeidUseCase) {
-                            SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET,
-                            -> {
-                                MigreringsPlan.Gjennomførbar(
-                                    nåværendeSakStatus = iaSakDto.status,
-                                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                                    tilstand = VirksomhetErVurdert,
-                                    gjørVirksomhetKlarTilVurderingSenere = true,
-                                )
-                            }
-
-                            SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN,
-                            SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
-                            -> {
-                                MigreringsPlan.Gjennomførbar(
-                                    nåværendeSakStatus = iaSakDto.status,
-                                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                                    tilstand = AlleSamarbeidIVirksomhetErAvsluttet,
-                                    gjørVirksomhetKlarTilVurderingSenere = true,
-                                )
-                            }
-
-                            else -> {
-                                MigreringsPlan.IkkeGjennomførbar
-                            }
-                        }
-                    }
-
-                    SakUseCase.SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
-                    -> {
-                        when (samarbeidUseCase) {
-                            SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET,
-                            -> {
-                                MigreringsPlan.Gjennomførbar(
-                                    nåværendeSakStatus = iaSakDto.status,
-                                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                                    tilstand = VirksomhetKlarTilVurdering,
-                                )
-                            }
-
-                            SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN,
-                            SamarbeidUseCase.INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
-                            -> {
-                                MigreringsPlan.Gjennomførbar(
-                                    nåværendeSakStatus = iaSakDto.status,
-                                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
-                                    tilstand = VirksomhetKlarTilVurdering,
-                                )
-                            }
-
-                            else -> {
-                                MigreringsPlan.IkkeGjennomførbar
-                            }
-                        }
-                    }
-                }
-            }
-
-            else -> {
-                MigreringsPlan.IkkeGjennomførbar
-            }
-        }
-
-    sealed class MigreringsPlan {
-        abstract fun kanGjennomføres(): Boolean
-
-        data class Gjennomførbar(
-            val nåværendeSakStatus: IASak.Status,
-            val resulterendeSakStatus: IASak.Status,
-            val tilstand: Tilstand,
-            val gjørVirksomhetKlarTilVurderingSenere: Boolean = false,
-        ) : MigreringsPlan() {
-            override fun kanGjennomføres(): Boolean = true
-        }
-
-        object IkkeGjennomførbar : MigreringsPlan() {
-            override fun kanGjennomføres(): Boolean = false
-        }
-    }
-
-    enum class SamarbeidUseCase {
-        INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET,
-        MINST_ETT_AKTIVT_SAMARBEID,
-        INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_OM_TIDLIGST_10_DAGER_SIDEN,
-        INGEN_AKTIVE_SAMARBEID_MEN_MINST_ETT_AVSLUTTET_SAMARBEID_FOR_MER_ENN_10_DAGER_SIDEN,
-    }
-
-    enum class SakUseCase {
-        SIST_ENDRET_DATO_PÅ_SAK_FOR_MER_ENN_10_DAGER_SIDEN,
-        SIST_ENDRET_DATO_PÅ_SAK_FOR_MINDRE_ENN_10_DAGER_SIDEN,
+        fun IASakDto.erSistEndretEtter(
+            dato: LocalDateTime,
+            tilbakeIAntallDager: Long,
+        ): Boolean =
+            this.endretTidspunkt != null &&
+                this.endretTidspunkt.toJavaLocalDateTime().isAfter(dato.minusDays(tilbakeIAntallDager))
     }
 }

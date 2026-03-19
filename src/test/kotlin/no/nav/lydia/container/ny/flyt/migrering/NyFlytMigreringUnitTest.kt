@@ -7,7 +7,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companio
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.erAvsluttetFør
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.erSistEndretEtter
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.getSamarbeidUseCase
-import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.SamarbeidUseCase
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.SamarbeidUseCase
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import java.time.LocalDateTime

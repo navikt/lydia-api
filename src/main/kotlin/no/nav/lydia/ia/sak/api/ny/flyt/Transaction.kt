@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak.api.ny.flyt
 
 import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -28,6 +29,69 @@ class Transaction(
             }
         }
 }
+
+context(tx: TransactionalSession)
+fun opprettAutomatiskOppdatering(
+    orgnr: String,
+    startTilstand: VirksomhetIATilstand,
+    planlagtHendelse: String,
+    nyTilstand: VirksomhetIATilstand,
+    planlagtDato: java.time.LocalDate,
+): VirksomhetTilstandAutomatiskOppdateringDto? {
+    val tilstandVirksomhetId = tx.run(
+        queryOf(
+            """
+            SELECT id FROM tilstand_virksomhet
+            WHERE orgnr = :orgnr
+            """.trimIndent(),
+            mapOf(
+                "orgnr" to orgnr,
+            ),
+        ).map { it.int("id") }.asSingle,
+    ) ?: return null
+
+    return tx.run(
+        queryOf(
+            """
+            INSERT INTO tilstand_automatisk_oppdatering (
+                orgnr,
+                tilstand_virksomhet_id,
+                start_tilstand,
+                planlagt_hendelse,
+                ny_tilstand,
+                planlagt_dato
+            )
+            VALUES (
+                :orgnr,
+                :tilstandVirksomhetId,
+                :startTilstand,
+                :planlagtHendelse,
+                :nyTilstand,
+                :planlagtDato
+            )
+            RETURNING *
+            """.trimIndent(),
+            mapOf(
+                "orgnr" to orgnr,
+                "tilstandVirksomhetId" to tilstandVirksomhetId,
+                "startTilstand" to startTilstand.name,
+                "planlagtHendelse" to planlagtHendelse,
+                "nyTilstand" to nyTilstand.name,
+                "planlagtDato" to planlagtDato,
+            ),
+        ).map { row ->
+            row.tilVirksomhetTilstandAutomatiskOppdateringDto()
+        }.asSingle,
+    )
+}
+
+private fun Row.tilVirksomhetTilstandAutomatiskOppdateringDto() =
+    VirksomhetTilstandAutomatiskOppdateringDto(
+        startTilstand = VirksomhetIATilstand.valueOf(string("start_tilstand")),
+        planlagtHendelse = string("planlagt_hendelse"),
+        nyTilstand = VirksomhetIATilstand.valueOf(string("ny_tilstand")),
+        planlagtDato = localDate("planlagt_dato").toKotlinLocalDate(),
+    )
 
 context(tx: TransactionalSession)
 fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) =
