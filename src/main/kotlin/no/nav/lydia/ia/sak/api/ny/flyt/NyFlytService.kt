@@ -15,7 +15,6 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.Tilstand
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -660,28 +659,4 @@ class NyFlytService(
             .filter { it.nesteTilstand?.planlagtDato == planlagtDato }
 
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
-
-    fun lagreEllerOppdaterVirksomhetTilstand(
-        orgnr: String,
-        tilstand: VirksomhetIATilstand,
-    ): VirksomhetTilstandDto? =
-        tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
-            orgnr = orgnr,
-            tilstand = tilstand,
-        )
-
-    fun opprettAutomatiskOppdatering(
-        orgnr: String,
-        startTilstand: Tilstand,
-        planlagtHendelse: String,
-        nyTilstand: Tilstand,
-        planlagtDato: java.time.LocalDate,
-    ): VirksomhetTilstandAutomatiskOppdateringDto? =
-        tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
-            orgnr = orgnr,
-            startTilstand = startTilstand.tilVirksomhetIATilstand(),
-            planlagtHendelse = planlagtHendelse,
-            nyTilstand = nyTilstand.tilVirksomhetIATilstand(),
-            planlagtDato = planlagtDato,
-        )
 }

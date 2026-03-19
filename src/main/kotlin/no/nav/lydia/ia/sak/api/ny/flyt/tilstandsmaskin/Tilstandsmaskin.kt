@@ -93,7 +93,7 @@ class TilstandsmaskinBuilder private constructor(
                 fiaKontekst.tilstandVirksomhetRepository.opprettAutomatiskOppdatering(
                     orgnr = orgnr,
                     startTilstand = AlleSamarbeidIVirksomhetErAvsluttet.tilVirksomhetIATilstand(),
-                    planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
+                    planlagtHendelse = GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                     nyTilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
                     planlagtDato = LocalDate.now().plusDays(90),
                 )

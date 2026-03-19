@@ -10,6 +10,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndrePlanlagtDat
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.GjørVirksomhetKlarTilNyVurderingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.VirksomhetVurderesSideEffect
 import no.nav.lydia.ia.sak.domene.IASak
 
@@ -35,11 +36,18 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
                 }
             }
 
-            is `GjørVirksomhetKlarTilNyVurdering` -> {
-                return Konsekvens(
-                    nyTilstand = VirksomhetKlarTilVurdering,
-                    endring = Either.Right(null),
+            is GjørVirksomhetKlarTilNyVurdering -> {
+                val sideEffect = GjørVirksomhetKlarTilNyVurderingSideEffect(
+                    orgnummer = hendelse.orgnr,
                 )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    return Konsekvens(
+                        nyTilstand = if (resultat.isRight()) VirksomhetKlarTilVurdering else AlleSamarbeidIVirksomhetErAvsluttet,
+                        endring = resultat,
+                        sideEffect = sideEffect,
+                    )
+                }
             }
 
             is EndrePlanlagtDatoForNesteTilstand -> {
