@@ -34,7 +34,7 @@ class IASamarbeidRepository(
                     mapOf(
                         "prosessId" to samarbeidId,
                     ),
-                ).map(this::mapRowToIASamarbeid).asSingle,
+                ).map { it.mapRowToIASamarbeid() }.asSingle,
             )
         }
 
@@ -55,7 +55,7 @@ class IASamarbeidRepository(
                         "saksnummer" to saksnummer,
                         "prosessId" to samarbeidId,
                     ),
-                ).map(this::mapRowToIASamarbeid).asSingle,
+                ).map { it.mapRowToIASamarbeid() }.asSingle,
             )
         }
 
@@ -73,7 +73,7 @@ class IASamarbeidRepository(
                         "saksnummer" to saksnummer,
                         "slettetStatus" to IASamarbeid.Status.SLETTET.name,
                     ),
-                ).map(this::mapRowToIASamarbeid).asList,
+                ).map { it.mapRowToIASamarbeid() }.asList,
             )
         }
 
@@ -90,7 +90,7 @@ class IASamarbeidRepository(
                     mapOf(
                         "saksnummer" to saksnummer,
                     ),
-                ).map(this::mapRowToIASamarbeid).asList,
+                ).map { it.mapRowToIASamarbeid() }.asList,
             )
         }
 
@@ -110,7 +110,7 @@ class IASamarbeidRepository(
                         "orgnr" to orgnr,
                         "slettetStatus" to IASamarbeid.Status.SLETTET.name,
                     ),
-                ).map { mapRowToIASamarbeid(it) }.asList,
+                ).map { it.mapRowToIASamarbeid() }.asList,
             )
         }
 
@@ -177,7 +177,7 @@ class IASamarbeidRepository(
                     SELECT *
                     FROM ia_prosess
                     """.trimIndent(),
-                ).map(this::mapRowToIASamarbeid).asList,
+                ).map { it.mapRowToIASamarbeid() }.asList,
             )
         }
 
@@ -199,7 +199,7 @@ class IASamarbeidRepository(
                         "saksnummer" to saksnummer,
                         "navn" to navn.nullIfEmpty(),
                     ),
-                ).map(this::mapRowToIASamarbeid).asSingle,
+                ).map { it.mapRowToIASamarbeid() }.asSingle,
             )!!
         }
 
@@ -223,19 +223,6 @@ class IASamarbeidRepository(
 
     private fun String?.nullIfEmpty(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
 
-    private fun mapRowToIASamarbeid(row: Row): IASamarbeid =
-        IASamarbeid(
-            id = row.int("id"),
-            offentligId = row.string("offentlig_id").tilUUID("offentlig_id"),
-            saksnummer = row.string("saksnummer"),
-            navn = row.string("navn"),
-            status = row.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
-            opprettet = row.localDateTime("opprettet").toKotlinLocalDateTime(),
-            avbrutt = row.localDateTimeOrNull("avbrutt_tidspunkt")?.toKotlinLocalDateTime(),
-            fullført = row.localDateTimeOrNull("fullfort_tidspunkt")?.toKotlinLocalDateTime(),
-            sistEndret = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
-        )
-
     fun slettSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -253,7 +240,7 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.SLETTET.name,
                         "endret_tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIASamarbeid).asSingle,
+                ).map { it.mapRowToIASamarbeid() }.asSingle,
             )!!
         }
 
@@ -274,7 +261,7 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.FULLFØRT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIASamarbeid).asSingle,
+                ).map { it.mapRowToIASamarbeid() }.asSingle,
             )!!
         }
 
@@ -295,7 +282,7 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.AVBRUTT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIASamarbeid).asSingle,
+                ).map { it.mapRowToIASamarbeid() }.asSingle,
             )!!
         }
 
@@ -380,3 +367,16 @@ class IASamarbeidRepository(
         val samarbeid: SamarbeidDto,
     )
 }
+
+fun Row.mapRowToIASamarbeid(): IASamarbeid =
+    IASamarbeid(
+        id = this.int("id"),
+        offentligId = this.string("offentlig_id").tilUUID("offentlig_id"),
+        saksnummer = this.string("saksnummer"),
+        navn = this.string("navn"),
+        status = this.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
+        opprettet = this.localDateTime("opprettet").toKotlinLocalDateTime(),
+        avbrutt = this.localDateTimeOrNull("avbrutt_tidspunkt")?.toKotlinLocalDateTime(),
+        fullført = this.localDateTimeOrNull("fullfort_tidspunkt")?.toKotlinLocalDateTime(),
+        sistEndret = this.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
+    )

@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettNyttSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.AngreVurderVirksomhetSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.AvsluttVurderingSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettSamarbeidSideEffect
 
 object VirksomhetVurderes : Tilstand() { // VURDERES
     override fun utførTransisjon(
@@ -52,17 +53,21 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
             }
 
             is OpprettNyttSamarbeid -> {
-                val endring = fiaKontekst.nyFlytService.opprettNyttSamarbeid(
+                val sideEffect = OpprettSamarbeidSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
-                    navn = hendelse.samarbeidsnavn,
+                    samarbeidsNavn = hendelse.samarbeidsnavn,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
                 )
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetHarAktiveSamarbeid,
-                )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    Konsekvens(
+                        nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
+                        endring = resultat,
+                        sideEffect = sideEffect,
+                    )
+                }
             }
 
             else -> {

@@ -2,6 +2,8 @@ package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
@@ -78,62 +80,6 @@ class NyFlytService(
     }
 
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
-
-    fun opprettNyttSamarbeid(
-        orgnummer: String,
-        saksnummer: String,
-        navn: String,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, IASamarbeidDto> {
-        val erFølgerAvSak = iaTeamService.erFølgerAvSak(
-            saksnummer = saksnummer,
-            saksbehandler = saksbehandler,
-        )
-        if (!erFølgerAvSak) {
-            return Either.Left(IASakError.`er ikke følger av sak`)
-        }
-
-        val alleSamarbeid = hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
-
-        if (navn.trim().isEmpty() || navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
-            return Either.Left(IASamarbeidFeil.`ugyldig samarbeidsnavn`)
-        }
-        alleSamarbeid.getOrNull()?.find { it.navn.equals(navn, ignoreCase = true) }
-            ?.let { return Either.Left(IASamarbeidFeil.`samarbeidsnavn finnes allerede`) }
-
-        val iASakshendelse = IASakshendelse(
-            id = ULID.random(),
-            opprettetTidspunkt = LocalDateTime.now(),
-            saksnummer = saksnummer,
-            hendelsesType = IASakshendelseType.NY_PROSESS,
-            orgnummer = orgnummer,
-            opprettetAv = saksbehandler.navIdent,
-            opprettetAvRolle = saksbehandler.rolle,
-            navEnhet = navEnhet,
-            resulterendeStatus = null,
-        )
-        iaSakshendelseRepository.lagreHendelse(
-            hendelse = iASakshendelse,
-            sistEndretAvHendelseId = null,
-            resulterendeStatus = AKTIV,
-        )
-        val opprettetSamarbeid = iaSamarbeidRepository.opprettNyttSamarbeid(
-            saksnummer = saksnummer,
-            navn = navn,
-        ).also { samarbeid ->
-            iaSamarbeidObservers.forEach { it.receive(input = samarbeid) }
-        }
-
-        iaSakRepository.oppdaterStatusPåSak(
-            saksnummer = saksnummer,
-            status = AKTIV,
-            endretAvHendelseId = iASakshendelse.id,
-            endretAv = saksbehandler.navIdent,
-        ).onRight(::varsleIASakObservers)
-
-        return Either.Right(opprettetSamarbeid.tilDto())
-    }
 
     fun opprettNyKartlegging(
         orgnummer: String,
@@ -616,4 +562,23 @@ class NyFlytService(
             .filter { it.nesteTilstand?.planlagtDato == planlagtDato }
 
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
+
+    fun validerOpprettelseAvSamarbeid(
+        navn: String,
+        saksnummer: String,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+    ): Either<Feil, Unit> =
+        either {
+            val erFølgerAvSak = iaTeamService.erFølgerAvSak(
+                saksnummer = saksnummer,
+                saksbehandler = saksbehandler,
+            )
+            ensure(erFølgerAvSak) { IASakError.`er ikke følger av sak` }
+            val ugyldigNavn = navn.trim().isEmpty() || navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
+            ensure(!ugyldigNavn) { IASamarbeidFeil.`ugyldig samarbeidsnavn` }
+            val navnFinnesAllerede = hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer).map { alleSamarbeid ->
+                alleSamarbeid.any { it.navn.equals(navn, ignoreCase = true) }
+            }.getOrNull() ?: false
+            ensure(!navnFinnesAllerede) { IASamarbeidFeil.`samarbeidsnavn finnes allerede` }
+        }
 }

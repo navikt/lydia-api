@@ -18,6 +18,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettKartlegging
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 
 // -- Virksomheten har minst ett aktivt samarbeid med en aktiv samarbeidsplan
@@ -28,17 +29,21 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
     ): Konsekvens =
         when (hendelse) {
             is OpprettNyttSamarbeid -> {
-                val endring = fiaKontekst.nyFlytService.opprettNyttSamarbeid(
+                val sideEffect = OpprettSamarbeidSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
-                    navn = hendelse.samarbeidsnavn,
+                    samarbeidsNavn = hendelse.samarbeidsnavn,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
                 )
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetHarAktiveSamarbeid,
-                )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    Konsekvens(
+                        nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
+                        endring = resultat,
+                        sideEffect = sideEffect,
+                    )
+                }
             }
 
             is OpprettKartleggingForSamarbeid -> {

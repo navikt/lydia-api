@@ -8,16 +8,20 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.db.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
+import no.nav.lydia.ia.sak.db.mapRowToIASamarbeid
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASakDto
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
+import java.util.UUID
 import javax.sql.DataSource
 
 class Transaction(
@@ -389,6 +393,29 @@ fun settSakTilSlettet(
         ).asUpdate,
     )
 }
+
+context(tx: TransactionalSession)
+fun opprettNyttSamarbeid(
+    offentligId: UUID = UUID.randomUUID(),
+    saksnummer: String,
+    navn: String? = DEFAULT_SAMARBEID_NAVN,
+): IASamarbeid =
+    tx.run(
+        queryOf(
+            """
+            INSERT INTO ia_prosess (offentlig_id, saksnummer, navn) 
+            values (:offentligId, :saksnummer, :navn)
+             returning *
+            """.trimIndent(),
+            mapOf(
+                "offentligId" to offentligId,
+                "saksnummer" to saksnummer,
+                "navn" to navn.nullIfEmpty(),
+            ),
+        ).map { it.mapRowToIASamarbeid() }.asSingle,
+    )!!
+
+private fun String?.nullIfEmpty(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
 
 fun IASakDto.nyHendelseBasertPåSak(
     hendelsestype: IASakshendelseType,
