@@ -14,6 +14,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASakDto
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
@@ -196,6 +197,43 @@ fun lagreHendelse(
         )
         hendelse
     }
+
+context(tx: TransactionalSession)
+fun lagreÅrsakForHendelse(
+    hendelseId: String,
+    valgtÅrsak: ValgtÅrsak,
+) = run {
+    valgtÅrsak.begrunnelser.forEach { begrunnelse ->
+        tx.run(
+            queryOf(
+                """
+                            INSERT INTO hendelse_begrunnelse (
+                                hendelse_id,
+                                aarsak,
+                                begrunnelse,
+                                aarsak_enum,
+                                begrunnelse_enum
+                            )
+                            VALUES (
+                                :hendelse_id,
+                                :aarsak,
+                                :begrunnelse,
+                                :aarsak_enum,
+                                :begrunnelse_enum
+                            ) 
+                            ON CONFLICT DO NOTHING  
+                """.trimMargin(),
+                mapOf(
+                    "hendelse_id" to hendelseId,
+                    "aarsak" to valgtÅrsak.type.navn,
+                    "begrunnelse" to begrunnelse.navn,
+                    "aarsak_enum" to valgtÅrsak.type.name,
+                    "begrunnelse_enum" to begrunnelse.name,
+                ),
+            ).asUpdate,
+        )
+    }
+}
 
 context(tx: TransactionalSession)
 fun opprettSak(iaSakDto: IASakDto): IASakDto =

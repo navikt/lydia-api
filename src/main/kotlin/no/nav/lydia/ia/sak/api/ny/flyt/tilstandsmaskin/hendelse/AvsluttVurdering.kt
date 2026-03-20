@@ -6,7 +6,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
 data class AvsluttVurdering(
     override val orgnr: String,
-    val årsak: `ValgtÅrsak`,
+    val årsak: ValgtÅrsak,
     val saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
     val navEnhet: NavEnhet,
 ) : Hendelse()

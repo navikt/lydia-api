@@ -283,7 +283,7 @@ fun Route.nyFlyt(
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
                 hendelse = hendelse,
             )
-            application.log.info("NyTilstand etter hendelse ${hendelse.navn()} er: '${konsekvens.nyTilstand}'")
+            application.log.info("NyTilstand etter hendelse ${hendelse.navn()} er: '${konsekvens.nyTilstand.navn()}'")
 
             konsekvens.endring.map { it as IASakDto }
         }.also { iaSakEither ->

@@ -77,48 +77,6 @@ class TilstandVirksomhetRepository(
             )
         }
 
-    fun oppdaterVirksomhetTilstand(
-        orgnr: String,
-        tilstand: VirksomhetIATilstand,
-    ): VirksomhetTilstandDto? =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE tilstand_virksomhet
-                    SET tilstand = :tilstand,
-                        sist_endret = current_timestamp
-                    WHERE orgnr = :orgnr
-                    RETURNING *
-                    """.trimIndent(),
-                    mapOf(
-                        "orgnr" to orgnr,
-                        "tilstand" to tilstand.name,
-                    ),
-                ).map { row ->
-                    row.tilVirksomhetTilstandDto()
-                }.asSingle,
-            )
-        }
-
-    fun slettVirksomhetTilstand(orgnr: String): VirksomhetTilstandDto? =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    DELETE FROM tilstand_virksomhet
-                    WHERE orgnr = :orgnr
-                    RETURNING *
-                    """.trimIndent(),
-                    mapOf(
-                        "orgnr" to orgnr,
-                    ),
-                ).map { row ->
-                    row.tilVirksomhetTilstandDto()
-                }.asSingle,
-            )
-        }
-
     fun opprettAutomatiskOppdatering(
         orgnr: String,
         startTilstand: VirksomhetIATilstand,

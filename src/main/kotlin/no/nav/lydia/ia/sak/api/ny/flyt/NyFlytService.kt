@@ -26,17 +26,13 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
 import no.nav.lydia.ia.sak.domene.IASak.Status.AVSLUTTET
 import no.nav.lydia.ia.sak.domene.IASak.Status.VURDERES
-import no.nav.lydia.ia.sak.domene.IASak.Status.VURDERT
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.IATeamService
-import no.nav.lydia.ia.årsak.db.ÅrsakRepository
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import org.slf4j.Logger
@@ -50,7 +46,6 @@ class NyFlytService(
     val tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     val iaSakRepository: IASakRepository,
     val iaSakshendelseRepository: IASakshendelseRepository,
-    val årsakRepository: ÅrsakRepository,
     val iaSamarbeidService: IASamarbeidService,
     val iaSamarbeidRepository: IASamarbeidRepository, // TODO: bruk Service i stedet
     val iaTeamService: IATeamService,
@@ -63,44 +58,6 @@ class NyFlytService(
 
     fun varsleIASakObservers(sakDto: IASakDto) {
         iaSakObservers.forEach { observer -> observer.receive(input = sakDto) }
-    }
-
-    fun avsluttVurderingAvVirksomhetUtenSamarbeid(
-        orgnummer: String,
-        saksnummer: String,
-        årsak: ValgtÅrsak,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, IASakDto> {
-        val iASakshendelse = IASakshendelse(
-            id = ULID.random(),
-            opprettetTidspunkt = LocalDateTime.now(),
-            saksnummer = saksnummer,
-            hendelsesType = VURDERING_FULLFØRT_UTEN_SAMARBEID,
-            orgnummer = orgnummer,
-            opprettetAv = saksbehandler.navIdent,
-            opprettetAvRolle = saksbehandler.rolle,
-            navEnhet = navEnhet,
-            resulterendeStatus = null,
-        )
-        iaSakshendelseRepository.lagreHendelse(
-            hendelse = iASakshendelse,
-            sistEndretAvHendelseId = null,
-            resulterendeStatus = VURDERT,
-        )
-
-        årsakRepository.lagreÅrsakForHendelse(
-            hendelseId = iASakshendelse.id,
-            valgtÅrsak = årsak,
-        )
-        val oppdatertSak = iaSakRepository.oppdaterStatusPåSak(
-            saksnummer = saksnummer,
-            status = VURDERT,
-            endretAvHendelseId = iASakshendelse.id,
-            endretAv = saksbehandler.navIdent,
-        ).onRight(::varsleIASakObservers)
-
-        return oppdatertSak
     }
 
     fun hentAlleAndreIASakDto(

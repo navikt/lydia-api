@@ -273,7 +273,6 @@ fun startLydiaBackend() {
         tilstandVirksomhetRepository = tilstandVirksomhetRepository,
         iaSakRepository = iaSakRepository,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-        årsakRepository = årsakRepository,
         iaSamarbeidService = samarbeidService,
         iaSamarbeidRepository = samarbeidRepository,
         iaTeamService = iaTeamService,

@@ -26,6 +26,9 @@ class GjørVirksomhetKlarTilNyVurderingSideEffect(
                 }
             }.right()
         } catch (e: Exception) {
-            Feil("Feil ved vurdering av virksomhet: ${e.message}", HttpStatusCode.InternalServerError).left()
+            Feil(
+                feilmelding = "Feil ved gjør virksomhet klar til vurdering for virksomhet med orgnr: '$orgnummer' med melding: '${e.message}'",
+                httpStatusCode = HttpStatusCode.InternalServerError,
+            ).left()
         }
 }
