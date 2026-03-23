@@ -1,13 +1,13 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion = "3.4.0"
+val ktorVersion = "3.4.1"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
-val kotestVerstion = "6.1.5"
+val kotestVerstion = "6.1.7"
 val testcontainersVersion = "2.0.3"
 val logbackVersion = "1.5.32"
 val logstashLogbackEncoderVersion = "9.0"
-val opentelemetryLogbackMdcVersion = "2.25.0-alpha"
+val opentelemetryLogbackMdcVersion = "2.26.0-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -52,12 +52,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.16.3")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.16.4")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.10")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:12.0.3")
+    implementation("org.flywaydb:flyway-database-postgresql:12.1.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
