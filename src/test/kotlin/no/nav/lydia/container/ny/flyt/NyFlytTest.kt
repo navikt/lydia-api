@@ -509,6 +509,7 @@ class NyFlytTest {
             samarbeidId = samarbeid.id,
             saksnummer = sak.saksnummer,
             nyttNavn = nyttNavn,
+            token = authContainerHelper.superbruker1.token,
         )
 
         response.statuskode() shouldBe HttpStatusCode.OK.value

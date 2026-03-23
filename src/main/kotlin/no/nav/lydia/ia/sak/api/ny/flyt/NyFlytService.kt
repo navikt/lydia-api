@@ -418,49 +418,6 @@ class NyFlytService(
         }
     }
 
-    fun endreSamarbeidsNavn(
-        orgnummer: String,
-        saksnummer: String,
-        samarbeidId: Int,
-        nyttNavn: String,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, IASamarbeidDto> {
-        if (nyttNavn.trim().isEmpty() || nyttNavn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
-            return IASamarbeidFeil.`ugyldig samarbeidsnavn`.left()
-        }
-
-        val alleSamarbeid = hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
-
-        alleSamarbeid.getOrNull()?.find { it.navn.equals(nyttNavn, ignoreCase = true) }
-            ?.let { return IASamarbeidFeil.`samarbeidsnavn finnes allerede`.left() }
-
-        val samarbeidDto = IASamarbeidDto(
-            id = samarbeidId,
-            saksnummer = saksnummer,
-            navn = nyttNavn,
-        )
-
-        val oppdatertSamarbeid = iaSamarbeidService.oppdaterNavnPåSamarbeid(samarbeidDto = samarbeidDto)
-            ?: return Feil(
-                feilmelding = "Fant ikke samarbeid med id $samarbeidId",
-                httpStatusCode = HttpStatusCode.NotFound,
-            ).left()
-
-        lagreHendelseOgOppdaterIaSakDto(
-            orgnummer = orgnummer,
-            saksnummer = saksnummer,
-            hendelsesType = IASakshendelseType.ENDRE_PROSESS,
-            saksbehandler = saksbehandler,
-            navEnhet = navEnhet,
-            resulterendeSakStatus = AKTIV,
-        )
-
-        iaSamarbeidObservers.forEach { it.receive(input = oppdatertSamarbeid) }
-
-        return oppdatertSamarbeid.tilDto().right()
-    }
-
     fun endrePlanlagtDatoForNesteTilstand(
         orgnummer: String,
         saksnummer: String,
@@ -563,7 +520,7 @@ class NyFlytService(
 
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
 
-    fun validerOpprettelseAvSamarbeid(
+    fun validerSamarbeidsnavn(
         navn: String,
         saksnummer: String,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,

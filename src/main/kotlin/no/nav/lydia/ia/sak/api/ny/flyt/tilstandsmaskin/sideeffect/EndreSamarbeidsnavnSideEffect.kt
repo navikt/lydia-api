@@ -5,42 +5,49 @@ import com.github.guepardoapps.kulid.ULID
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.Transaction
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.ny.flyt.lagreEllerOppdaterVirksomhetTilstand
+import no.nav.lydia.ia.sak.api.ny.flyt.hentSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.lagreHendelse
+import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterNavnPåSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterStatusPåSak
-import no.nav.lydia.ia.sak.api.ny.flyt.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
-import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import java.time.LocalDateTime
 
-class OpprettSamarbeidSideEffect(
+class EndreSamarbeidsnavnSideEffect(
     val orgnummer: String,
     val saksnummer: String,
-    val samarbeidsNavn: String,
+    val samarbeidId: Int,
+    val nyttNavn: String,
     val saksbehandler: NavAnsattMedSaksbehandlerRolle,
     val navEnhet: NavEnhet,
 ) : SideEffect<IASamarbeidDto>() {
     context(nyFlytService: NyFlytService)
-    override fun apply(): Either<Feil, IASamarbeidDto> {
-        // -- validering burde ikke ligge her, men hvor? ¯\_(ツ)_/¯
-        return nyFlytService.validerSamarbeidsnavn(
-            navn = samarbeidsNavn,
+    override fun apply(): Either<Feil, IASamarbeidDto> =
+        nyFlytService.validerSamarbeidsnavn(
+            navn = nyttNavn,
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
         ).map {
             Transaction(nyFlytService.dataSource).transactional { tx ->
                 with(tx) {
+                    val samarbeidDto = IASamarbeidDto(
+                        id = samarbeidId,
+                        saksnummer = saksnummer,
+                        navn = nyttNavn,
+                    )
+
+                    oppdaterNavnPåSamarbeid(samarbeidDto)
+
                     val iASakshendelse = IASakshendelse(
                         id = ULID.random(),
                         opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = saksnummer,
-                        hendelsesType = IASakshendelseType.NY_PROSESS,
+                        hendelsesType = IASakshendelseType.ENDRE_PROSESS,
                         orgnummer = orgnummer,
                         opprettetAv = saksbehandler.navIdent,
                         opprettetAvRolle = saksbehandler.rolle,
@@ -50,27 +57,15 @@ class OpprettSamarbeidSideEffect(
                     lagreHendelse(
                         hendelse = iASakshendelse,
                         sistEndretAvHendelseId = null,
-                        resulterendeStatus = AKTIV,
+                        resulterendeStatus = IASak.Status.AKTIV,
                     )
-
-                    val opprettetSamarbeid = opprettNyttSamarbeid(
-                        saksnummer = saksnummer,
-                        navn = samarbeidsNavn,
-                    )
-
                     oppdaterStatusPåSak(
                         saksnummer = saksnummer,
-                        status = AKTIV,
-                        endretAvHendelseId = iASakshendelse.id,
+                        status = IASak.Status.AKTIV,
                         endretAv = saksbehandler.navIdent,
+                        endretAvHendelseId = iASakshendelse.id,
                     )
-
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = orgnummer,
-                        tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
-                    )
-
-                    opprettetSamarbeid
+                    hentSamarbeid(samarbeidId = samarbeidId)!!
                 }
             }.also { samarbeid ->
                 nyFlytService.iaSamarbeidObservers.forEach { it.receive(samarbeid) }
@@ -79,5 +74,4 @@ class OpprettSamarbeidSideEffect(
                 }
             }.tilDto()
         }
-    }
 }

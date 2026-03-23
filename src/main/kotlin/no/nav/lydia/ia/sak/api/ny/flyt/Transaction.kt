@@ -10,6 +10,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.db.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
 import no.nav.lydia.ia.sak.db.mapRowToIASamarbeid
 import no.nav.lydia.ia.sak.domene.IASak
@@ -389,6 +390,38 @@ fun settSakTilSlettet(
                 "endret_av" to hendelse.opprettetAv,
                 "endret_av_hendelse" to hendelse.id,
                 "endret" to hendelse.opprettetTidspunkt,
+            ),
+        ).asUpdate,
+    )
+}
+
+context(tx: TransactionalSession)
+fun hentSamarbeid(samarbeidId: Int) =
+    tx.run(
+        queryOf(
+            """
+            SELECT *
+            FROM ia_prosess
+            WHERE id = :prosessId
+            """.trimIndent(),
+            mapOf(
+                "prosessId" to samarbeidId,
+            ),
+        ).map { it.mapRowToIASamarbeid() }.asSingle,
+    )
+
+context(tx: TransactionalSession)
+fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto) {
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_prosess SET navn = :navn, endret_tidspunkt = :endret_tidspunkt 
+            WHERE id = :prosessId
+            """.trimIndent(),
+            mapOf(
+                "navn" to samarbeidDto.navn,
+                "prosessId" to samarbeidDto.id,
+                "endret_tidspunkt" to LocalDateTime.now(),
             ),
         ).asUpdate,
     )
