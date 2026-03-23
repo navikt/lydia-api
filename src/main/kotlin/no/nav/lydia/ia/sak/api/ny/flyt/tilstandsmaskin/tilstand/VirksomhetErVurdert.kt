@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.FiaKontekst
+import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.Konsekvens
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndrePlanlagtDatoForNesteTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
@@ -66,7 +67,7 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
             }
 
             else -> {
-                Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
+                Either.Left(Feil("'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetErVurdert.tilVirksomhetIATilstand()}'", HttpStatusCode.BadRequest))
             }
         }
 

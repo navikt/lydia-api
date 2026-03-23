@@ -25,6 +25,8 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Evaluering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaInfo
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -389,6 +391,12 @@ class SpørreundersøkelseService(
 
         return temaResultat.tilTemaResultatKafkaDto().right()
     }
+
+    fun hentAktiveTemaer(type: Spørreundersøkelse.Type): List<TemaInfo> =
+        spørreundersøkelseRepository.hentAktiveTemaer(type)
+
+    fun hentObligatoriskeAktiveUndertemaer(temaId: Int): List<UndertemaInfo> =
+        spørreundersøkelseRepository.hentObligatoriskeAktiveUndertemaer(temaId)
 
     private fun erPublisertEllerUnderPublisering(spørreundersøkelse: Spørreundersøkelse): Boolean {
         val type = DokumentPubliseringDto.Type.valueOf(spørreundersøkelse.type.name.uppercase())

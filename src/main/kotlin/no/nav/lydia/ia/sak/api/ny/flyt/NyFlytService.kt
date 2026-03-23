@@ -21,6 +21,7 @@ import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
@@ -34,6 +35,7 @@ import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
@@ -80,32 +82,6 @@ class NyFlytService(
     }
 
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
-
-    fun opprettNyKartlegging(
-        orgnummer: String,
-        saksnummer: String,
-        samarbeidId: Int,
-        type: Spørreundersøkelse.Type,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, Spørreundersøkelse> =
-        spørreundersøkelseService.opprettSpørreundersøkelse(
-            orgnummer = orgnummer,
-            saksnummer = saksnummer,
-            samarbeidId = samarbeidId,
-            type = type,
-            saksbehandler = saksbehandler,
-        ).apply {
-            onRight {
-                lagreHendelseUtenEndringIStatusPåSak(
-                    orgnummer = orgnummer,
-                    saksnummer = saksnummer,
-                    hendelsesType = IASakshendelseType.OPPRETT_KARTLEGGING,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                )
-            }
-        }
 
     fun startNyKartlegging(
         orgnummer: String,
@@ -537,5 +513,49 @@ class NyFlytService(
                 alleSamarbeid.any { it.navn.equals(navn, ignoreCase = true) }
             }.getOrNull() ?: false
             ensure(!navnFinnesAllerede) { IASamarbeidFeil.`samarbeidsnavn finnes allerede` }
+        }
+
+    fun validerOpprettelseAvKartlegging(
+        saksnummer: String,
+        samarbeidId: Int,
+        type: Spørreundersøkelse.Type,
+    ): Either<Feil, List<TemaInfo>> =
+        either {
+            iaSamarbeidService.hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).bind()
+
+            when (type) {
+                Spørreundersøkelse.Type.Behovsvurdering -> {
+                    spørreundersøkelseService.hentAktiveTemaer(type)
+                }
+
+                Spørreundersøkelse.Type.Evaluering -> {
+                    val sakStatus = iaSakRepository.hentStatusForSaksnummer(saksnummer)
+                    ensure(sakStatus == IASak.Status.VI_BISTÅR || sakStatus == IASak.Status.AKTIV) {
+                        IASakSpørreundersøkelseError.`sak ikke i rett status`
+                    }
+                    val plan = planService.hentPlan(samarbeidId = samarbeidId).bind()
+                    val temaerInkludertIPlan = plan.temaer.filter { planTema -> planTema.inkludert }
+                    ensure(temaerInkludertIPlan.isNotEmpty()) {
+                        Feil(
+                            feilmelding = "Kan ikke opprette en evaluering basert på en tom plan",
+                            httpStatusCode = HttpStatusCode.BadRequest,
+                        )
+                    }
+                    val temaNavnInkludertIPlan = temaerInkludertIPlan.map { planTema -> planTema.navn }
+                    val aktiveTemaer = spørreundersøkelseService.hentAktiveTemaer(type)
+                    val temaerSomSkalEvalueres = aktiveTemaer.filter { tema -> temaNavnInkludertIPlan.contains(tema.navn) }
+                    val undertemaNavnInkludertIPlan = temaerInkludertIPlan
+                        .flatMap { planTema -> planTema.undertemaer }
+                        .filter { undertema -> undertema.inkludert }
+                        .map { undertema -> undertema.navn }
+                    temaerSomSkalEvalueres.map { tema ->
+                        tema.copy(
+                            undertemaer = tema.undertemaer.filter { u -> undertemaNavnInkludertIPlan.contains(u.navn) } +
+                                spørreundersøkelseService.hentObligatoriskeAktiveUndertemaer(tema.id),
+                        )
+                    }
+                }
+            }
+
         }
 }
