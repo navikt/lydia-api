@@ -37,8 +37,8 @@ object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
                     nyTilstand = VirksomhetKlarTilVurdering,
                     endring = Either.Left(
                         Feil(
-                            "'$hendelse' er ikke gjennomførbar for '${VirksomhetKlarTilVurdering.tilVirksomhetIATilstand()}'",
-                            HttpStatusCode.Companion.BadRequest,
+                            "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetKlarTilVurdering.tilVirksomhetIATilstand()}'",
+                            HttpStatusCode.BadRequest,
                         ),
                     ),
                 )

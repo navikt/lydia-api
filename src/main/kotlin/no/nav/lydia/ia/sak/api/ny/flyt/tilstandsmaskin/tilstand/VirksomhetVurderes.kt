@@ -4,6 +4,7 @@ import arrow.core.Either
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.ny.flyt.FiaKontekst
+import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.Konsekvens
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.AngreVurderVirksomhet
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.AvsluttVurdering
@@ -71,7 +72,9 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
             }
 
             else -> {
-                val endring = Either.Left(Feil("Something odd happened", HttpStatusCode.BadRequest))
+                val endring = Either.Left(
+                    Feil("'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetVurderes.tilVirksomhetIATilstand()}'", HttpStatusCode.BadRequest),
+                )
                 Konsekvens(
                     endring = endring,
                     nyTilstand = VirksomhetVurderes,
