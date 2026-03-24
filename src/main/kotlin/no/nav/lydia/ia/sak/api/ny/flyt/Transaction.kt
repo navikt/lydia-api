@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import com.github.guepardoapps.kulid.ULID
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -19,6 +20,11 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASakDto
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.plan.Plan
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanTema
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
@@ -27,6 +33,8 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
 import java.util.UUID
@@ -454,6 +462,213 @@ fun opprettNyttSamarbeid(
             ),
         ).map { it.mapRowToIASamarbeid() }.asSingle,
     )!!
+
+context(tx: TransactionalSession)
+fun opprettSamarbeidsplan(
+    planId: UUID,
+    samarbeidId: Int,
+    saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+    mal: PlanMalDto,
+): Plan? {
+    tx.run(
+        queryOf(
+            """
+                            INSERT INTO ia_sak_plan (
+                                plan_id,
+                                ia_prosess,
+                                opprettet_av
+                            )
+                            VALUES (
+                                :plan_id,
+                                :ia_prosess,
+                                :opprettet_av
+                            )
+            """.trimMargin(),
+            mapOf(
+                "plan_id" to planId.toString(),
+                "ia_prosess" to samarbeidId,
+                "opprettet_av" to saksbehandler.navIdent,
+            ),
+        ).asUpdate,
+    )
+    mal.tema.forEach { tema ->
+        val temaId = tx.run(
+            queryOf(
+                """
+                            INSERT INTO ia_sak_plan_tema (
+                                navn,
+                                inkludert,
+                                plan_id
+                            )
+                            VALUES (
+                                :navn,
+                                :inkludert,
+                                :plan_id
+                            )
+                            RETURNING *
+                """.trimMargin(),
+                mapOf(
+                    "navn" to tema.navn,
+                    "inkludert" to tema.inkludert,
+                    "plan_id" to planId.toString(),
+                ),
+            ).map { row: Row ->
+                row.int("tema_id")
+            }.asSingle,
+        )!!
+
+        tema.innhold.forEach { innhold ->
+            tx.run(
+                queryOf(
+                    """
+                            INSERT INTO ia_sak_plan_undertema (
+                                navn,
+                                inkludert,
+                                status,
+                                start_dato,
+                                slutt_dato,
+                                tema_id,
+                                plan_id
+
+                            )
+                            VALUES (
+                                :navn,
+                                :inkludert,
+                                :status,
+                                :start_dato,
+                                :slutt_dato,
+                                :tema_id,
+                                :plan_id
+                            )
+                    """.trimMargin(),
+                    mapOf(
+                        "navn" to innhold.navn,
+                        "inkludert" to innhold.inkludert,
+                        "status" to if (innhold.inkludert) PlanUndertema.Status.PLANLAGT.name else null,
+                        "start_dato" to innhold.startDato?.toJavaLocalDate(),
+                        "slutt_dato" to innhold.sluttDato?.toJavaLocalDate(),
+                        "tema_id" to temaId,
+                        "plan_id" to planId.toString(),
+                    ),
+                ).asUpdate,
+            )
+        }
+    }
+    return hentPlan(samarbeidId = samarbeidId, tx = tx)
+}
+
+private fun hentPlan(
+    samarbeidId: Int,
+    tx: TransactionalSession,
+): Plan? =
+    tx.run(
+        queryOf(
+            """
+                        SELECT *
+                        FROM ia_sak_plan
+                        WHERE ia_prosess = :prosessId
+                        AND status != 'SLETTET'
+            """.trimMargin(),
+            mapOf(
+                "prosessId" to samarbeidId,
+            ),
+        ).map { tilPlan(row = it, tx = tx) }.asSingle,
+    )
+
+private fun tilPlan(
+    row: Row,
+    tx: TransactionalSession,
+): Plan {
+    val planIdLestFraDB = UUID.fromString(row.string("plan_id"))
+    return Plan(
+        id = planIdLestFraDB,
+        samarbeidId = row.int("ia_prosess"),
+        sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
+        sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
+        status = IASamarbeid.Status.valueOf(row.string("status")),
+        temaer = hentTema(planIdLestFraDB, tx = tx),
+    )
+}
+
+private fun hentTema(
+    planId: UUID,
+    tx: TransactionalSession,
+): List<PlanTema> =
+    tx.run(
+        queryOf(
+            """
+                        SELECT *
+                        FROM ia_sak_plan_tema
+                        WHERE plan_id = :planId
+            """.trimMargin(),
+            mapOf(
+                "planId" to planId.toString(),
+            ),
+        ).map { row: Row ->
+            val temaId = row.int("tema_id")
+            PlanTema(
+                id = temaId,
+                navn = row.string("navn"),
+                inkludert = row.boolean("inkludert"),
+                undertemaer = hentUndertema(temaId, tx),
+            )
+        }.asList,
+    )
+
+private fun hentUndertema(
+    temaId: Int,
+    tx: TransactionalSession,
+): List<PlanUndertema> =
+    tx.run(
+        queryOf(
+            """
+                        SELECT *
+                        FROM ia_sak_plan_undertema
+                        WHERE tema_id = :temaId
+            """.trimMargin(),
+            mapOf(
+                "temaId" to temaId,
+            ),
+        ).map { row: Row ->
+            val innholdsNavn = row.string("navn")
+            val undertemaId = row.int("undertema_id")
+            PlanUndertema(
+                id = undertemaId,
+                navn = innholdsNavn,
+                målsetning = hentInnholdsMålsetning(innholdsNavn) ?: "",
+                inkludert = row.boolean("inkludert"),
+                status = row.stringOrNull("status")?.let { PlanUndertema.Status.valueOf(it) },
+                startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
+                sluttDato = row.localDateOrNull("slutt_dato")?.toKotlinLocalDate(),
+                aktiviteterISalesforce = hentAktiviterISalesforce(
+                    planId = row.string("plan_id"),
+                    undertemaId = undertemaId,
+                    tx = tx,
+                ),
+            )
+        }.asList,
+    )
+
+private fun hentAktiviterISalesforce(
+    planId: String,
+    undertemaId: Int,
+    tx: TransactionalSession,
+) = tx.run(
+    queryOf(
+        """
+        SELECT salesforce_aktiviteter.* 
+        FROM ia_sak_plan_undertema JOIN salesforce_aktiviteter USING (plan_id)
+        WHERE plan_id = :planId
+        AND undertema_id = :undertemaId
+        AND position(lower(navn) in lower(undertema)) > 0
+        AND salesforce_aktiviteter.slettet = false
+        """.trimIndent(),
+        mapOf(
+            "planId" to planId,
+            "undertemaId" to undertemaId,
+        ),
+    ).map(Row::mapTilSalesforceAktivitet).asList,
+)
 
 private fun String?.nullIfEmpty(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
 

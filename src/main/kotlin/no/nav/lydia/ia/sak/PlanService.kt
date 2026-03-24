@@ -47,6 +47,18 @@ class PlanService(
             )
         }
 
+    fun varslePlanObservers(
+        plan: Plan,
+        type: PlanHendelseType,
+    ) {
+        planObservers.forEach {
+            it.receive(
+                input =
+                    ObservedPlan(hendelsesType = type, plan = plan),
+            )
+        }
+    }
+
     fun opprettPlan(
         samarbeidId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
@@ -72,7 +84,7 @@ class PlanService(
             saksbehandler = saksbehandler,
             mal = mal,
         ).onRight { plan ->
-            planObservers.forEach { it.receive(ObservedPlan(hendelsesType = OPPRETT, plan = plan)) }
+            varslePlanObservers(plan = plan, type = OPPRETT)
             logger.info("Opprettet plan med Id '${plan.id}'")
         }
         return plan
@@ -110,14 +122,10 @@ class PlanService(
         }
 
         return hentPlan(samarbeidId = lagretPlan.samarbeidId).onRight { oppdatertPlan ->
-            planObservers.forEach {
-                it.receive(
-                    ObservedPlan(
-                        hendelsesType = PlanHendelseType.OPPDATER,
-                        plan = oppdatertPlan,
-                    ),
-                )
-            }
+            varslePlanObservers(
+                plan = oppdatertPlan,
+                type = PlanHendelseType.OPPDATER,
+            )
         }
     }
 
@@ -162,14 +170,10 @@ class PlanService(
             lagretTema = lagretTema,
             nyttInnholdListe = nyttInnholdListe,
         ).onRight { oppdatertPlan ->
-            planObservers.forEach {
-                it.receive(
-                    ObservedPlan(
-                        hendelsesType = PlanHendelseType.OPPDATER,
-                        plan = oppdatertPlan,
-                    ),
-                )
-            }
+            varslePlanObservers(
+                plan = oppdatertPlan,
+                type = PlanHendelseType.OPPDATER,
+            )
         }
     }
 
@@ -227,14 +231,10 @@ class PlanService(
         ) ?: return PlanFeil.`fikk ikke oppdatert undertema`.left()
 
         return hentPlan(samarbeidId = lagretPlan.samarbeidId).onRight { oppdatertPlan ->
-            planObservers.forEach {
-                it.receive(
-                    ObservedPlan(
-                        hendelsesType = ENDRE_STATUS,
-                        plan = oppdatertPlan,
-                    ),
-                )
-            }
+            varslePlanObservers(
+                plan = oppdatertPlan,
+                type = ENDRE_STATUS,
+            )
         }
     }
 
@@ -251,19 +251,15 @@ class PlanService(
 
         // oppdater status og notify observers
         return planRepository.settPlanTilSlettet(plan).onRight { oppdatertPlan ->
-            planObservers.forEach {
-                it.receive(
-                    ObservedPlan(
-                        plan = oppdatertPlan,
-                        ENDRE_STATUS,
-                    ),
-                )
-            }
+            varslePlanObservers(
+                plan = oppdatertPlan,
+                type = ENDRE_STATUS,
+            )
         }
     }
 
     companion object {
-        private fun PlanMalDto.erGyldig(): Boolean =
+        fun PlanMalDto.erGyldig(): Boolean =
             tema.all {
                 it.innhold.all { innhold ->
                     if (innhold.sluttDato == null || innhold.startDato == null) true else innhold.sluttDato > innhold.startDato

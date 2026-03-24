@@ -12,13 +12,13 @@ import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
+import no.nav.lydia.ia.sak.PlanFeil
 import no.nav.lydia.ia.sak.PlanService
+import no.nav.lydia.ia.sak.PlanService.Companion.erGyldig
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
-import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
@@ -200,48 +200,6 @@ class NyFlytService(
             endretAvHendelseId = iASakshendelse.id,
             oppdaterSistEndretPåSak = oppdaterSistEndretPåSak,
         ).onRight(::varsleIASakObservers)
-    }
-
-    fun opprettNySamarbeidsplan(
-        orgnummer: String,
-        saksnummer: String,
-        samarbeidId: Int,
-        plan: PlanMalDto,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, PlanMedPubliseringStatusDto> {
-        val plan = planService.opprettPlan(
-            samarbeidId = samarbeidId,
-            saksbehandler = saksbehandler,
-            mal = plan,
-        ).map {
-            it.tilDtoMedPubliseringStatus()
-        }.onRight {
-            val iASakshendelse = IASakshendelse(
-                id = ULID.random(),
-                opprettetTidspunkt = LocalDateTime.now(),
-                saksnummer = saksnummer,
-                hendelsesType = IASakshendelseType.OPPRETT_SAMARBEIDSPLAN,
-                orgnummer = orgnummer,
-                opprettetAv = saksbehandler.navIdent,
-                opprettetAvRolle = saksbehandler.rolle,
-                navEnhet = navEnhet,
-                resulterendeStatus = null,
-            )
-            iaSakshendelseRepository.lagreHendelse(
-                hendelse = iASakshendelse,
-                sistEndretAvHendelseId = null,
-                resulterendeStatus = AKTIV,
-            )
-            iaSakRepository.oppdaterStatusPåSak(
-                saksnummer = saksnummer,
-                status = AKTIV,
-                endretAv = saksbehandler.navIdent,
-                endretAvHendelseId = iASakshendelse.id,
-            ).onRight(::varsleIASakObservers)
-        }
-
-        return plan
     }
 
     fun slettSamarbeidsplan(
@@ -496,6 +454,8 @@ class NyFlytService(
 
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
 
+    // Valideringer
+
     fun validerSamarbeidsnavn(
         navn: String,
         saksnummer: String,
@@ -556,6 +516,22 @@ class NyFlytService(
                     }
                 }
             }
+        }
 
+    fun validerOpprettelseAvSamarbeidsplan(
+        samarbeidId: Int,
+        mal: PlanMalDto,
+    ): Either<Feil, PlanMalDto> =
+        either {
+            ensure(condition = planService.hentPlan(samarbeidId = samarbeidId).isLeft()) {
+                Feil(
+                    feilmelding = "Plan eksisterer allerede for dette samarbeidet: '$samarbeidId'",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                )
+            }
+            ensure(condition = mal.erGyldig()) {
+                PlanFeil.`feil inndata i forespørsel`
+            }
+            mal
         }
 }

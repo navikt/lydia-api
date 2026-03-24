@@ -67,6 +67,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandVirksomhetRepository
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService
 import no.nav.lydia.ia.sak.api.ny.flyt.nyFlyt
+import no.nav.lydia.ia.sak.api.ny.flyt.nyFlytSamarbeidsplan
 import no.nav.lydia.ia.sak.api.plan.iaSakPlan
 import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
@@ -598,6 +599,18 @@ private fun Application.lydiaRestApi(
                 planService = planService,
                 tilstandVirksomhetRepository = tilstandVirksomhetRepository,
                 virksomhetService = virksomhetService,
+                adGrupper = naisEnv.security.adGrupper,
+                auditLog = auditLog,
+                azureService = azureService,
+            )
+            nyFlytSamarbeidsplan(
+                iaSakService = iaSakService,
+                iASamarbeidService = samarbeidService,
+                iaTeamService = iaTeamService,
+                nyFlytService = nyFlytService,
+                dokumentPubliseringService = dokumentPubliseringService,
+                planService = planService,
+                tilstandVirksomhetRepository = tilstandVirksomhetRepository,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
