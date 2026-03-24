@@ -44,13 +44,11 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndreSamarbeidsN
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.FullførKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettNyttSamarbeid
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
-import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
@@ -58,7 +56,6 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseErr
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.tilSakshistorikk
 import no.nav.lydia.ia.sak.domene.plan.Plan
-import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -524,38 +521,7 @@ fun Route.nyFlyt(
         }
     }
 
-    post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/opprett-samarbeidsplan") {
-        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        val samarbeidId = call.samarbeidId ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        val tilstandsmaskin = tilstandsmaskin(orgnr)
-        val plan = call.receive<PlanMalDto>()
-
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
-            val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = OpprettPlanForSamarbeid(
-                    orgnr = orgnr,
-                    samarbeidId = samarbeidId,
-                    plan = plan,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                ),
-            )
-            konsekvens.endring.map { it as PlanMedPubliseringStatusDto }
-        }.also { iaPlanDtoEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = iaPlanDtoEither,
-                orgnummer = orgnr,
-                auditType = AuditType.create,
-                saksnummer = tilstandsmaskin.saksnummer,
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.Created, message = it)
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
+    // "$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/opprett-samarbeidsplan" er flyttet til NyFlytPlanRoutes
     delete("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/slett-samarbeidsplan") {
         val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
         val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
