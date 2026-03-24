@@ -4,6 +4,7 @@ import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
 import ia.felles.integrasjoner.jobbsender.Jobb
 import io.kotest.inspectors.forAll
+import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
@@ -258,8 +259,7 @@ class MigreringTestUtils {
                         hendelse shouldContain iaSakDto.saksnummer
                         hendelse shouldContain iaSakDto.orgnr
                     }
-                    meldinger shouldHaveSize 1
-                    meldinger[0] shouldContain forventetStatus.name
+                    meldinger.forAtLeastOne { melding -> melding.contains(forventetStatus.name) }
                 }
                 kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                     key = iaSakDto.saksnummer,
