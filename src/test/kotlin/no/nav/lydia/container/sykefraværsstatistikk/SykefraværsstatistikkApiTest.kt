@@ -25,8 +25,15 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils
 import no.nav.lydia.helper.SakHelper.Companion.fullførSak
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -75,9 +82,11 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.sykefraværsstatistikk.api.FILTERVERDIER_PATH
@@ -1167,6 +1176,70 @@ class SykefraværsstatistikkApiTest {
         hentSykefraværRespons(side = "side").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteFra = "ansatteFra").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteTil = "ansatteTil").statuskode() shouldBe 400
+    }
+
+    @Test
+    fun `(ny flyt) skal kunne filtrere på tilstand VirksomhetKlarTilVurdering`() {
+        hentTotaltAntallTreffISykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering.name) shouldBeGreaterThan 0
+        hentSykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering.name).data.forAll {
+            it.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+            hentVirksomhetTilstand(it.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        }
+    }
+
+    @Test
+    fun `(ny flyt) skal kunne filtrere på tilstand VirksomhetVurderes`() {
+        vurderVirksomhet()
+
+        hentTotaltAntallTreffISykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetVurderes.name) shouldBeGreaterThan 0
+        val virksomheterVurderes = hentSykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetVurderes.name).data
+        virksomheterVurderes.forAll {
+            it.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+            hentVirksomhetTilstand(it.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+        }
+    }
+
+    @Test
+    fun `(ny flyt) skal kunne filtrere på tilstand VirksomhetErVurdert`() {
+        val sak = vurderVirksomhet()
+        sak.avsluttVurdering()
+
+        hentTotaltAntallTreffISykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetErVurdert.name) shouldBeGreaterThan 0
+        val virksomheterErVurdert = hentSykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetErVurdert.name).data
+        virksomheterErVurdert.forAll {
+            it.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+            hentVirksomhetTilstand(it.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        }
+    }
+
+    @Test
+    fun `(ny flyt) skal kunne filtrere på tilstand VirksomhetHarAktiveSamarbeid`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.opprettSamarbeid()
+
+        hentTotaltAntallTreffISykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid.name) shouldBeGreaterThan 0
+        val virksomheterAktiveSamarbeid = hentSykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid.name).data
+        virksomheterAktiveSamarbeid.forAll {
+            it.tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+            hentVirksomhetTilstand(it.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+        }
+    }
+
+    @Test
+    fun `(ny flyt) skal kunne filtrere på tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        hentTotaltAntallTreffISykefravær(virksomhetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet.name) shouldBeGreaterThan 0
+        val virksomheterAktiveSamarbeid = hentSykefravær(virksomhetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet.name).data
+        virksomheterAktiveSamarbeid.forAll {
+            it.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+            hentVirksomhetTilstand(it.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        }
     }
 
     companion object {

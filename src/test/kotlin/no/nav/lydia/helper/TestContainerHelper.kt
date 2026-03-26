@@ -1408,6 +1408,7 @@ class StatistikkHelper {
             ansatteFra: String = "",
             ansatteTil: String = "",
             iaStatus: String = "",
+            virksomhetTilstand: String = "",
             side: String = "",
             bransjeProgram: String = "",
             eiere: String = "",
@@ -1425,6 +1426,7 @@ class StatistikkHelper {
             ansatteFra = ansatteFra,
             ansatteTil = ansatteTil,
             iaStatus = iaStatus,
+            virkomhetTilstand = virksomhetTilstand,
             side = side,
             bransjeProgram = bransjeProgram,
             eiere = eiere,
@@ -1444,6 +1446,7 @@ class StatistikkHelper {
             ansatteFra: String = "",
             ansatteTil: String = "",
             iaStatus: String = "",
+            virkomhetTilstand: String = "",
             side: String = "",
             bransjeProgram: String = "",
             eiere: String = "",
@@ -1462,6 +1465,7 @@ class StatistikkHelper {
                 "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
                 "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
                 "&${Søkeparametere.IA_STATUS}=$iaStatus" +
+                "&${Søkeparametere.VIRKSOMHET_TILSTAND}=$virkomhetTilstand" +
                 "&${Søkeparametere.SIDE}=$side" +
                 "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
                 "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
@@ -1586,6 +1590,7 @@ class StatistikkHelper {
             ansatteFra: String = "",
             ansatteTil: String = "",
             iaStatus: String = "",
+            virksomhetTilstand: String = "",
             side: String = "",
             bransjeProgram: String = "",
             eiere: String = "",
@@ -1604,6 +1609,7 @@ class StatistikkHelper {
                     "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
                     "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
                     "&${Søkeparametere.IA_STATUS}=$iaStatus" +
+                    "&${Søkeparametere.VIRKSOMHET_TILSTAND}=$virksomhetTilstand" +
                     "&${Søkeparametere.SIDE}=$side" +
                     "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
                     "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +

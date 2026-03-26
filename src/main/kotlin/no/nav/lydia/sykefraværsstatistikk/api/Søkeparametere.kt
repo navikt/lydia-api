@@ -13,6 +13,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.server.request.ApplicationRequest
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
@@ -36,6 +37,7 @@ data class Søkeparametere(
     val ansatteFra: Int?,
     val ansatteTil: Int?,
     val status: IASak.Status?,
+    val tilstand: VirksomhetIATilstand?,
     val side: Int,
     val navIdenter: Set<String>,
     val bransjeprogram: Set<Bransje>,
@@ -50,7 +52,8 @@ data class Søkeparametere(
             (if (kommunenummer.isNotEmpty()) " $KOMMUNER=$kommunenummer" else "") +
             (if (næringsgruppeKoder.isNotEmpty()) " $NÆRINGSGRUPPER=$næringsgruppeKoder" else "") +
             (if (navIdenter.isNotEmpty()) " $IA_SAK_EIERE=$navIdenter" else "") +
-            (status?.let { " $IA_STATUS=$ansatteTil" } ?: "") +
+            (status?.let { " $IA_STATUS=$status" } ?: "") +
+            (tilstand?.let { " $VIRKSOMHET_TILSTAND=$tilstand" } ?: "") +
             (if (bransjeprogram.isNotEmpty()) " $BRANSJEPROGRAM=$bransjeprogram" else "") +
             " $SORTERINGSNØKKEL=$sorteringsnøkkel" +
             " $SORTERINGSRETNING=$sorteringsretning" +
@@ -70,6 +73,7 @@ data class Søkeparametere(
         const val ANSATTE_FRA = "ansatteFra"
         const val ANSATTE_TIL = "ansatteTil"
         const val IA_STATUS = "iaStatus"
+        const val VIRKSOMHET_TILSTAND = "virksomhetTilstand"
         const val SIDE = "side"
         const val BRANSJEPROGRAM = "bransjeprogram"
         const val IA_SAK_EIERE = "eiere"
@@ -98,6 +102,7 @@ data class Søkeparametere(
                     sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
                     sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
                     status = queryParameters[IA_STATUS].tomSomNull()?.let { IASak.Status.valueOf(it) },
+                    tilstand = queryParameters[VIRKSOMHET_TILSTAND].tomSomNull()?.let { VirksomhetIATilstand.valueOf(it) },
                     navIdenter = navIdenter(navAnsatt = navAnsatt),
                     bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
                     sektor = finnSektor(queryParameters[SEKTOR]),
@@ -121,19 +126,28 @@ data class Søkeparametere(
                 " AND ia_sak.eid_av in (select unnest(:eiere)) "
             }
 
+        fun filtrerPåTilstand(søkeparametere: Søkeparametere) =
+            søkeparametere.tilstand?.let { tilstand ->
+                " AND tilstand_virksomhet.tilstand = '${tilstand.name}' "
+            } ?: ""
+
         fun filtrerPåStatus(søkeparametere: Søkeparametere) =
             søkeparametere.status?.let { status ->
                 when (status) {
-                    IASak.Status.IKKE_AKTIV ->
+                    IASak.Status.IKKE_AKTIV -> {
                         " AND (ia_sak.status IS NULL " +
                             "OR ((ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET') " +
                             "AND ia_sak.endret < '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'))"
+                    }
 
-                    IASak.Status.IKKE_AKTUELL, IASak.Status.FULLFØRT, IASak.Status.SLETTET ->
+                    IASak.Status.IKKE_AKTUELL, IASak.Status.FULLFØRT, IASak.Status.SLETTET -> {
                         " AND ia_sak.status = '$status' " +
                             "AND ia_sak.endret >= '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'"
+                    }
 
-                    else -> " AND ia_sak.status = '$status'"
+                    else -> {
+                        " AND ia_sak.status = '$status'"
+                    }
                 }
             } ?: ""
 

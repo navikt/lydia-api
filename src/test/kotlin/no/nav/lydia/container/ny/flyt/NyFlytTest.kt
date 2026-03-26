@@ -12,6 +12,8 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
@@ -36,7 +38,6 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
@@ -1201,25 +1202,6 @@ class NyFlytTest {
             .authentication().bearer(token = token)
             .tilSingelRespons<IASakDto>()
 
-    private fun IASamarbeidDto.avsluttSamarbeid(
-        orgnr: String,
-        avslutningsType: IASamarbeid.Status,
-        token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/avslutt-samarbeid")
-        .authentication().bearer(token)
-        .jsonBody(
-            Json.encodeToString(
-                SamarbeidDto(
-                    id = this.id,
-                    status = avslutningsType,
-                ),
-            ),
-        )
-        .tilSingelRespons<IASamarbeidDto>().third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) },
-        )
-
     private fun IASamarbeidDto.slettSamarbeid(
         orgnr: String,
         token: String = authContainerHelper.saksbehandler1.token,
@@ -1284,25 +1266,6 @@ class NyFlytTest {
         applikasjon.performPost("$NY_FLYT_PATH/$orgnr/angre-vurdering")
             .authentication().bearer(token)
             .tilSingelRespons<IASakDto>()
-
-    private fun IASakDto.avsluttVurdering(
-        token: String = authContainerHelper.superbruker1.token,
-        valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
-            type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
-            begrunnelser = listOf(
-                BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
-            ),
-            dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
-        ),
-    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/avslutt-vurdering")
-        .authentication().bearer(token)
-        .jsonBody(
-            Json.encodeToString(valgtÅrsak),
-        )
-        .tilSingelRespons<IASakDto>().third.fold(
-            { it },
-            { fail(it.message) },
-        )
 
     private fun endrePlanlagtDato(
         orgnr: String,

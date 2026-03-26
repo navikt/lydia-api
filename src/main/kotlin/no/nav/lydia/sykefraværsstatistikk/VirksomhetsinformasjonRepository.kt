@@ -9,6 +9,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.api.Sorteringsnøkkel
@@ -25,6 +26,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrer
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåSnitt
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåStatus
+import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåTilstand
 import no.nav.lydia.sykefraværsstatistikk.domene.Statistikkdata
 import no.nav.lydia.sykefraværsstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
@@ -56,12 +58,15 @@ class VirksomhetsinformasjonRepository(
                     statistikk.mulige_dagsverk,
                     statistikk.prosent,
                     statistikk.maskert,
+                    tilstand_virksomhet.tilstand,
+                    tilstand_virksomhet.sist_endret,
                     ia_sak.status,
                     ia_sak.saksnummer,
                     ia_sak.eid_av,
                     ia_sak.endret
                 FROM
                     virksomhetsstatistikk_for_prioritering AS statistikk
+                    LEFT JOIN tilstand_virksomhet using (orgnr)
                     LEFT JOIN ia_sak ON (
                         (ia_sak.orgnr = statistikk.orgnr) AND
                         ia_sak.opprettet = (select max(opprettet) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
@@ -71,6 +76,7 @@ class VirksomhetsinformasjonRepository(
                     ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
                     ${filtrerPåKommuner(søkeparametere = søkeparametere)}
                     ${filtrerPåStatus(søkeparametere = søkeparametere)}
+                    ${filtrerPåTilstand(søkeparametere = søkeparametere)}
                     ${filtrerPåSektor(søkeparametere = søkeparametere)}
                     ${filtrerPåEiere(søkeparametere = søkeparametere)}
                     ${filtrerPåSnitt(søkeparametere = søkeparametere)}
@@ -107,6 +113,7 @@ class VirksomhetsinformasjonRepository(
                     COUNT(statistikk.orgnr) AS total
                 FROM
                     virksomhetsstatistikk_for_prioritering AS statistikk
+                    LEFT JOIN tilstand_virksomhet using (orgnr)
                     LEFT JOIN ia_sak ON (
                         (ia_sak.orgnr = statistikk.orgnr) AND
                         ia_sak.opprettet = (select max(opprettet) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
@@ -115,6 +122,7 @@ class VirksomhetsinformasjonRepository(
                     ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
                     ${filtrerPåKommuner(søkeparametere = søkeparametere)}
                     ${filtrerPåStatus(søkeparametere = søkeparametere)}
+                    ${filtrerPåTilstand(søkeparametere = søkeparametere)}
                     ${filtrerPåSektor(søkeparametere = søkeparametere)}
                     ${filtrerPåEiere(søkeparametere = søkeparametere)}
                     
@@ -319,6 +327,7 @@ class VirksomhetsinformasjonRepository(
             sykefraværsprosent = row.doubleOrNull("prosent") ?: 0.0,
             maskert = row.boolean("maskert"),
             status = row.stringOrNull("status")?.let { IASak.Status.valueOf(it) },
+            tilstand = row.stringOrNull("tilstand")?.let { VirksomhetIATilstand.valueOf(it) },
             eidAv = row.stringOrNull("eid_av"),
             sistEndret = row.localDateOrNull("endret")?.toKotlinLocalDate(),
         )
