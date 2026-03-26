@@ -455,16 +455,17 @@ class NyFlytService(
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
 
     // Valideringer
-
-    fun validerSamarbeidsnavn(
+    fun validerEndringAvSamarbeid(
         navn: String,
         saksnummer: String,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
     ): Either<Feil, Unit> =
         either {
-            val erFølgerAvSak = iaTeamService.erFølgerAvSak(
+            val eier = iaSakRepository.hentIASakDto(saksnummer)?.eidAv
+            val erFølgerAvSak = iaTeamService.erEierEllerFølgerAvSak(
                 saksnummer = saksnummer,
                 saksbehandler = saksbehandler,
+                eierAvSak = eier,
             )
             ensure(erFølgerAvSak) { IASakError.`er ikke følger av sak` }
             val ugyldigNavn = navn.trim().isEmpty() || navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
@@ -490,7 +491,7 @@ class NyFlytService(
 
                 Spørreundersøkelse.Type.Evaluering -> {
                     val sakStatus = iaSakRepository.hentStatusForSaksnummer(saksnummer)
-                    ensure(sakStatus == IASak.Status.VI_BISTÅR || sakStatus == IASak.Status.AKTIV) {
+                    ensure(sakStatus == IASak.Status.VI_BISTÅR || sakStatus == AKTIV) {
                         IASakSpørreundersøkelseError.`sak ikke i rett status`
                     }
                     val plan = planService.hentPlan(samarbeidId = samarbeidId).bind()

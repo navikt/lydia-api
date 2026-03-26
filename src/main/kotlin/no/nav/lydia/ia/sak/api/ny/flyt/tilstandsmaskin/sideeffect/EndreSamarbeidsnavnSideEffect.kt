@@ -28,7 +28,7 @@ class EndreSamarbeidsnavnSideEffect(
 ) : SideEffect<IASamarbeidDto>() {
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASamarbeidDto> =
-        nyFlytService.validerSamarbeidsnavn(
+        nyFlytService.validerEndringAvSamarbeid(
             navn = nyttNavn,
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,

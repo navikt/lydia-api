@@ -29,7 +29,7 @@ class OpprettSamarbeidSideEffect(
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASamarbeidDto> {
         // -- validering burde ikke ligge her, men hvor? ¯\_(ツ)_/¯
-        return nyFlytService.validerSamarbeidsnavn(
+        return nyFlytService.validerEndringAvSamarbeid(
             navn = samarbeidsNavn,
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,

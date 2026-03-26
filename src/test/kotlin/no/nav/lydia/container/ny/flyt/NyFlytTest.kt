@@ -770,6 +770,26 @@ class NyFlytTest {
     }
 
     @Test
+    fun `både eier og følger av sak skal kunne opprette samarbeid`() {
+        val eierAvSak = authContainerHelper.superbruker1
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        val sak = vurderVirksomhet(token = authContainerHelper.superbruker1.token)
+
+        sak.leggTilFolger(følgerAvSak.token)
+        sak.bliEier(eierAvSak.token)
+
+        listOf(eierAvSak, følgerAvSak).forEach { bruker ->
+            val samarbeid = sak.opprettSamarbeid(
+                samarbeidsnavn = "Samarbeid ${bruker.navIdent}",
+                token = bruker.token,
+            )
+            samarbeid.navn shouldBe "Samarbeid ${bruker.navIdent}"
+        }
+
+        hentVirksomhetTilstand(sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+    }
+
+    @Test
     fun `status er fortsatt AKTIV dersom det gjenstår en eller flere samarbeid etter slett samarbeid`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
