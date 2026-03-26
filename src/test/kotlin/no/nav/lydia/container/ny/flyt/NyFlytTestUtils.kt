@@ -9,6 +9,7 @@ import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
@@ -27,6 +28,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent.SamarbeidValue
+import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_API_PATH
@@ -39,9 +41,12 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import java.time.LocalDate
 import kotlin.test.fail
 
 class NyFlytTestUtils {
@@ -185,6 +190,44 @@ class NyFlytTestUtils {
 
             return res.third.get()
         }
+
+        fun IASakDto.avsluttVurdering(
+            token: String = authContainerHelper.superbruker1.token,
+            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                ),
+                dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
+            ),
+        ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/avslutt-vurdering")
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(valgtÅrsak),
+            )
+            .tilSingelRespons<IASakDto>().third.fold(
+                { it },
+                { fail(it.message) },
+            )
+
+        fun IASamarbeidDto.avsluttSamarbeid(
+            orgnr: String,
+            avslutningsType: IASamarbeid.Status,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/avslutt-samarbeid")
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(
+                    SamarbeidDto(
+                        id = this.id,
+                        status = avslutningsType,
+                    ),
+                ),
+            )
+            .tilSingelRespons<IASamarbeidDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
 
         fun IASakDto.opprettSamarbeid(
             token: String = authContainerHelper.superbruker1.token,

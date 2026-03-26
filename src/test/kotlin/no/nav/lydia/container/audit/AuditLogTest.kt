@@ -270,7 +270,7 @@ class AuditLogTest {
                     auditType = AuditType.access,
                     tillat = Tillat.Ja,
                     melding =
-                        "Søk med parametere: sykefravarsprosentFra=5.0 sykefravarsprosentTil=30.0 ansatteFra=10 ansatteTil=50 kommuner=[1750] naringsgrupper=[bil] iaStatus=50 sorteringsnokkel=tapte_dagsverk sorteringsretning=asc side=2",
+                        "Søk med parametere: sykefravarsprosentFra=5.0 sykefravarsprosentTil=30.0 ansatteFra=10 ansatteTil=50 kommuner=[1750] naringsgrupper=[bil] iaStatus=FULLFØRT sorteringsnokkel=tapte_dagsverk sorteringsretning=asc side=2",
                 )
             }
     }

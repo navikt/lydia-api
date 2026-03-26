@@ -2,6 +2,7 @@ package no.nav.lydia.sykefraværsstatistikk.api
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.domene.Virksomhetsoversikt
 
@@ -19,6 +20,7 @@ data class VirksomhetsoversiktDto(
     val muligeDagsverk: Double,
     val tapteDagsverk: Double,
     val status: IASak.Status,
+    val tilstand: VirksomhetIATilstand,
     val eidAv: String?,
     val sistEndret: LocalDate?,
 ) {
@@ -39,6 +41,7 @@ data class VirksomhetsoversiktDto(
                 muligeDagsverk = this.muligeDagsverk,
                 tapteDagsverk = this.tapteDagsverk,
                 status = this.status ?: IASak.Status.IKKE_AKTIV,
+                tilstand = this.tilstand ?: VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 eidAv = this.eidAv,
                 sistEndret = this.sistEndret,
             )
