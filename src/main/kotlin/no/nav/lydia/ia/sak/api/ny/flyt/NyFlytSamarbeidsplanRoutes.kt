@@ -9,6 +9,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -20,11 +21,14 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
+import no.nav.lydia.ia.sak.api.extensions.planId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.TilstandsmaskinBuilder
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OppdaterPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettPlanForSamarbeid
+import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.team.IATeamService
@@ -33,6 +37,7 @@ import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
+import java.util.UUID
 
 const val NY_FLYT_API_PATH = "api/v1"
 
@@ -106,6 +111,45 @@ fun Route.nyFlytSamarbeidsplan(
                     navEnhet = navEnhet,
                     plan = planMalDto,
                     samarbeidId = samarbeidId,
+                ),
+            )
+            konsekvens.endring.map { (it as PlanMedPubliseringStatusDto) }
+        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanMedPubliseringStatusDto> ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planMedPlubliseringStatusDtoEither,
+                orgnummer = orgnrUrlParameter,
+                auditType = AuditType.update,
+                saksnummer = saksnummerUrlParameter,
+            )
+        }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->
+            call.respond(status = HttpStatusCode.OK, message = planMedPubliseringStatusDto)
+        }.mapLeft { feil: Feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
+    put("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/plan/{planId}") {
+        val orgnrUrlParameter = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummerUrlParameter = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val samarbeidId = call.samarbeidId ?: return@put call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        val planId: UUID = call.planId ?: return@put call.sendFeil(Feil(feilmelding = "Ugyldig planId", httpStatusCode = HttpStatusCode.BadRequest))
+        val endringer = call.receive<List<EndreTemaRequest>>()
+
+        call.somEierEllerFølgerAvSakMedNavenhet(
+            iaSakService = iaSakService,
+            iaTeamService = iaTeamService,
+            adGrupper = adGrupper,
+        ) { saksbehandler, navEnhet, orgnr, _ ->
+            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
+                hendelse = OppdaterPlanForSamarbeid(
+                    orgnr = orgnr,
+                    saksnummer = saksnummerUrlParameter,
+                    samarbeidId = samarbeidId,
+                    planId = planId,
+                    endringer = endringer,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
                 ),
             )
             konsekvens.endring.map { (it as PlanMedPubliseringStatusDto) }

@@ -17,6 +17,8 @@ val ApplicationCall.spørreundersøkelseId
     get() = parameters["sporreundersokelseId"]?.tilUUID(hvaErJeg = "spørreundersøkelseId")
 val ApplicationCall.iaSakLeveranseId
     get() = parameters["iaSakLeveranseId"]
+val ApplicationCall.planId
+    get() = parameters["planId"]?.tilUUID(hvaErJeg = "planId")
 val ApplicationCall.temaId
     get() = parameters["temaId"]?.toIntOrNull()
 val ApplicationCall.prosessId

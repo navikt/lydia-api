@@ -19,6 +19,9 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
+import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
@@ -534,5 +537,51 @@ class NyFlytService(
                 PlanFeil.`feil inndata i forespørsel`
             }
             mal
+        }
+
+    fun validerOppdateringAvSamarbeidsplan(
+        samarbeidId: Int,
+        planId: UUID,
+        endringAvPlan: List<EndreTemaRequest>,
+    ): Either<Feil, PlanDto> =
+        either {
+            val plan: Plan = planService.hentPlan(samarbeidId = samarbeidId)
+                .mapLeft {
+                    Feil(
+                        feilmelding = "Ingen plan funnet for dette samarbeidet: '$samarbeidId'",
+                        httpStatusCode = HttpStatusCode.BadRequest,
+                    )
+                }
+                .bind()
+
+            val planDto = plan.tilDto()
+            ensure(condition = planId.toString() == planDto.id) {
+                Feil(
+                    feilmelding = "Ønsket endring på plan med id '$planId' som ikke er riktig plan " +
+                        "for samarbeidet: '$samarbeidId' (funnet plan med id='${planDto.id}')",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                )
+            }
+
+            ensure(condition = endringAvPlan.erGyldig(lagretPlan = plan)) {
+                Feil(
+                    feilmelding = "Ønsket endring på plan med id '$planId' er ikke gyldig " +
+                        "for samarbeidet: '$samarbeidId'",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                )
+            }
+
+            val erAlleUndertemaerSomErForsøktFjernetUtenAktiviteterISalesforce = endringAvPlan.all { endring ->
+                val harAktiviteterFraSalesforce = planService.harAktiviteterFraSalesforce(
+                    lagretPlan = plan,
+                    endringAvPlan = endring.undertemaer,
+                )
+                !harAktiviteterFraSalesforce
+            }
+
+            ensure(condition = erAlleUndertemaerSomErForsøktFjernetUtenAktiviteterISalesforce) {
+                PlanFeil.`aktiviteter i salesforce`
+            }
+            planDto
         }
 }

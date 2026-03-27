@@ -13,6 +13,11 @@ import kotliquery.using
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
+import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
+import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
+import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
+import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.db.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
 import no.nav.lydia.ia.sak.db.mapRowToIASamarbeid
@@ -557,6 +562,85 @@ fun opprettSamarbeidsplan(
     return hentPlan(samarbeidId = samarbeidId, tx = tx)
 }
 
+context(tx: TransactionalSession)
+fun oppdaterSamarbeidsplan(
+    planDto: PlanDto,
+    samarbeidId: Int,
+    endringer: List<EndreTemaRequest>,
+): Plan? {
+    endringer.forEach { endreTemaRequest ->
+        tx.run(
+            queryOf(
+                """
+                        UPDATE ia_sak_plan_tema SET 
+                            inkludert = :inkludert
+                        WHERE tema_id = :temaId
+                """.trimMargin(),
+                mapOf(
+                    "temaId" to endreTemaRequest.id,
+                    "inkludert" to endreTemaRequest.inkludert,
+                ),
+            ).asUpdate,
+        ) // oppdater status på tema ^ (arvet teknisk gjeld fra PlanRepository)
+
+        oppdaterTema(
+            tema = planDto.temaer.first { it.id == endreTemaRequest.id },
+            nyttInnholdListe = endreTemaRequest.undertemaer,
+            tx = tx,
+        )
+        // oppdater status på undertemaene ^ (arvet teknisk gjeld fra PlanRepository)
+    }
+
+    return hentPlan(samarbeidId = samarbeidId, tx = tx)
+}
+
+private fun oppdaterTema(
+    tema: PlanTemaDto,
+    nyttInnholdListe: List<EndreUndertemaRequest>,
+    tx: TransactionalSession,
+) {
+    val innholdSomSkalEndres: List<PlanUndertemaDto> =
+        tema.undertemaer.map { undertemaDto: PlanUndertemaDto ->
+            if (nyttInnholdListe.map { it.id }.contains(undertemaDto.id)) {
+                undertemaDto.endreInnhold(nyttInnholdListe.first { it.id == undertemaDto.id })
+            } else {
+                undertemaDto
+            }
+        }
+
+    innholdSomSkalEndres.forEach { innhold ->
+        oppdaterUndertema(temaId = tema.id, undertema = innhold, tx = tx)
+    }
+}
+
+private fun oppdaterUndertema(
+    temaId: Int,
+    undertema: PlanUndertemaDto,
+    tx: TransactionalSession,
+) {
+    tx.run(
+        queryOf(
+            """
+                    UPDATE ia_sak_plan_undertema SET 
+                        inkludert = :inkludert,
+                        status = :status,
+                        start_dato = :startDato,
+                        slutt_dato = :sluttDato
+                    WHERE tema_id = :temaId
+                    AND undertema_id = :undertemaId
+            """.trimMargin(),
+            mapOf(
+                "temaId" to temaId,
+                "undertemaId" to undertema.id,
+                "inkludert" to undertema.inkludert,
+                "status" to undertema.status?.name,
+                "startDato" to undertema.startDato?.toJavaLocalDate(),
+                "sluttDato" to undertema.sluttDato?.toJavaLocalDate(),
+            ),
+        ).asUpdate,
+    )
+}
+
 private fun hentPlan(
     samarbeidId: Int,
     tx: TransactionalSession,
@@ -647,6 +731,14 @@ private fun hentUndertema(
                 ),
             )
         }.asList,
+    )
+
+private fun PlanUndertemaDto.endreInnhold(nyttInnhold: EndreUndertemaRequest) =
+    this.copy(
+        inkludert = nyttInnhold.inkludert,
+        status = if (nyttInnhold.inkludert) this.status ?: PlanUndertema.Status.PLANLAGT else null,
+        startDato = if (nyttInnhold.inkludert) nyttInnhold.startDato else null,
+        sluttDato = if (nyttInnhold.inkludert) nyttInnhold.sluttDato else null,
     )
 
 private fun hentAktiviterISalesforce(

@@ -129,7 +129,7 @@ class PlanService(
         }
     }
 
-    private fun harAktiviteterFraSalesforce(
+    fun harAktiviteterFraSalesforce(
         lagretPlan: Plan,
         endringAvPlan: List<EndreUndertemaRequest>,
     ): Boolean {
@@ -277,7 +277,7 @@ class PlanService(
                     }
                 }
 
-        private fun List<EndreTemaRequest>.erGyldig(lagretPlan: Plan): Boolean =
+        fun List<EndreTemaRequest>.erGyldig(lagretPlan: Plan): Boolean =
             this.all { tema ->
                 tema.undertemaer.harGyldigeFelter() &&
                     tema.id in lagretPlan.temaer.map { lagretTema -> lagretTema.id } &&

@@ -9,7 +9,12 @@ import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
@@ -22,6 +27,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
@@ -34,6 +40,7 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_API_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
+import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
@@ -46,7 +53,6 @@ import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import java.time.LocalDate
 import kotlin.test.fail
 
 class NyFlytTestUtils {
@@ -198,7 +204,7 @@ class NyFlytTestUtils {
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
                 ),
-                dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
+                dato = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(90, DateTimeUnit.DAY),
             ),
         ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/avslutt-vurdering")
             .authentication().bearer(token)
@@ -258,6 +264,25 @@ class NyFlytTestUtils {
             return plan
         }
 
+        fun IASamarbeidDto.oppdaterSamarbeidsplan(
+            orgnr: String,
+            planId: String,
+            endringer: List<EndreTemaRequest> = emptyList(),
+            token: String = authContainerHelper.superbruker1.token,
+        ): PlanMedPubliseringStatusDto {
+            val plan = applikasjon.performPut(
+                url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId",
+            )
+                .authentication().bearer(token)
+                .jsonBody(
+                    Json.encodeToString(endringer),
+                ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail("${it.message}") },
+                )
+            return plan
+        }
+
         fun IASamarbeidDto.slettSamarbeidsplan(
             orgnr: String,
             token: String = authContainerHelper.saksbehandler1.token,
@@ -266,6 +291,32 @@ class NyFlytTestUtils {
             .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
+            )
+
+        fun PlanMedPubliseringStatusDto.endreTema(
+            temaId: Int,
+            inkluderTema: Boolean = true,
+            inkluderUnderTema: Boolean = true,
+            nyStartDato: LocalDate? = null,
+            nySluttDato: LocalDate? = null,
+        ): PlanMedPubliseringStatusDto =
+            this.copy(
+                temaer = this.temaer.map { tema ->
+                    if (tema.id == temaId) {
+                        tema.copy(
+                            inkludert = inkluderTema,
+                            undertemaer = tema.undertemaer.map { undertema ->
+                                undertema.copy(
+                                    inkludert = inkluderUnderTema,
+                                    startDato = nyStartDato ?: if (inkluderUnderTema) undertema.startDato else null,
+                                    sluttDato = nySluttDato ?: if (inkluderUnderTema) undertema.sluttDato else null,
+                                )
+                            },
+                        )
+                    } else {
+                        tema
+                    }
+                },
             )
     }
 }
