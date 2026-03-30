@@ -4,16 +4,16 @@ val ktorVersion = "3.4.1"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
 val kotestVerstion = "6.1.7"
-val testcontainersVersion = "2.0.3"
+val testcontainersVersion = "2.0.4"
 val logbackVersion = "1.5.32"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.26.0-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.3.10"
+    kotlin("jvm") version "2.3.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.3.10"
+    kotlin("plugin.serialization") version "2.3.20"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
@@ -57,7 +57,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.10")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:12.1.0")
+    implementation("org.flywaydb:flyway-database-postgresql:12.1.1")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -75,7 +75,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:2.2.2")
+    implementation("io.arrow-kt:arrow-core:2.2.2.1")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
