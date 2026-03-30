@@ -38,6 +38,11 @@ class SamarbeidsplanBigqueryEksportererTest {
             konsument.unsubscribe()
             konsument.close()
         }
+
+        fun List<InnholdIPlanMelding>.inkluderteTemaer(): Int =
+            this.groupBy { it.temaId }.filter { innholdITema -> innholdITema.value.any { it.inkludert } }.size
+
+        fun List<InnholdIPlanMelding>.inkludertInnhold(): Int = this.filter { it.inkludert }.size
     }
 
     @Test
@@ -55,8 +60,8 @@ class SamarbeidsplanBigqueryEksportererTest {
                 val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
                 val sistePlan = planer.last()
                 sistePlan.shouldForAll { it.planId shouldBe plan.id }
-                sistePlan.planlagteTemaer() shouldBe plan.temaer.size
-                sistePlan.planlagtInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
+                sistePlan.inkluderteTemaer() shouldBe plan.temaer.size
+                sistePlan.inkludertInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
             }
         }
     }
@@ -81,8 +86,8 @@ class SamarbeidsplanBigqueryEksportererTest {
                 val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
                 val sistePlan = planer.last()
                 sistePlan.shouldForAll { it.planId shouldBe plan.id }
-                sistePlan.planlagteTemaer() shouldBe plan.temaer.size
-                sistePlan.planlagtInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
+                sistePlan.inkluderteTemaer() shouldBe plan.temaer.size
+                sistePlan.inkludertInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
             }
         }
     }
@@ -112,8 +117,8 @@ class SamarbeidsplanBigqueryEksportererTest {
                 val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
                 val sistePlan = planer.last()
                 sistePlan.shouldForAll { it.planId shouldBe plan.id }
-                sistePlan.planlagteTemaer() shouldBe 1
-                sistePlan.planlagtInnhold() shouldBe plan.temaer.last().undertemaer.size
+                sistePlan.inkluderteTemaer() shouldBe 1
+                sistePlan.inkludertInnhold() shouldBe plan.temaer.last().undertemaer.size
             }
         }
     }
@@ -144,14 +149,9 @@ class SamarbeidsplanBigqueryEksportererTest {
                 val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
                 val sistePlan = planer.last()
                 sistePlan.shouldForAll { it.planId shouldBe plan.id }
-                sistePlan.planlagteTemaer() shouldBe 3
-                sistePlan.planlagtInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
+                sistePlan.inkluderteTemaer() shouldBe 3
+                sistePlan.inkludertInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
             }
         }
     }
-
-    private fun List<InnholdIPlanMelding>.planlagteTemaer(): Int =
-        this.groupBy { it.temaId }.filter { innholdITema -> innholdITema.value.any { it.inkludert } }.size
-
-    private fun List<InnholdIPlanMelding>.planlagtInnhold(): Int = this.filter { it.inkludert }.size
 }

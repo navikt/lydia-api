@@ -20,6 +20,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
+import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -580,6 +581,53 @@ class NyFlytService(
             }
 
             ensure(condition = erAlleUndertemaerSomErForsøktFjernetUtenAktiviteterISalesforce) {
+                PlanFeil.`aktiviteter i salesforce`
+            }
+            planDto
+        }
+
+    fun validerOppdateringAvTemaISamarbeidsplan(
+        samarbeidId: Int,
+        planId: UUID,
+        temaId: Int,
+        endringAvUndertema: List<EndreUndertemaRequest>,
+    ): Either<Feil, PlanDto> =
+        either {
+            val plan: Plan = planService.hentPlan(samarbeidId = samarbeidId)
+                .mapLeft {
+                    Feil(
+                        feilmelding = "Ingen plan funnet for dette samarbeidet: '$samarbeidId'",
+                        httpStatusCode = HttpStatusCode.BadRequest,
+                    )
+                }
+                .bind()
+
+            val lagretTema = plan.temaer.firstOrNull { it.id == temaId }
+                ?: return PlanFeil.`fant ikke tema`.left()
+
+            val planDto = plan.tilDto()
+            ensure(condition = planId.toString() == planDto.id) {
+                Feil(
+                    feilmelding = "Ønsket endring på plan med id '$planId' som ikke er riktig plan " +
+                        "for samarbeidet: '$samarbeidId' (funnet plan med id='${planDto.id}')",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                )
+            }
+
+            ensure(condition = endringAvUndertema.erGyldig(lagretTema = lagretTema)) {
+                Feil(
+                    feilmelding = "Ønsket endring på tema med temaId '$temaId' i plan med id '$planId' er ikke gyldig " +
+                        "for samarbeidet: '$samarbeidId'",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                )
+            }
+
+            val harAktiviteterFraSalesforce = planService.harAktiviteterFraSalesforce(
+                lagretPlan = plan,
+                endringAvPlan = endringAvUndertema,
+            )
+
+            ensure(condition = !harAktiviteterFraSalesforce) {
                 PlanFeil.`aktiviteter i salesforce`
             }
             planDto

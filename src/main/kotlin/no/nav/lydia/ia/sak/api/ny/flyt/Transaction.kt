@@ -594,6 +594,22 @@ fun oppdaterSamarbeidsplan(
     return hentPlan(samarbeidId = samarbeidId, tx = tx)
 }
 
+context(tx: TransactionalSession)
+fun oppdaterTemaISamarbeidsplan(
+    planDto: PlanDto,
+    samarbeidId: Int,
+    endringer: List<EndreUndertemaRequest>,
+    temaId: Int,
+): Plan? {
+    oppdaterTema(
+        tema = planDto.temaer.first { it.id == temaId },
+        nyttInnholdListe = endringer,
+        tx = tx,
+    )
+
+    return hentPlan(samarbeidId = samarbeidId, tx = tx)
+}
+
 private fun oppdaterTema(
     tema: PlanTemaDto,
     nyttInnholdListe: List<EndreUndertemaRequest>,

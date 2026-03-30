@@ -6,7 +6,10 @@ import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
+import io.kotest.inspectors.shouldForAll
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
@@ -19,6 +22,8 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
+import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkludertInnhold
+import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkluderteTemaer
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -36,11 +41,14 @@ import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent.SamarbeidValue
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
+import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent.InnholdIPlanMelding
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_API_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
+import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
@@ -61,21 +69,25 @@ class NyFlytTestUtils {
         private val iaSakStatistikkTopic = Topic.IA_SAK_STATISTIKK_TOPIC
         private val samarbeidsplanTopic = Topic.SAMARBEIDSPLAN_TOPIC
         private val samarbeidBigqueryTopic = Topic.SAMARBEID_BIGQUERY_TOPIC
+        private val samarbeidsplanBigqueryTopic = Topic.SAMARBEIDSPLAN_BIGQUERY_TOPIC
         private lateinit var iaSakKonsument: KafkaConsumer<String, String>
         private lateinit var iaSakStatistikkKonsument: KafkaConsumer<String, String>
         private lateinit var samarbeidsplanKonsument: KafkaConsumer<String, String>
         private lateinit var samarbeidBigqueryKonsument: KafkaConsumer<String, String>
+        private lateinit var samarbeidsplanBigqueryKonsument: KafkaConsumer<String, String>
 
         fun setUpKonsumenter() {
             iaSakKonsument = kafkaContainerHelper.nyKonsument(topic = iaSakTopic)
             iaSakStatistikkKonsument = kafkaContainerHelper.nyKonsument(topic = iaSakStatistikkTopic)
             samarbeidsplanKonsument = kafkaContainerHelper.nyKonsument(topic = samarbeidsplanTopic)
             samarbeidBigqueryKonsument = kafkaContainerHelper.nyKonsument(topic = samarbeidBigqueryTopic)
+            samarbeidsplanBigqueryKonsument = kafkaContainerHelper.nyKonsument(topic = samarbeidsplanBigqueryTopic)
 
             iaSakKonsument.subscribe(mutableListOf(iaSakTopic.navn))
             iaSakStatistikkKonsument.subscribe(mutableListOf(iaSakStatistikkTopic.navn))
             samarbeidsplanKonsument.subscribe(mutableListOf(samarbeidsplanTopic.navn))
             samarbeidBigqueryKonsument.subscribe(mutableListOf(samarbeidBigqueryTopic.navn))
+            samarbeidsplanBigqueryKonsument.subscribe(mutableListOf(samarbeidsplanBigqueryTopic.navn))
         }
 
         fun tearDownKonsumenter() {
@@ -100,6 +112,40 @@ class NyFlytTestUtils {
             val url = "$NY_FLYT_PATH/$orgnr/tilstand"
             return applikasjon.performGet(url)
                 .authentication().bearer(token).tilSingelRespons<VirksomhetTilstandDto>().third.get()
+        }
+
+        fun verifiserKafkaPlanObserversErVarslet(
+            iASakDto: IASakDto,
+            iASamarbeidDto: IASamarbeidDto,
+            plan: PlanMedPubliseringStatusDto,
+        ) {
+            runBlocking {
+                kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                    key = plan.id,
+                    konsument = samarbeidsplanBigqueryKonsument,
+                ) { meldinger ->
+                    meldinger shouldHaveAtLeastSize 1
+                    val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
+                    val sistePlan = planer.last()
+                    sistePlan.shouldForAll { it.planId shouldBe plan.id }
+                    sistePlan.inkluderteTemaer() shouldBe plan.temaer.size
+                    sistePlan.inkludertInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
+                }
+            }
+            runBlocking {
+                kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                    key = "${iASakDto.saksnummer}-${iASamarbeidDto.id}-${plan.id}",
+                    konsument = samarbeidsplanKonsument,
+                ) { meldinger ->
+                    meldinger.forAtLeastOne { melding ->
+                        val samarbeidsplanProdusentTestSentTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
+                        samarbeidsplanProdusentTestSentTilSalesforce.plan.id shouldBe plan.id
+                        samarbeidsplanProdusentTestSentTilSalesforce.samarbeid.id shouldBe iASamarbeidDto.id
+                        samarbeidsplanProdusentTestSentTilSalesforce.samarbeid.navn shouldBe iASamarbeidDto.navn
+                        samarbeidsplanProdusentTestSentTilSalesforce.plan shouldNotBe null
+                    }
+                }
+            }
         }
 
         fun verifiserSamarbeidObserversErVarslet(
@@ -272,6 +318,26 @@ class NyFlytTestUtils {
         ): PlanMedPubliseringStatusDto {
             val plan = applikasjon.performPut(
                 url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId",
+            )
+                .authentication().bearer(token)
+                .jsonBody(
+                    Json.encodeToString(endringer),
+                ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail("${it.message}") },
+                )
+            return plan
+        }
+
+        fun IASamarbeidDto.oppdaterTemaISamarbeidsplan(
+            orgnr: String,
+            planId: String,
+            temaId: Int,
+            endringer: List<EndreUndertemaRequest> = emptyList(),
+            token: String = authContainerHelper.superbruker1.token,
+        ): PlanMedPubliseringStatusDto {
+            val plan = applikasjon.performPut(
+                url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId/tema/$temaId",
             )
                 .authentication().bearer(token)
                 .jsonBody(

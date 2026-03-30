@@ -13,6 +13,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndreSamarbeidsN
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.FullførKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OppdaterPlanForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OppdaterTemaIPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettNyttSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettPlanForSamarbeid
@@ -22,6 +23,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndreSamarbeidsnavnSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OppdaterPlanForSamarbeidSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OppdaterTemaIPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettSamarbeidSideEffect
@@ -166,6 +168,25 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     saksnummer = fiaKontekst.saksnummer!!,
                     samarbeidId = hendelse.samarbeidId,
                     planId = hendelse.planId,
+                    endringer = hendelse.endringer,
+                )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    Konsekvens(
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                        endring = resultat,
+                        sideEffect = sideEffect,
+                    )
+                }
+            }
+
+            is OppdaterTemaIPlanForSamarbeid -> {
+                val sideEffect = OppdaterTemaIPlanForSamarbeidSideEffect(
+                    orgnummer = hendelse.orgnr,
+                    saksnummer = fiaKontekst.saksnummer!!,
+                    samarbeidId = hendelse.samarbeidId,
+                    planId = hendelse.planId,
+                    temaId = hendelse.temaId,
                     endringer = hendelse.endringer,
                 )
                 with(fiaKontekst.nyFlytService) {

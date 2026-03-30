@@ -12,9 +12,11 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreTema
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.oppdaterSamarbeidsplan
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.oppdaterTemaISamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidsplan
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserKafkaPlanObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.PlanHelper.Companion.SLUTT_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
@@ -70,11 +72,18 @@ class NyFlytSamarbeidsplanTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        sak.opprettSamarbeid(samarbeidsnavn = "Samarbeid med ${sak.orgnr}").opprettSamarbeidsplan(sak.orgnr)
+        sak.opprettSamarbeid(samarbeidsnavn = "Samarbeid med ${sak.orgnr}")
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
-        sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid for ${sak.orgnr}").opprettSamarbeidsplan(sak.orgnr)
+        val samarbeidNummer2 = sak.opprettSamarbeid(samarbeidsnavn = "Nytt samarbeid for ${sak.orgnr}")
+        val planPåSamaarbeidNummer2 = samarbeidNummer2.opprettSamarbeidsplan(sak.orgnr)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        verifiserKafkaPlanObserversErVarslet(
+            iASakDto = sak,
+            iASamarbeidDto = samarbeidNummer2,
+            plan = planPåSamaarbeidNummer2,
+        )
     }
 
     @Test
@@ -110,6 +119,11 @@ class NyFlytSamarbeidsplanTest {
             it.sluttDato!! shouldBeGreaterThan SLUTT_DATO
         }
         oppdatertSamarbeidsplan.temaer[1].inkludert shouldBe false
+        verifiserKafkaPlanObserversErVarslet(
+            iASakDto = sak,
+            iASamarbeidDto = samarbeid,
+            plan = oppdatertSamarbeidsplan,
+        )
     }
 
     @Test
@@ -175,6 +189,45 @@ class NyFlytSamarbeidsplanTest {
         planEtterEndring.temaer.first().undertemaer.forAll {
             it.inkludert shouldBe false
         }
+    }
+
+    @Test
+    fun `endre ett tema på samarbeid oppdaterer sist endret dato på plan og trigger kafka-eksport til BigQuery`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid(authContainerHelper.saksbehandler1.token)
+        val opprinneligPlan: PlanMedPubliseringStatusDto = samarbeid.opprettSamarbeidsplan(sak.orgnr, token = authContainerHelper.saksbehandler1.token)
+
+        // Gjør bare en endring på sluttDato i første tema og eksluder andre tema
+
+        val temaId = opprinneligPlan.temaer[0].id
+        val endringer = opprinneligPlan.endreTema(
+            temaId = temaId,
+            inkluderTema = true,
+            inkluderUnderTema = true,
+            nyStartDato = START_DATO,
+            nySluttDato = SLUTT_DATO.plus(15, DateTimeUnit.DAY),
+        ).tilRequest().first().undertemaer
+
+        val oppdatertSamarbeidsplan = samarbeid.oppdaterTemaISamarbeidsplan(
+            orgnr = sak.orgnr,
+            planId = opprinneligPlan.id,
+            temaId = temaId,
+            endringer = endringer,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+
+        oppdatertSamarbeidsplan.id shouldBe opprinneligPlan.id
+        oppdatertSamarbeidsplan.sistEndret shouldBeGreaterThan opprinneligPlan.sistEndret
+        oppdatertSamarbeidsplan.temaer[0].undertemaer.forAll {
+            it.sluttDato!! shouldBeGreaterThan SLUTT_DATO
+        }
+
+        verifiserKafkaPlanObserversErVarslet(
+            iASakDto = sak,
+            iASamarbeidDto = samarbeid,
+            plan = oppdatertSamarbeidsplan,
+        )
     }
 
     @Test

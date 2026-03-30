@@ -25,10 +25,13 @@ import no.nav.lydia.ia.sak.api.extensions.planId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
+import no.nav.lydia.ia.sak.api.extensions.temaId
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OppdaterPlanForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OppdaterTemaIPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
+import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.team.IATeamService
@@ -93,6 +96,7 @@ fun Route.nyFlytSamarbeidsplan(
             ),
         ).build(orgnr)
 
+    // Opprett samarbeidsplan
     post("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/plan") {
         val orgnrUrlParameter = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummerUrlParameter = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
@@ -129,6 +133,7 @@ fun Route.nyFlytSamarbeidsplan(
         }
     }
 
+    // Oppdater hele samarbeidsplan (dvs oppdaterer alle tema og undertema i planen)
     put("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/plan/{planId}") {
         val orgnrUrlParameter = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummerUrlParameter = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
@@ -167,4 +172,54 @@ fun Route.nyFlytSamarbeidsplan(
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
     }
+
+    // Oppdater et tema i samarbeidsplan
+    put("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/plan/{planId}/tema/{temaId}") {
+        val orgnrUrlParameter = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummerUrlParameter = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val samarbeidId = call.samarbeidId ?: return@put call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        val planId: UUID = call.planId ?: return@put call.sendFeil(Feil(feilmelding = "Ugyldig planId", httpStatusCode = HttpStatusCode.BadRequest))
+        val temaId = call.temaId ?: return@put call.sendFeil(
+            Feil(
+                feilmelding = "Ugyldig temaId",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ),
+        )
+        val endringer = call.receive<List<EndreUndertemaRequest>>()
+
+        call.somEierEllerFølgerAvSakMedNavenhet(
+            iaSakService = iaSakService,
+            iaTeamService = iaTeamService,
+            adGrupper = adGrupper,
+        ) { saksbehandler, navEnhet, orgnr, _ ->
+            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
+                hendelse = OppdaterTemaIPlanForSamarbeid(
+                    orgnr = orgnr,
+                    saksnummer = saksnummerUrlParameter,
+                    samarbeidId = samarbeidId,
+                    planId = planId,
+                    temaId = temaId,
+                    endringer = endringer,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { (it as PlanMedPubliseringStatusDto) }
+        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanMedPubliseringStatusDto> ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planMedPlubliseringStatusDtoEither,
+                orgnummer = orgnrUrlParameter,
+                auditType = AuditType.update,
+                saksnummer = saksnummerUrlParameter,
+            )
+        }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->
+            call.respond(status = HttpStatusCode.OK, message = planMedPubliseringStatusDto)
+        }.mapLeft { feil: Feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
+    // Oppdater status til et undertema i samarbeidsplan
+    //     put("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/plan/{planId}/tema/{temaId}/undertema/{undertemaId}/status") {
 }
