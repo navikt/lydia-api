@@ -509,6 +509,7 @@ class SykefraværsstatistikkApiTest {
             .shouldNotBeNull()
         filterverdier.naringsgrupper.size shouldBeGreaterThan 1
         filterverdier.naringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 2 }.shouldBeTrue()
+        filterverdier.virksomhetTilstander shouldBe VirksomhetIATilstand.entries.toList()
         filterverdier.statuser shouldBe IASak.Status.filtrerbareStatuser()
         filterverdier.filtrerbareEiere shouldBe listOf(
             EierDTO(
