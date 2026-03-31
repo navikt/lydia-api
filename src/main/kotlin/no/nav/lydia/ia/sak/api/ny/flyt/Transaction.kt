@@ -657,6 +657,31 @@ private fun oppdaterUndertema(
     )
 }
 
+context(tx: TransactionalSession)
+fun endreStatusPåUndertemaISamarbeidsplan(
+    samarbeidId: Int,
+    temaId: Int,
+    undertemaId: Int,
+    nyStatus: PlanUndertema.Status,
+): Plan? {
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_sak_plan_undertema SET
+                status = :status
+            WHERE tema_id = :temaId
+            AND undertema_id = :undertemaId
+            """.trimIndent(),
+            mapOf(
+                "temaId" to temaId,
+                "undertemaId" to undertemaId,
+                "status" to nyStatus.name,
+            ),
+        ).asUpdate,
+    )
+    return hentPlan(samarbeidId = samarbeidId, tx = tx)
+}
+
 private fun hentPlan(
     samarbeidId: Int,
     tx: TransactionalSession,

@@ -37,6 +37,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
@@ -631,5 +632,45 @@ class NyFlytService(
                 PlanFeil.`aktiviteter i salesforce`
             }
             planDto
+        }
+
+    fun validerEndringAvStatusPåUndertema(
+        samarbeidId: Int,
+        planId: UUID,
+        temaId: Int,
+        undertemaId: Int,
+        nyStatus: PlanUndertema.Status,
+    ): Either<Feil, Plan> =
+        either {
+            val plan: Plan = planService.hentPlan(samarbeidId = samarbeidId)
+                .mapLeft {
+                    Feil(
+                        feilmelding = "Ingen plan funnet for dette samarbeidet: '$samarbeidId'",
+                        httpStatusCode = HttpStatusCode.BadRequest,
+                    )
+                }
+                .bind()
+
+            ensure(condition = planId.toString() == plan.id.toString()) {
+                Feil(
+                    feilmelding = "Ønsket endring på plan med id '$planId' som ikke er riktig plan " +
+                        "for samarbeidet: '$samarbeidId' (funnet plan med id='${plan.id}')",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                )
+            }
+
+            val undertema = plan.temaer.firstOrNull { it.id == temaId }
+                ?.undertemaer?.firstOrNull { it.id == undertemaId }
+                ?: raise(PlanFeil.`fant ikke undertema`)
+
+            ensure(undertema.inkludert) {
+                PlanFeil.`innhold er ikke inkludert`
+            }
+
+            ensure(!(nyStatus == PlanUndertema.Status.AVBRUTT && undertema.starterIFremtiden())) {
+                PlanFeil.`innhold starter i fremtiden`
+            }
+
+            plan
         }
 }

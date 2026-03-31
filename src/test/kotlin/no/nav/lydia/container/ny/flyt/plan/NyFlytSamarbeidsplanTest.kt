@@ -6,9 +6,11 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreStatusPåUndertemaISamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreTema
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.oppdaterSamarbeidsplan
@@ -20,7 +22,9 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserKafkaPl
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.PlanHelper.Companion.SLUTT_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
+import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdMedStatus
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -28,10 +32,15 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import java.time.LocalDate.now
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -228,6 +237,101 @@ class NyFlytSamarbeidsplanTest {
             iASamarbeidDto = samarbeid,
             plan = oppdatertSamarbeidsplan,
         )
+    }
+
+    @Test
+    fun `kan endre status på undertema i samarbeidsplan`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal().inkluderAlt())
+
+        val førsteTema = plan.temaer.first()
+        val førsteUndertema = førsteTema.undertemaer.first()
+
+        val oppdatertPlan = samarbeid.endreStatusPåUndertemaISamarbeidsplan(
+            orgnr = sak.orgnr,
+            planId = plan.id,
+            temaId = førsteTema.id,
+            undertemaId = førsteUndertema.id,
+            nyStatus = PlanUndertema.Status.FULLFØRT,
+        )
+
+        oppdatertPlan.antallInnholdMedStatus(status = PlanUndertema.Status.FULLFØRT) shouldBe 1
+
+        verifiserKafkaPlanObserversErVarslet(
+            iASakDto = sak,
+            iASamarbeidDto = samarbeid,
+            plan = oppdatertPlan,
+        )
+    }
+
+    @Test
+    fun `kan ikke endre status på undertema som ikke er inkludert`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal())
+
+        val førsteTema = plan.temaer.first()
+        val førsteUndertema = førsteTema.undertemaer.first()
+
+        shouldFailWithMessage("HTTP Exception 400 Bad Request") {
+            samarbeid.endreStatusPåUndertemaISamarbeidsplan(
+                orgnr = sak.orgnr,
+                planId = plan.id,
+                temaId = førsteTema.id,
+                undertemaId = førsteUndertema.id,
+                nyStatus = PlanUndertema.Status.FULLFØRT,
+            )
+        }
+    }
+
+    @Test
+    fun `kan ikke endre status til AVBRUTT om undertema starter i fremtiden`() {
+        val iDag = now().toKotlinLocalDate()
+        val iMorgen = iDag.plus(1, DateTimeUnit.DAY)
+        val om6Måneder = iDag.plus(6, DateTimeUnit.MONTH)
+
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        val plan = samarbeid.opprettSamarbeidsplan(
+            orgnr = sak.orgnr,
+            planMal = PlanMalDto(
+                tema = listOf(
+                    TemaMalDto(
+                        rekkefølge = 1,
+                        navn = "Et tema til test",
+                        inkludert = true,
+                        innhold = listOf(
+                            InnholdMalDto(
+                                rekkefølge = 1,
+                                navn = "Et undertema til test",
+                                inkludert = true,
+                                startDato = iMorgen,
+                                sluttDato = om6Måneder,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        val førsteTema = plan.temaer.first()
+        val førsteUndertema = førsteTema.undertemaer.first()
+        førsteUndertema.status shouldBe PlanUndertema.Status.PLANLAGT
+        førsteUndertema.startDato shouldBe iMorgen
+
+        shouldFailWithMessage("HTTP Exception 400 Bad Request") {
+            samarbeid.endreStatusPåUndertemaISamarbeidsplan(
+                orgnr = sak.orgnr,
+                planId = plan.id,
+                temaId = førsteTema.id,
+                undertemaId = førsteUndertema.id,
+                nyStatus = PlanUndertema.Status.AVBRUTT,
+            )
+        }
     }
 
     @Test

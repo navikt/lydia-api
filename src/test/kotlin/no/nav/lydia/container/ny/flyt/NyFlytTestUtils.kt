@@ -54,6 +54,7 @@ import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -358,6 +359,27 @@ class NyFlytTestUtils {
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
+
+        fun IASamarbeidDto.endreStatusPåUndertemaISamarbeidsplan(
+            orgnr: String,
+            planId: String,
+            temaId: Int,
+            undertemaId: Int,
+            nyStatus: PlanUndertema.Status,
+            token: String = authContainerHelper.superbruker1.token,
+        ): PlanMedPubliseringStatusDto {
+            val plan = applikasjon.performPut(
+                url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId/tema/$temaId/undertema/$undertemaId/status",
+            )
+                .authentication().bearer(token)
+                .jsonBody(
+                    Json.encodeToString(nyStatus),
+                ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail("${it.message}") },
+                )
+            return plan
+        }
 
         fun PlanMedPubliseringStatusDto.endreTema(
             temaId: Int,
