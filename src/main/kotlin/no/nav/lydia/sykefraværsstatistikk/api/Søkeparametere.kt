@@ -128,7 +128,20 @@ data class Søkeparametere(
 
         fun filtrerPåTilstand(søkeparametere: Søkeparametere) =
             søkeparametere.tilstand?.let { tilstand ->
-                " AND tilstand_virksomhet.tilstand = '${tilstand.name}' "
+                when (tilstand) {
+                    VirksomhetIATilstand.VirksomhetKlarTilVurdering -> {
+                        """ 
+                            AND (
+                              tilstand_virksomhet.tilstand IS NULL 
+                              OR tilstand_virksomhet.tilstand = '${tilstand.name}'
+                            ) 
+                        """.trimMargin()
+                    }
+
+                    else -> {
+                        " AND tilstand_virksomhet.tilstand = '${tilstand.name}' "
+                    }
+                }
             } ?: ""
 
         fun filtrerPåStatus(søkeparametere: Søkeparametere) =
