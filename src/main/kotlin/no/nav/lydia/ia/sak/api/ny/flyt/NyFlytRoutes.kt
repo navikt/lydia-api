@@ -45,17 +45,14 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.FullførKartlegg
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettNyttSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
-import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.tilSakshistorikk
-import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -516,37 +513,6 @@ fun Route.nyFlyt(
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    // "$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/opprett-samarbeidsplan" er flyttet til NyFlytPlanRoutes
-    delete("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/slett-samarbeidsplan") {
-        val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
-        val tilstandsmaskin = tilstandsmaskin(orgnr)
-
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
-            val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = SlettPlanForSamarbeid(
-                    orgnr = orgnr,
-                    samarbeidId = samarbeidId,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                ),
-            )
-            konsekvens.endring.map { it as Plan }
-        }.also { iaPlanDtoEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = iaPlanDtoEither,
-                orgnummer = orgnr,
-                auditType = AuditType.delete,
-                saksnummer = tilstandsmaskin.saksnummer,
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDtoMedPubliseringStatus())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

@@ -8,6 +8,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
@@ -31,9 +32,12 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndreStatusPåUn
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OppdaterPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OppdaterTemaIPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettPlanForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
+import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.team.IATeamService
@@ -269,6 +273,41 @@ fun Route.nyFlytSamarbeidsplan(
                 either = planMedPlubliseringStatusDtoEither,
                 orgnummer = orgnrUrlParameter,
                 auditType = AuditType.update,
+                saksnummer = saksnummerUrlParameter,
+            )
+        }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->
+            call.respond(status = HttpStatusCode.OK, message = planMedPubliseringStatusDto)
+        }.mapLeft { feil: Feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
+    // Slett samarbeidsplan
+    delete("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/plan/{planId}") {
+        val orgnrUrlParameter = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummerUrlParameter = call.saksnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+
+        call.somEierEllerFølgerAvSakMedNavenhet(
+            iaSakService = iaSakService,
+            iaTeamService = iaTeamService,
+            adGrupper = adGrupper,
+        ) { saksbehandler, navEnhet, orgnr, _ ->
+            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
+                hendelse = SlettPlanForSamarbeid(
+                    orgnr = orgnr,
+                    samarbeidId = samarbeidId,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.endring.map { (it as Plan).tilDtoMedPubliseringStatus() }
+        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanMedPubliseringStatusDto> ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planMedPlubliseringStatusDtoEither,
+                orgnummer = orgnrUrlParameter,
+                auditType = AuditType.delete,
                 saksnummer = saksnummerUrlParameter,
             )
         }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->

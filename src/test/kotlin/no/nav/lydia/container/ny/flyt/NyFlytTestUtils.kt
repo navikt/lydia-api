@@ -352,8 +352,9 @@ class NyFlytTestUtils {
 
         fun IASamarbeidDto.slettSamarbeidsplan(
             orgnr: String,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeidsplan")
+            planId: String,
+            token: String = authContainerHelper.superbruker1.token,
+        ) = applikasjon.performDelete("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId")
             .authentication().bearer(token)
             .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },

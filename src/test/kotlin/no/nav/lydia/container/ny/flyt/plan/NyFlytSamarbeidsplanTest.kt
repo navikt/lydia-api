@@ -339,12 +339,12 @@ class NyFlytSamarbeidsplanTest {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeid = sak.opprettSamarbeid()
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal())
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal())
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         sak.opprettSamarbeid(samarbeidsnavn = "Helt nytt").opprettSamarbeidsplan(orgnr = sak.orgnr)
 
-        samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr)
+        samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, planId = plan.id)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }
 }
