@@ -371,6 +371,49 @@ class NyFlytTest {
     }
 
     @Test
+    fun `Hendelse EndrePlanlagtDatoForNesteTilstand to ganger på rad skal fungere`() {
+        val sak = vurderVirksomhet()
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                ),
+                dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
+            ),
+        )
+
+        val tilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        tilstand.nesteTilstand shouldNotBe null
+
+        val førsteDato = LocalDate.now().plusDays(14).toKotlinLocalDate()
+        val førsteResponse = endrePlanlagtDato(
+            orgnr = sak.orgnr,
+            nesteTilstand = tilstand.nesteTilstand!!,
+            nyPlanlagtDato = førsteDato,
+        )
+        førsteResponse.statuskode() shouldBe HttpStatusCode.OK.value
+
+        val tilstandEtterFørste = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandEtterFørste.nesteTilstand shouldNotBe null
+
+        val andreDato = LocalDate.now().plusDays(30).toKotlinLocalDate()
+        val andreResponse = endrePlanlagtDato(
+            orgnr = sak.orgnr,
+            nesteTilstand = tilstandEtterFørste.nesteTilstand!!,
+            nyPlanlagtDato = andreDato,
+        )
+        andreResponse.statuskode() shouldBe HttpStatusCode.OK.value
+        andreResponse.third.get().planlagtDato shouldBe andreDato
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+        val hendelser = historikk.flatMap { it.sakshendelser }
+        hendelser.filter { it.hendelsestype == IASakshendelseType.ENDRE_PLANLAGT_DATO } shouldHaveSize 2
+    }
+
+    @Test
     fun `Hendelse EndrePlanlagtDatoForNesteTilstand skal ikke fungere dersom nyPlanlagtDato settes til i dag`() {
         val sak = vurderVirksomhet()
 

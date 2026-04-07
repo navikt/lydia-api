@@ -227,6 +227,7 @@ class IASakshendelseRepository(
                     siste.hendelsesType != IASakshendelseType.FULLFØR_PROSESS &&
                     siste.hendelsesType != IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK &&
                     siste.hendelsesType != IASakshendelseType.AVBRYT_PROSESS &&
+                    siste.hendelsesType != IASakshendelseType.ENDRE_PLANLAGT_DATO &&
                     siste.hendelsesType == nestSiste.hendelsesType
                 ) {
                     logger.warn(
