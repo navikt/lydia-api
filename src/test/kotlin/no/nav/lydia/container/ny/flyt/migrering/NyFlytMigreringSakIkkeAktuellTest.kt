@@ -40,8 +40,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
     }
 
     @Test
-    fun `Rad #16 sak IKKE_AKTUELL ingen samarbeid status FULLFØRT for mindre enn 10d siden migreres til AVSLUTTET og VirksomhetErVurdert`() {
-        // val iaSakDtoUnderArbeid = mirgeringSakIViBistår().avbrytSamarbeid().nyIkkeAktuellHendelse()
+    fun `Rad #16 sak IKKE_AKTUELL ingen samarbeid status oppdatert for mindre enn 10d siden migreres til VURDERT og VirksomhetErVurdert`() {
         val iaSakDtoUnderArbeid = migreringSakIKartlegges().nyIkkeAktuellHendelse()
         iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
 
@@ -58,11 +57,11 @@ class NyFlytMigreringSakIkkeAktuellTest {
         sendMigreringsmeldingOgVerifiserSak(
             iaSakDto = iaSakDto,
             sistEndretAvBruker = iaSakDto.endretTidspunkt,
-            forventetStatus = IASak.Status.AVSLUTTET,
+            forventetStatus = IASak.Status.VURDERT,
             forventetTilstand = VirksomhetIATilstand.VirksomhetErVurdert,
             forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
                 startTilstand = VirksomhetIATilstand.VirksomhetErVurdert,
-                planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
+                planlagtHendelse = GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                 nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
             ),
@@ -77,7 +76,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
                 IASak.Status.KONTAKTES,
                 IASak.Status.KARTLEGGES,
                 IASak.Status.IKKE_AKTUELL,
-                IASak.Status.AVSLUTTET,
+                IASak.Status.VURDERT,
             ),
             forventedeHendelsestyper = listOf(
                 IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
@@ -90,11 +89,11 @@ class NyFlytMigreringSakIkkeAktuellTest {
             ),
         )
 
-        verifiserKafkaMeldinger(iaSakDto, forventetStatus = IASak.Status.AVSLUTTET)
+        verifiserKafkaMeldinger(iaSakDto, forventetStatus = IASak.Status.VURDERT)
     }
 
     @Test
-    fun `Rad #17 sak IKKE_AKTUELL ingen samarbeid status FULLFØRT for mer enn 10d siden migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
+    fun `Rad #17 sak IKKE_AKTUELL ingen samarbeid status oppdatert for mer enn 10d siden migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
         val iaSakDtoUnderArbeid = migreringSakIKartlegges().nyIkkeAktuellHendelse()
         iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
 
@@ -142,7 +141,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
     }
 
     @Test
-    fun `Rad #18 sak IKKE_AKTUELL alle smrbd avsluttet st FULLFØRT for mindre enn 10d siden migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
+    fun `Rad #18 sak IKKE_AKTUELL alle smrbd avsluttet st oppdatert for mindre enn 10d siden migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
         val iaSakDtoUnderArbeid = migreringSakIKartlegges().opprettNyttSamarbeid().avbrytSamarbeid().nyIkkeAktuellHendelse()
         iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
 
@@ -163,7 +162,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
             forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
                 startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
-                planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
+                planlagtHendelse = GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                 nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
             ),
@@ -199,7 +198,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
     }
 
     @Test
-    fun `Rad #19 sak IKKE_AKTUELL alle smrbd avsluttet st FULLFØRT for mer enn 10d siden migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
+    fun `Rad #19 sak IKKE_AKTUELL alle smrbd avsluttet st oppdatert for mer enn 10d siden migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
         val iaSakDtoUnderArbeid = migreringSakIKartlegges().opprettNyttSamarbeid().avbrytSamarbeid().nyIkkeAktuellHendelse()
         iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
 

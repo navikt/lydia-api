@@ -136,7 +136,7 @@ sealed class Migreringsplan {
                                 -> {
                                     Gjennomførbar(
                                         nåværendeSakStatus = iaSakDto.status,
-                                        resulterendeSakStatus = IASak.Status.AVSLUTTET,
+                                        resulterendeSakStatus = IASak.Status.VURDERT,
                                         tilstand = VirksomhetErVurdert,
                                         gjørVirksomhetKlarTilVurderingSenere = true,
                                     )
