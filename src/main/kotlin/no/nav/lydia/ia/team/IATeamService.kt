@@ -10,6 +10,7 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.collections.map
 
 class IATeamService(
     val iaTeamRepository: IATeamRepository,
@@ -60,13 +61,15 @@ class IATeamService(
         iaTeamRepository.slettBrukerFraTeam(saksnummer = iaSakDto.saksnummer, navAnsatt = navAnsatt)?.right()
             ?: Feil("Feil ved fjerning av bruker som følger sak", HttpStatusCode.BadRequest).left()
 
-    fun slettAlleFølgereForSak(saksnummer: String) {
-        iaTeamRepository.slettAlleFølgereForSak(saksnummer = saksnummer)
-    }
-
-    fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<Pair<IASakDto, String>>> =
+    fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<MineSakerDto>> =
         try {
-            iaTeamRepository.hentSakerBrukerEierEllerFølger(navAnsatt = navAnsatt).right()
+            iaTeamRepository.hentSakerBrukerEierEllerFølger(navAnsatt = navAnsatt).map {
+                MineSakerDto(
+                    iaSak = it.first,
+                    orgnavn = it.second,
+                    virksomhetTilstand = it.third,
+                )
+            }.right()
         } catch (e: Exception) {
             log.error("Feil ved henting av en brukers saker. Feilmelding: ${e.message}", e)
             Feil("Feil ved henting av en brukers saker", httpStatusCode = HttpStatusCode.InternalServerError).left()

@@ -96,14 +96,7 @@ fun Route.iaSakTeam(
 
     get(MINE_SAKER_PATH) {
         call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
-            iaTeamService.hentSakerTilBruker(lesebruker).map {
-                it.map { (iasak, orgnavn) ->
-                    MineSakerDto(
-                        iaSak = iasak,
-                        orgnavn = orgnavn,
-                    )
-                }
-            }
+            iaTeamService.hentSakerTilBruker(lesebruker)
         }.onLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)

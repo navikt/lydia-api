@@ -1,9 +1,11 @@
 package no.nav.lydia.ia.team
 
+import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASakDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
@@ -86,29 +88,15 @@ class IATeamRepository(
         )
     }
 
-    fun slettAlleFølgereForSak(saksnummer: String): Int =
+    fun hentSakerBrukerEierEllerFølger(navAnsatt: NavAnsatt): List<Triple<IASakDto, String, VirksomhetIATilstand>> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                        DELETE FROM ia_sak_team
-                        WHERE saksnummer = :saksnummer
-                    """.trimMargin(),
-                    mapOf(
-                        "saksnummer" to saksnummer,
-                    ),
-                ).asUpdate,
-            )
-        }
-
-    fun hentSakerBrukerEierEllerFølger(navAnsatt: NavAnsatt): List<Pair<IASakDto, String>> =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT sak.*, v.navn
+                        SELECT sak.*, v.navn, tv.tilstand
                         FROM ia_sak AS sak
                             JOIN virksomhet AS v USING (orgnr)
+                            LEFT JOIN tilstand_virksomhet AS tv USING (orgnr)
                             LEFT JOIN (
                                 SELECT saksnummer, ident
                                 FROM ia_sak_team
@@ -121,8 +109,11 @@ class IATeamRepository(
                         "navident" to navAnsatt.navIdent,
                     ),
                 ).map { row ->
-                    Pair(row.tilIASakDto(), row.string("navn"))
+                    Triple(row.tilIASakDto(), row.string("navn"), row.tilVirksomhetTilstand())
                 }.asList,
             )
         }
 }
+
+private fun Row.tilVirksomhetTilstand() =
+    this.stringOrNull("tilstand")?.let { VirksomhetIATilstand.valueOf(it) } ?: VirksomhetIATilstand.VirksomhetKlarTilVurdering
