@@ -7,12 +7,15 @@ import arrow.core.right
 import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.Lesebruker
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.Lesebruker.Companion.lesebruker
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Companion.navAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import no.nav.lydia.tilgangskontroll.fia.objectId
 
 fun <T> ApplicationCall.somLesebruker(
     adGrupper: ADGrupper,
@@ -52,3 +55,25 @@ fun <T> ApplicationCall.somHøyestTilgang(
         erLesebruker.flatMap { block(it) }
     }
 }
+
+fun <T> ApplicationCall.somSaksbehandlerMedNavenhet(
+    adGrupper: ADGrupper,
+    azureService: AzureService,
+    block: (NavAnsattMedSaksbehandlerRolle, NavEnhet) -> Either<Feil, T>,
+): Either<Feil, T> =
+    somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+        azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
+            block(saksbehandler, navEnhet)
+        }
+    }
+
+fun <T> ApplicationCall.somSuperbrukerMedNavenhet(
+    adGrupper: ADGrupper,
+    azureService: AzureService,
+    block: (Superbruker, NavEnhet) -> Either<Feil, T>,
+): Either<Feil, T> =
+    somSuperbruker(adGrupper = adGrupper) { superbruker ->
+        azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
+            block(superbruker, navEnhet)
+        }
+    }

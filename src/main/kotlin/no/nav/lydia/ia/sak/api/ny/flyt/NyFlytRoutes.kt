@@ -1,12 +1,10 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
-import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -58,13 +56,10 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurdering
 import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
-import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
-import no.nav.lydia.tilgangskontroll.somSaksbehandler
-import no.nav.lydia.tilgangskontroll.somSuperbruker
+import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
+import no.nav.lydia.tilgangskontroll.somSuperbrukerMedNavenhet
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VirksomhetFeil
 import no.nav.lydia.virksomhet.api.toDto
@@ -84,22 +79,6 @@ fun Route.nyFlyt(
     auditLog: AuditLog,
     azureService: AzureService,
 ) {
-    fun <T> ApplicationCall.somSuperbrukerMedNavenhet(
-        block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker, NavEnhet) -> Either<Feil, T>,
-    ): Either<Feil, T> =
-        somSuperbruker(adGrupper = adGrupper) { superbruker ->
-            azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
-                block(superbruker, navEnhet)
-            }
-        }
-
-    fun <T> ApplicationCall.somSaksbehandlerMedNavenhet(block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, NavEnhet) -> Either<Feil, T>): Either<Feil, T> =
-        somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
-                block(saksbehandler, navEnhet)
-            }
-        }
-
     fun tilstandsmaskin(orgnr: String) =
         TilstandsmaskinBuilder.medKontekst(
             fiaKontekst = FiaKontekst(
@@ -268,7 +247,7 @@ fun Route.nyFlyt(
 
     post("$NY_FLYT_PATH/{orgnummer}/vurder") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        call.somSuperbrukerMedNavenhet { superbruker, navEnhet ->
+        call.somSuperbrukerMedNavenhet(adGrupper, azureService) { superbruker, navEnhet ->
             val hendelse = VurderVirksomhet(
                 orgnr = orgnr,
                 superbruker = superbruker,
@@ -298,7 +277,7 @@ fun Route.nyFlyt(
     post("$NY_FLYT_PATH/{orgnummer}/angre-vurdering") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
 
-        call.somSuperbrukerMedNavenhet { superbruker, enhet ->
+        call.somSuperbrukerMedNavenhet(adGrupper, azureService) { superbruker, enhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
                 hendelse = AngreVurderVirksomhet(
                     orgnr = orgnr,
@@ -340,7 +319,7 @@ fun Route.nyFlyt(
             )
         }
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
                 hendelse = AvsluttVurdering(
                     orgnr = orgnr,
@@ -369,7 +348,7 @@ fun Route.nyFlyt(
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val iaSamarbeidDto = call.receive<IASamarbeidDto>()
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
                 hendelse = OpprettNyttSamarbeid(
                     orgnr = orgnr,
@@ -402,7 +381,7 @@ fun Route.nyFlyt(
             Spørreundersøkelse.Type.entries.firstOrNull { it.name.equals(param, ignoreCase = true) }
         } ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = OpprettKartleggingForSamarbeid(
                     orgnr = orgnr,
@@ -433,7 +412,7 @@ fun Route.nyFlyt(
         val tilstandsmaskin = tilstandsmaskin(orgnr)
         val spørreundersøkelseId = call.spørreundersøkelseId ?: return@post call.respond(IASakSpørreundersøkelseError.`ugyldig id`)
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = StartKartleggingForSamarbeid(
                     orgnr = orgnr,
@@ -463,9 +442,9 @@ fun Route.nyFlyt(
         val tilstandsmaskin = tilstandsmaskin(orgnr)
         val spørreundersøkelseId = call.spørreundersøkelseId ?: return@post call.respond(IASakSpørreundersøkelseError.`ugyldig id`)
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
-                hendelse = `FullførKartleggingForSamarbeid`(
+                hendelse = FullførKartleggingForSamarbeid(
                     orgnr = orgnr,
                     spørreundersøkelseId = spørreundersøkelseId,
                     saksbehandler = saksbehandler,
@@ -493,7 +472,7 @@ fun Route.nyFlyt(
         val tilstandsmaskin = tilstandsmaskin(orgnr)
         val spørreundersøkelseId = call.spørreundersøkelseId ?: return@delete call.respond(IASakSpørreundersøkelseError.`ugyldig id`)
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = SlettKartleggingForSamarbeid(
                     orgnr = orgnr,
@@ -523,7 +502,7 @@ fun Route.nyFlyt(
         val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         val tilstandsmaskin = tilstandsmaskin(orgnr)
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = SlettSamarbeid(
                     orgnr = orgnr,
@@ -558,7 +537,7 @@ fun Route.nyFlyt(
         }
         val tilstandsmaskin = tilstandsmaskin(orgnr)
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = AvsluttSamarbeid(
                     orgnr = orgnr,
@@ -590,7 +569,7 @@ fun Route.nyFlyt(
         val iaSamarbeidDto = call.receive<IASamarbeidDto>()
         val tilstandsmaskin = tilstandsmaskin(orgnr)
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = EndreSamarbeidsNavn(
                     orgnr = orgnr,
@@ -621,7 +600,7 @@ fun Route.nyFlyt(
         val virksomhetTilstandAutomatiskOppdateringDto = call.receive<VirksomhetTilstandAutomatiskOppdateringDto>()
         val tilstandsmaskin = tilstandsmaskin(orgnr)
 
-        call.somSaksbehandlerMedNavenhet { saksbehandler, navEnhet ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             val konsekvens = tilstandsmaskin.prosesserHendelse(
                 hendelse = EndrePlanlagtDatoForNesteTilstand(
                     orgnr = orgnr,
@@ -650,7 +629,7 @@ fun Route.nyFlyt(
     // -- Dette etterlater ingen hendelser, men skriver kun over eierskap i den akktive saken
     post("$NY_FLYT_PATH/{orgnummer}/bli-eier") {
         val orgnr = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        call.somSaksbehandlerMedNavenhet { saksbehandler, _ ->
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, _ ->
             nyFlytService.bliEier(orgnr, saksbehandler)
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(

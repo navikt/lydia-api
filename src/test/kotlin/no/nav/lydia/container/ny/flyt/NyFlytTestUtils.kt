@@ -244,6 +244,26 @@ class NyFlytTestUtils {
             return res.third.get()
         }
 
+        fun IASakDto.apiAvsluttVurdering(
+            token: String = authContainerHelper.superbruker1.token,
+            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                ),
+                dato = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(90, DateTimeUnit.DAY),
+            ),
+        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/avslutt-vurdering")
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(valgtÅrsak),
+            )
+            .tilSingelRespons<IASakDto>().third.fold(
+                { it },
+                { fail(it.message) },
+            )
+
+        @Deprecated("Bruk apiAvsluttVurdering som treffer på /api/v1")
         fun IASakDto.avsluttVurdering(
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(

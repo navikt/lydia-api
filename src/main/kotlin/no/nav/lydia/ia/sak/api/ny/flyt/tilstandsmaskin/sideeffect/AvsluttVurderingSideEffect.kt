@@ -77,12 +77,16 @@ class AvsluttVurderingSideEffect(
 
                     // #3 opprett automatisk oppdatering til VirksomhetVurderes eller VirksomhetKlarTilVurdering
                     val nyTilstand = when (årsak.type) {
-                        ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE -> VirksomhetIATilstand.VirksomhetVurderes
+                        ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE, ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                        -> VirksomhetIATilstand.VirksomhetVurderes
+
                         else -> VirksomhetIATilstand.VirksomhetKlarTilVurdering
                     }
 
                     val planlagtHendelse = when (årsak.type) {
-                        ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE -> VurderVirksomhet::class.simpleName!!
+                        ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE, ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                        -> VurderVirksomhet::class.simpleName!!
+
                         else -> GjørVirksomhetKlarTilNyVurdering::class.simpleName!!
                     }
 

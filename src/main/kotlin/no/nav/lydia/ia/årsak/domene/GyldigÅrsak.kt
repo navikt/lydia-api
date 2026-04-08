@@ -11,6 +11,41 @@ class GyldigÅrsak(
     val begrunnelser: List<GyldigBegrunnelse>,
 ) {
     companion object {
+        val GYLDIGE_ÅRSAKER_FOR_VURDERES_PÅ_ET_SENERE_TIDSPUNKT = listOf(
+            GyldigÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
+                    BegrunnelseType.NAV_HAR_IKKE_KAPASITET_NÅ,
+                ).somGyldigeBegrunnelser(),
+            ),
+        )
+
+        val GYLDIGE_ÅRSAKER_FOR_FERDIG_VURDERT_MED_INTERN_VURDERING = listOf(
+            GyldigÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_HAR_IKKE_SVART_PÅ_HENVENDELSER,
+                    BegrunnelseType.VIRKSOMHETEN_HAR_FOR_LAVT_POTENSIALE,
+                    BegrunnelseType.VIRKSOMHETEN_MANGLER_REPRESANTANTER_ELLER_ETABLERT_PARTSGRUPPE,
+                ).somGyldigeBegrunnelser(),
+            ),
+        )
+
+        val GYLDIGE_ÅRSAKER_FOR_FERDIG_VURDERT_OG_TAKKET_NEI = listOf(
+            GyldigÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
+                    BegrunnelseType.VIRKSOMHETEN_SAMARBEIDER_MED_ANDRE_ELLER_GJØR_EGNE_TILTAK,
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_KUN_INFORMASJON_OG_VEILEDNING,
+                    BegrunnelseType.KOMMUNEN_ELLER_OVERORDNET_LEDELSE_ØNSKER_IKKE_Å_STARTE_ET_SAMARBEID,
+                    BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
+                ).somGyldigeBegrunnelser(),
+            ),
+        )
+
+        @Deprecated("Bruk avslutt-vurdering v1")
         val GYLDIGE_ÅRSAKER_FOR_VURDERES_SENERE = listOf(
             GyldigÅrsak(
                 type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
@@ -19,6 +54,8 @@ class GyldigÅrsak(
                 ).somGyldigeBegrunnelser(),
             ),
         )
+
+        @Deprecated("Bruk avslutt-vurdering v1")
         val GYLDIGE_ÅRSAKER_FOR_FERDIG_VURDERT = listOf(
             GyldigÅrsak(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
@@ -74,7 +111,16 @@ class GyldigBegrunnelse(
 enum class ÅrsakType(
     val navn: String,
 ) {
+    // avslutt-vurdering v1
+    VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT(navn = "Virksomheten vurderes på et senere tidspunkt"),
+    VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING(navn = "Virksomheten er ferdig vurdert med intern vurdering"),
+    VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI(navn = "Virksomheten er ferdig vurdert og har takket nei"),
+
+    // avslutt-vurdering v0
+    @Deprecated("Bruk avslutt-vurdering v1")
     VIRKSOMHETEN_SKAL_VURDERES_SENERE(navn = "Virksomheten ønsker samarbeid senere"),
+
+    @Deprecated("Bruk avslutt-vurdering v1")
     VIRKSOMHETEN_ER_FERDIG_VURDERT(navn = "Virksomheten er ferdig vurdert"),
 
     // -- Gammel saksflyt
@@ -85,6 +131,24 @@ enum class ÅrsakType(
 enum class BegrunnelseType(
     val navn: String,
 ) {
+    // avslutt-vurdering v1
+    // Vurderes på et senere tidspunkt
+    VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE(navn = "Virksomheten ønsker å bli kontaktet senere"),
+    NAV_HAR_IKKE_KAPASITET_NÅ(navn = "Nav har ikke kapasitet nå"),
+
+    // Ferdig vurdert: Intern vurdering
+    VIRKSOMHETEN_HAR_IKKE_SVART_PÅ_HENVENDELSER(navn = "Virksomheten har ikke svart på henvendelser"),
+    VIRKSOMHETEN_HAR_FOR_LAVT_POTENSIALE(navn = "Virksomheten har for lavt potensiale til å redusere tapte dagsverk"),
+    VIRKSOMHETEN_MANGLER_REPRESANTANTER_ELLER_ETABLERT_PARTSGRUPPE(navn = "Virksomheten mangler representanter / etablert partsgruppe"),
+
+    // Ferdig vurdert: Virksomheten har takket nei
+    VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET(navn = "Virksomheten er ikke motivert / har ikke kapasitet"),
+    VIRKSOMHETEN_SAMARBEIDER_MED_ANDRE_ELLER_GJØR_EGNE_TILTAK(navn = "Virksomheten samarbeider med andre / gjør egne tiltak"),
+    VIRKSOMHETEN_ØNSKER_KUN_INFORMASJON_OG_VEILEDNING(navn = "Virksomheten ønsker kun informasjon og veiledning"),
+    KOMMUNEN_ELLER_OVERORDNET_LEDELSE_ØNSKER_IKKE_Å_STARTE_ET_SAMARBEID(navn = "Kommunen / overordnet ledelse ønsker ikke å starte et samarbeid"),
+    VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET(navn = "Annet"),
+
+    // avslutt-vurdering v0
     VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE(navn = "Virksomheten ønsker samarbeid senere"),
 
     VIRKSOMHETEN_HAR_IKKE_SVART(navn = "Virksomheten har ikke svart"),
