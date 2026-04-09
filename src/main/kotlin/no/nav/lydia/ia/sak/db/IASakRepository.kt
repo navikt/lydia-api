@@ -370,18 +370,18 @@ class IASakRepository(
             )
         }
 
-    fun hentAlleSakerDtoForKommune(kommunenummer: String) =
+    fun hentAlleSakerDtoForFylke(fylkenummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     SELECT *
                     FROM ia_sak join virksomhet on ia_sak.orgnr = virksomhet.orgnr
-                    WHERE kommunenummer = :kommunenummer
+                    WHERE kommunenummer like :fylkenummer
                     order by endret
                     """.trimMargin(),
                     mapOf(
-                        "kommunenummer" to kommunenummer,
+                        "fylkenummer" to "$fylkenummer%",
                     ),
                 ).map(this::mapRowToIASakDto).asList,
             )

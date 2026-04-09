@@ -68,5 +68,7 @@ class GeografiService {
 
     fun finnFylke(kommunenummer: String): Fylke? = hentFylkerOgKommuner().firstOrNull { it.harKommune(kommunenummer) }?.fylke
 
+    fun hentAlleFylker(): List<Fylke> = alleFylker
+
     private fun FylkeOgKommuner.harKommune(kommunenummer: String) = kommuner.map { it.nummer }.contains(kommunenummer)
 }
