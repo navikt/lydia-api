@@ -32,65 +32,51 @@ class NyFlytMigreringService(
         val antallForsøktMigrerteSaker = AtomicInteger(0)
         val antallProsessert = AtomicInteger(0)
 
-        val fylkerOgKommuner = if (fylkenummer == "ALLE") {
-            geografiService.hentFylkerOgKommuner()
+        val fylker = if (fylkenummer == "ALLE") {
+            geografiService.hentAlleFylker()
         } else {
-            geografiService.hentFylkerOgKommuner().filter { it.fylke.nummer == fylkenummer }
+            geografiService.hentAlleFylker().filter { it.nummer == fylkenummer }
         }
 
-        fylkerOgKommuner.flatMap { fylke ->
+        fylker.forEach { fylke ->
             val antallMigrerbareSakerIFylke = AtomicInteger(0)
             val antallGamleSakerIFylke = AtomicInteger(0)
             val antallForsøktMigrerteSakerIFylke = AtomicInteger(0)
             val antallProsesserteSakerIFylke = AtomicInteger(0)
-            log.info("[Migrering] Starter migrering av saker for fylke '${fylke.fylke.navn}'. faktiskMigrer: $faktiskMigrer")
+            log.info("[Migrering] Starter migrering av saker for fylke '${fylke.navn}'. faktiskMigrer: $faktiskMigrer")
 
-            fylke.kommuner.flatMap { kommune ->
-                val antallMigrerbareSakerIKommune = AtomicInteger(0)
-                val antallProsesserteSakerIKommune = AtomicInteger(0)
-                val antallGamleSakerIKommune = AtomicInteger(0)
-                val antallForsøktMigrerteSakerIKommune = AtomicInteger(0)
+            val alleMigrerbareSakerIFylke = nyFlytService.hentAlleSisteIASakDtoForFylke(fylkenummer = fylke.nummer)
+            log.info(
+                "[Migrering] funnet ${alleMigrerbareSakerIFylke.size} siste saker for fylke '${fylke.nummer}' " +
+                    "i fylke '${fylke.navn}'. faktiskMigrer: $faktiskMigrer",
+            )
 
-                val alleMigrerbareSakerIKommunne = nyFlytService.hentAlleSisteIASakDtoForKommune(kommune.nummer)
-                antallMigrerbareSakerIKommune.addAndGet(alleMigrerbareSakerIKommunne.size)
-                log.debug(
-                    "[Migrering] funnet ${alleMigrerbareSakerIKommunne.size} siste saker for kommune '${kommune.nummer}' " +
-                        "i fylke '${fylke.fylke.navn}'. faktiskMigrer: $faktiskMigrer",
-                )
+            alleMigrerbareSakerIFylke.forEach { iaSakDto ->
+                antallProsesserteSakerIFylke.incrementAndGet()
+                if (faktiskMigrer) antallForsøktMigrerteSakerIFylke.incrementAndGet()
 
-                alleMigrerbareSakerIKommunne.map { iaSakDto ->
-                    antallProsesserteSakerIKommune.incrementAndGet()
-                    if (faktiskMigrer) antallForsøktMigrerteSakerIKommune.incrementAndGet()
+                migrerSisteSak(
+                    iaSakDto = iaSakDto,
+                    orgnummer = iaSakDto.orgnr,
+                    migreringsDato = LocalDateTime.now().toLocalDate().atStartOfDay(),
+                    faktiskMigrer = faktiskMigrer,
+                )?.also {
+                    val gamleSakerIVirksomhet = nyFlytService.hentAlleAndreIASakDto(orgnummer = it.orgnr, saksnummer = it.saksnummer)
+                    antallGamleSakerIFylke.addAndGet(gamleSakerIVirksomhet.size)
 
-                    migrerSisteSak(
-                        iaSakDto = iaSakDto,
-                        orgnummer = iaSakDto.orgnr,
-                        migreringsDato = LocalDateTime.now().toLocalDate().atStartOfDay(),
-                        faktiskMigrer = faktiskMigrer,
-                    )?.also {
-                        val gamleSakerIVirksomhet = nyFlytService.hentAlleAndreIASakDto(orgnummer = it.orgnr, saksnummer = it.saksnummer)
-                        antallGamleSakerIKommune.addAndGet(gamleSakerIVirksomhet.size)
-
-                        gamleSakerIVirksomhet.forEach { gammelIaSakDto ->
-                            logMenIkkeMigrerGammelSak(
-                                iaSakDto = gammelIaSakDto,
-                                faktiskMigrer = faktiskMigrer,
-                            )
-                        }
+                    gamleSakerIVirksomhet.forEach { gammelIaSakDto ->
+                        logMenIkkeMigrerGammelSak(
+                            iaSakDto = gammelIaSakDto,
+                            faktiskMigrer = faktiskMigrer,
+                        )
                     }
-                }.also {
-                    antallMigrerbareSakerIFylke.addAndGet(antallMigrerbareSakerIKommune.get())
-                    antallForsøktMigrerteSakerIFylke.addAndGet(antallForsøktMigrerteSakerIKommune.get())
-                    antallGamleSakerIFylke.addAndGet(antallGamleSakerIKommune.get())
-                    antallProsesserteSakerIFylke.addAndGet(antallProsesserteSakerIKommune.get())
                 }
-            }.also {
                 antallProsessert.addAndGet(antallProsesserteSakerIFylke.get())
                 antallMigrerbareSakerFunnet.addAndGet(antallMigrerbareSakerIFylke.get())
                 antallGamleSakerFunnet.addAndGet(antallGamleSakerIFylke.get())
                 if (faktiskMigrer) antallForsøktMigrerteSaker.addAndGet(antallForsøktMigrerteSakerIFylke.get())
                 log.info(
-                    "[Migrering] Ferdig med migrering av saker for fylke '${fylke.fylke.navn}'. faktiskMigrer: $faktiskMigrer. " +
+                    "[Migrering] Ferdig med migrering av saker for fylke '${fylke.navn}'. faktiskMigrer: $faktiskMigrer. " +
                         "Antall migrerbare saker i fylke: ${antallProsesserteSakerIFylke.get()}, " +
                         "Antall prosesserte saker i fylke: ${antallProsesserteSakerIFylke.get()}, " +
                         "antall forsøkt migrerte saker i fylke: ${antallForsøktMigrerteSakerIFylke.get()}, " +

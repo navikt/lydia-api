@@ -81,8 +81,8 @@ class NyFlytService(
     fun hentSisteIASakDto(orgnummer: String): IASakDto? =
         iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer).maxByOrNull { it.opprettetTidspunkt }
 
-    fun hentAlleSisteIASakDtoForKommune(nummer: String): List<IASakDto> {
-        val sakerGruppertPåOrgnr: Map<String, List<IASakDto>> = iaSakRepository.hentAlleSakerDtoForKommune(kommunenummer = nummer).groupBy { it.orgnr }
+    fun hentAlleSisteIASakDtoForFylke(fylkenummer: String): List<IASakDto> {
+        val sakerGruppertPåOrgnr: Map<String, List<IASakDto>> = iaSakRepository.hentAlleSakerDtoForFylke(fylkenummer = fylkenummer).groupBy { it.orgnr }
         return sakerGruppertPåOrgnr.map { it.value.maxBy { it.opprettetTidspunkt } }.toList()
     }
 
