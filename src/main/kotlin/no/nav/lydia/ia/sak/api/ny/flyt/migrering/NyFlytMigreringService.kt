@@ -37,8 +37,10 @@ class NyFlytMigreringService(
         } else {
             geografiService.hentAlleFylker().filter { it.nummer == fylkenummer }
         }
+        log.info("[Migrering] Starter migrering av saker for ${fylker.size} fylke(r). faktiskMigrer: $faktiskMigrer")
 
         fylker.forEach { fylke ->
+            val startTidspunktFylke = LocalDateTime.now()
             val antallMigrerbareSakerIFylke = AtomicInteger(0)
             val antallGamleSakerIFylke = AtomicInteger(0)
             val antallForsøktMigrerteSakerIFylke = AtomicInteger(0)
@@ -71,19 +73,20 @@ class NyFlytMigreringService(
                         )
                     }
                 }
-                antallProsessert.addAndGet(antallProsesserteSakerIFylke.get())
-                antallMigrerbareSakerFunnet.addAndGet(antallMigrerbareSakerIFylke.get())
-                antallGamleSakerFunnet.addAndGet(antallGamleSakerIFylke.get())
-                if (faktiskMigrer) antallForsøktMigrerteSaker.addAndGet(antallForsøktMigrerteSakerIFylke.get())
-                log.info(
-                    "[Migrering] Ferdig med migrering av saker for fylke '${fylke.navn}'. faktiskMigrer: $faktiskMigrer. " +
-                        "Antall migrerbare saker i fylke: ${antallProsesserteSakerIFylke.get()}, " +
-                        "Antall prosesserte saker i fylke: ${antallProsesserteSakerIFylke.get()}, " +
-                        "antall forsøkt migrerte saker i fylke: ${antallForsøktMigrerteSakerIFylke.get()}, " +
-                        "antall gamle saker (som ikke migreres) i fylke: ${antallGamleSakerIFylke.get()}. " +
-                        "Prosesseringstid: ${java.time.Duration.between(startTidspunkt, LocalDateTime.now()).toSeconds()} sekunder.",
-                )
             }
+            antallProsessert.addAndGet(antallProsesserteSakerIFylke.get())
+            antallMigrerbareSakerFunnet.addAndGet(antallMigrerbareSakerIFylke.get())
+            antallGamleSakerFunnet.addAndGet(antallGamleSakerIFylke.get())
+            if (faktiskMigrer) antallForsøktMigrerteSaker.addAndGet(antallForsøktMigrerteSakerIFylke.get())
+            log.info(
+                "[Migrering] Ferdig med migrering av saker for fylke '${fylke.navn}'. faktiskMigrer: $faktiskMigrer. " +
+                    "Antall migrerbare saker i fylke: ${antallProsesserteSakerIFylke.get()}, " +
+                    "Antall prosesserte saker i fylke: ${antallProsesserteSakerIFylke.get()}, " +
+                    "antall forsøkt migrerte saker i fylke: ${antallForsøktMigrerteSakerIFylke.get()}, " +
+                    "antall gamle saker (som ikke migreres) i fylke: ${antallGamleSakerIFylke.get()}. " +
+                    "Prosesseringstid: ${java.time.Duration.between(startTidspunktFylke, LocalDateTime.now()).toSeconds()} sekunder " +
+                    "(${java.time.Duration.between(startTidspunktFylke, LocalDateTime.now()).toMillis()} millis).",
+            )
         }
 
         log.info(
@@ -91,7 +94,8 @@ class NyFlytMigreringService(
                 "Antall prosesserte saker: ${antallProsessert.get()}, " +
                 "antall forsøkt migrerte saker: ${antallForsøktMigrerteSaker.get()}, " +
                 "antall gamle saker (som ikke migreres): ${antallGamleSakerFunnet.get()}. " +
-                "Prosesseringstid: ${java.time.Duration.between(startTidspunkt, LocalDateTime.now()).toSeconds()} sekunder.",
+                "Prosesseringstid: ${java.time.Duration.between(startTidspunkt, LocalDateTime.now()).toSeconds()} sekunder " +
+                "(${java.time.Duration.between(startTidspunkt, LocalDateTime.now()).toMillis()} millis).",
         )
         return Triple(antallProsessert.toInt(), antallForsøktMigrerteSaker.toInt(), antallGamleSakerFunnet.toInt())
     }
