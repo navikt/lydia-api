@@ -8,6 +8,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.sykefraværsstatistikk.api.geografi.Fylke
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,11 +32,16 @@ class NyFlytMigreringService(
         val antallGamleSakerFunnet = AtomicInteger(0)
         val antallForsøktMigrerteSaker = AtomicInteger(0)
         val antallProsessert = AtomicInteger(0)
+        val oppløsteFylker = listOf(
+            Fylke(navn = "Viken", nummer = "30"),
+            Fylke(navn = "Vestfold og Telemark", nummer = "38"),
+            Fylke(navn = "Troms og Finmark", nummer = "54"),
+        )
 
         val fylker = if (fylkenummer == "ALLE") {
-            geografiService.hentAlleFylker()
+            geografiService.hentAlleFylker().plus(oppløsteFylker)
         } else {
-            geografiService.hentAlleFylker().filter { it.nummer == fylkenummer }
+            geografiService.hentAlleFylker().plus(oppløsteFylker).filter { it.nummer == fylkenummer }
         }
         log.info("[Migrering] Starter migrering av saker for ${fylker.size} fylke(r). faktiskMigrer: $faktiskMigrer")
 
