@@ -244,12 +244,12 @@ class NyFlytTestUtils {
             return res.third.get()
         }
 
-        fun IASakDto.apiAvsluttVurdering(
+        fun IASakDto.avsluttVurderingResponse(
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
                 dato = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(90, DateTimeUnit.DAY),
             ),
@@ -258,30 +258,24 @@ class NyFlytTestUtils {
             .jsonBody(
                 Json.encodeToString(valgtÅrsak),
             )
-            .tilSingelRespons<IASakDto>().third.fold(
-                { it },
-                { fail(it.message) },
-            )
+            .tilSingelRespons<IASakDto>()
 
-        @Deprecated("Bruk apiAvsluttVurdering som treffer på /api/v1")
         fun IASakDto.avsluttVurdering(
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
                 dato = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(90, DateTimeUnit.DAY),
             ),
-        ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/avslutt-vurdering")
-            .authentication().bearer(token)
-            .jsonBody(
-                Json.encodeToString(valgtÅrsak),
-            )
-            .tilSingelRespons<IASakDto>().third.fold(
-                { it },
-                { fail(it.message) },
-            )
+        ) = this.avsluttVurderingResponse(
+            token = token,
+            valgtÅrsak = valgtÅrsak,
+        ).third.fold(
+            { it },
+            { fail(it.message) },
+        )
 
         fun IASamarbeidDto.avsluttSamarbeid(
             orgnr: String,

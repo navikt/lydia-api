@@ -1,14 +1,11 @@
-package no.nav.lydia.container.ny.flyt.plan
+package no.nav.lydia.container.ny.flyt.virksomhet
 
 import ia.felles.definisjoner.bransjer.Bransje
-import ia.felles.definisjoner.bransjer.BransjeId
+import ia.felles.definisjoner.bransjer.BransjeId.Næring
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.apiAvsluttVurdering
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserIASakObserversErVarslet
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -38,10 +35,10 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `skal kunne avslutte vurdering som ikke medfører et samarbeid`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = NyFlytTestUtils.vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
 
-        val oppdatertSakDto = sak.apiAvsluttVurdering(
+        val oppdatertSakDto = sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
                 begrunnelser = listOf(
@@ -53,7 +50,7 @@ class NyFlytVirksomhetTest {
         )
         oppdatertSakDto.status shouldBe IASak.Status.VURDERT
 
-        verifiserIASakObserversErVarslet(
+        NyFlytTestUtils.verifiserIASakObserversErVarslet(
             iASakDto = oppdatertSakDto,
             forventedeIASakStatuser = listOf(IASak.Status.VURDERES, IASak.Status.VURDERT),
             forventetIASakStatusIStatistikk = IASak.Status.VURDERT,
@@ -68,10 +65,10 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `avslutt vurdering med gyldig årsak gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetKlarTilVurdering`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = NyFlytTestUtils.vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
 
-        sak.apiAvsluttVurdering(
+        sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
                 begrunnelser = listOf(
@@ -82,7 +79,7 @@ class NyFlytVirksomhetTest {
             ),
         )
 
-        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        val virksomhetsTilstand = NyFlytTestUtils.hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
@@ -92,10 +89,10 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `avslutt vurdering med årsak 'skal vurderes senere' gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetVurderes`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = NyFlytTestUtils.vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as Næring).næring}.120")
         sak.status shouldBe IASak.Status.VURDERES
 
-        sak.apiAvsluttVurdering(
+        sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
                 begrunnelser = listOf(
@@ -105,7 +102,7 @@ class NyFlytVirksomhetTest {
             ),
         )
 
-        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        val virksomhetsTilstand = NyFlytTestUtils.hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "VurderVirksomhet"

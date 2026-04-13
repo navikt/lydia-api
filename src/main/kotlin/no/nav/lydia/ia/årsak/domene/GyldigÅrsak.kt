@@ -45,31 +45,6 @@ class GyldigÅrsak(
             ),
         )
 
-        @Deprecated("Bruk avslutt-vurdering v1")
-        val GYLDIGE_ÅRSAKER_FOR_VURDERES_SENERE = listOf(
-            GyldigÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
-                begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
-                ).somGyldigeBegrunnelser(),
-            ),
-        )
-
-        @Deprecated("Bruk avslutt-vurdering v1")
-        val GYLDIGE_ÅRSAKER_FOR_FERDIG_VURDERT = listOf(
-            GyldigÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
-                begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_HAR_IKKE_SVART,
-                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
-                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
-                    BegrunnelseType.FOR_FÅ_TAPTE_DAGSVERK,
-                    BegrunnelseType.INTERN_VURDERING_FØR_KONTAKT,
-                    BegrunnelseType.NAV_HAR_IKKE_KAPASITET,
-                ).somGyldigeBegrunnelser(),
-            ),
-        )
-
         val GYLDIGE_ÅRSAKER_FOR_IKKE_AKTUELL = listOf(
             GyldigÅrsak(
                 type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
@@ -116,13 +91,6 @@ enum class ÅrsakType(
     VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING(navn = "Virksomheten er ferdig vurdert med intern vurdering"),
     VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI(navn = "Virksomheten er ferdig vurdert og har takket nei"),
 
-    // avslutt-vurdering v0
-    @Deprecated("Bruk avslutt-vurdering v1")
-    VIRKSOMHETEN_SKAL_VURDERES_SENERE(navn = "Virksomheten ønsker samarbeid senere"),
-
-    @Deprecated("Bruk avslutt-vurdering v1")
-    VIRKSOMHETEN_ER_FERDIG_VURDERT(navn = "Virksomheten er ferdig vurdert"),
-
     // -- Gammel saksflyt
     NAV_IGANGSETTER_IKKE_TILTAK(navn = "NAV har besluttet å ikke starte samarbeid"),
     VIRKSOMHETEN_TAKKET_NEI(navn = "Virksomheten har takket nei"),
@@ -148,12 +116,7 @@ enum class BegrunnelseType(
     KOMMUNEN_ELLER_OVERORDNET_LEDELSE_ØNSKER_IKKE_Å_STARTE_ET_SAMARBEID(navn = "Kommunen / overordnet ledelse ønsker ikke å starte et samarbeid"),
     VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET(navn = "Annet"),
 
-    // avslutt-vurdering v0
-    VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE(navn = "Virksomheten ønsker samarbeid senere"),
-
-    VIRKSOMHETEN_HAR_IKKE_SVART(navn = "Virksomheten har ikke svart"),
-    VIRKSOMHETEN_HAR_TAKKET_NEI(navn = "Virksomheten har takket nei"),
-    IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE(navn = "Virksomheten har ikke dokumentert dialog mellom partene"),
+    // Legacy: IKKE_AKTUELL
     FOR_FÅ_TAPTE_DAGSVERK(navn = "Virksomheten har for få tapte dagsverk"),
     INTERN_VURDERING_FØR_KONTAKT(navn = "Intern vurdering før kontakt med virksomhet "),
     NAV_HAR_IKKE_KAPASITET(navn = "NAV har ikke tid eller kapasitet nå til å samarbeide med virksomheten"),

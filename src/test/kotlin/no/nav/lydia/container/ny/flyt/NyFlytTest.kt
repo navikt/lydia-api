@@ -14,6 +14,7 @@ import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurderingResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
@@ -43,6 +44,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASak
@@ -113,9 +115,9 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
                 dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
             ),
@@ -142,10 +144,10 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
-                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
+                    BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_KUN_INFORMASJON_OG_VEILEDNING,
                 ),
                 dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
             ),
@@ -248,10 +250,10 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
-                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
+                    BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
+                    BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
                 ),
                 dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
             ),
@@ -339,9 +341,9 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                    BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                 ),
                 dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
             ),
@@ -351,6 +353,9 @@ class NyFlytTest {
         tilstandFørEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         tilstandFørEndring.nesteTilstand shouldNotBe null
         tilstandFørEndring.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+        tilstandFørEndring.nesteTilstand.planlagtHendelse shouldBe GjørVirksomhetKlarTilNyVurdering::class.simpleName
+        tilstandFørEndring.nesteTilstand.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        tilstandFørEndring.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
 
         val nyPlanlagtDato = LocalDate.now().plusDays(14).toKotlinLocalDate()
         val response = endrePlanlagtDato(
@@ -362,12 +367,16 @@ class NyFlytTest {
         response.statuskode() shouldBe HttpStatusCode.OK.value
         val automatiskOppdatering = response.third.get()
         automatiskOppdatering.planlagtDato shouldBe nyPlanlagtDato
+        automatiskOppdatering.planlagtHendelse shouldBe GjørVirksomhetKlarTilNyVurdering::class.simpleName
         automatiskOppdatering.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         automatiskOppdatering.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
 
         val tilstandEtterEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
         tilstandEtterEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         tilstandEtterEndring.nesteTilstand!!.planlagtDato shouldBe nyPlanlagtDato
+        tilstandEtterEndring.nesteTilstand.planlagtHendelse shouldBe GjørVirksomhetKlarTilNyVurdering::class.simpleName
+        tilstandEtterEndring.nesteTilstand.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        tilstandEtterEndring.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
     }
 
     @Test
@@ -376,9 +385,9 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                    BegrunnelseType.VIRKSOMHETEN_HAR_IKKE_SVART_PÅ_HENVENDELSER,
                 ),
                 dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
             ),
@@ -419,9 +428,9 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
+                    BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                 ),
                 dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
             ),
@@ -452,8 +461,8 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
-                begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI),
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET),
                 dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
             ),
         )
@@ -676,10 +685,10 @@ class NyFlytTest {
 
         val oppdatertSakDto = sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
-                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
+                    BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
+                    BegrunnelseType.VIRKSOMHETEN_SAMARBEIDER_MED_ANDRE_ELLER_GJØR_EGNE_TILTAK,
                 ),
                 dato = LocalDate.now().plusDays(20).toKotlinLocalDate(),
             ),
@@ -692,7 +701,10 @@ class NyFlytTest {
             forventetIASakStatusIStatistikk = IASak.Status.VURDERT,
             rolle = Rolle.SUPERBRUKER,
             hendelseType = IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID,
-            begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI, BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE),
+            begrunnelser = listOf(
+                BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
+                BegrunnelseType.VIRKSOMHETEN_SAMARBEIDER_MED_ANDRE_ELLER_GJØR_EGNE_TILTAK,
+            ),
         )
     }
 
@@ -703,10 +715,10 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT,
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_HAR_TAKKET_NEI,
-                    BegrunnelseType.IKKE_DOKUMENTERT_DIALOG_MELLOM_PARTENE,
+                    BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
+                    BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
                 ),
                 dato = LocalDate.now().plusDays(20).toKotlinLocalDate(),
             ),
@@ -727,9 +739,9 @@ class NyFlytTest {
 
         sak.avsluttVurdering(
             valgtÅrsak = ValgtÅrsak(
-                type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
                 begrunnelser = listOf(
-                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
                 dato = LocalDate.now().plusDays(20).toKotlinLocalDate(),
             ),
@@ -748,20 +760,16 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
-        val avsluttVurderingRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/avslutt-vurdering")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(
-                Json.encodeToString(
-                    ValgtÅrsak(
-                        type = ÅrsakType.VIRKSOMHETEN_SKAL_VURDERES_SENERE,
-                        begrunnelser = listOf(
-                            BegrunnelseType.VIRKSOMHETEN_ØNSKER_SAMARBEID_SENERE,
-                        ),
-                        dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
-                    ),
+        val avsluttVurderingRes = sak.avsluttVurderingResponse(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
-            )
-            .tilSingelRespons<IASakDto>()
+                dato = LocalDate.now().plusDays(20).toKotlinLocalDate(),
+            ),
+        )
+
         avsluttVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
         avsluttVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
 

@@ -36,7 +36,6 @@ import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.AngreVurderVirksomhet
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.AvsluttSamarbeid
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.AvsluttVurdering
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndrePlanlagtDatoForNesteTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndreSamarbeidsNavn
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.FullførKartleggingForSamarbeid
@@ -53,8 +52,6 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.tilSakshistorikk
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurdering
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -63,7 +60,6 @@ import no.nav.lydia.tilgangskontroll.somSuperbrukerMedNavenhet
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VirksomhetFeil
 import no.nav.lydia.virksomhet.api.toDto
-import java.time.LocalDate
 
 const val NY_FLYT_PATH = "iasak/nyflyt"
 
@@ -292,49 +288,6 @@ fun Route.nyFlyt(
                 either = iaSakEither,
                 orgnummer = orgnr,
                 auditType = AuditType.delete,
-                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.OK, message = it)
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    post("$NY_FLYT_PATH/{orgnummer}/avslutt-vurdering") {
-        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        val årsak = call.receive<ValgtÅrsak>()
-
-        if (!årsak.validerBegrunnelserForVurdering()) {
-            return@post call.respond(
-                status = HttpStatusCode.BadRequest,
-                message = "Ugyldig årsak eller begrunnelse for avslutting av vurdering",
-            )
-        }
-
-        if (årsak.dato == null || årsak.dato.toJavaLocalDate().isBefore(LocalDate.now().plusDays(1))) {
-            return@post call.respond(
-                status = HttpStatusCode.BadRequest,
-                message = "Dato for avslutting av vurdering må oppgis",
-            )
-        }
-
-        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
-            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = AvsluttVurdering(
-                    orgnr = orgnr,
-                    årsak = årsak,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                ),
-            )
-            konsekvens.endring.map { (it as IASakDto) }
-        }.also { iaSakEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = iaSakEither,
-                orgnummer = orgnr,
-                auditType = AuditType.update,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
             )
         }.map {
