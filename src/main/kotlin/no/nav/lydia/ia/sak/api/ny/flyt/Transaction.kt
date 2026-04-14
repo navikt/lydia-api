@@ -448,6 +448,43 @@ fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto) {
 }
 
 context(tx: TransactionalSession)
+fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): List<IASamarbeid> =
+    tx.run(
+        queryOf(
+            """
+            SELECT *
+            FROM ia_prosess
+            WHERE saksnummer = :saksnummer
+            AND status != :slettetStatus
+            """.trimIndent(),
+            mapOf(
+                "saksnummer" to saksnummer,
+                "slettetStatus" to IASamarbeid.Status.SLETTET.name,
+            ),
+        ).map { it.mapRowToIASamarbeid() }.asList,
+    )
+
+context(tx: TransactionalSession)
+fun slettSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_prosess
+             SET status = :status, endret_tidspunkt = :endret_tidspunkt
+             WHERE id = :prosessId
+             AND saksnummer = :saksnummer
+             returning *
+            """.trimIndent(),
+            mapOf(
+                "prosessId" to samarbeidDto.id,
+                "saksnummer" to samarbeidDto.saksnummer,
+                "status" to IASamarbeid.Status.SLETTET.name,
+                "endret_tidspunkt" to LocalDateTime.now(),
+            ),
+        ).map { it.mapRowToIASamarbeid() }.asSingle,
+    )!!
+
+context(tx: TransactionalSession)
 fun opprettNyttSamarbeid(
     offentligId: UUID = UUID.randomUUID(),
     saksnummer: String,

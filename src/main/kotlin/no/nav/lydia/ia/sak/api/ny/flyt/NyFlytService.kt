@@ -32,7 +32,6 @@ import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
 import no.nav.lydia.ia.sak.domene.IASak.Status.AVSLUTTET
-import no.nav.lydia.ia.sak.domene.IASak.Status.VURDERES
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.Plan
@@ -243,66 +242,6 @@ class NyFlytService(
             ).onRight(::varsleIASakObservers)
         }
 
-    fun slettSamarbeid(
-        orgnummer: String,
-        saksnummer: String,
-        samarbeidId: Int,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, IASamarbeidDto?> {
-        val samarbeidDto = IASamarbeidDto(
-            id = samarbeidId,
-            saksnummer = saksnummer,
-            navn = "",
-        )
-
-        val iaSamarbeidDto = iaSamarbeidService.slettSamarbeid(samarbeidDto = samarbeidDto, saksnummer = saksnummer)?.also { iaSamarbeid ->
-            val iASakshendelse = IASakshendelse(
-                id = ULID.random(),
-                opprettetTidspunkt = LocalDateTime.now(),
-                saksnummer = saksnummer,
-                hendelsesType = IASakshendelseType.SLETT_PROSESS,
-                orgnummer = orgnummer,
-                opprettetAv = saksbehandler.navIdent,
-                opprettetAvRolle = saksbehandler.rolle,
-                navEnhet = navEnhet,
-                resulterendeStatus = null,
-            )
-
-            val alleSamarbeid = iaSamarbeidRepository.hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
-            val ingenAndreSamarbeid = alleSamarbeid.isEmpty()
-            val alleAndreSamarbeidErAvsluttet = alleSamarbeid
-                .all { it.status == IASamarbeid.Status.AVBRUTT || it.status == IASamarbeid.Status.FULLFØRT }
-
-            val resulterendeStatus = when {
-                ingenAndreSamarbeid -> VURDERES
-                alleAndreSamarbeidErAvsluttet -> AVSLUTTET
-                else -> AKTIV
-            }
-
-            iaSakshendelseRepository.lagreHendelse(
-                hendelse = iASakshendelse,
-                sistEndretAvHendelseId = null,
-                resulterendeStatus = resulterendeStatus,
-            )
-
-            iaSakRepository.oppdaterStatusPåSak(
-                saksnummer = saksnummer,
-                status = resulterendeStatus,
-                endretAv = saksbehandler.navIdent,
-                endretAvHendelseId = iASakshendelse.id,
-            ).onRight(::varsleIASakObservers)
-
-            iaSamarbeidObservers.forEach {
-                it.receive(
-                    input = iaSamarbeid,
-                )
-            }
-        }?.tilDto().right()
-
-        return iaSamarbeidDto
-    }
-
     fun avsluttSamarbeid(
         orgnummer: String,
         saksnummer: String,
@@ -460,6 +399,28 @@ class NyFlytService(
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
 
     // Valideringer
+    fun validerSlettingAvSamarbeid(
+        saksnummer: String,
+        samarbeidId: Int,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+    ): Either<Feil, Unit> =
+        either {
+            val eier = iaSakRepository.hentIASakDto(saksnummer)?.eidAv
+            val erFølgerAvSak = iaTeamService.erEierEllerFølgerAvSak(
+                saksnummer = saksnummer,
+                saksbehandler = saksbehandler,
+                eierAvSak = eier,
+            )
+            ensure(erFølgerAvSak) { IASakError.`er ikke følger av sak` }
+            val kanSlettes = iaSamarbeidService.kanSletteSamarbeid(
+                saksnummer = saksnummer,
+                samarbeidId = samarbeidId,
+            )
+            ensure(kanSlettes.kanGjennomføres) {
+                IASamarbeidFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`
+            }
+        }
+
     fun validerEndringAvSamarbeid(
         navn: String,
         saksnummer: String,

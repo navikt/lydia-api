@@ -5,10 +5,12 @@ import com.github.kittinunf.fuel.core.extensions.jsonBody
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
 import ia.felles.integrasjoner.jobbsender.Jobb
+import io.kotest.assertions.shouldFail
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
@@ -23,6 +25,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserSamarbe
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.PlanHelper
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -177,7 +180,7 @@ class NyFlytTest {
         samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr)
+        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
 
@@ -842,6 +845,23 @@ class NyFlytTest {
     }
 
     @Test
+    fun `skal ikke kunne slette et samarbeid med plan`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(
+            orgnr = sak.orgnr,
+            planMal = PlanHelper.hentPlanMal().inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1),
+        )
+
+        shouldFail {
+            samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
+        }.message shouldMatch ("HTTP Exception 400 Bad Request")
+
+        hentVirksomhetTilstand(sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+    }
+
+    @Test
     fun `status er fortsatt AKTIV dersom det gjenstår en eller flere samarbeid etter slett samarbeid`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
@@ -851,7 +871,7 @@ class NyFlytTest {
 
         val etNyttSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Helt nytt")
 
-        etNyttSamarbeid.slettSamarbeid(orgnr = sak.orgnr)
+        etNyttSamarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         sak.hentAlleSamarbeid() shouldHaveSize 1
     }
@@ -862,7 +882,7 @@ class NyFlytTest {
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeid = sak.opprettSamarbeid()
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        samarbeid.slettSamarbeid(orgnr = sak.orgnr)
+        samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
         sak.hentAlleSamarbeid() shouldHaveSize 0
     }
@@ -877,7 +897,7 @@ class NyFlytTest {
         samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr)
+        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
         sak.hentAlleSamarbeid() shouldHaveSize 1
@@ -1253,15 +1273,23 @@ class NyFlytTest {
             .authentication().bearer(token = token)
             .tilSingelRespons<IASakDto>()
 
-    private fun IASamarbeidDto.slettSamarbeid(
+    private fun IASamarbeidDto.slettSamarbeidRespons(
         orgnr: String,
         token: String = authContainerHelper.saksbehandler1.token,
     ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeid")
         .authentication().bearer(token)
-        .tilSingelRespons<IASamarbeidDto>().third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) },
-        )
+        .tilSingelRespons<IASamarbeidDto>()
+
+    private fun IASamarbeidDto.slettSamarbeid(
+        orgnr: String,
+        token: String = authContainerHelper.saksbehandler1.token,
+    ) = this.slettSamarbeidRespons(
+        orgnr = orgnr,
+        token = token,
+    ).third.fold(
+        success = { respons -> respons },
+        failure = { fail(it.message) },
+    )
 
     private fun IASamarbeidDto.opprettKartlegging(
         orgnr: String,

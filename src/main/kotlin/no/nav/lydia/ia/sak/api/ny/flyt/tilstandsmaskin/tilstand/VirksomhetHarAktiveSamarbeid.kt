@@ -29,6 +29,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OppdaterTemaIP
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettSamarbeidSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.SlettSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 
 // -- Virksomheten har minst ett aktivt samarbeid med en aktiv samarbeidsplan
@@ -236,7 +237,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
             }
 
             is SlettSamarbeid -> {
-                val endring = fiaKontekst.nyFlytService.slettSamarbeid(
+                val sideEffect = SlettSamarbeidSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
                     samarbeidId = hendelse.samarbeidId,
@@ -244,30 +245,34 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
 
-                val harAktiveSamarbeid = TilstandsmaskinBuilder.harAktiveSamarbeid(
-                    fiaKontekst = fiaKontekst,
-                    saksnummer = fiaKontekst.saksnummer,
-                )
-                val harSamarbeidOgAlleErAvsluttet = TilstandsmaskinBuilder.harSamarbeidOgAlleErAvsluttet(
-                    fiaKontekst = fiaKontekst,
-                    saksnummer = fiaKontekst.saksnummer,
-                )
-
-                if (harSamarbeidOgAlleErAvsluttet && endring.isRight()) {
-                    TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
-                        orgnr = hendelse.orgnr,
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    val harAktiveSamarbeid = TilstandsmaskinBuilder.harAktiveSamarbeid(
                         fiaKontekst = fiaKontekst,
+                        saksnummer = fiaKontekst.saksnummer,
+                    )
+                    val harSamarbeidOgAlleErAvsluttet = TilstandsmaskinBuilder.harSamarbeidOgAlleErAvsluttet(
+                        fiaKontekst = fiaKontekst,
+                        saksnummer = fiaKontekst.saksnummer,
+                    )
+
+                    if (harSamarbeidOgAlleErAvsluttet && resultat.isRight()) {
+                        TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
+                            orgnr = hendelse.orgnr,
+                            fiaKontekst = fiaKontekst,
+                        )
+                    }
+
+                    Konsekvens(
+                        endring = resultat,
+                        nyTilstand = when {
+                            harAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
+                            harSamarbeidOgAlleErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
+                            else -> VirksomhetVurderes
+                        },
+                        sideEffect = sideEffect,
                     )
                 }
-
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = when {
-                        harAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
-                        harSamarbeidOgAlleErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
-                        else -> VirksomhetVurderes
-                    },
-                )
             }
 
             is AvsluttSamarbeid -> {
