@@ -51,7 +51,7 @@ class NyFlytMigreringEdgeCaseTest {
             sendMigreringsmeldingOgVerifiserLogg(
                 iaSakDto = iaSakDtoUnderArbeid,
                 loggmelding = (
-                    "Sak '${iaSakDtoUnderArbeid.saksnummer}' med status 'NY' på virksomhet med orgnr '${iaSakDtoUnderArbeid.orgnr}' " +
+                    "Sak '${iaSakDtoUnderArbeid.saksnummer}' med status 'NY' " +
                         "er ikke håndtert som en use-case til migrering"
                 ).toRegex(),
             )
@@ -78,7 +78,7 @@ class NyFlytMigreringEdgeCaseTest {
         sendMigreringsmeldingOgVerifiserLogg(
             iaSakDto = iaSakDto,
             (
-                "Sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
+                "Sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' " +
                     "er allerede migrert"
             ).toRegex(),
         )
@@ -96,7 +96,7 @@ class NyFlytMigreringEdgeCaseTest {
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
             forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
                 startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
-                planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
+                planlagtHendelse = GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                 nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
             ),
@@ -105,7 +105,7 @@ class NyFlytMigreringEdgeCaseTest {
         sendMigreringsmeldingOgVerifiserLogg(
             iaSakDto = iaSakDto,
             (
-                "Sak '${iaSakDto.saksnummer}' med status '${IASak.Status.AVSLUTTET.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
+                "Sak '${iaSakDto.saksnummer}' med status '${IASak.Status.AVSLUTTET.name}' " +
                     "er allerede migrert. Virksomhet har tilstand 'AlleSamarbeidIVirksomhetErAvsluttet', og eventuelt ny tilstand til senere oppdatering: " +
                     "'neste tilstand 'VirksomhetKlarTilVurdering' med planlagt hendelse 'GjørVirksomhetKlarTilNyVurdering'"
             ).toRegex(),

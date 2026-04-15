@@ -65,7 +65,6 @@ class NyFlytMigreringService(
 
                 migrerSisteSak(
                     iaSakDto = iaSakDto,
-                    orgnummer = iaSakDto.orgnr,
                     migreringsDato = LocalDateTime.now().toLocalDate().atStartOfDay(),
                     faktiskMigrer = faktiskMigrer,
                 )?.also {
@@ -114,7 +113,6 @@ class NyFlytMigreringService(
         nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iaSakDto ->
             migrerSisteSak(
                 iaSakDto = iaSakDto,
-                orgnummer = orgnr,
                 migreringsDato = migreringsDato,
                 faktiskMigrer = faktiskMigrer,
             )
@@ -133,18 +131,17 @@ class NyFlytMigreringService(
         faktiskMigrer: Boolean,
     ) {
         log.info(
-            "[Migrering][faktiskMigrer=$faktiskMigrer] Funnet eldre sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' på virksomhet med orgnr '${iaSakDto.orgnr}' ",
+            "[Migrering][faktiskMigrer=$faktiskMigrer] Funnet eldre sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' ",
         )
     }
 
     private fun migrerSisteSak(
         iaSakDto: IASakDto?,
-        orgnummer: String,
         migreringsDato: LocalDateTime,
         faktiskMigrer: Boolean,
     ): IASakDto? {
         if (iaSakDto == null) {
-            log.info("Fant ingen sak for virksomhet med orgnr '$orgnummer', og det er derfor ingen sak å migrere.")
+            log.info("Fant ingen sak for virksomhet, og det er derfor ingen sak å migrere.")
             return null
         }
 
@@ -159,7 +156,7 @@ class NyFlytMigreringService(
             }
             log.info(
                 "[Migrering][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' med status '${iaSakDto.status}' " +
-                    "på virksomhet med orgnr '${iaSakDto.orgnr}' er allerede migrert. Virksomhet har tilstand '${tilstandVirksomhet.tilstand}', " +
+                    "er allerede migrert. Virksomhet har tilstand '${tilstandVirksomhet.tilstand}', " +
                     "og eventuelt ny tilstand til senere oppdatering: '$loggForNyTilstand'. Det er derfor ingen sak å migrere.",
             )
             return iaSakDto
@@ -192,7 +189,7 @@ class NyFlytMigreringService(
                     is Migreringsplan.IkkeGjennomførbar -> {
                         log.info(
                             "[Migrering][${migreringsplan.javaClass.simpleName}][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' " +
-                                "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' " +
+                                "med status '${iaSakDto.status.name}' " +
                                 "er ikke håndtert som en use-case til migrering og vil derfor ikke bli migrert. " +
                                 "Følgende use-case '$samarbeidEllerSakBasertUsecase' er ikke håndtert for status '${iaSakDto.status.name}'. " +
                                 "Det finnes ${samarbeidListe.size} samarbeid på saken. Detaljer om samarbeid: '$samarbeidDetaljer'. ",
@@ -213,7 +210,7 @@ class NyFlytMigreringService(
                         }
                         log.info(
                             "[Migrering][${migreringsplan.javaClass.simpleName}][faktiskMigrer=$faktiskMigrer] Sak '${iaSakDto.saksnummer}' " +
-                                "med status '${iaSakDto.status.name}' på virksomhet med orgnr '${iaSakDto.orgnr}' er en gyldig use-case til migrering. " +
+                                "med status '${iaSakDto.status.name}' er en gyldig use-case til migrering. " +
                                 "Saken blir migrert til status '${migreringsplan.resulterendeSakStatus.name}', " +
                                 "virksomhet vil få tilstand '${migreringsplan.tilstand.tilVirksomhetIATilstand()}', " +
                                 "og automatisk oppdatering (VirksomhetKlarTilVurdering om 90 dager): " +
@@ -234,12 +231,12 @@ class NyFlytMigreringService(
                     transactionalMigrering.apply().apply {
                         onLeft { feil ->
                             log.warn(
-                                "[Migrering] Feil ved migrering av sak '${iaSakDto.saksnummer}' på virksomhet med orgnr '${iaSakDto.orgnr}': ${feil.feilmelding}",
+                                "[Migrering] Feil ved migrering av sak '${iaSakDto.saksnummer}': ${feil.feilmelding}",
                             )
                         }
                         onRight { oppdatertIASakDto: IASakDto ->
                             log.info(
-                                "[Migrering] Oppdatert sak '${oppdatertIASakDto.saksnummer}' på virksomhet med orgnr '${oppdatertIASakDto.orgnr}' " +
+                                "[Migrering] Oppdatert sak '${oppdatertIASakDto.saksnummer}' " +
                                     "fra status '${oppdatertIASakDto.status.name}' til status '${oppdatertIASakDto.status.name}', " +
                                     "og opprettet tilstand '${migreringsplan.tilstand.tilVirksomhetIATilstand()}'",
                             )
