@@ -141,26 +141,46 @@ fun lagreEllerOppdaterVirksomhetTilstand(
     tx.run(
         queryOf(
             """
-            INSERT INTO tilstand_virksomhet (
-                orgnr,
-                tilstand
+            WITH upserted AS (
+                INSERT INTO tilstand_virksomhet (
+                    orgnr,
+                    tilstand
+                )
+                VALUES (
+                    :orgnr,
+                    :tilstand
+                )
+                ON CONFLICT ON CONSTRAINT tilstand_virksomhet_orgnr_unique DO UPDATE SET
+                    tilstand = :tilstand,
+                    sist_endret = now()
+                RETURNING *
             )
-            VALUES (
-                :orgnr,
-                :tilstand
-            )
-            ON CONFLICT ON CONSTRAINT tilstand_virksomhet_orgnr_unique DO UPDATE SET
-                tilstand = :tilstand,
-                sist_endret = now()
-            RETURNING *
+            SELECT upserted.*, tao.start_tilstand, tao.planlagt_hendelse, tao.ny_tilstand, tao.planlagt_dato, tao.opprettet, tao.sist_endret
+            FROM upserted
+            LEFT JOIN tilstand_automatisk_oppdatering tao 
+                ON upserted.id = tao.tilstand_virksomhet_id
             """.trimIndent(),
             mapOf(
                 "orgnr" to orgnr,
                 "tilstand" to tilstand.name,
             ),
         ).map { row ->
-            row.tilVirksomhetTilstandDto()
+            row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering()
         }.asSingle,
+    )
+
+private fun Row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering(): VirksomhetTilstandDto =
+    VirksomhetTilstandDto(
+        orgnr = string("orgnr"),
+        tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
+        nesteTilstand = stringOrNull("ny_tilstand")?.let { nyTilstand ->
+            VirksomhetTilstandAutomatiskOppdateringDto(
+                startTilstand = VirksomhetIATilstand.valueOf(string("start_tilstand")),
+                planlagtHendelse = string("planlagt_hendelse"),
+                nyTilstand = VirksomhetIATilstand.valueOf(nyTilstand),
+                planlagtDato = localDate("planlagt_dato").toKotlinLocalDate(),
+            )
+        },
     )
 
 private fun Row.tilVirksomhetTilstandDto() =
@@ -355,17 +375,21 @@ fun hentAlleSakerDtoForVirksomhet(orgnummer: String): List<IASakDto> =
     )
 
 context(tx: TransactionalSession)
-fun slettVirksomhetTilstand(orgnr: String): VirksomhetTilstandDto? =
+fun slettVirksomhetTilstand(orgnr: String) {
     tx.run(
         queryOf(
             """
+            WITH slettet_automatisk_oppdatering AS (
+                DELETE FROM tilstand_automatisk_oppdatering
+                WHERE orgnr = :orgnr
+            )
             DELETE FROM tilstand_virksomhet
             WHERE orgnr = :orgnr
-            RETURNING *
             """.trimIndent(),
             mapOf("orgnr" to orgnr),
-        ).map { row -> row.tilVirksomhetTilstandDto() }.asSingle,
+        ).asUpdate,
     )
+}
 
 context(tx: TransactionalSession)
 fun oppdaterVirksomhetTilstand(

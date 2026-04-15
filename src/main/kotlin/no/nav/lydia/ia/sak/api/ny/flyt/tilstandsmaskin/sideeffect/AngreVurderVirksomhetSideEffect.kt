@@ -21,12 +21,16 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class AngreVurderVirksomhetSideEffect(
     val orgnummer: String,
     val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
     val navEnhet: NavEnhet,
 ) : SideEffect<IASakDto>() {
+    val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASakDto> =
         try {
@@ -69,6 +73,7 @@ class AngreVurderVirksomhetSideEffect(
             }.also { nyFlytService.varsleIASakObservers(it) }
                 .right()
         } catch (e: Exception) {
+            logger.warn("Feil ved angring av vurdering for virksomhet '$orgnummer': ${e.message}", e)
             Feil("Feil ved angring av vurdering: ${e.message}", HttpStatusCode.InternalServerError).left()
         }
 }

@@ -1,9 +1,11 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import kotlinx.datetime.toKotlinLocalDate
+import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import java.time.LocalDate
 import javax.sql.DataSource
 
 class TilstandVirksomhetRepository(
@@ -17,25 +19,31 @@ class TilstandVirksomhetRepository(
             session.run(
                 queryOf(
                     """
-                    INSERT INTO tilstand_virksomhet (
-                        orgnr,
-                        tilstand
+                    WITH upserted AS (
+                        INSERT INTO tilstand_virksomhet (
+                            orgnr,
+                            tilstand
+                        )
+                        VALUES (
+                            :orgnr,
+                            :tilstand
+                        )
+                        ON CONFLICT ON CONSTRAINT tilstand_virksomhet_orgnr_unique DO UPDATE SET
+                            tilstand = :tilstand,
+                            sist_endret = now()
+                        RETURNING *
                     )
-                    VALUES (
-                        :orgnr,
-                        :tilstand
-                    )
-                    ON CONFLICT ON CONSTRAINT tilstand_virksomhet_orgnr_unique DO UPDATE SET
-                        tilstand = :tilstand,
-                        sist_endret = now()
-                    RETURNING *
+                    SELECT upserted.*, tao.start_tilstand, tao.planlagt_hendelse, tao.ny_tilstand, tao.planlagt_dato, tao.opprettet, tao.sist_endret
+                    FROM upserted
+                    LEFT JOIN tilstand_automatisk_oppdatering tao 
+                        ON upserted.id = tao.tilstand_virksomhet_id
                     """.trimIndent(),
                     mapOf(
                         "orgnr" to orgnr,
                         "tilstand" to tilstand.name,
                     ),
                 ).map { row ->
-                    row.tilVirksomhetTilstandDto()
+                    row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering()
                 }.asSingle,
             )
         }
@@ -45,7 +53,7 @@ class TilstandVirksomhetRepository(
             session.run(
                 queryOf(
                     """
-                    SELECT tv.*, tao.start_tilstand, tao.planlagt_hendelse, tao.ny_tilstand, tao.planlagt_dato
+                    SELECT tv.*, tao.start_tilstand, tao.planlagt_hendelse, tao.ny_tilstand, tao.planlagt_dato, tao.opprettet, tao.sist_endret
                     FROM tilstand_virksomhet tv
                     LEFT JOIN tilstand_automatisk_oppdatering tao 
                         ON tv.id = tao.tilstand_virksomhet_id
@@ -82,7 +90,7 @@ class TilstandVirksomhetRepository(
         startTilstand: VirksomhetIATilstand,
         planlagtHendelse: String,
         nyTilstand: VirksomhetIATilstand,
-        planlagtDato: java.time.LocalDate,
+        planlagtDato: LocalDate,
     ): VirksomhetTilstandAutomatiskOppdateringDto? =
         using(sessionOf(dataSource)) { session ->
             val tilstandVirksomhetId = session.run(
@@ -152,14 +160,15 @@ class TilstandVirksomhetRepository(
 
     fun endrePlanlagtDatoForNesteTilstand(
         orgnr: String,
-        nyPlanlagtDato: java.time.LocalDate,
+        nyPlanlagtDato: LocalDate,
     ): VirksomhetTilstandAutomatiskOppdateringDto? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     UPDATE tilstand_automatisk_oppdatering
-                    SET planlagt_dato = :nyPlanlagtDato
+                    SET planlagt_dato = :nyPlanlagtDato,                                 
+                    sist_endret = now()
                     WHERE orgnr = :orgnr
                     RETURNING *
                     """.trimIndent(),
@@ -173,14 +182,7 @@ class TilstandVirksomhetRepository(
             )
         }
 
-    private fun kotliquery.Row.tilVirksomhetTilstandDto() =
-        VirksomhetTilstandDto(
-            orgnr = string("orgnr"),
-            tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
-            nesteTilstand = null, // TODO: Fiks
-        )
-
-    private fun kotliquery.Row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering(): VirksomhetTilstandDto =
+    private fun Row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering(): VirksomhetTilstandDto =
         VirksomhetTilstandDto(
             orgnr = string("orgnr"),
             tilstand = VirksomhetIATilstand.valueOf(string("tilstand")),
@@ -194,7 +196,7 @@ class TilstandVirksomhetRepository(
             },
         )
 
-    private fun kotliquery.Row.tilVirksomhetTilstandAutomatiskOppdateringDto() =
+    private fun Row.tilVirksomhetTilstandAutomatiskOppdateringDto() =
         VirksomhetTilstandAutomatiskOppdateringDto(
             startTilstand = VirksomhetIATilstand.valueOf(string("start_tilstand")),
             planlagtHendelse = string("planlagt_hendelse"),
