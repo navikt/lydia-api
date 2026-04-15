@@ -7,7 +7,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 data class OpprettKartleggingForSamarbeid(
     override val orgnr: String,
     val samarbeidId: Int,
-    val type: `Spørreundersøkelse`.Type,
+    val type: Spørreundersøkelse.Type,
     val saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
     val navEnhet: NavEnhet,
 ) : Hendelse()

@@ -15,6 +15,8 @@ val ApplicationCall.type
     get() = parameters["type"]?.let { Spørreundersøkelse.Type.valueOf(it) }
 val ApplicationCall.spørreundersøkelseId
     get() = parameters["sporreundersokelseId"]?.tilUUID(hvaErJeg = "spørreundersøkelseId")
+val ApplicationCall.kartleggingId
+    get() = parameters["kartleggingId"]?.tilUUID(hvaErJeg = "kartleggingId")
 val ApplicationCall.iaSakLeveranseId
     get() = parameters["iaSakLeveranseId"]
 val ApplicationCall.planId

@@ -23,7 +23,6 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserIASakObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserSamarbeidObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
@@ -49,11 +48,9 @@ import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDt
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
@@ -995,220 +992,6 @@ class NyFlytTest {
     }
 
     @Test
-    fun `Opprett kartlegging aksepterer SCREAMING_CASE type`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        val samarbeid = sak.opprettSamarbeid()
-
-        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "BEHOVSVURDERING")
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "EVALUERING")
-        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
-    }
-
-    @Test
-    fun `Opprett kartlegging aksepterer lowercase type`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        val samarbeid = sak.opprettSamarbeid()
-
-        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "behovsvurdering")
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "evaluering")
-        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
-    }
-
-    @Test
-    fun `Opprett kartlegging aksepterer Pascalcase type`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        val samarbeid = sak.opprettSamarbeid()
-
-        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "Behovsvurdering")
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "Evaluering")
-        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
-    }
-
-    @Test
-    fun `Opprett kartlegging aksepterer type med tilfeldig sammensetning av stor og liten bokstav`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        val samarbeid = sak.opprettSamarbeid()
-
-        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "BeHoVsVuRDERINg")
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "EVALuering")
-        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
-    }
-
-    @Test
-    fun `Opprett kartlegging avviser ugyldig type`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        val samarbeid = sak.opprettSamarbeid()
-
-        val respons = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/${samarbeid.id}/opprett-kartlegging/UGYLDIG_TYPE")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<SpørreundersøkelseDto>()
-        respons.statuskode() shouldBe HttpStatusCode.BadRequest.value
-    }
-
-    @Test
-    fun `Opprettelse av behovsvurdering skal ikke endre status`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
-
-        val samarbeid = sak.opprettSamarbeid()
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        val behovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        val spørreundersøkelse = IASakSpørreundersøkelseHelper.hentSpørreundersøkelse(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
-        )
-        spørreundersøkelse.first().id shouldBe behovsvurdering.id
-    }
-
-    @Test
-    fun `Starting og fullføring av behovsvurdering skal ikke endre status på IASak`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
-
-        val samarbeid = sak.opprettSamarbeid()
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        val opprettetBehovsvurdering = samarbeid.opprettKartlegging(
-            orgnr = sak.orgnr,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
-        )
-        opprettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
-
-        val startetBehovsvurdering = samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            sporreundersokelseId = opprettetBehovsvurdering.id,
-        )
-        startetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        val fullførtBehovsvurdering = samarbeid.fullførKartlegging(
-            orgnr = sak.orgnr,
-            sporreundersokelseId = opprettetBehovsvurdering.id,
-        )
-
-        fullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-    }
-
-    @Test
-    fun `Sletting av behovsvurdering skal ikke endre status på IASak`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
-
-        val samarbeid = sak.opprettSamarbeid()
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        val opprettetBehovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
-
-        samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            sporreundersokelseId = opprettetBehovsvurdering.id,
-        )
-
-        val slettetBehovsvurdering = samarbeid.slettKartlegging(orgnr = sak.orgnr, sporreundersokelseId = opprettetBehovsvurdering.id)
-
-        slettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.SLETTET
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-    }
-
-    @Test
-    fun `Starting og fullføring av evaluering skal ikke endre status på IASak`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
-
-        val samarbeid = sak.opprettSamarbeid()
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val opprettetEvaluering = samarbeid.opprettKartlegging(
-            orgnr = sak.orgnr,
-            type = Spørreundersøkelse.Type.Evaluering,
-        )
-        opprettetEvaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
-
-        val startetEvaluering = samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            sporreundersokelseId = opprettetEvaluering.id,
-        )
-        startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        val fullførtEvaluering = samarbeid.fullførKartlegging(
-            orgnr = sak.orgnr,
-            sporreundersokelseId = opprettetEvaluering.id,
-        )
-
-        fullførtEvaluering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-    }
-
-    @Test
-    fun `Sletting av evaluering skal ikke endre status på IASak`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
-
-        val samarbeid = sak.opprettSamarbeid()
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val opprettetEvaluering = samarbeid.opprettKartlegging(
-            orgnr = sak.orgnr,
-            type = Spørreundersøkelse.Type.Evaluering,
-        )
-        opprettetEvaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
-
-        val startetEvaluering = samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            sporreundersokelseId = opprettetEvaluering.id,
-        )
-        startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        val slettetEvaluering = samarbeid.slettKartlegging(
-            orgnr = sak.orgnr,
-            sporreundersokelseId = opprettetEvaluering.id,
-        )
-
-        slettetEvaluering.status shouldBe Spørreundersøkelse.Status.SLETTET
-        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-    }
-
-    @Test
     fun `skal kunne revurdere en virksomhet som er i tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
@@ -1290,56 +1073,6 @@ class NyFlytTest {
         success = { respons -> respons },
         failure = { fail(it.message) },
     )
-
-    private fun IASamarbeidDto.opprettKartlegging(
-        orgnr: String,
-        type: Spørreundersøkelse.Type,
-        token: String = authContainerHelper.saksbehandler1.token,
-    ) = opprettKartleggingMedRåType(orgnr = orgnr, råType = type.name, token = token)
-
-    private fun IASamarbeidDto.opprettKartleggingMedRåType(
-        orgnr: String,
-        råType: String,
-        token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/opprett-kartlegging/$råType")
-        .authentication().bearer(token)
-        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) },
-        )
-
-    private fun IASamarbeidDto.startKartlegging(
-        orgnr: String,
-        sporreundersokelseId: String,
-        token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/start-kartlegging/$sporreundersokelseId")
-        .authentication().bearer(token)
-        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) },
-        )
-
-    private fun IASamarbeidDto.fullførKartlegging(
-        orgnr: String,
-        sporreundersokelseId: String,
-        token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/fullfor-kartlegging/$sporreundersokelseId")
-        .authentication().bearer(token)
-        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) },
-        )
-
-    private fun IASamarbeidDto.slettKartlegging(
-        orgnr: String,
-        sporreundersokelseId: String,
-        token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-kartlegging/$sporreundersokelseId")
-        .authentication().bearer(token)
-        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) },
-        )
 
     private fun IASakDto.angreVurdering(token: String = authContainerHelper.superbruker1.token) =
         applikasjon.performPost("$NY_FLYT_PATH/$orgnr/angre-vurdering")
