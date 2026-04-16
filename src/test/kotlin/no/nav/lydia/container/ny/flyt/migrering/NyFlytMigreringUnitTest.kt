@@ -1,12 +1,16 @@
 package no.nav.lydia.container.ny.flyt.migrering
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.erAvsluttetEtter
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.erAvsluttetFør
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.erSistEndretEtter
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.faktiskMigrer
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.getSamarbeidUseCase
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.tilFylkenummer
+import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService.Companion.tilOrgnr
 import no.nav.lydia.ia.sak.api.ny.flyt.migrering.SamarbeidUseCase
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -51,6 +55,51 @@ class NyFlytMigreringUnitTest {
             fullført = iDag.minusDays(antallDagerSiden.toLong()).toKotlinLocalDateTime(),
             sistEndret = iDag.minusDays(antallDagerSiden.toLong()).toKotlinLocalDateTime(),
         )
+    }
+
+    @Test
+    fun `tilFylkenummer fungerer`() {
+        "ALLE".tilFylkenummer() shouldBe "ALLE"
+        "00".tilFylkenummer() shouldBe "00"
+        "50:".tilFylkenummer() shouldBe "50"
+        "50:true".tilFylkenummer() shouldBe "50"
+        "50:false".tilFylkenummer() shouldBe "50"
+        shouldThrow<IllegalArgumentException> { "Alle".tilFylkenummer() }
+        shouldThrow<IllegalArgumentException> { "501".tilFylkenummer() }
+        shouldThrow<IllegalArgumentException> { "501:true".tilFylkenummer() }
+        shouldThrow<IllegalArgumentException> { "3".tilFylkenummer() }
+        shouldThrow<IllegalArgumentException> { "".tilFylkenummer() }
+        shouldThrow<IllegalArgumentException> { "true:03".tilFylkenummer() }
+    }
+
+    @Test
+    fun `tilOrgnr fungerer`() {
+        "123456789".tilOrgnr() shouldBe "123456789"
+        "123456789:".tilOrgnr() shouldBe "123456789"
+        "123456789:true".tilOrgnr() shouldBe "123456789"
+        "123456789:false".tilOrgnr() shouldBe "123456789"
+        shouldThrow<IllegalArgumentException> { "1234567890".tilOrgnr() }
+        shouldThrow<IllegalArgumentException> { "1234567890:true".tilOrgnr() }
+        shouldThrow<IllegalArgumentException> { "123".tilOrgnr() }
+        shouldThrow<IllegalArgumentException> { "".tilOrgnr() }
+        shouldThrow<IllegalArgumentException> { "true:123456789".tilOrgnr() }
+    }
+
+    @Test
+    fun `faktisk migrer fungerer`() {
+        "123456789:".tilOrgnr() shouldBe "123456789"
+        "123456789:yolo".faktiskMigrer() shouldBe false
+        "123456789:".faktiskMigrer() shouldBe false
+        "123456789".faktiskMigrer() shouldBe false
+        "".faktiskMigrer() shouldBe false
+        "true".faktiskMigrer() shouldBe false
+        "50".faktiskMigrer() shouldBe false
+        "50:hei".faktiskMigrer() shouldBe false
+        "50:trueee".faktiskMigrer() shouldBe false
+        "Trøndelag:".faktiskMigrer() shouldBe false
+        "Trøndelag:true".faktiskMigrer() shouldBe true
+        "50:true".faktiskMigrer() shouldBe true
+        "123456789:true".faktiskMigrer() shouldBe true
     }
 
     @Test

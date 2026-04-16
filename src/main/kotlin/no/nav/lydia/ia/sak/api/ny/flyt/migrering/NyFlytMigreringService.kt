@@ -28,7 +28,7 @@ class NyFlytMigreringService(
         faktiskMigrer: Boolean,
     ): Triple<Int, Int, Int> {
         val startTidspunkt = LocalDateTime.now()
-        val antallMigrerbareSakerFunnet = AtomicInteger(0) //
+        val antallMigrerbareSakerFunnet = AtomicInteger(0)
         val antallGamleSakerFunnet = AtomicInteger(0)
         val antallForsøktMigrerteSaker = AtomicInteger(0)
         val antallProsessert = AtomicInteger(0)
@@ -220,40 +220,56 @@ class NyFlytMigreringService(
                     }
                 }
 
-                if (!faktiskMigrer) return iaSakDto
+                if (!faktiskMigrer) {
+                    return iaSakDto
+                } else {
+                    val transactionalMigrering = TransactionalMigrering(
+                        iaSakDto = iaSakDto,
+                        migreringsplan = migreringsplan,
+                    )
 
-                val transactionalMigrering = TransactionalMigrering(
-                    iaSakDto = iaSakDto,
-                    migreringsplan = migreringsplan,
-                )
-
-                with(receiver = nyFlytService) {
-                    transactionalMigrering.apply().apply {
-                        onLeft { feil ->
-                            log.warn(
-                                "[Migrering] Feil ved migrering av sak '${iaSakDto.saksnummer}': ${feil.feilmelding}",
-                            )
-                        }
-                        onRight { oppdatertIASakDto: IASakDto ->
-                            log.info(
-                                "[Migrering] Oppdatert sak '${oppdatertIASakDto.saksnummer}' " +
-                                    "fra status '${oppdatertIASakDto.status.name}' til status '${oppdatertIASakDto.status.name}', " +
-                                    "og opprettet tilstand '${migreringsplan.tilstand.tilVirksomhetIATilstand()}'",
-                            )
+                    with(receiver = nyFlytService) {
+                        transactionalMigrering.apply().apply {
+                            onLeft { feil ->
+                                log.warn(
+                                    "[Migrering] Feil ved migrering av sak '${iaSakDto.saksnummer}': ${feil.feilmelding}",
+                                )
+                            }
+                            onRight { oppdatertIASakDto: IASakDto ->
+                                log.info(
+                                    "[Migrering] Oppdatert sak '${oppdatertIASakDto.saksnummer}' " +
+                                        "fra status '${oppdatertIASakDto.status.name}' til status '${oppdatertIASakDto.status.name}', " +
+                                        "og opprettet tilstand '${migreringsplan.tilstand.tilVirksomhetIATilstand()}'",
+                                )
+                            }
                         }
                     }
                 }
             }
+            return iaSakDto
         }
-        return iaSakDto
     }
 
     companion object {
         // Eksempel på orgnr som skal migreres: "123456789", "123456789:false" eller "123456789:true".
         // Siste del av strengen indikerer om migrering blir gjennomført eller ikke. Default verdi er "false"
-        fun String.tilOrgnr() = this.split(":").get(0)
+        fun String.tilOrgnr() =
+            this.split(":").get(0).let {
+                if (it.matches(Regex("\\d{9}"))) {
+                    it
+                } else {
+                    throw IllegalArgumentException("Ugyldig orgnummer '$this'")
+                }
+            }
 
-        fun String.tilFylkenummer() = this.split(":").get(0)
+        fun String.tilFylkenummer() =
+            this.split(":").get(0).let {
+                if (it == "ALLE" || it.matches(Regex("\\d{2}"))) {
+                    it
+                } else {
+                    throw IllegalArgumentException("Ugyldig fylkenummer '$this'")
+                }
+            }
 
         fun String.faktiskMigrer() = this.contains(":") && this.split(":").get(1) == "true"
 
