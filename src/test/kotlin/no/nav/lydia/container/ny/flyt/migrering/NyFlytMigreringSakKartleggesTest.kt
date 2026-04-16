@@ -1,6 +1,5 @@
 package no.nav.lydia.container.ny.flyt.migrering
 
-import io.kotest.assertions.shouldFail
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.migreringSakIKartlegges
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.sendMigreringsmeldingOgVerifiserSak
@@ -9,24 +8,16 @@ import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.uti
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.utilsTearDown
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.verifiserHistorikk
 import no.nav.lydia.container.ny.flyt.migrering.MigreringTestUtils.Companion.verifiserKafkaMeldinger
-import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import org.junit.Ignore
 import kotlin.test.Test
 
 class NyFlytMigreringSakKartleggesTest {
@@ -44,30 +35,8 @@ class NyFlytMigreringSakKartleggesTest {
         }
     }
 
-    @Ignore
-    fun `EDGE CASE sak med status KARTLEGGES med et fullført samarbeid er ikke dekket enda av migrerings matrise`() {
-        val iaSakDto = migreringSakIKartlegges().opprettNyttSamarbeid().also { it.opprettEnPlan() }.nyHendelse(hendelsestype = VIRKSOMHET_SKAL_BISTÅS)
-        val iaSakDtoTilbakeIKartlegges = iaSakDto.fullførSamarbeid().nyHendelse(IASakshendelseType.TILBAKE)
-
-        tømmKafkaTopics(iaSakDto)
-        sendMigreringsmeldingOgVerifiserSak(
-            iaSakDto = iaSakDtoTilbakeIKartlegges,
-            sistEndretAvBruker = iaSakDtoTilbakeIKartlegges.endretTidspunkt,
-            forventetStatus = IASak.Status.KARTLEGGES,
-            forventetTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
-            migrer = false,
-        )
-        shouldFail {
-            postgresContainerHelper.hentEnkelKolonne<String>(
-                "select tilstand from tilstand_virksomhet where orgnr = '${iaSakDtoTilbakeIKartlegges.orgnr}'",
-            )
-        }
-
-        applikasjon.shouldContainLog("er ikke håndtert som en use-case til migrering enda".toRegex())
-    }
-
     @Test
-    fun `Rad #6 sak med status KARTLEGGES men ingen aktive samarbeid migreres til VURDERES status`() {
+    fun `Rad #5_1 sak med status KARTLEGGES men ingen aktive samarbeid migreres til VURDERES status`() {
         val iaSakDto = migreringSakIKartlegges()
 
         tømmKafkaTopics(iaSakDto)
@@ -102,7 +71,7 @@ class NyFlytMigreringSakKartleggesTest {
     }
 
     @Test
-    fun `Rad #7 sak med status KARTLEGGES og et aktivt samarbeid migreres til AKTIV status`() {
+    fun `Rad #5_2 sak med status KARTLEGGES og et aktivt samarbeid migreres til AKTIV status`() {
         val iaSakDto = migreringSakIKartlegges()
         val sistEndretAvBruker = iaSakDto.opprettNyttSamarbeid().endretTidspunkt
 
@@ -140,7 +109,7 @@ class NyFlytMigreringSakKartleggesTest {
     }
 
     @Test
-    fun `Rad #8 sak med status KARTLEGGES hvor alle samarbeid er slettet migreres til VURDERES status`() {
+    fun `Rad #5_3 sak med status KARTLEGGES hvor alle samarbeid er slettet migreres til VURDERES status`() {
         val iaSakDto = migreringSakIKartlegges()
         val sistEndretAvBruker = iaSakDto.opprettNyttSamarbeid().slettSamarbeid().endretTidspunkt
 
@@ -180,7 +149,7 @@ class NyFlytMigreringSakKartleggesTest {
     }
 
     @Test
-    fun `Rad #9 sak med status KARTLEGGES uten aktive samarbeid men hvor det er minst ett avbryt samarbeid migreres til AVSLUTTET status`() {
+    fun `Rad #5_4 sak med status KARTLEGGES uten aktive samarbeid men hvor det er minst ett avbryt samarbeid migreres til AVSLUTTET status`() {
         val iaSakDto = migreringSakIKartlegges()
         val sistEndretAvBruker = iaSakDto.opprettNyttSamarbeid().avbrytSamarbeid().endretTidspunkt
 
@@ -192,7 +161,7 @@ class NyFlytMigreringSakKartleggesTest {
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
             forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
                 startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
-                planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
+                planlagtHendelse = GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                 nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
             ),

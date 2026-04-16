@@ -43,7 +43,7 @@ class NyFlytMigreringSakViBistårTest {
     }
 
     @Test
-    fun `Rad #10 sak med status VI_BISTÅR med minst et aktivt samarbeid migreres til AKTIV status og VirksomhetHarAktiveSamarbeid tilstand`() {
+    fun `Rad #6_1 sak med status VI_BISTÅR med minst et aktivt samarbeid migreres til AKTIV status og VirksomhetHarAktiveSamarbeid tilstand`() {
         val iaSakDto = migreringSakIViBistår()
 
         tømmKafkaTopics(iaSakDto)
@@ -82,7 +82,7 @@ class NyFlytMigreringSakViBistårTest {
     }
 
     @Test
-    fun `Rad #11 sak med status VI_BISTÅR hvor alle samarbeid er slettet migreres til AKTIV status og VirksomhetHarAktiveSamarbeid tilstand`() {
+    fun `Rad #6_2 sak med status VI_BISTÅR hvor alle samarbeid er slettet migreres til AKTIV status og VirksomhetHarAktiveSamarbeid tilstand`() {
         val iaSakDto = migreringSakIViBistår().slettSamarbeid()
 
         tømmKafkaTopics(iaSakDto)
@@ -123,7 +123,7 @@ class NyFlytMigreringSakViBistårTest {
     }
 
     @Test
-    fun `Rad #12 status VI_BISTÅR uten aktive samarbeid og minst et avsluttet samarbeid over 10 dager migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
+    fun `Rad #6_3 status VI_BISTÅR uten aktive samarbeid og minst et avsluttet samarbeid over 10 dager migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
         val iaSakDto = migreringSakIViBistår().avbrytSamarbeid()
         val iASamarbeidDto = iaSakDto.hentAlleSamarbeid().first()
         postgresContainerHelper.performUpdate(
@@ -180,7 +180,7 @@ class NyFlytMigreringSakViBistårTest {
     }
 
     @Test
-    fun `Rad #13 VI_BISTÅR uten aktive samarb, minst ett avsluttet samarbeid under 10 dager migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
+    fun `Rad #6_4 VI_BISTÅR uten aktive samarb, minst ett avsluttet samarbeid under 10 dager migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
         val iaSakDto = migreringSakIViBistår().avbrytSamarbeid()
         val iASamarbeidDto = iaSakDto.hentAlleSamarbeid().first()
         postgresContainerHelper.performUpdate(
@@ -207,7 +207,7 @@ class NyFlytMigreringSakViBistårTest {
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
             forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
                 startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
-                planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
+                planlagtHendelse = GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                 nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
             ),

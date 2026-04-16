@@ -40,7 +40,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
     }
 
     @Test
-    fun `Rad #16 sak IKKE_AKTUELL ingen samarbeid status oppdatert for mindre enn 10d siden migreres til VURDERT og VirksomhetErVurdert`() {
+    fun `Rad #8_1 sak IKKE_AKTUELL ingen samarbeid status oppdatert for mindre enn 10d siden migreres til VURDERT og VirksomhetErVurdert`() {
         val iaSakDtoUnderArbeid = migreringSakIKartlegges().nyIkkeAktuellHendelse()
         iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
 
@@ -93,7 +93,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
     }
 
     @Test
-    fun `Rad #17 sak IKKE_AKTUELL ingen samarbeid status oppdatert for mer enn 10d siden migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
+    fun `Rad #8_2 sak IKKE_AKTUELL ingen samarbeid status oppdatert for mer enn 10d siden migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
         val iaSakDtoUnderArbeid = migreringSakIKartlegges().nyIkkeAktuellHendelse()
         iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
 
@@ -141,7 +141,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
     }
 
     @Test
-    fun `Rad #18 sak IKKE_AKTUELL alle smrbd avsluttet st oppdatert for mindre enn 10d siden migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
+    fun `Rad #8_3 sak IKKE_AKTUELL alle smrbd avsluttet st oppdatert for mindre enn 10d siden migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
         val iaSakDtoUnderArbeid = migreringSakIKartlegges().opprettNyttSamarbeid().avbrytSamarbeid().nyIkkeAktuellHendelse()
         iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
 
@@ -198,7 +198,7 @@ class NyFlytMigreringSakIkkeAktuellTest {
     }
 
     @Test
-    fun `Rad #19 sak IKKE_AKTUELL alle smrbd avsluttet st oppdatert for mer enn 10d siden migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
+    fun `Rad #8_4 sak IKKE_AKTUELL alle smrbd avsluttet st oppdatert for mer enn 10d siden migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
         val iaSakDtoUnderArbeid = migreringSakIKartlegges().opprettNyttSamarbeid().avbrytSamarbeid().nyIkkeAktuellHendelse()
         iaSakDtoUnderArbeid.status shouldBe IASak.Status.IKKE_AKTUELL
 

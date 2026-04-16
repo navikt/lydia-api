@@ -32,23 +32,7 @@ sealed class Migreringsplan {
             sakSakUseCase: SakUseCase,
         ): Migreringsplan =
             when (iaSakDto.status) {
-                IASak.Status.VURDERES -> {
-                    Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.VURDERES,
-                        tilstand = VirksomhetVurderes,
-                    )
-                }
-
-                IASak.Status.KONTAKTES -> {
-                    Gjennomførbar(
-                        nåværendeSakStatus = iaSakDto.status,
-                        resulterendeSakStatus = IASak.Status.VURDERES,
-                        tilstand = VirksomhetVurderes,
-                    )
-                }
-
-                IASak.Status.KARTLEGGES -> {
+                IASak.Status.VURDERES, IASak.Status.KONTAKTES, IASak.Status.KARTLEGGES -> {
                     when (samarbeidUseCase) {
                         SamarbeidUseCase.INGEN_SAMARBEID_ELLER_ALLE_SAMARBEID_ER_SLETTET -> Gjennomførbar(
                             nåværendeSakStatus = iaSakDto.status,

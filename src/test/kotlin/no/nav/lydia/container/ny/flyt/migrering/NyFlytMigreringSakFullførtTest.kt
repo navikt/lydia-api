@@ -36,7 +36,7 @@ class NyFlytMigreringSakFullførtTest {
     }
 
     @Test
-    fun `Rad #14 sak FULLFØRT for mindre enn 10 dager siden og alle samarbeid avsluttet migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
+    fun `Rad #7_1 sak FULLFØRT for mindre enn 10 dager siden og alle samarbeid avsluttet migreres til AVSLUTTET og AlleSamarbeidIVirksomhetErAvsluttet`() {
         val iaSakDtoUnderArbeid = migreringSakIViBistår().fullførSak()
         postgresContainerHelper.performUpdate(
             "UPDATE ia_sak " +
@@ -55,7 +55,7 @@ class NyFlytMigreringSakFullførtTest {
             forventetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
             forventetAutomatiskOppdatering = VirksomhetTilstandAutomatiskOppdateringDto(
                 startTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet,
-                planlagtHendelse = `GjørVirksomhetKlarTilNyVurdering`::class.simpleName!!,
+                planlagtHendelse = GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                 nyTilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
                 planlagtDato = java.time.LocalDateTime.now().plusDays(90).toLocalDate().atStartOfDay().toLocalDate().toKotlinLocalDate(),
             ),
@@ -93,7 +93,7 @@ class NyFlytMigreringSakFullførtTest {
     }
 
     @Test
-    fun `Rad #15 sak FULLFØRT for mer enn 10 dager siden og alle samarbeid er avsluttet migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
+    fun `Rad #7_2 sak FULLFØRT for mer enn 10 dager siden og alle samarbeid er avsluttet migreres til AVSLUTTET og VirksomhetKlarTilVurdering`() {
         val iaSakDtoUnderArbeid = migreringSakIViBistår().fullførSak()
         postgresContainerHelper.performUpdate(
             "UPDATE ia_sak " +
