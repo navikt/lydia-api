@@ -1,6 +1,5 @@
 package no.nav.lydia.ia.eksport.ny.flyt
 
-import kotlinx.datetime.LocalDate
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
@@ -27,11 +26,11 @@ class TilstandVirksomhetOppdaterer(
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun oppdaterTilstandVirksomhet(planlagtDato: LocalDate) {
+    fun oppdaterTilstandVirksomhet() {
         log.info("Oppdaterer tilstand virksomhet...")
-        val alleVirksomhetTilstander = nyFlytService.hentAlleVirksomhetTilstanderFiltrertPåPlanlagtDato(planlagtDato = planlagtDato)
-        log.info("Fant ${alleVirksomhetTilstander.size} virksomheter med planlagte tilstandsoppdateringer.")
-        alleVirksomhetTilstander.forEach {
+        val virksomhetTilstander = nyFlytService.hentAlleVirksomhetTilstanderMedPlanlagtDatoFørEllerIDag()
+        log.info("Fant ${virksomhetTilstander.size} virksomheter med planlagte tilstandsoppdateringer.")
+        virksomhetTilstander.forEach {
             val hendelse = utledHendelseFraString(it.nesteTilstand?.planlagtHendelse, it.orgnr)
             val konsekvens = tilstandsmaskin(it.orgnr).prosesserHendelse(
                 hendelse = hendelse,
@@ -48,7 +47,7 @@ class TilstandVirksomhetOppdaterer(
         orgnr: String,
     ): Hendelse =
         when (hendelse) {
-            "GjørVirksomhetKlarTilNyVurdering" -> `GjørVirksomhetKlarTilNyVurdering`(
+            "GjørVirksomhetKlarTilNyVurdering" -> GjørVirksomhetKlarTilNyVurdering(
                 orgnr = orgnr,
             )
 

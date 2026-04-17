@@ -129,6 +129,15 @@ class NyFlytTest {
         virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
         virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
 
+        // Oppdater planlagt_dato til i dag slik at batch jobben vil prosessere hendelsen
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE tilstand_automatisk_oppdatering 
+            SET planlagt_dato = CURRENT_DATE
+            WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+
         // send jobbmelding
         kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
 
@@ -159,6 +168,15 @@ class NyFlytTest {
         virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
         virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
 
+        // Oppdater planlagt_dato til i dag slik at batch jobben vil prosessere hendelsen
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE tilstand_automatisk_oppdatering 
+            SET planlagt_dato = CURRENT_DATE
+            WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+
         // send jobbmelding
         kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
 
@@ -188,17 +206,17 @@ class NyFlytTest {
         virksomhetsTilstand.nesteTilstand?.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
         virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
 
-        // Oppdater planlagt_dato til i morgen slik at batch jobben vil prosessere hendelsen
+        // Oppdater planlagt_dato til i dag slik at batch jobben vil prosessere hendelsen
         postgresContainerHelper.performUpdate(
             """
             UPDATE tilstand_automatisk_oppdatering 
-            SET planlagt_dato = CURRENT_DATE + INTERVAL '1 day'
+            SET planlagt_dato = CURRENT_DATE
             WHERE orgnr = '${sak.orgnr}'
             """.trimIndent(),
         )
 
         val oppdatertTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
-        oppdatertTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+        oppdatertTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().toKotlinLocalDate()
 
         // send jobbmelding
         kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
@@ -224,23 +242,81 @@ class NyFlytTest {
         virksomhetsTilstand.nesteTilstand?.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
         virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
 
-        // Oppdater planlagt_dato til i morgen slik at batch jobben vil prosessere hendelsen
+        // Oppdater planlagt_dato til i dag slik at batch jobben vil prosessere hendelsen
         postgresContainerHelper.performUpdate(
             """
             UPDATE tilstand_automatisk_oppdatering 
-            SET planlagt_dato = CURRENT_DATE + INTERVAL '1 day'
+            SET planlagt_dato = CURRENT_DATE
             WHERE orgnr = '${sak.orgnr}'
             """.trimIndent(),
         )
 
         val oppdatertTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
-        oppdatertTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+        oppdatertTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().toKotlinLocalDate()
 
         // send jobbmelding
         kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
 
         val virksomhetsTilstandOppdatert = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstandOppdatert.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+    }
+
+    @Test
+    fun `Batch jobb - skal IKKE prosessere hendelser med planlagt dato i fremtiden`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
+                ),
+                dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
+            ),
+        )
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstand.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+
+        kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
+
+        val virksomhetsTilstandEtterJobb = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstandEtterJobb.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+        virksomhetsTilstandEtterJobb.nesteTilstand shouldNotBe null
+        virksomhetsTilstandEtterJobb.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
+    }
+
+    @Test
+    fun `Batch jobb - skal prosessere hendelser med planlagt dato i fortiden`() {
+        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        sak.status shouldBe IASak.Status.VURDERES
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
+                ),
+                dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
+            ),
+        )
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE tilstand_automatisk_oppdatering 
+            SET planlagt_dato = CURRENT_DATE - INTERVAL '1 day'
+            WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+
+        kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
+
+        val virksomhetsTilstandEtterJobb = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstandEtterJobb.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+        virksomhetsTilstandEtterJobb.nesteTilstand shouldBe null
     }
 
     @Test

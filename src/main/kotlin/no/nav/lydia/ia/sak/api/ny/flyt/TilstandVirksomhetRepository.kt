@@ -68,15 +68,16 @@ class TilstandVirksomhetRepository(
             )
         }
 
-    fun hentAlleVirksomhetTilstander(): List<VirksomhetTilstandDto> =
+    fun hentAlleVirksomhetTilstanderMedPlanlagtDatoFørEllerIDag(): List<VirksomhetTilstandDto> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     SELECT tv.*, tao.start_tilstand, tao.planlagt_hendelse, tao.ny_tilstand, tao.planlagt_dato
                     FROM tilstand_virksomhet tv
-                    LEFT JOIN tilstand_automatisk_oppdatering tao 
+                    INNER JOIN tilstand_automatisk_oppdatering tao 
                         ON tv.id = tao.tilstand_virksomhet_id
+                    WHERE tao.planlagt_dato <= CURRENT_DATE
                     ORDER BY tv.sist_endret DESC
                     """.trimIndent(),
                 ).map { row ->

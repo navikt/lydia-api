@@ -7,7 +7,6 @@ import arrow.core.raise.ensure
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
-import kotlinx.datetime.LocalDate
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
@@ -392,9 +391,8 @@ class NyFlytService(
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
 
-    fun hentAlleVirksomhetTilstanderFiltrertPåPlanlagtDato(planlagtDato: LocalDate): List<VirksomhetTilstandDto> =
-        tilstandVirksomhetRepository.hentAlleVirksomhetTilstander()
-            .filter { it.nesteTilstand?.planlagtDato == planlagtDato }
+    fun hentAlleVirksomhetTilstanderMedPlanlagtDatoFørEllerIDag(): List<VirksomhetTilstandDto> =
+        tilstandVirksomhetRepository.hentAlleVirksomhetTilstanderMedPlanlagtDatoFørEllerIDag()
 
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
 

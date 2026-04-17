@@ -24,7 +24,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
@@ -54,7 +53,6 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.time.LocalDate
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -222,16 +220,7 @@ object Jobblytter : CoroutineScope {
                                     }
 
                                     prosesserPlanlagteHendelser -> {
-                                        var antallDager = jobInfo.parameter
-                                        if (jobInfo.parameter.isNullOrEmpty()) {
-                                            logger.info(
-                                                "Jobb prosesserPlanlagteHendelser har ingen parameter, setter default til 1 dag",
-                                            )
-                                            antallDager = "1"
-                                        }
-                                        tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet(
-                                            planlagtDato = LocalDate.now().plusDays(antallDager.toLong()).toKotlinLocalDate(),
-                                        )
+                                        tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet()
                                     }
 
                                     migrerEnVirksomhetTilNyFlyt -> {
