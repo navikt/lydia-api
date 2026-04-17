@@ -33,9 +33,10 @@ class NyFlytMigreringService(
         val antallForsøktMigrerteSaker = AtomicInteger(0)
         val antallProsessert = AtomicInteger(0)
         val oppløsteFylker = listOf(
+            Fylke(navn = "Svalbard", nummer = "21"),
             Fylke(navn = "Viken", nummer = "30"),
             Fylke(navn = "Vestfold og Telemark", nummer = "38"),
-            Fylke(navn = "Troms og Finmark", nummer = "54"),
+            Fylke(navn = "Troms og Finnmark", nummer = "54"),
         )
 
         val fylker = if (fylkenummer == "ALLE") {
