@@ -281,7 +281,8 @@ class NyFlytTestUtils {
             orgnr: String,
             avslutningsType: IASamarbeid.Status,
             token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/avslutt-samarbeid")
+            dato: java.time.LocalDate? = null,
+        ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/avslutt-samarbeid" + (dato?.let { "?dato=$it" } ?: ""))
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(

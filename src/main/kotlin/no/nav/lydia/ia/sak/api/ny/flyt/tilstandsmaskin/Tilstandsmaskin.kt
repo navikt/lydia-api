@@ -85,6 +85,7 @@ class TilstandsmaskinBuilder private constructor(
         fun oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
             orgnr: String,
             fiaKontekst: FiaKontekst,
+            planlagtDato: LocalDate? = null,
         ) {
             fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
                 orgnr = orgnr,
@@ -95,7 +96,7 @@ class TilstandsmaskinBuilder private constructor(
                     startTilstand = AlleSamarbeidIVirksomhetErAvsluttet.tilVirksomhetIATilstand(),
                     planlagtHendelse = GjørVirksomhetKlarTilNyVurdering::class.simpleName!!,
                     nyTilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
-                    planlagtDato = LocalDate.now().plusDays(90),
+                    planlagtDato = planlagtDato ?: LocalDate.now().plusDays(90),
                 )
             }
         }

@@ -1068,6 +1068,155 @@ class NyFlytTest {
     }
 
     @Test
+    fun `avsluttSamarbeid med dato setter planlagtDato til angitt dato`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        val planlagtDato = LocalDate.now().plusDays(30)
+
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT, dato = planlagtDato)
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand!!.planlagtHendelse shouldBe GjørVirksomhetKlarTilNyVurdering::class.simpleName
+        virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+        virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe planlagtDato.toKotlinLocalDate()
+    }
+
+    @Test
+    fun `avsluttSamarbeid uten dato bruker default 90 dager`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand!!.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
+    }
+
+    @Test
+    fun `slettSamarbeid med dato setter planlagtDato til angitt dato`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
+        val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
+        samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
+        samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+        val planlagtDato = LocalDate.now().plusDays(45)
+
+        samarbeidSomSkalSlettes.slettSamarbeid(
+            orgnr = sak.orgnr,
+            token = authContainerHelper.superbruker1.token,
+            dato = planlagtDato,
+        )
+
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        virksomhetsTilstand.nesteTilstand!!.planlagtDato shouldBe planlagtDato.toKotlinLocalDate()
+    }
+
+    @Test
+    fun `avsluttSamarbeid med dato i fortiden gir BadRequest`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val response = applikasjon.performPost(
+            "$NY_FLYT_PATH/${sak.orgnr}/${samarbeid.id}/avslutt-samarbeid?dato=${LocalDate.now()}",
+        )
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .jsonBody(
+                Json.encodeToString(
+                    no.nav.lydia.ia.eksport.SamarbeidDto(
+                        id = samarbeid.id,
+                        status = IASamarbeid.Status.FULLFØRT,
+                    ),
+                ),
+            )
+            .tilSingelRespons<IASamarbeidDto>()
+        response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `slettSamarbeid med dato i fortiden gir BadRequest`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
+        val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
+        samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
+        samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        val response = samarbeidSomSkalSlettes.slettSamarbeidRespons(
+            orgnr = sak.orgnr,
+            token = authContainerHelper.superbruker1.token,
+            dato = LocalDate.now(),
+        )
+        response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `slettSamarbeid med ugyldig datoformat gir BadRequest`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
+        val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
+        samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
+        samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        val response = applikasjon.performDelete("$NY_FLYT_PATH/${sak.orgnr}/${samarbeidSomSkalSlettes.id}/slett-samarbeid?dato=tulletekst")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<IASamarbeidDto>()
+        response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `avsluttSamarbeid med ugyldig datoformat gir BadRequest`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val response = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/${samarbeid.id}/avslutt-samarbeid?dato=tulletekst")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .jsonBody(
+                Json.encodeToString(
+                    no.nav.lydia.ia.eksport.SamarbeidDto(
+                        id = samarbeid.id,
+                        status = IASamarbeid.Status.FULLFØRT,
+                    ),
+                ),
+            )
+            .tilSingelRespons<IASamarbeidDto>()
+        response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `automatisk oppdatering slettes når virksomhet revurderes fra AlleSamarbeidIVirksomhetErAvsluttet`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        val tilstandFørRevurdering = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandFørRevurdering.tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+        tilstandFørRevurdering.nesteTilstand shouldNotBe null
+        tilstandFørRevurdering.nesteTilstand?.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
+
+        val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<IASakDto>()
+        revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
+
+        val tilstandEtterRevurdering = hentVirksomhetTilstand(orgnr = sak.orgnr)
+        tilstandEtterRevurdering.tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+        tilstandEtterRevurdering.nesteTilstand shouldBe null
+    }
+
+    @Test
     fun `skal kunne revurdere en virksomhet som er i tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
@@ -1135,16 +1284,19 @@ class NyFlytTest {
     private fun IASamarbeidDto.slettSamarbeidRespons(
         orgnr: String,
         token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeid")
+        dato: LocalDate? = null,
+    ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeid" + (dato?.let { "?dato=$it" } ?: ""))
         .authentication().bearer(token)
         .tilSingelRespons<IASamarbeidDto>()
 
     private fun IASamarbeidDto.slettSamarbeid(
         orgnr: String,
         token: String = authContainerHelper.saksbehandler1.token,
+        dato: LocalDate? = null,
     ) = this.slettSamarbeidRespons(
         orgnr = orgnr,
         token = token,
+        dato = dato,
     ).third.fold(
         success = { respons -> respons },
         failure = { fail(it.message) },

@@ -7,6 +7,7 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
+import java.time.LocalDate
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.application
@@ -453,6 +454,15 @@ fun Route.nyFlyt(
     delete("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/slett-samarbeid") {
         val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
         val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        val datoParam = call.request.queryParameters["dato"]
+        val dato = datoParam?.let {
+            runCatching { LocalDate.parse(it) }.getOrElse {
+                return@delete call.sendFeil(Feil(feilmelding = "Ugyldig datoformat", httpStatusCode = HttpStatusCode.BadRequest))
+            }
+        }
+        if (dato != null && dato.isBefore(LocalDate.now().plusDays(1))) {
+            return@delete call.sendFeil(Feil(feilmelding = "Dato må være minst én dag frem i tid", httpStatusCode = HttpStatusCode.BadRequest))
+        }
         val tilstandsmaskin = tilstandsmaskin(orgnr)
 
         call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
@@ -462,6 +472,7 @@ fun Route.nyFlyt(
                     samarbeidId = samarbeidId,
                     saksbehandler = saksbehandler,
                     navEnhet = navEnhet,
+                    dato = dato,
                 ),
             )
             konsekvens.endring.map { it as IASamarbeidDto }
@@ -488,6 +499,15 @@ fun Route.nyFlyt(
         if (typeAvslutning != IASamarbeid.Status.FULLFØRT && typeAvslutning != IASamarbeid.Status.AVBRUTT) {
             return@post call.sendFeil(Feil(feilmelding = "Ugyldig avslutningstype", httpStatusCode = HttpStatusCode.BadRequest))
         }
+        val datoParam = call.request.queryParameters["dato"]
+        val dato = datoParam?.let {
+            runCatching { LocalDate.parse(it) }.getOrElse {
+                return@post call.sendFeil(Feil(feilmelding = "Ugyldig datoformat", httpStatusCode = HttpStatusCode.BadRequest))
+            }
+        }
+        if (dato != null && dato.isBefore(LocalDate.now().plusDays(1))) {
+            return@post call.sendFeil(Feil(feilmelding = "Dato må være minst én dag frem i tid", httpStatusCode = HttpStatusCode.BadRequest))
+        }
         val tilstandsmaskin = tilstandsmaskin(orgnr)
 
         call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
@@ -498,6 +518,7 @@ fun Route.nyFlyt(
                     typeAvslutning = typeAvslutning,
                     saksbehandler = saksbehandler,
                     navEnhet = navEnhet,
+                    dato = dato,
                 ),
             )
             konsekvens.endring.map { it as IASamarbeidDto }

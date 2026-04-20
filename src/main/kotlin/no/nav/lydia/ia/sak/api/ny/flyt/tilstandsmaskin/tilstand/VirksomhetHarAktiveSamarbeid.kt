@@ -260,6 +260,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                         TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
                             orgnr = hendelse.orgnr,
                             fiaKontekst = fiaKontekst,
+                            planlagtDato = hendelse.dato,
                         )
                     }
 
@@ -294,6 +295,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
                         orgnr = hendelse.orgnr,
                         fiaKontekst = fiaKontekst,
+                        planlagtDato = hendelse.dato,
                     )
                 }
 

@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse
 
+import java.time.LocalDate
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
@@ -10,4 +11,5 @@ data class AvsluttSamarbeid(
     val typeAvslutning: IASamarbeid.Status, // FULLFØRT eller AVBRUTT
     val saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
     val navEnhet: NavEnhet,
+    val dato: LocalDate? = null,
 ) : Hendelse()
