@@ -1,19 +1,19 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion = "3.4.1"
+val ktorVersion = "3.4.2"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
-val kotestVerstion = "6.1.7"
-val testcontainersVersion = "2.0.3"
+val kotestVerstion = "6.1.11"
+val testcontainersVersion = "2.0.4"
 val logbackVersion = "1.5.32"
 val logstashLogbackEncoderVersion = "9.0"
-val opentelemetryLogbackMdcVersion = "2.26.0-alpha"
+val opentelemetryLogbackMdcVersion = "2.26.1-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.3.10"
+    kotlin("jvm") version "2.3.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.3.10"
+    kotlin("plugin.serialization") version "2.3.20"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
@@ -57,7 +57,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.10")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:12.1.0")
+    implementation("org.flywaydb:flyway-database-postgresql:12.3.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -65,7 +65,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.2")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.10.4")
+    implementation("at.yawk.lz4:lz4-java:1.11.0")
     implementation("org.apache.kafka:kafka-clients:4.2.0") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
@@ -75,7 +75,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:2.2.2")
+    implementation("io.arrow-kt:arrow-core:2.2.2.1")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
@@ -85,7 +85,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.8")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.9")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
