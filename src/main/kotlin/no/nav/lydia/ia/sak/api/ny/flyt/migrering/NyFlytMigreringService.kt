@@ -239,7 +239,7 @@ class NyFlytMigreringService(
                             onRight { oppdatertIASakDto: IASakDto ->
                                 log.info(
                                     "[Migrering] Oppdatert sak '${oppdatertIASakDto.saksnummer}' " +
-                                        "fra status '${oppdatertIASakDto.status.name}' til status '${oppdatertIASakDto.status.name}', " +
+                                        "fra status '${iaSakDto.status.name}' til status '${oppdatertIASakDto.status.name}', " +
                                         "og opprettet tilstand '${migreringsplan.tilstand.tilVirksomhetIATilstand()}'",
                                 )
                             }
