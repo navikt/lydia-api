@@ -85,6 +85,7 @@ class Kafka(
     val keystoreLocation: String = getEnvVar("KAFKA_KEYSTORE_PATH"),
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong(),
+    val ikkeKonsumerMeldinger: Boolean = getEnvVar(varName = "IKKE_KONSUMER_MELDINGER", defaultValue = "false").toBoolean(),
 ) {
     fun producerProperties(clientId: String): Map<String, Any> {
         val producerConfigs = mutableMapOf(

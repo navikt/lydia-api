@@ -66,7 +66,14 @@ class KvitteringConsumer :
                     consumer.subscribe(listOf(topic.navn))
                     logger.info("Kafka consumer subscribed to topic '${topic.navn}' of groupId '${topic.konsumentGruppe}' )' in $consumer")
 
+                    if (kafka.ikkeKonsumerMeldinger) {
+                        logger.warn("Kommer IKKE til å konsumere meldinger fra topic ${topic.navn}")
+                    }
                     while (job.isActive) {
+                        delay(kafka.consumerLoopDelay)
+                        if (kafka.ikkeKonsumerMeldinger) {
+                            continue
+                        }
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
@@ -98,7 +105,6 @@ class KvitteringConsumer :
                         } catch (e: RetriableException) {
                             logger.warn("Had a retriable exception in $consumer (topic '${topic.navn}'), retrying", e)
                         }
-                        delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
                     logger.info("$consumer (topic '${topic.navn}')  is waking up", e)

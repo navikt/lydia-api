@@ -62,15 +62,26 @@ class SpørreundersøkelseHendelseConsumer :
                     consumer.subscribe(listOf(topic.navn))
                     logger.info("Kafka consumer subscribed to topic '${topic.navn}' of groupId '${topic.konsumentGruppe}' )' in $consumer")
 
+                    if (kafka.ikkeKonsumerMeldinger) {
+                        logger.warn("Kommer IKKE til å konsumere meldinger fra topic ${topic.navn}")
+                    }
                     while (job.isActive) {
+                        delay(kafka.consumerLoopDelay)
+                        if (kafka.ikkeKonsumerMeldinger) {
+                            continue
+                        }
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 records.forEach { melding ->
                                     when (val hendelse = SpørreundersøkelseHendelse.meldingTilHendelse(melding)) {
-                                        is StengTema -> spørreundersøkelseService.stengTema(hendelse)
-                                        is SvarPåSpørsmål ->
+                                        is StengTema -> {
+                                            spørreundersøkelseService.stengTema(hendelse)
+                                        }
+
+                                        is SvarPåSpørsmål -> {
                                             logger.warn("Ikke implementert å ta imot svar på dette topicet ennå")
+                                        }
                                     }
                                 }
                                 logger.info("Lagret ${records.count()} meldinger i $consumer (topic '${topic.navn}') ")
@@ -79,7 +90,6 @@ class SpørreundersøkelseHendelseConsumer :
                         } catch (e: RetriableException) {
                             logger.warn("Had a retriable exception in $consumer (topic '${topic.navn}'), retrying", e)
                         }
-                        delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
                     logger.info("$consumer (topic '${topic.navn}')  is waking up", e)
