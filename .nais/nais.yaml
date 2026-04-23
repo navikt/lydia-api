@@ -76,6 +76,8 @@ spec:
   envFrom:
     - secret: fia-salesforce
   env:
+    - name: IKKE_KONSUMER_MELDINGER
+      value: "true"
     - name: CONSUMER_LOOP_DELAY
       value: "1000"
     - name: SSB_NARINGS_URL
