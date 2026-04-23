@@ -107,6 +107,7 @@ services:
       KAFKA_CREDSTORE_PASSWORD: ""
       # Backend spesifikk env
       CONSUMER_LOOP_DELAY: 1
+      IKKE_KONSUMER_MELDINGER: true
       SSB_NARINGS_URL: /naringmock/api/klass/v1/30/json
       NAIS_CLUSTER_NAME: "lokal"
       # Spesifikk for remote debugging
