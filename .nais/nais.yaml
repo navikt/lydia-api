@@ -46,10 +46,10 @@ spec:
         - host: data.ssb.no
         - host: {{salesforceTokenHost}}
         - host: {{salesforceApiHost}}
-#    inbound:
-#      rules:
-#        - application: lydia-radgiver-frontend
-#        - application: fia-arbeidsgiver
+    inbound:
+      rules:
+        - application: lydia-radgiver-frontend
+        - application: fia-arbeidsgiver
   azure:
     application:
       enabled: true
@@ -76,8 +76,6 @@ spec:
   envFrom:
     - secret: fia-salesforce
   env:
-    - name: IKKE_KONSUMER_MELDINGER
-      value: "true"
     - name: CONSUMER_LOOP_DELAY
       value: "1000"
     - name: SSB_NARINGS_URL
