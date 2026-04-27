@@ -109,16 +109,16 @@ dependencies {
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
-            version { require("2.18.6") }
-            because("versjoner < 2.18.6 har sårbarhet. inkludert i ktor-server-auth:3.4.0")
+            version { require("2.21.1") }
+            because("versjoner < 2.21.1 har sårbarhet. inkludert i ktor-server-auth:3.4.0")
         }
         implementation("tools.jackson.core:jackson-core") {
-            version { require("3.1.0") }
-            because("versjoner < 3.1.0 har sårbarhet. inkludert i logstash-logback-encoder:9.0")
+            version { require("3.1.1") }
+            because("versjoner <= 3.1.0 har sårbarhet. inkludert i logstash-logback-encoder:9.0")
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.10.Final")
+                require("4.2.11.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
@@ -135,6 +135,22 @@ dependencies {
                 require("1.28.0")
             }
             because("testcontainers har sårbar versjon")
+        }
+        testImplementation("org.bouncycastle:bcprov-jdk18on") {
+            version {
+                require("1.84")
+            }
+            because(
+                "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.1",
+            )
+        }
+        testImplementation("org.bouncycastle:bcpkix-jdk18on") {
+            version {
+                require("1.84")
+            }
+            because(
+                "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.1",
+            )
         }
     }
 }
