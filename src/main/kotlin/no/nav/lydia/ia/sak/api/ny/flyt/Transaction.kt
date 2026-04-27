@@ -530,6 +530,46 @@ fun opprettNyttSamarbeid(
     )!!
 
 context(tx: TransactionalSession)
+fun fullførSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_prosess
+             SET status = :status, endret_tidspunkt = :tidspunkt, fullfort_tidspunkt = :tidspunkt
+             WHERE id = :prosessId
+             AND saksnummer = :saksnummer
+             returning *
+            """.trimIndent(),
+            mapOf(
+                "prosessId" to samarbeidDto.id,
+                "saksnummer" to samarbeidDto.saksnummer,
+                "status" to IASamarbeid.Status.FULLFØRT.name,
+                "tidspunkt" to LocalDateTime.now(),
+            ),
+        ).map { it.mapRowToIASamarbeid() }.asSingle,
+    )!!
+
+context(tx: TransactionalSession)
+fun avbrytSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_prosess
+             SET status = :status, endret_tidspunkt = :tidspunkt, avbrutt_tidspunkt = :tidspunkt
+             WHERE id = :prosessId
+             AND saksnummer = :saksnummer
+             returning *
+            """.trimIndent(),
+            mapOf(
+                "prosessId" to samarbeidDto.id,
+                "saksnummer" to samarbeidDto.saksnummer,
+                "status" to IASamarbeid.Status.AVBRUTT.name,
+                "tidspunkt" to LocalDateTime.now(),
+            ),
+        ).map { it.mapRowToIASamarbeid() }.asSingle,
+    )!!
+
+context(tx: TransactionalSession)
 fun opprettSamarbeidsplan(
     planId: UUID,
     samarbeidId: Int,
@@ -742,6 +782,46 @@ fun endreStatusPåUndertemaISamarbeidsplan(
     )
     return hentPlan(samarbeidId = samarbeidId, tx = tx)
 }
+
+context(tx: TransactionalSession)
+fun settPlanTilFullført(plan: Plan) {
+    plan.temaer.forEach { tema ->
+        tx.run(
+            queryOf(
+                """
+                UPDATE ia_sak_plan_undertema
+                SET status = :statusFullfort
+                WHERE status != :statusAvbrutt
+                AND tema_id = :temaId
+                AND plan_id = :planId
+                AND inkludert = true
+                """.trimIndent(),
+                mapOf(
+                    "statusFullfort" to PlanUndertema.Status.FULLFØRT.name,
+                    "statusAvbrutt" to PlanUndertema.Status.AVBRUTT.name,
+                    "temaId" to tema.id,
+                    "planId" to plan.id.toString(),
+                ),
+            ).asUpdate,
+        )
+    }
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_sak_plan
+            SET status = :statusFullfort
+            WHERE plan_id = :planId
+            """.trimIndent(),
+            mapOf(
+                "statusFullfort" to IASamarbeid.Status.FULLFØRT.name,
+                "planId" to plan.id.toString(),
+            ),
+        ).asUpdate,
+    )
+}
+
+context(tx: TransactionalSession)
+fun hentPlan(samarbeidId: Int) = hentPlan(samarbeidId, tx)
 
 private fun hentPlan(
     samarbeidId: Int,

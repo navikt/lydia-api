@@ -30,7 +30,6 @@ import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
-import no.nav.lydia.ia.sak.domene.IASak.Status.AVSLUTTET
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.Plan
@@ -241,60 +240,6 @@ class NyFlytService(
             ).onRight(::varsleIASakObservers)
         }
 
-    fun avsluttSamarbeid(
-        orgnummer: String,
-        saksnummer: String,
-        samarbeidId: Int,
-        typeAvslutning: IASamarbeid.Status,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, IASamarbeidDto?> {
-        val samarbeidDto = IASamarbeidDto(
-            id = samarbeidId,
-            saksnummer = saksnummer,
-            navn = "",
-        )
-
-        if (typeAvslutning == IASamarbeid.Status.AVBRUTT) {
-            if (!iaSamarbeidService.kanAvbryteSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).kanGjennomføres) {
-                return IASamarbeidFeil.`kan ikke fullføre samarbeid`.left()
-            }
-            val iaSamarbeidDto = iaSamarbeidService.avbrytSamarbeid(
-                samarbeidDto = samarbeidDto,
-                saksnummer = saksnummer,
-            )?.also { iaSamarbeid ->
-                avslutningAvSamarbeid(
-                    saksnummer = saksnummer,
-                    orgnummer = orgnummer,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                    iaSamarbeid = iaSamarbeid,
-                    typeAvslutning = IASakshendelseType.AVBRYT_PROSESS,
-                )
-            }
-
-            return iaSamarbeidDto?.tilDto().right()
-        } else if (typeAvslutning == IASamarbeid.Status.FULLFØRT) {
-            if (!iaSamarbeidService.kanFullføreSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).kanGjennomføres) {
-                return IASamarbeidFeil.`kan ikke fullføre samarbeid`.left()
-            }
-
-            val iaSamarbeidDto = iaSamarbeidService.fullførSamarbeid(samarbeidDto = samarbeidDto, saksnummer = saksnummer)?.also { iaSamarbeid ->
-                avslutningAvSamarbeid(
-                    saksnummer = saksnummer,
-                    orgnummer = orgnummer,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                    iaSamarbeid = iaSamarbeid,
-                    typeAvslutning = IASakshendelseType.FULLFØR_PROSESS,
-                )
-            }
-            return iaSamarbeidDto?.tilDto().right()
-        } else {
-            return Feil("feil ved avslutning", HttpStatusCode.BadRequest).left()
-        }
-    }
-
     fun endrePlanlagtDatoForNesteTilstand(
         orgnummer: String,
         saksnummer: String,
@@ -340,48 +285,6 @@ class NyFlytService(
             return aktivSak.right()
         }
         return iaSakRepository.oppdaterEierPåSak(aktivSak.saksnummer, navAnsatt.navIdent)?.right() ?: IASakError.`fikk ikke oppdatert sak`.left()
-    }
-
-    private fun avslutningAvSamarbeid(
-        saksnummer: String,
-        orgnummer: String,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-        iaSamarbeid: IASamarbeid,
-        typeAvslutning: IASakshendelseType,
-    ) {
-        val iASakshendelse = IASakshendelse(
-            id = ULID.random(),
-            opprettetTidspunkt = LocalDateTime.now(),
-            saksnummer = saksnummer,
-            hendelsesType = typeAvslutning,
-            orgnummer = orgnummer,
-            opprettetAv = saksbehandler.navIdent,
-            opprettetAvRolle = saksbehandler.rolle,
-            navEnhet = navEnhet,
-            resulterendeStatus = null,
-        )
-
-        val ingenAktiveSamarbeid = iaSamarbeidRepository.hentAktiveSamarbeid(saksnummer = saksnummer).isEmpty()
-        val status = if (ingenAktiveSamarbeid) AVSLUTTET else AKTIV
-        iaSakshendelseRepository.lagreHendelse(
-            hendelse = iASakshendelse,
-            sistEndretAvHendelseId = null,
-            resulterendeStatus = status,
-        )
-
-        iaSakRepository.oppdaterStatusPåSak(
-            saksnummer = saksnummer,
-            status = status,
-            endretAv = saksbehandler.navIdent,
-            endretAvHendelseId = iASakshendelse.id,
-        )
-
-        iaSamarbeidObservers.forEach {
-            it.receive(
-                input = iaSamarbeid,
-            )
-        }
     }
 
     fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): Either<Feil, List<IASamarbeid>> =
@@ -438,6 +341,32 @@ class NyFlytService(
                 alleSamarbeid.any { it.navn.equals(navn, ignoreCase = true) }
             }.getOrNull() ?: false
             ensure(!navnFinnesAllerede) { IASamarbeidFeil.`samarbeidsnavn finnes allerede` }
+        }
+
+    fun validerAvslutningAvSamarbeid(
+        saksnummer: String,
+        samarbeidId: Int,
+        typeAvslutning: IASamarbeid.Status, // Burde ha sin egen type
+    ): Either<Feil, Pair<IASamarbeidDto, Plan?>> =
+        either {
+            ensure(typeAvslutning == IASamarbeid.Status.AVBRUTT || typeAvslutning == IASamarbeid.Status.FULLFØRT) {
+                Feil(
+                    "feil ved avslutning",
+                    HttpStatusCode.BadRequest,
+                )
+            }
+
+            val samarbeid = iaSamarbeidService.hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).bind().tilDto()
+            if (typeAvslutning == IASamarbeid.Status.AVBRUTT) {
+                val kanAvbryteSamarbeid = iaSamarbeidService.kanAvbryteSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).kanGjennomføres
+                ensure(kanAvbryteSamarbeid) { IASamarbeidFeil.`kan ikke avbryte samarbeid` }
+                Pair(samarbeid, null)
+            } else {
+                val kamFullføreSamarbeid = iaSamarbeidService.kanFullføreSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).kanGjennomføres
+                ensure(kamFullføreSamarbeid) { IASamarbeidFeil.`kan ikke fullføre samarbeid` }
+                val plan = planService.hentPlan(samarbeidId = samarbeidId).bind()
+                Pair(samarbeid, plan)
+            }
         }
 
     fun validerOpprettelseAvKartlegging(

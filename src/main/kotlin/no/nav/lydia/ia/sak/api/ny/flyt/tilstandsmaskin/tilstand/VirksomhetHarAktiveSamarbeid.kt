@@ -22,6 +22,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettKartlegging
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.AvsluttSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndreSamarbeidsnavnSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndreStatusPåUndertemaISamarbeidsplanSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OppdaterPlanForSamarbeidSideEffect
@@ -32,7 +33,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettSamarbe
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.SlettSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 
-// -- Virksomheten har minst ett aktivt samarbeid med en aktiv samarbeidsplan
+// -- Virksomheten har minst ett aktivt samarbeid
 object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
     override fun utførTransisjon(
         hendelse: Hendelse,
@@ -277,32 +278,23 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
             }
 
             is AvsluttSamarbeid -> {
-                val endring = fiaKontekst.nyFlytService.avsluttSamarbeid(
+                val sideEffect = AvsluttSamarbeidSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
                     samarbeidId = hendelse.samarbeidId,
                     typeAvslutning = hendelse.typeAvslutning,
+                    avsluttetTil = hendelse.dato,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
                 )
-                // Når hendelsen mottas, har vi minst ett aktivt samarbeid, men nå som endringen er påført må vi sjekke det igjen
-                val harIkkeLengerAktiveSamarbeid = !TilstandsmaskinBuilder.harAktiveSamarbeid(
-                    fiaKontekst = fiaKontekst,
-                    saksnummer = fiaKontekst.saksnummer,
-                )
-
-                if (harIkkeLengerAktiveSamarbeid && endring.isRight()) {
-                    TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
-                        orgnr = hendelse.orgnr,
-                        fiaKontekst = fiaKontekst,
-                        planlagtDato = hendelse.dato,
+                with(receiver = fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    Konsekvens(
+                        nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
+                        endring = resultat,
+                        sideEffect = sideEffect,
                     )
                 }
-
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = if (harIkkeLengerAktiveSamarbeid) AlleSamarbeidIVirksomhetErAvsluttet else VirksomhetHarAktiveSamarbeid,
-                )
             }
 
             is EndreSamarbeidsNavn -> {
