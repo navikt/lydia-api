@@ -51,15 +51,18 @@ import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
+import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import kotlin.test.fail
@@ -106,6 +109,15 @@ class NyFlytTestUtils {
         }
 
         // Verifisering
+        fun hentVirksomhet(
+            orgnr: String,
+            token: String = authContainerHelper.superbruker1.token,
+        ): VirksomhetDto {
+            val url = "$NY_FLYT_PATH/virksomhet/$orgnr"
+            return applikasjon.performGet(url)
+                .authentication().bearer(token).tilSingelRespons<VirksomhetDto>().third.get()
+        }
+
         fun hentVirksomhetTilstand(
             orgnr: String,
             token: String = authContainerHelper.superbruker1.token,
@@ -228,6 +240,19 @@ class NyFlytTestUtils {
         }
 
         // Test-case utils
+        fun vurderVirksomhet(
+            virksomhet: TestVirksomhet,
+            token: String = authContainerHelper.superbruker1.token,
+        ): IASakDto {
+            lastInnNyVirksomhet(virksomhet)
+            val orgnummer = virksomhet.orgnr
+            val res = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
+                .authentication().bearer(token)
+                .tilSingelRespons<IASakDto>()
+
+            return res.third.get()
+        }
+
         fun vurderVirksomhet(
             næringskode: String = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
             token: String = authContainerHelper.superbruker1.token,
@@ -421,6 +446,56 @@ class NyFlytTestUtils {
                         tema
                     }
                 },
+            )
+
+        fun IASamarbeidDto.opprettKartlegging(
+            orgnr: String,
+            type: Spørreundersøkelse.Type,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = opprettKartleggingMedRåType(orgnr = orgnr, råType = type.name, token = token)
+
+        fun IASamarbeidDto.opprettKartleggingMedRåType(
+            orgnr: String,
+            råType: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/${this.id}/kartlegging/$råType")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
+        fun IASamarbeidDto.startKartlegging(
+            orgnr: String,
+            kartleggingId: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/${this.id}/kartlegging/$kartleggingId/start")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
+        fun IASamarbeidDto.fullførKartlegging(
+            orgnr: String,
+            kartleggingId: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/${this.id}/kartlegging/$kartleggingId/fullfor")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
+        fun IASamarbeidDto.slettKartlegging(
+            orgnr: String,
+            kartleggingId: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performDelete("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/${this.id}/kartlegging/$kartleggingId")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
             )
     }
 }

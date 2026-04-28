@@ -100,7 +100,7 @@ object BrregOppdateringConsumer : CoroutineScope {
 
                                     BrregVirksomhetEndringstype.Sletting,
                                     BrregVirksomhetEndringstype.Fjernet,
-                                    -> virksomhetService.slettEllerFjernVirksomhet(oppdateringVirksomhet)
+                                    -> virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet)
                                 }
                             }
                             logger.info("Lagret $antallMeldinger meldinger for ${topic.navn}")
