@@ -31,6 +31,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettKartleg
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.SlettSamarbeidSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.StartKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 
 // -- Virksomheten har minst ett aktivt samarbeid
@@ -85,24 +86,28 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
             }
 
             is StartKartleggingForSamarbeid -> {
-                val endring = fiaKontekst.nyFlytService.startNyKartlegging(
+                val sideEffect = StartKartleggingSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
                     spørreundersøkelseId = hendelse.spørreundersøkelseId,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
-                ).map {
-                    it.tilDto(
-                        fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
-                            referanseId = it.id,
-                            type = it.type.name.tilDokumentTilPubliseringType(),
-                        ),
+                )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    Konsekvens(
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                        endring = resultat.map {
+                            it.tilDto(
+                                fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                    referanseId = it.id,
+                                    type = it.type.name.tilDokumentTilPubliseringType(),
+                                ),
+                            )
+                        },
+                        sideEffect = sideEffect,
                     )
                 }
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetHarAktiveSamarbeid,
-                )
             }
 
             is FullførKartleggingForSamarbeid -> {

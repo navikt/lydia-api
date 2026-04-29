@@ -1036,6 +1036,27 @@ fun leggTilUndertemaTilKartlegging(
 }
 
 context(tx: TransactionalSession)
+fun startSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? {
+    val nåværendeTidspunkt = LocalDateTime.now()
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_sak_kartlegging SET
+                status = '${Spørreundersøkelse.Status.PÅBEGYNT.name}',
+                endret = :navaerendeTidspunkt,
+                pabegynt = :navaerendeTidspunkt
+            WHERE kartlegging_id = :kartleggingId
+            """.trimIndent(),
+            mapOf(
+                "kartleggingId" to spørreundersøkelseId.toString(),
+                "navaerendeTidspunkt" to nåværendeTidspunkt,
+            ),
+        ).asUpdate,
+    )
+    return hentSpørreundersøkelse(spørreundersøkelseId)
+}
+
+context(tx: TransactionalSession)
 fun hentSpørreundersøkelse(kartleggingId: UUID): Spørreundersøkelse? =
     tx.run(
         queryOf(

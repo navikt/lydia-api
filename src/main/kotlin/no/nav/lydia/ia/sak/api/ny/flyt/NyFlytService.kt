@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api.ny.flyt
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensure
@@ -84,28 +85,6 @@ class NyFlytService(
     }
 
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
-
-    fun startNyKartlegging(
-        orgnummer: String,
-        saksnummer: String,
-        spørreundersøkelseId: UUID,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, Spørreundersøkelse> =
-        spørreundersøkelseService.endreSpørreundersøkelseStatus(
-            spørreundersøkelseId = spørreundersøkelseId,
-            statusViSkalEndreTil = Spørreundersøkelse.Status.PÅBEGYNT,
-        ).apply {
-            onRight {
-                lagreHendelseUtenEndringIStatusPåSak(
-                    orgnummer = orgnummer,
-                    saksnummer = saksnummer,
-                    hendelsesType = IASakshendelseType.START_KARTLEGGING,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                )
-            }
-        }
 
     fun fullførNyKartlegging(
         orgnummer: String,
@@ -411,6 +390,16 @@ class NyFlytService(
                 }
             }
         }
+
+    fun validerStartAvKartlegging(spørreundersøkelseId: UUID): Either<Feil, Spørreundersøkelse> =
+        spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId)
+            .flatMap { eksisterende ->
+                if (eksisterende.status != Spørreundersøkelse.Status.OPPRETTET) {
+                    IASakSpørreundersøkelseError.`feil status kan ikke starte`.left()
+                } else {
+                    eksisterende.right()
+                }
+            }
 
     fun validerOpprettelseAvSamarbeidsplan(
         samarbeidId: Int,
