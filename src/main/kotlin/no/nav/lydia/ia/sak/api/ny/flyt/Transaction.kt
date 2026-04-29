@@ -1057,6 +1057,27 @@ fun startSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkels
 }
 
 context(tx: TransactionalSession)
+fun avsluttSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? {
+    val nåværendeTidspunkt = LocalDateTime.now()
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_sak_kartlegging SET
+                status = '${Spørreundersøkelse.Status.AVSLUTTET.name}',
+                endret = :navaerendeTidspunkt,
+                fullfort = :navaerendeTidspunkt
+            WHERE kartlegging_id = :kartleggingId
+            """.trimIndent(),
+            mapOf(
+                "kartleggingId" to spørreundersøkelseId.toString(),
+                "navaerendeTidspunkt" to nåværendeTidspunkt,
+            ),
+        ).asUpdate,
+    )
+    return hentSpørreundersøkelse(spørreundersøkelseId)
+}
+
+context(tx: TransactionalSession)
 fun hentSpørreundersøkelse(kartleggingId: UUID): Spørreundersøkelse? =
     tx.run(
         queryOf(

@@ -86,28 +86,6 @@ class NyFlytService(
 
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
 
-    fun fullførNyKartlegging(
-        orgnummer: String,
-        saksnummer: String,
-        spørreundersøkelseId: UUID,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, Spørreundersøkelse> =
-        spørreundersøkelseService.endreSpørreundersøkelseStatus(
-            spørreundersøkelseId = spørreundersøkelseId,
-            statusViSkalEndreTil = Spørreundersøkelse.Status.AVSLUTTET,
-        ).apply {
-            onRight {
-                lagreHendelseUtenEndringIStatusPåSak(
-                    orgnummer = orgnummer,
-                    saksnummer = saksnummer,
-                    hendelsesType = IASakshendelseType.FULLFØR_KARTLEGGING,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                )
-            }
-        }
-
     fun slettNyKartlegging(
         orgnummer: String,
         saksnummer: String,
@@ -396,6 +374,16 @@ class NyFlytService(
             .flatMap { eksisterende ->
                 if (eksisterende.status != Spørreundersøkelse.Status.OPPRETTET) {
                     IASakSpørreundersøkelseError.`feil status kan ikke starte`.left()
+                } else {
+                    eksisterende.right()
+                }
+            }
+
+    fun validerFullføringAvKartlegging(spørreundersøkelseId: UUID): Either<Feil, Spørreundersøkelse> =
+        spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId)
+            .flatMap { eksisterende ->
+                if (eksisterende.status != Spørreundersøkelse.Status.PÅBEGYNT) {
+                    IASakSpørreundersøkelseError.`ikke påbegynt`.left()
                 } else {
                     eksisterende.right()
                 }

@@ -24,6 +24,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.AvsluttSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndreSamarbeidsnavnSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.FullførKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndreStatusPåUndertemaISamarbeidsplanSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OppdaterPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OppdaterTemaIPlanForSamarbeidSideEffect
@@ -111,24 +112,28 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
             }
 
             is FullførKartleggingForSamarbeid -> {
-                val endring = fiaKontekst.nyFlytService.fullførNyKartlegging(
+                val sideEffect = FullførKartleggingSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
                     spørreundersøkelseId = hendelse.spørreundersøkelseId,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
-                ).map {
-                    it.tilDto(
-                        fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
-                            referanseId = it.id,
-                            type = it.type.name.tilDokumentTilPubliseringType(),
-                        ),
+                )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    Konsekvens(
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                        endring = resultat.map {
+                            it.tilDto(
+                                fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                    referanseId = it.id,
+                                    type = it.type.name.tilDokumentTilPubliseringType(),
+                                ),
+                            )
+                        },
+                        sideEffect = sideEffect,
                     )
                 }
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetHarAktiveSamarbeid,
-                )
             }
 
             is SlettKartleggingForSamarbeid -> {
