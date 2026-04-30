@@ -497,5 +497,17 @@ class NyFlytTestUtils {
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
+
+        @Deprecated("Bruk slett kartlegging")
+        fun IASamarbeidDto.slettKartleggingDeprecatedPathINyFlyt(
+            orgnr: String,
+            kartleggingId: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performDelete("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/${this.id}/kartlegging/$kartleggingId")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
     }
 }

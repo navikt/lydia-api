@@ -38,6 +38,8 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
+const val NY_FLYT_API_KARTLEGGING_BASE_PATH = "$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging"
+
 fun Route.nyFlytKartlegging(
     iaSakService: IASakService,
     iASamarbeidService: IASamarbeidService,
@@ -87,9 +89,7 @@ fun Route.nyFlytKartlegging(
             ),
         ).build(orgnr)
 
-    val kartleggingBasePath = "$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging"
-
-    post("$kartleggingBasePath/{type}") {
+    post("$NY_FLYT_API_KARTLEGGING_BASE_PATH/{type}") {
         val samarbeidId = call.samarbeidId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
         val type = call.parameters["type"]?.let { param ->
             Spørreundersøkelse.Type.entries.firstOrNull { it.name.equals(param, ignoreCase = true) }
@@ -121,7 +121,7 @@ fun Route.nyFlytKartlegging(
         }
     }
 
-    post("$kartleggingBasePath/{kartleggingId}/start") {
+    post("$NY_FLYT_API_KARTLEGGING_BASE_PATH/{kartleggingId}/start") {
         val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somEierEllerFølgerAvSakMedNavenhet { saksbehandler, navEnhet, orgnr, _ ->
@@ -149,7 +149,7 @@ fun Route.nyFlytKartlegging(
         }
     }
 
-    post("$kartleggingBasePath/{kartleggingId}/fullfor") {
+    post("$NY_FLYT_API_KARTLEGGING_BASE_PATH/{kartleggingId}/fullfor") {
         val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somEierEllerFølgerAvSakMedNavenhet { saksbehandler, navEnhet, orgnr, _ ->
@@ -177,7 +177,7 @@ fun Route.nyFlytKartlegging(
         }
     }
 
-    delete("$kartleggingBasePath/{kartleggingId}") {
+    delete("$NY_FLYT_API_KARTLEGGING_BASE_PATH/{kartleggingId}") {
         val kartleggingId = call.kartleggingId ?: return@delete call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somEierEllerFølgerAvSakMedNavenhet { saksbehandler, navEnhet, orgnr, _ ->

@@ -24,13 +24,14 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.AvsluttSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndreSamarbeidsnavnSideEffect
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.FullførKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndreStatusPåUndertemaISamarbeidsplanSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.FullførKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OppdaterPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OppdaterTemaIPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettSamarbeidSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.SlettKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.SlettSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.StartKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
@@ -137,24 +138,28 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
             }
 
             is SlettKartleggingForSamarbeid -> {
-                val endring = fiaKontekst.nyFlytService.slettNyKartlegging(
+                val sideEffect = SlettKartleggingSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
                     spørreundersøkelseId = hendelse.spørreundersøkelseId,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
-                ).map {
-                    it.tilDto(
-                        fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
-                            referanseId = it.id,
-                            type = it.type.name.tilDokumentTilPubliseringType(),
-                        ),
+                )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    Konsekvens(
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                        endring = resultat.map {
+                            it.tilDto(
+                                fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                    referanseId = it.id,
+                                    type = it.type.name.tilDokumentTilPubliseringType(),
+                                ),
+                            )
+                        },
+                        sideEffect = sideEffect,
                     )
                 }
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetHarAktiveSamarbeid,
-                )
             }
 
             is OpprettPlanForSamarbeid -> {

@@ -6,10 +6,10 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.Transaction
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.ny.flyt.avsluttSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.ny.flyt.lagreEllerOppdaterVirksomhetTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.lagreHendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterStatusPåSak
+import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterStatusTilSpørreundersøkelse
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -32,8 +32,9 @@ class FullførKartleggingSideEffect(
             .map {
                 Transaction(nyFlytService.dataSource).transactional { tx ->
                     with(tx) {
-                        val oppdatertKartlegging = avsluttSpørreundersøkelse(spørreundersøkelseId)
-                            ?: error("Kunne ikke fullføre kartlegging")
+                        val oppdatertKartlegging =
+                            oppdaterStatusTilSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId, status = Spørreundersøkelse.Status.AVSLUTTET)
+                                ?: error("Kunne ikke fullføre kartlegging")
 
                         val hendelse = lagreHendelse(
                             hendelse = IASakshendelse(

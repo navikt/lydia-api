@@ -11,9 +11,11 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettKartleggi
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettKartlegging
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettKartleggingDeprecatedPathINyFlyt
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.startKartlegging
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
+import no.nav.lydia.helper.SakHelper.Companion.hentSakNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -179,7 +181,7 @@ class NyFlytKartleggingTest {
     }
 
     @Test
-    fun `Sletting av behovsvurdering skal ikke endre status på IASak`() {
+    fun `Sletting av behovsvurdering skal ikke endre tilstand til virksomhet eller status på IASak`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
@@ -194,11 +196,45 @@ class NyFlytKartleggingTest {
             orgnr = sak.orgnr,
             kartleggingId = opprettetBehovsvurdering.id,
         )
+        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
 
         val slettetBehovsvurdering = samarbeid.slettKartlegging(orgnr = sak.orgnr, kartleggingId = opprettetBehovsvurdering.id)
 
         slettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.SLETTET
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+            it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
+            it.status shouldBe sakFørKartleggingErSlettet.status
+        }
+    }
+
+    @Test
+    @Deprecated("Duplisert test som skal fjernes etter NY_FLYT_API_KARTLEGGING_BASE_PATH er tatt i bruk og slett-kartlegging er fjernet fra NyFlytRoutes")
+    fun `(Deprecated) Sletting av behovsvurdering skal ikke endre tilstand til virksomhet eller status på IASak`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+
+        val samarbeid = sak.opprettSamarbeid()
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        val opprettetBehovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
+
+        samarbeid.startKartlegging(
+            orgnr = sak.orgnr,
+            kartleggingId = opprettetBehovsvurdering.id,
+        )
+        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
+
+        val slettetBehovsvurdering = samarbeid.slettKartleggingDeprecatedPathINyFlyt(orgnr = sak.orgnr, kartleggingId = opprettetBehovsvurdering.id)
+
+        slettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.SLETTET
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+            it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
+            it.status shouldBe sakFørKartleggingErSlettet.status
+        }
     }
 
     @Test
@@ -236,7 +272,7 @@ class NyFlytKartleggingTest {
     }
 
     @Test
-    fun `Sletting av evaluering skal ikke endre status på IASak`() {
+    fun `Sletting av evaluering skal ikke endre tilstand til virksomhet eller status på IASak`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
@@ -259,6 +295,7 @@ class NyFlytKartleggingTest {
         )
         startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
 
         val slettetEvaluering = samarbeid.slettKartlegging(
             orgnr = sak.orgnr,
@@ -267,5 +304,49 @@ class NyFlytKartleggingTest {
 
         slettetEvaluering.status shouldBe Spørreundersøkelse.Status.SLETTET
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+            it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
+            it.status shouldBe sakFørKartleggingErSlettet.status
+        }
+    }
+
+    @Test
+    @Deprecated("Duplisert test som skal fjernes etter NY_FLYT_API_KARTLEGGING_BASE_PATH er tatt i bruk og slett-kartlegging er fjernet fra NyFlytRoutes")
+    fun `(Deprecated) Sletting av evaluering skal ikke endre tilstand til virksomhet eller status på IASak`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+
+        val samarbeid = sak.opprettSamarbeid()
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        val opprettetEvaluering = samarbeid.opprettKartlegging(
+            orgnr = sak.orgnr,
+            type = Spørreundersøkelse.Type.Evaluering,
+        )
+        opprettetEvaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
+
+        val startetEvaluering = samarbeid.startKartlegging(
+            orgnr = sak.orgnr,
+            kartleggingId = opprettetEvaluering.id,
+        )
+        startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
+
+        val slettetEvaluering = samarbeid.slettKartleggingDeprecatedPathINyFlyt(
+            orgnr = sak.orgnr,
+            kartleggingId = opprettetEvaluering.id,
+        )
+
+        slettetEvaluering.status shouldBe Spørreundersøkelse.Status.SLETTET
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+            it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
+            it.status shouldBe sakFørKartleggingErSlettet.status
+        }
     }
 }

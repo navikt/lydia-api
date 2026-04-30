@@ -19,6 +19,8 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanDto
@@ -26,6 +28,8 @@ import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
@@ -60,6 +64,7 @@ class NyFlytService(
     val planService: PlanService,
     val iaSakObservers: List<Observer<IASakDto>>,
     val iaSamarbeidObservers: List<Observer<IASamarbeid>>,
+    val dokumentPubliseringService: DokumentPubliseringService,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -85,47 +90,6 @@ class NyFlytService(
     }
 
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
-
-    fun slettNyKartlegging(
-        orgnummer: String,
-        saksnummer: String,
-        spørreundersøkelseId: UUID,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, Spørreundersøkelse> =
-        spørreundersøkelseService.slettSpørreundersøkelse(
-            spørreundersøkelseId = spørreundersøkelseId,
-        ).apply {
-            onRight {
-                lagreHendelseUtenEndringIStatusPåSak(
-                    orgnummer = orgnummer,
-                    saksnummer = saksnummer,
-                    hendelsesType = IASakshendelseType.SLETT_KARTLEGGING,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                )
-            }
-        }
-
-    private fun lagreHendelseUtenEndringIStatusPåSak(
-        orgnummer: String,
-        saksnummer: String,
-        hendelsesType: IASakshendelseType,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-        oppdaterSistEndretPåSak: Boolean = true,
-    ): Either<Feil, IASakDto> =
-        iaSakRepository.hentIASakDto(saksnummer = saksnummer)?.let { sakDto ->
-            lagreHendelseOgOppdaterIaSakDto(
-                orgnummer = orgnummer,
-                saksnummer = saksnummer,
-                hendelsesType = hendelsesType,
-                saksbehandler = saksbehandler,
-                navEnhet = navEnhet,
-                resulterendeSakStatus = sakDto.status,
-                oppdaterSistEndretPåSak = oppdaterSistEndretPåSak,
-            )
-        } ?: Feil(feilmelding = "Fant ikke sak med saksnummer $saksnummer", httpStatusCode = HttpStatusCode.NotFound).left()
 
     fun lagreHendelseOgOppdaterIaSakDto(
         orgnummer: String,
@@ -366,6 +330,48 @@ class NyFlytService(
                         )
                     }
                 }
+            }
+        }
+
+    fun validerSlettingAvKartlegging(
+        saksnummer: String,
+        spørreundersøkelseId: UUID,
+    ): Either<Feil, SpørreundersøkelseDto> =
+        either {
+            val spørreundersøkelse = spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId).bind()
+            ensure(spørreundersøkelse.id == spørreundersøkelseId) {
+                Feil(
+                    "Fant ikke spørreundersøkelse med id '$spørreundersøkelseId'",
+                    HttpStatusCode.BadRequest,
+                )
+            }
+            ensure(spørreundersøkelse.saksnummer == saksnummer) {
+                Feil(
+                    "Spørreundersøkelse med id '$spørreundersøkelseId' matcher ikke saksnummer '$saksnummer'",
+                    HttpStatusCode.BadRequest,
+                )
+            }
+
+            ensure(spørreundersøkelse.status != Spørreundersøkelse.Status.SLETTET) {
+                IASakSpørreundersøkelseError.`allerede slettet`
+            }
+
+            val erPublisertEllerUnderPublisering = spørreundersøkelseService.erPublisertEllerUnderPublisering(spørreundersøkelse)
+            ensure(!erPublisertEllerUnderPublisering) {
+                IASakSpørreundersøkelseError.`publisert, kan ikke slettes`
+            }
+
+            val erAvsluttetOgHarMinstEttResultat = spørreundersøkelse.status == Spørreundersøkelse.Status.AVSLUTTET && spørreundersøkelse.harMinstEttResultat()
+            ensure(!erAvsluttetOgHarMinstEttResultat) {
+                IASakSpørreundersøkelseError.`kan ikke slettes`
+            }
+            spørreundersøkelse.let {
+                it.tilDto(
+                    dokumentPubliseringService.hentPubliseringStatus(
+                        referanseId = it.id,
+                        type = it.type.name.tilDokumentTilPubliseringType(),
+                    ),
+                )
             }
         }
 

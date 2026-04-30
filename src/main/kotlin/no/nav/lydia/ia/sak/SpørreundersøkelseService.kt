@@ -392,13 +392,11 @@ class SpørreundersøkelseService(
         return temaResultat.tilTemaResultatKafkaDto().right()
     }
 
-    fun hentAktiveTemaer(type: Spørreundersøkelse.Type): List<TemaInfo> =
-        spørreundersøkelseRepository.hentAktiveTemaer(type)
+    fun hentAktiveTemaer(type: Spørreundersøkelse.Type): List<TemaInfo> = spørreundersøkelseRepository.hentAktiveTemaer(type)
 
-    fun hentObligatoriskeAktiveUndertemaer(temaId: Int): List<UndertemaInfo> =
-        spørreundersøkelseRepository.hentObligatoriskeAktiveUndertemaer(temaId)
+    fun hentObligatoriskeAktiveUndertemaer(temaId: Int): List<UndertemaInfo> = spørreundersøkelseRepository.hentObligatoriskeAktiveUndertemaer(temaId)
 
-    private fun erPublisertEllerUnderPublisering(spørreundersøkelse: Spørreundersøkelse): Boolean {
+    fun erPublisertEllerUnderPublisering(spørreundersøkelse: Spørreundersøkelse): Boolean {
         val type = DokumentPubliseringDto.Type.valueOf(spørreundersøkelse.type.name.uppercase())
         val dokumentErUnderPublisering = dokumentPubliseringRepository.hentDokumentTilPublisering(
             dokumentReferanseId = spørreundersøkelse.id,
