@@ -1,19 +1,19 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion = "3.4.2"
+val ktorVersion = "3.4.3"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
 val kotestVerstion = "6.1.11"
-val testcontainersVersion = "2.0.4"
+val testcontainersVersion = "2.0.5"
 val logbackVersion = "1.5.32"
 val logstashLogbackEncoderVersion = "9.0"
-val opentelemetryLogbackMdcVersion = "2.26.1-alpha"
+val opentelemetryLogbackMdcVersion = "2.27.0-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.3.20"
+    kotlin("jvm") version "2.3.21"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.3.20"
+    kotlin("plugin.serialization") version "2.3.21"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
@@ -62,7 +62,7 @@ dependencies {
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.google.code.gson:gson:2.13.2")
+    implementation("com.google.code.gson:gson:2.14.0")
 
     // Kafka
     implementation("at.yawk.lz4:lz4-java:1.11.0")
