@@ -41,6 +41,7 @@ import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -62,7 +63,7 @@ fun opprettAutomatiskOppdatering(
     startTilstand: VirksomhetIATilstand,
     planlagtHendelse: String,
     nyTilstand: VirksomhetIATilstand,
-    planlagtDato: java.time.LocalDate,
+    planlagtDato: LocalDate,
 ): VirksomhetTilstandAutomatiskOppdateringDto? {
     val tilstandVirksomhetId = tx.run(
         queryOf(
@@ -110,6 +111,29 @@ fun opprettAutomatiskOppdatering(
         }.asSingle,
     )
 }
+
+context(tx: TransactionalSession)
+fun endrePlanlagtDatoForNesteTilstand(
+    orgnr: String,
+    nyPlanlagtDato: LocalDate,
+): VirksomhetTilstandAutomatiskOppdateringDto? =
+    tx.run(
+        queryOf(
+            """
+            UPDATE tilstand_automatisk_oppdatering
+            SET planlagt_dato = :nyPlanlagtDato,                                 
+            sist_endret = now()
+            WHERE orgnr = :orgnr
+            RETURNING *
+            """.trimIndent(),
+            mapOf(
+                "orgnr" to orgnr,
+                "nyPlanlagtDato" to nyPlanlagtDato,
+            ),
+        ).map { row ->
+            row.tilVirksomhetTilstandAutomatiskOppdateringDto()
+        }.asSingle,
+    )
 
 private fun Row.tilVirksomhetTilstandAutomatiskOppdateringDto() =
     VirksomhetTilstandAutomatiskOppdateringDto(

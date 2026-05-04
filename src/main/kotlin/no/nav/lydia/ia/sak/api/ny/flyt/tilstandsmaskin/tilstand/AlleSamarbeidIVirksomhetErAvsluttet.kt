@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndrePlanlagtDat
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndrePlanlagtDatoForNesteTilstandSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.GjørVirksomhetKlarTilNyVurderingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.VirksomhetVurderesSideEffect
 import no.nav.lydia.ia.sak.domene.IASak
@@ -52,18 +53,22 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
             }
 
             is EndrePlanlagtDatoForNesteTilstand -> {
-                val endring = fiaKontekst.nyFlytService.endrePlanlagtDatoForNesteTilstand(
+                val sideEffect = EndrePlanlagtDatoForNesteTilstandSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
                     nyPlanlagtDato = hendelse.nyPlanlagtDato,
+                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
-                    resulterendeSakStatus = IASak.Status.AVSLUTTET,
                 )
-                return Konsekvens(
-                    endring = endring,
-                    nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
-                )
+                with(receiver = fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    return Konsekvens(
+                        nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
+                        endring = resultat,
+                        sideEffect = sideEffect,
+                    )
+                }
             }
 
             else -> {
@@ -77,7 +82,7 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
         }
 
         return Konsekvens(
-            nyTilstand = if (endring.isRight()) VirksomhetVurderes else AlleSamarbeidIVirksomhetErAvsluttet,
+            nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
             endring = endring,
         )
     }

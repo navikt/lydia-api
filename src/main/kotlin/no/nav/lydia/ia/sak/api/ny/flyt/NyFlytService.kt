@@ -91,40 +91,6 @@ class NyFlytService(
 
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
 
-    fun lagreHendelseOgOppdaterIaSakDto(
-        orgnummer: String,
-        saksnummer: String,
-        hendelsesType: IASakshendelseType,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-        resulterendeSakStatus: IASak.Status,
-        oppdaterSistEndretPåSak: Boolean = true,
-    ): Either<Feil, IASakDto> {
-        val iASakshendelse = IASakshendelse(
-            id = ULID.random(),
-            opprettetTidspunkt = LocalDateTime.now(),
-            saksnummer = saksnummer,
-            hendelsesType = hendelsesType,
-            orgnummer = orgnummer,
-            opprettetAv = saksbehandler.navIdent,
-            opprettetAvRolle = saksbehandler.rolle,
-            navEnhet = navEnhet,
-            resulterendeStatus = null,
-        )
-        iaSakshendelseRepository.lagreHendelse(
-            hendelse = iASakshendelse,
-            sistEndretAvHendelseId = null,
-            resulterendeStatus = resulterendeSakStatus,
-        )
-        return iaSakRepository.oppdaterStatusPåSak(
-            saksnummer = saksnummer,
-            status = resulterendeSakStatus,
-            endretAv = saksbehandler.navIdent,
-            endretAvHendelseId = iASakshendelse.id,
-            oppdaterSistEndretPåSak = oppdaterSistEndretPåSak,
-        ).onRight(::varsleIASakObservers)
-    }
-
     fun slettSamarbeidsplan(
         orgnummer: String,
         saksnummer: String,
@@ -161,39 +127,6 @@ class NyFlytService(
             ).onRight(::varsleIASakObservers)
         }
 
-    fun endrePlanlagtDatoForNesteTilstand(
-        orgnummer: String,
-        saksnummer: String,
-        nyPlanlagtDato: java.time.LocalDate,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-        resulterendeSakStatus: IASak.Status,
-    ): Either<Feil, VirksomhetTilstandAutomatiskOppdateringDto> {
-        if (!nyPlanlagtDato.isAfter(java.time.LocalDate.now())) {
-            return Feil("Planlagt dato må være etter dagens dato", HttpStatusCode.BadRequest).left()
-        }
-
-        val automatiskOppdatering = tilstandVirksomhetRepository.endrePlanlagtDatoForNesteTilstand(
-            orgnr = orgnummer,
-            nyPlanlagtDato = nyPlanlagtDato,
-        ) ?: return Feil(
-            "Fant ingen planlagt tilstandsoppdatering for virksomhet $orgnummer",
-            HttpStatusCode.NotFound,
-        ).left()
-
-        lagreHendelseOgOppdaterIaSakDto(
-            orgnummer = orgnummer,
-            saksnummer = saksnummer,
-            hendelsesType = IASakshendelseType.ENDRE_PLANLAGT_DATO,
-            saksbehandler = saksbehandler,
-            navEnhet = navEnhet,
-            resulterendeSakStatus = resulterendeSakStatus,
-            oppdaterSistEndretPåSak = false,
-        )
-
-        return automatiskOppdatering.right()
-    }
-
     fun bliEier(
         orgnr: String,
         navAnsatt: NavAnsattMedSaksbehandlerRolle,
@@ -221,6 +154,29 @@ class NyFlytService(
     fun slettVirksomhetTilstandAutomatiskOppdatering(orgnr: String) = tilstandVirksomhetRepository.slettVirksomhetTilstandAutomatiskOppdatering(orgnr = orgnr)
 
     // Valideringer
+    fun validerEndringAvPlanlagtDatoForNesteTilstand(
+        orgnummer: String,
+        saksnummer: String,
+        nyPlanlagtDato: java.time.LocalDate,
+    ): Either<Feil, VirksomhetTilstandDto> =
+        either {
+            val virksomhetTilstandDto: VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
+            ensure(virksomhetTilstandDto?.nesteTilstand != null) {
+                Feil(
+                    "Har ikke funnet oppdatering til neste tilstand for saksnummer '$saksnummer'",
+                    HttpStatusCode.BadRequest,
+                )
+            }
+
+            ensure(nyPlanlagtDato.isAfter(java.time.LocalDate.now())) {
+                Feil(
+                    "Planlagt dato må være etter dagens dato for saksnummer '$saksnummer'",
+                    HttpStatusCode.BadRequest,
+                )
+            }
+            virksomhetTilstandDto
+        }
+
     fun validerSlettingAvSamarbeid(
         saksnummer: String,
         samarbeidId: Int,

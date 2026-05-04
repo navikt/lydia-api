@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.EndrePlanlagtDat
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndrePlanlagtDatoForNesteTilstandSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.GjørVirksomhetKlarTilNyVurderingSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.VirksomhetVurderesSideEffect
 import no.nav.lydia.ia.sak.domene.IASak
@@ -52,22 +53,28 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
             }
 
             is EndrePlanlagtDatoForNesteTilstand -> {
-                val endring = fiaKontekst.nyFlytService.endrePlanlagtDatoForNesteTilstand(
+                val sideEffect = EndrePlanlagtDatoForNesteTilstandSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
                     nyPlanlagtDato = hendelse.nyPlanlagtDato,
+                    resulterendeSakStatus = IASak.Status.VURDERT,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
-                    resulterendeSakStatus = IASak.Status.VURDERT,
                 )
-                return Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetErVurdert,
-                )
+                with(receiver = fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    return Konsekvens(
+                        nyTilstand = VirksomhetErVurdert,
+                        endring = resultat,
+                        sideEffect = sideEffect,
+                    )
+                }
             }
 
             else -> {
-                Either.Left(Feil("'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetErVurdert.tilVirksomhetIATilstand()}'", HttpStatusCode.BadRequest))
+                Either.Left(
+                    Feil("'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetErVurdert.tilVirksomhetIATilstand()}'", HttpStatusCode.BadRequest),
+                )
             }
         }
 
