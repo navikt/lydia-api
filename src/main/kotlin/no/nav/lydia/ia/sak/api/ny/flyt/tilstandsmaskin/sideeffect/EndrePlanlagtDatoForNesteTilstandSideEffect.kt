@@ -15,6 +15,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class EndrePlanlagtDatoForNesteTilstandSideEffect(
@@ -25,6 +26,8 @@ class EndrePlanlagtDatoForNesteTilstandSideEffect(
     val saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
     val navEnhet: NavEnhet,
 ) : SideEffect<VirksomhetTilstandAutomatiskOppdateringDto>() {
+    val logger = LoggerFactory.getLogger(this::class.java)
+
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, VirksomhetTilstandAutomatiskOppdateringDto> =
         nyFlytService.validerEndringAvPlanlagtDatoForNesteTilstand(
@@ -64,6 +67,7 @@ class EndrePlanlagtDatoForNesteTilstandSideEffect(
                 }
             }.also { result: Pair<IASakDto, VirksomhetTilstandAutomatiskOppdateringDto?> ->
                 nyFlytService.varsleIASakObservers(result.first)
+                logger.info("EndrePlanlagtDatoForNesteTilstand kjørt for saksnummer='$saksnummer', nyPlanlagtDato='$nyPlanlagtDato'")
             }.second ?: error("Fant ingen tilstand_automatisk_oppdatering for saksnummer '$saksnummer'")
         }
 }

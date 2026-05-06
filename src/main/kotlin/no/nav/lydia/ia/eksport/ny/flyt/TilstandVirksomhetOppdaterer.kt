@@ -7,6 +7,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.ny.flyt.FiaKontekst
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandVirksomhetRepository
+import no.nav.lydia.ia.sak.api.ny.flyt.tilTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
@@ -35,9 +36,9 @@ class TilstandVirksomhetOppdaterer(
             val konsekvens = tilstandsmaskin(it.orgnr).prosesserHendelse(
                 hendelse = hendelse,
             )
-            log.info("Oppdatert tilstand for virksomhet ${it.orgnr}, ny tilstand: ${konsekvens.nyTilstand}")
+            log.info("Oppdatert tilstand for virksomhet. Gammel tilstand: ${it.tilstand.tilTilstand().navn()}. Ny tilstand: ${konsekvens.nyTilstand.navn()}")
             nyFlytService.slettVirksomhetTilstandAutomatiskOppdatering(it.orgnr)
-            log.info("Slettet planlagt tilstandsoppdatering for virksomhet ${it.orgnr}.")
+            log.info("Slettet planlagt tilstandsoppdatering for virksomhet.")
         }
         log.info("Ferdig med å oppdatere alle tilstand virksomheter.")
     }
