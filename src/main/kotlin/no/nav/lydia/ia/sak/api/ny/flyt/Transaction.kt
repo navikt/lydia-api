@@ -845,7 +845,63 @@ fun settPlanTilFullført(plan: Plan) {
 }
 
 context(tx: TransactionalSession)
+fun settPlanTilSlettet(planId: UUID): Plan {
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_sak_plan
+            SET status = :statusSlettet
+            WHERE plan_id = :planId
+            """.trimIndent(),
+            mapOf(
+                "statusSlettet" to IASamarbeid.Status.SLETTET.name,
+                "planId" to planId.toString(),
+            ),
+        ).asUpdate,
+    )
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_sak_plan_undertema
+            SET inkludert = false, start_dato = null, slutt_dato = null
+            WHERE plan_id = :planId
+            """.trimIndent(),
+            mapOf("planId" to planId.toString()),
+        ).asUpdate,
+    )
+    tx.run(
+        queryOf(
+            """
+            UPDATE ia_sak_plan_tema
+            SET inkludert = false
+            WHERE plan_id = :planId
+            """.trimIndent(),
+            mapOf("planId" to planId.toString()),
+        ).asUpdate,
+    )
+    return hentPlanById(planId = planId, tx = tx)
+        ?: error("Fant ikke plan med id $planId etter sletting")
+}
+
+context(tx: TransactionalSession)
 fun hentPlan(samarbeidId: Int) = hentPlan(samarbeidId, tx)
+
+private fun hentPlanById(
+    planId: UUID,
+    tx: TransactionalSession,
+): Plan? =
+    tx.run(
+        queryOf(
+            """
+            SELECT *
+            FROM ia_sak_plan
+            WHERE plan_id = :planId
+            """.trimIndent(),
+            mapOf(
+                "planId" to planId.toString(),
+            ),
+        ).map { tilPlan(row = it, tx = tx) }.asSingle,
+    )
 
 private fun hentPlan(
     samarbeidId: Int,

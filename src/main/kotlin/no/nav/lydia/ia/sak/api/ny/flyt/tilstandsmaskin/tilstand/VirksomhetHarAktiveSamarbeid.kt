@@ -32,6 +32,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettKartleg
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.OpprettSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.SlettKartleggingSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.SlettPlanForSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.SlettSamarbeidSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.StartKartleggingSideEffect
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
@@ -239,17 +240,21 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
             }
 
             is SlettPlanForSamarbeid -> {
-                val endring = fiaKontekst.nyFlytService.slettSamarbeidsplan(
+                val sideEffect = SlettPlanForSamarbeidSideEffect(
                     orgnummer = hendelse.orgnr,
                     saksnummer = fiaKontekst.saksnummer!!,
                     samarbeidId = hendelse.samarbeidId,
                     saksbehandler = hendelse.saksbehandler,
                     navEnhet = hendelse.navEnhet,
                 )
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetHarAktiveSamarbeid,
-                )
+                with(fiaKontekst.nyFlytService) {
+                    val resultat = sideEffect.apply()
+                    Konsekvens(
+                        nyTilstand = VirksomhetHarAktiveSamarbeid,
+                        endring = resultat,
+                        sideEffect = sideEffect,
+                    )
+                }
             }
 
             is SlettSamarbeid -> {

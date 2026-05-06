@@ -6,7 +6,6 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.right
-import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.IASamarbeidFeil
@@ -31,12 +30,9 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseErr
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 import no.nav.lydia.ia.sak.db.IASakRepository
-import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
-import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -44,11 +40,9 @@ import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.team.IATeamService
-import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -56,7 +50,6 @@ class NyFlytService(
     val dataSource: DataSource,
     val tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     val iaSakRepository: IASakRepository,
-    val iaSakshendelseRepository: IASakshendelseRepository,
     val iaSamarbeidService: IASamarbeidService,
     val iaSamarbeidRepository: IASamarbeidRepository, // TODO: bruk Service i stedet
     val iaTeamService: IATeamService,
@@ -90,42 +83,6 @@ class NyFlytService(
     }
 
     fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
-
-    fun slettSamarbeidsplan(
-        orgnummer: String,
-        saksnummer: String,
-        samarbeidId: Int,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
-    ): Either<Feil, Plan> =
-        planService.slettPlan(
-            samarbeidId = samarbeidId,
-        ).onRight {
-            val iASakshendelse = IASakshendelse(
-                id = ULID.random(),
-                opprettetTidspunkt = LocalDateTime.now(),
-                saksnummer = saksnummer,
-                hendelsesType = IASakshendelseType.SLETT_SAMARBEIDSPLAN,
-                orgnummer = orgnummer,
-                opprettetAv = saksbehandler.navIdent,
-                opprettetAvRolle = saksbehandler.rolle,
-                navEnhet = navEnhet,
-                resulterendeStatus = null,
-            )
-
-            iaSakshendelseRepository.lagreHendelse(
-                hendelse = iASakshendelse,
-                sistEndretAvHendelseId = null,
-                resulterendeStatus = AKTIV,
-            )
-
-            iaSakRepository.oppdaterStatusPåSak(
-                saksnummer = saksnummer,
-                status = AKTIV,
-                endretAv = saksbehandler.navIdent,
-                endretAvHendelseId = iASakshendelse.id,
-            ).onRight(::varsleIASakObservers)
-        }
 
     fun bliEier(
         orgnr: String,
@@ -496,6 +453,20 @@ class NyFlytService(
 
             ensure(!(nyStatus == PlanUndertema.Status.AVBRUTT && undertema.starterIFremtiden())) {
                 PlanFeil.`innhold starter i fremtiden`
+            }
+
+            plan
+        }
+
+    fun validerSlettingAvSamarbeidsplan(samarbeidId: Int): Either<Feil, Plan> =
+        either {
+            val plan = planService.hentPlan(samarbeidId = samarbeidId).bind()
+
+            val finnesSalesforceAktivitet = plan.temaer.any { tema ->
+                tema.undertemaer.any { undertema -> undertema.aktiviteterISalesforce.isNotEmpty() }
+            }
+            ensure(!finnesSalesforceAktivitet) {
+                PlanFeil.`aktiviteter i salesforce`
             }
 
             plan
