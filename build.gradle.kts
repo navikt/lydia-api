@@ -55,9 +55,9 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.16.5")
 
     // Database
-    implementation("org.postgresql:postgresql:42.7.10")
+    implementation("org.postgresql:postgresql:42.7.11")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:12.4.0")
+    implementation("org.flywaydb:flyway-database-postgresql:12.5.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
