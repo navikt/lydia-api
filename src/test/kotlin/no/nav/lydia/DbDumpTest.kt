@@ -2,9 +2,14 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.DokumentPubliseringHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettKartlegging
@@ -13,9 +18,8 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.SakHelper.Companion.fullførSak
+import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -71,33 +75,37 @@ class DbDumpTest {
         val slettetVirksomhetMedAktivitet = lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "SLETTET VIRKSOMHET MED AKTIVITET AS"),
         )
-        SakHelper.nySakIViBistår(orgnummer = slettetVirksomhetMedAktivitet.orgnr)
-            .fullførSak()
+
+        slettetVirksomhetMedAktivitet.opprettOgFullførSamarbeidsperiode()
+
         VirksomhetHelper.sendSlettingForVirksomhet(slettetVirksomhetMedAktivitet)
     }
 
     private fun opprettVirksomhetMedFlereSaker() {
-        val orgnr = lastInnNyVirksomhet(
+        val virksomhet = lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "HURRA MEG RUNDT AS"),
-        ).orgnr
-        val eldgammelSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
-        eldgammelSak.leggTilFolger(authContainerHelper.saksbehandler3.token)
-        eldgammelSak.fullførSak()
-        eldgammelSak.oppdaterHendelsesTidspunkter(180)
+        )
 
-        val gammelSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
-        gammelSak.leggTilFolger(authContainerHelper.saksbehandler3.token)
-        gammelSak.fullførSak()
-        gammelSak.oppdaterHendelsesTidspunkter(90)
+        // eldgammel samarbeidsperiode
+        virksomhet.aktivSamarbeidsperiode()
+            .leggTilFolger(authContainerHelper.saksbehandler3.token)
+            .fullførSamarbeidsperiode()
+            .oppdaterHendelsesTidspunkter(180)
 
-        val sak = SakHelper.nySakIViBistår(orgnummer = orgnr)
-        sak.leggTilFolger(authContainerHelper.saksbehandler3.token)
+        // gammel samarbeidsperiode
+        virksomhet.aktivSamarbeidsperiode()
+            .leggTilFolger(authContainerHelper.saksbehandler3.token)
+            .fullførSamarbeidsperiode()
+            .oppdaterHendelsesTidspunkter(90)
+
+        // aktiv samarbeidsperiode
+        virksomhet.aktivSamarbeidsperiode()
+            .leggTilFolger(authContainerHelper.saksbehandler3.token)
     }
 
     private fun opprettVirksomhetMedKartlegginger() {
-        val orgnr = "123459876"
-        lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(orgnr = orgnr, navn = "SPENSTIG KATTEDYR"))
-        val sak = SakHelper.nySakIViBistår(orgnummer = orgnr, navnPåSamarbeid = "Avdeling Pusekatt")
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(orgnr = "123459876", navn = "SPENSTIG KATTEDYR"))
+        val sak = virksomhet.aktivSamarbeidsperiode(samarbeidsnavn = "Avdeling Pusekatt")
 
         // -- behovsvurdering, kun opprettet
         sak.opprettBehovsvurdering()
@@ -177,7 +185,7 @@ class DbDumpTest {
         besvarSpørsmålITemaer(listOf(behovsvurdering.temaer[1]), sesjonsIder, behovsvurdering.id) {
             it.chunked(it.size / 2).first()
         }
-        behovsvurdering.avslutt(orgnummer = orgnr, saksnummer = this.saksnummer)
+        behovsvurdering.fullfør(orgnummer = orgnr, saksnummer = this.saksnummer)
     }
 
     private fun IASakDto.kartleggingFørsteTemaBesvart(
@@ -201,7 +209,7 @@ class DbDumpTest {
         val behovsvurdering = this.opprettKartlegging(type = type)
         behovsvurdering.start(orgnummer = orgnr, saksnummer = this.saksnummer)
         besvarSpørsmålITemaer(block(behovsvurdering), sesjonsIder, behovsvurdering.id)
-        return behovsvurdering.avslutt(orgnummer = orgnr, saksnummer = this.saksnummer)
+        return behovsvurdering.fullfør(orgnummer = orgnr, saksnummer = this.saksnummer)
     }
 
     private fun besvarSpørsmålITemaer(
@@ -230,20 +238,13 @@ class DbDumpTest {
             authContainerHelper.saksbehandler2.token,
         ).forEach { token ->
             // -- Prioritert virksomhet
-            SakHelper.opprettSakForVirksomhet(orgnummer = VirksomhetHelper.nyttOrgnummer())
+            vurderVirksomhet()
 
             // -- Prioritert virksomhet eierskap tatt
-            SakHelper.opprettSakForVirksomhet(orgnummer = VirksomhetHelper.nyttOrgnummer())
-                .nyHendelse(TA_EIERSKAP_I_SAK, token = token)
-
-            // -- Virksomhet kontaktes
-            SakHelper.nySakIKontaktes(token = token)
-
-            // -- Virksomhet kartlegges
-            SakHelper.nySakIKartlegges(token = token)
+            vurderVirksomhet().bliEier(token = token)
 
             // -- Virksomhet biståes med ett samarbeid
-            SakHelper.nySakIViBistår(token = token)
+            vurderVirksomhet().opprettSamarbeid(token = token)
         }
     }
 

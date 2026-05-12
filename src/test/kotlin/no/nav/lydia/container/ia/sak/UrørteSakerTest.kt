@@ -2,20 +2,18 @@ package no.nav.lydia.container.ia.sak
 
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.Rolle
@@ -25,7 +23,7 @@ import org.junit.Test
 class UrørteSakerTest {
     @Test
     fun `skal tilbakeføre urørte saker i vurderes uten eier`() {
-        val urørtGammelSak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val urørtGammelSak = vurderVirksomhet()
         urørtGammelSak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 365)
 
         val sakFørRydding = hentSak(orgnummer = urørtGammelSak.orgnr, saksnummer = urørtGammelSak.saksnummer)
@@ -55,11 +53,7 @@ class UrørteSakerTest {
 
     @Test
     fun `skal ikke tilbakeføre andre gamle saker enn de som er i vurderes uten eier`() {
-        val sakMedEier = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.saksbehandler1.token,
-            )
+        val sakMedEier = vurderVirksomhet().bliEier(token = authContainerHelper.superbruker1.token).third.get()
         sakMedEier.oppdaterHendelsesTidspunkter(antallDagerTilbake = 365)
 
         val sakFørRydding = hentSak(orgnummer = sakMedEier.orgnr, saksnummer = sakMedEier.saksnummer)
@@ -77,7 +71,7 @@ class UrørteSakerTest {
 
     @Test
     fun `skal ikke tilbakeføre saker som er nyere enn 6 måneder i vurderes uten eier`() {
-        val urørtNyereSak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val urørtNyereSak = vurderVirksomhet()
         urørtNyereSak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 20)
 
         val sakFørRydding = hentSak(orgnummer = urørtNyereSak.orgnr, saksnummer = urørtNyereSak.saksnummer)

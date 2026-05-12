@@ -22,7 +22,6 @@ data class IASakDto(
     val eidAv: String?,
     val endretAvHendelseId: String,
     val gyldigeNesteHendelser: List<GyldigHendelse>,
-    val lukket: Boolean,
 ) {
     @Transient
     private val sakshendelser = mutableListOf<IASakshendelse>()
@@ -34,9 +33,9 @@ data class IASakDto(
     }
 
     companion object {
-        fun List<IASak>.toDto(navAnsatt: NavAnsatt) = this.map { it.toDto(navAnsatt) }
+        fun List<IASak>.toDto() = this.map { it.toDto() }
 
-        fun IASak.toDto(navAnsatt: NavAnsatt) =
+        fun IASak.toDto() =
             IASakDto(
                 saksnummer = this.saksnummer,
                 orgnr = this.orgnr,
@@ -47,13 +46,7 @@ data class IASakDto(
                 endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime(),
                 eidAv = this.eidAv,
                 endretAvHendelseId = this.endretAvHendelseId,
-                gyldigeNesteHendelser = when (navAnsatt) {
-                    is NavAnsattMedSaksbehandlerRolle -> this.gyldigeNesteHendelser(navAnsatt, false)
-                    else -> listOf()
-                },
-                lukket = this.erLukket(),
+                gyldigeNesteHendelser = listOf(), // TODO: [OPPRYDDING] Fjern fra frontend
             )
-
-        fun IASak.erLukket() = this.erEtterFristenForLåsingAvSak() && (this.status == IASak.Status.FULLFØRT || this.status == IASak.Status.IKKE_AKTUELL)
     }
 }

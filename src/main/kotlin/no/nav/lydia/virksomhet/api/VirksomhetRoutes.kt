@@ -32,8 +32,8 @@ fun Route.virksomhet(
     get("$VIRKSOMHET_PATH/{orgnummer}") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
-        call.somLesebruker(adGrupper = adGrupper) { navAnsatt ->
-            val aktivSak = iaSakService.hentAktivSak(orgnummer = orgnummer, navAnsatt = navAnsatt)
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            val aktivSak = iaSakService.hentAktivSak(orgnummer = orgnummer)
             virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto(saksnummer = aktivSak?.saksnummer)
                 ?.right() ?: VirksomhetFeil.`fant ikke virksomhet`.left()
         }.also {

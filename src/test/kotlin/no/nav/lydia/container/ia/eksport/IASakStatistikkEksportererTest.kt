@@ -2,14 +2,12 @@ package no.nav.lydia.container.ia.eksport
 
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -18,7 +16,6 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
@@ -66,8 +63,7 @@ class IASakStatistikkEksportererTest {
         )
         lastInnNyVirksomhet(virksomhet)
 
-        val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = authContainerHelper.superbruker1.token)
-            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
+        val sak = vurderVirksomhet(virksomhet = virksomhet, token = authContainerHelper.superbruker1.navIdent)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -77,16 +73,15 @@ class IASakStatistikkEksportererTest {
                 val objektene = meldinger.map {
                     Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
                 }
-                objektene shouldHaveSize 3
                 objektene.forExactlyOne {
                     it.saksnummer shouldBe sak.saksnummer
-                    it.eierAvSak shouldBe authContainerHelper.saksbehandler1.navIdent
+                    it.eierAvSak shouldBe authContainerHelper.superbruker1.navIdent
                     it.status shouldBe IASak.Status.VURDERES
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
                     it.bransjeprogram shouldBe Bransje.ANLEGG
-                    it.endretAvRolle shouldBe Rolle.SAKSBEHANDLER
+                    it.endretAvRolle shouldBe Rolle.SUPERBRUKER
                     it.enhetsnummer shouldBe "2900"
                     it.enhetsnavn shouldBe "IT-avdelingen" // -- Bør ha fallback til minst spesifikk avdeling
                 }

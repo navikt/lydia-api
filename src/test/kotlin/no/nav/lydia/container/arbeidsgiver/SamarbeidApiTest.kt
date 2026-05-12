@@ -10,11 +10,11 @@ import io.kotest.matchers.string.shouldBeUUID
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.arbeidsgiver.ARBEIDSGIVER_SAMARBEID_PATH
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførSamarbeidsperiode
 import no.nav.lydia.helper.DokumentPubliseringHelper
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
-import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -38,21 +38,21 @@ class SamarbeidApiTest {
 
     @Test
     fun `skal ikke få samarbeid som ikke har dokumenter knyttet til seg i listen`() {
-        val orgnr = VirksomhetHelper.nyttOrgnummer()
-        SakHelper.nySakIKartleggesMedEtSamarbeid(orgnummer = orgnr, navnPåSamarbeid = "Test")
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet()
+        virksomhet.aktivSamarbeidsperiode(samarbeidsnavn = "Test")
 
-        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(orgnr)
+        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(virksomhet.orgnr)
         samarbeidSomHarDokumenter shouldHaveSize 0
     }
 
     @Test
     fun `skal få ut en liste over samarbeid for et orgnr`() {
-        val orgnr = VirksomhetHelper.nyttOrgnummer()
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid(orgnummer = orgnr, navnPåSamarbeid = "Test")
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet()
+        val sak = virksomhet.aktivSamarbeidsperiode(samarbeidsnavn = "Test")
         val samarbeid = sak.hentAlleSamarbeid().first()
         publiserDokument(sak = sak, samarbeid = samarbeid)
 
-        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(orgnr)
+        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(virksomhet.orgnr)
         samarbeidSomHarDokumenter shouldHaveSize 1
         samarbeidSomHarDokumenter.first().navn shouldBe samarbeid.navn
         samarbeidSomHarDokumenter.first().offentligId.shouldBeUUID(version = UUIDVersion.ANY)
@@ -60,28 +60,28 @@ class SamarbeidApiTest {
 
     @Test
     fun `skal få alle samarbeid for alle saker (også gamle) for et orgnr`() {
-        val orgnr = VirksomhetHelper.nyttOrgnummer()
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet()
 
-        val gammelSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
+        val gammelSak = virksomhet.aktivSamarbeidsperiode()
         publiserDokument(sak = gammelSak)
-        gammelSak.fullførSak()
+        gammelSak.fullførSamarbeidsperiode()
 
-        val aktivSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
+        val aktivSak = virksomhet.aktivSamarbeidsperiode()
         publiserDokument(sak = aktivSak)
 
-        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(orgnr)
+        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(virksomhet.orgnr)
         samarbeidSomHarDokumenter shouldHaveSize 2
     }
 
     @Test
     fun `skal få kun ett samarbeid selvom det er publisert mange dokumenter`() {
-        val orgnr = VirksomhetHelper.nyttOrgnummer()
-        val sak = SakHelper.nySakIViBistår(orgnummer = orgnr)
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet()
+        val sak = virksomhet.aktivSamarbeidsperiode()
         publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)
         publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)
         publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)
 
-        val samarbeid = hentSamarbeidMedDokumenter(orgnr)
+        val samarbeid = hentSamarbeidMedDokumenter(virksomhet.orgnr)
         samarbeid shouldHaveSize 1
         samarbeid.forExactlyOne {
             it.dokumenter shouldHaveSize 3

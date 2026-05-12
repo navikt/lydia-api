@@ -12,7 +12,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTi
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettKartlegging
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
@@ -187,12 +187,12 @@ class VirksomhetOppdateringTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, prosessId = samarbeid.id)
         val evaluering = sak.opprettEvaluering()
         evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        evaluering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        evaluering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val sakEtterFullføring = sak.nyHendelse(
             hendelsestype = IASakshendelseType.FULLFØR_PROSESS,
             payload = Json.encodeToString(

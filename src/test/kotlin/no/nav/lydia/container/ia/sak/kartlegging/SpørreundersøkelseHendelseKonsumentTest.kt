@@ -5,12 +5,12 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.stengTema
-import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -45,7 +45,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
     @Test
     fun `skal oppdatere tema til stengt i databasen`() {
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val spørreundersøkelse = sak.opprettBehovsvurdering()
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = spørreundersøkelse.temaer.first()
@@ -61,7 +61,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
     @Test
     fun `skal oppdatere spørreundersøkelse til stengt i databasen om alle temaer har blitt stengt`() {
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = samarbeid.id)
 
@@ -87,7 +87,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
     @Test
     fun `steng tema skal ikke avslutte spørreundersøkelse før alle temaer er stengt`() {
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = samarbeid.id)
 
@@ -112,7 +112,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
     @Test
     fun `skal sende resultater for stengt tema på kafka`() {
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val spørreundersøkelse = sak.opprettBehovsvurdering()
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = spørreundersøkelse.temaer.first()

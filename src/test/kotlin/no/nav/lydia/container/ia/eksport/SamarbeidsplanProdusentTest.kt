@@ -11,12 +11,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
-import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -29,6 +28,7 @@ import no.nav.lydia.ia.sak.api.plan.PlanDtoI
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -52,10 +52,10 @@ class SamarbeidsplanProdusentTest {
 
     @Test
     fun `fullføring av samarbeid skal trigge fullfør meldinger av plan til SF`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-        sak.fullførSamarbeid(samarbeid)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -78,7 +78,7 @@ class SamarbeidsplanProdusentTest {
     fun `starter re-eksport av alle samarbeidsplaner til salesforce`() {
         val planMal: PlanMalDto = hentPlanMal()
         // Opprette noen saker med planer
-        val sak1 = nySakIKartleggesMedEtSamarbeid()
+        val sak1 = aktivSamarbeidsperiode()
         val samarbeid1 = sak1.hentAlleSamarbeid().first()
         val opprettetPlan1 = sak1.opprettEnPlan(plan = planMal)
         // lytte og konsummere kafka meldingen sendt til SF av "opprett plan funksjon"
@@ -91,7 +91,7 @@ class SamarbeidsplanProdusentTest {
             }
         }
 
-        val sak2 = nySakIKartleggesMedEtSamarbeid()
+        val sak2 = aktivSamarbeidsperiode()
         val samarbeid2 = sak2.hentAlleSamarbeid().first()
         val opprettetPlan2 = sak2.opprettEnPlan(plan = planMal)
         // lytte og konsummere alle kafka meldingen sendt til SF av "opprett plan funksjon"
@@ -116,7 +116,7 @@ class SamarbeidsplanProdusentTest {
 
     @Test
     fun `Nyopprettet samarbeidsplan skal sendes til salesforce`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val planMal: PlanMalDto = hentPlanMal()
 
@@ -157,7 +157,7 @@ class SamarbeidsplanProdusentTest {
 
     @Test
     fun `Skal ikke kunne opprette duplisert plan`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val planMal: PlanMalDto = hentPlanMal()
 

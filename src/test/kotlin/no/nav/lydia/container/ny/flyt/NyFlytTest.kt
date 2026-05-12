@@ -25,6 +25,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserSamarbe
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
+import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -61,7 +62,6 @@ import org.junit.BeforeClass
 import java.time.LocalDate
 import kotlin.test.Ignore
 import kotlin.test.Test
-import kotlin.test.fail
 
 class NyFlytTest {
     companion object {
@@ -110,7 +110,7 @@ class NyFlytTest {
 
     @Test
     fun `Batch jobb - automatisk oppdatering av virksomhet tilstand fra VirksomhetErVurdert til VirksomhetVurderes`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -148,7 +148,7 @@ class NyFlytTest {
 
     @Test
     fun `Batch jobb - automatisk oppdatering av virksomhet tilstand fra VirksomhetErVurdert til VirksomhetKlarTilVurdering`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -186,7 +186,7 @@ class NyFlytTest {
 
     @Test
     fun `Batch jobb - automatisk oppdatering av tilstand fra AlleSamarbeidIVirksomhetErAvsluttet til VirksomhetKlarTilVurdering ved slettSamarbeid`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
@@ -227,7 +227,7 @@ class NyFlytTest {
 
     @Test
     fun `Batch jobb - automatisk oppdatering av tilstand fra AlleSamarbeidIVirksomhetErAvsluttet til VirksomhetKlarTilVurdering ved avsluttSamarbeid`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeid = sak.opprettSamarbeid()
@@ -263,7 +263,7 @@ class NyFlytTest {
 
     @Test
     fun `Batch jobb - skal IKKE prosessere hendelser med planlagt dato i fremtiden`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -289,7 +289,7 @@ class NyFlytTest {
 
     @Test
     fun `Batch jobb - skal prosessere hendelser med planlagt dato i fortiden`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -321,7 +321,7 @@ class NyFlytTest {
 
     @Test
     fun `nesteTilstand skal være null ved Hendelse vurderVirksomhet fra tilstand VirksomhetErVurdert`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -354,7 +354,7 @@ class NyFlytTest {
 
     @Test
     fun `nesteTilstand skal være null ved Hendelse vurderVirksomhet fra tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         val samarbeid = sak.opprettSamarbeid()
@@ -628,7 +628,7 @@ class NyFlytTest {
 
     @Test
     fun `skal kunne vurdere samarbeid med en virksomhet`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         verifiserIASakObserversErVarslet(
@@ -684,7 +684,6 @@ class NyFlytTest {
         val eierAvSak = authContainerHelper.superbruker1
         val følgerAvSak = authContainerHelper.saksbehandler2
         val sak = vurderVirksomhet(
-            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
             token = eierAvSak.token,
         )
         sak.status shouldBe IASak.Status.VURDERES
@@ -717,7 +716,6 @@ class NyFlytTest {
     fun `skal kunne angre vurdering med en virksomhet som har flere følgere`() {
         val eierAvSak = authContainerHelper.superbruker1
         val sak = vurderVirksomhet(
-            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
             token = eierAvSak.token,
         )
         sak.status shouldBe IASak.Status.VURDERES
@@ -737,7 +735,6 @@ class NyFlytTest {
     fun `skal kunne angre vurdering etter å ha opprettet og slettet et samarbeid`() {
         val eierAvSak = authContainerHelper.superbruker1
         val sak = vurderVirksomhet(
-            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
             token = eierAvSak.token,
         )
         sak.status shouldBe IASak.Status.VURDERES
@@ -756,7 +753,7 @@ class NyFlytTest {
 
     @Test
     fun `skal kunne avslutte vurdering som ikke medfører et samarbeid`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         val oppdatertSakDto = sak.avsluttVurdering(
@@ -786,7 +783,7 @@ class NyFlytTest {
 
     @Test
     fun `avslutt vurdering med gyldig årsak gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetKlarTilVurdering`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -810,7 +807,7 @@ class NyFlytTest {
 
     @Test
     fun `avslutt vurdering med årsak 'skal vurderes senere' gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetVurderes`() {
-        val sak = vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120")
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -863,7 +860,6 @@ class NyFlytTest {
         val eierAvSak = authContainerHelper.superbruker1
         val følgerAvSak = authContainerHelper.saksbehandler2
         val sak = vurderVirksomhet(
-            næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120",
             token = eierAvSak.token,
         )
         sak.status shouldBe IASak.Status.VURDERES
@@ -1257,11 +1253,11 @@ class NyFlytTest {
         val superbruker = authContainerHelper.superbruker1
         val virksomhetUtenSak = VirksomhetHelper.nyttOrgnummer()
 
-        val responseUtenSak = virksomhetUtenSak.bliEier(token = superbruker.token)
+        val responseUtenSak = bliEier(orgnr = virksomhetUtenSak, token = superbruker.token)
         responseUtenSak.statuskode() shouldBe HttpStatusCode.BadRequest.value
 
         val virksomhetMedAvsluttetSak = vurderVirksomhet().avsluttVurdering().orgnr
-        val responseMedAvsluttetSak = virksomhetMedAvsluttetSak.bliEier(superbruker.token)
+        val responseMedAvsluttetSak = bliEier(orgnr = virksomhetMedAvsluttetSak, superbruker.token)
         responseMedAvsluttetSak.statuskode() shouldBe HttpStatusCode.BadRequest.value
     }
 
@@ -1274,38 +1270,12 @@ class NyFlytTest {
         responseLesebruker.statuskode() shouldBe HttpStatusCode.Forbidden.value
     }
 
-    private fun IASakDto.bliEier(token: String) = orgnr.bliEier(token)
-
-    private fun String.bliEier(token: String) =
-        applikasjon.performPost("$NY_FLYT_PATH/$this/bli-eier")
-            .authentication().bearer(token = token)
-            .tilSingelRespons<IASakDto>()
-
-    private fun IASamarbeidDto.slettSamarbeidRespons(
+    private fun bliEier(
         orgnr: String,
-        token: String = authContainerHelper.saksbehandler1.token,
-        dato: LocalDate? = null,
-    ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeid" + (dato?.let { "?dato=$it" } ?: ""))
-        .authentication().bearer(token)
-        .tilSingelRespons<IASamarbeidDto>()
-
-    private fun IASamarbeidDto.slettSamarbeid(
-        orgnr: String,
-        token: String = authContainerHelper.saksbehandler1.token,
-        dato: LocalDate? = null,
-    ) = this.slettSamarbeidRespons(
-        orgnr = orgnr,
-        token = token,
-        dato = dato,
-    ).third.fold(
-        success = { respons -> respons },
-        failure = { fail(it.message) },
-    )
-
-    private fun IASakDto.angreVurdering(token: String = authContainerHelper.superbruker1.token) =
-        applikasjon.performPost("$NY_FLYT_PATH/$orgnr/angre-vurdering")
-            .authentication().bearer(token)
-            .tilSingelRespons<IASakDto>()
+        token: String,
+    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/bli-eier")
+        .authentication().bearer(token = token)
+        .tilSingelRespons<IASakDto>()
 
     private fun endrePlanlagtDato(
         orgnr: String,
@@ -1324,22 +1294,4 @@ class NyFlytTest {
                 ),
             ),
         ).tilSingelRespons<VirksomhetTilstandAutomatiskOppdateringDto>()
-
-    private fun endreSamarbeidsNavn(
-        orgnr: String,
-        samarbeidId: Int,
-        saksnummer: String,
-        nyttNavn: String,
-        token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performPut("$NY_FLYT_PATH/virksomhet/$orgnr/samarbeid/$samarbeidId/oppdater")
-        .authentication().bearer(token)
-        .jsonBody(
-            Json.encodeToString(
-                IASamarbeidDto(
-                    id = samarbeidId,
-                    saksnummer = saksnummer,
-                    navn = nyttNavn,
-                ),
-            ),
-        ).tilSingelRespons<IASamarbeidDto>()
 }

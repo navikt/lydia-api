@@ -15,6 +15,8 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettKartlegging
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.startKartlegging
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSakNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -164,9 +166,9 @@ class NyFlytKartleggingTest {
         )
         opprettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
-        val startetBehovsvurdering = samarbeid.startKartlegging(
+        val startetBehovsvurdering = opprettetBehovsvurdering.startKartlegging(
             orgnr = sak.orgnr,
-            kartleggingId = opprettetBehovsvurdering.id,
+            saksnummer = sak.saksnummer,
         )
         startetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
@@ -192,17 +194,17 @@ class NyFlytKartleggingTest {
 
         val opprettetBehovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
 
-        samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetBehovsvurdering.id,
+        opprettetBehovsvurdering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
-        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
+        val sakFørKartleggingErSlettet = hentSak(orgnummer = sak.orgnr)
 
         val slettetBehovsvurdering = samarbeid.slettKartlegging(orgnr = sak.orgnr, kartleggingId = opprettetBehovsvurdering.id)
 
         slettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.SLETTET
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+        hentSak(orgnummer = sak.orgnr).let {
             it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
             it.status shouldBe sakFørKartleggingErSlettet.status
         }

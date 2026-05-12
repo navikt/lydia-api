@@ -19,6 +19,7 @@ import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.INGEN_EV
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.INGEN_PLAN
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.SAK_I_FEIL_STATUS
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -82,7 +83,7 @@ class IASamarbeidService(
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
 
-    fun hentAktiveSamarbeid(sak: IASak): List<IASamarbeid> = samarbeidRepository.hentAktiveSamarbeid(saksnummer = sak.saksnummer)
+    fun hentAktiveSamarbeid(sak: IASakDto): List<IASamarbeid> = samarbeidRepository.hentAktiveSamarbeid(saksnummer = sak.saksnummer)
 
     fun hentAlleSamarbeidSomIkkeErSlettet(saksnummer: String): List<IASamarbeid> = samarbeidRepository.hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
 

@@ -8,22 +8,20 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
-import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent.SpørreundersøkelseEksport
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -50,7 +48,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `Oppretting av en spørreundersøkelse med typen 'Behovsvurdering' skal trigge kafka-eksport`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val opprettetBehovsvurdering = sak.opprettBehovsvurdering()
 
         runBlocking {
@@ -79,7 +77,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `Oppretting av en spørreundersøkelse med typen 'Evaluering' skal trigge kafka-eksport`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val opprettetEvaluering = sak.opprettEvaluering()
 
@@ -109,7 +107,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `Start av en spørreundersøkelse med typen 'Behovsvurdering' skal trigge kafka-eksport`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val startetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(
                 orgnummer = sak.orgnr,
@@ -143,7 +141,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `Start av en spørreundersøkelse med typen 'Evaluering' skal trigge kafka-eksport`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val startetEvaluering = sak.opprettEvaluering().start(
             orgnummer = sak.orgnr,
@@ -178,13 +176,13 @@ class SpørreundersøkelseBigqueryEksportererTest {
     @Test
     fun `Avslutting av en spørreundersøkelse med typen 'Behovsvurdering' skal trigge kafka-eksport`() {
         // TODO: Denne kan til tider være litt flaky, samme med de fleste "trigge kafka eksport" testene i min erfaring - Sindre
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val avsluttetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
             )
-            .avslutt(
+            .fullfør(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
             )
@@ -215,12 +213,12 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `Avslutting av en spørreundersøkelse med typen 'Evaluering' skal trigge kafka-eksport`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val avsluttetEvaluering = sak.opprettEvaluering().start(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-        ).avslutt(
+        ).fullfør(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
         )
@@ -251,7 +249,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `Behovsvurdering med info om besvarelse skal kunne sendes før fullføring`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val avsluttetSpørreundersøkelse = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
 
         runBlocking {
@@ -283,11 +281,11 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `jobb starter re-eksport av alle behovsvurderinger til bigquery`() {
-        val sak1 = nySakIKartlegges()
-        val samarbeid1 = sak1.opprettNyttSamarbeid().hentAlleSamarbeid().first()
+        val sak1 = vurderVirksomhet()
+        val samarbeid1 = sak1.opprettSamarbeid()
         sak1.opprettBehovsvurdering(samarbeidId = samarbeid1.id)
-        val sak2 = nySakIKartlegges()
-        val samarbeid2 = sak2.opprettNyttSamarbeid().hentAlleSamarbeid().first()
+        val sak2 = vurderVirksomhet()
+        val samarbeid2 = sak2.opprettSamarbeid()
         sak2.opprettBehovsvurdering(samarbeidId = samarbeid2.id)
 
         runBlocking { kafkaContainerHelper.sendJobbMelding(Jobb.spørreundersøkelseBigQueryEksport) }

@@ -30,8 +30,6 @@ import no.nav.lydia.arbeidsgiver.samarbeid
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent
 import no.nav.lydia.ia.eksport.IASakEksporterer
-import no.nav.lydia.ia.eksport.IASakProdusent
-import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
 import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
@@ -47,7 +45,6 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.eksport.ny.flyt.IASakDtoProdusent
 import no.nav.lydia.ia.eksport.ny.flyt.IASakDtoStatistikkProdusent
 import no.nav.lydia.ia.eksport.ny.flyt.TilstandVirksomhetOppdaterer
-import no.nav.lydia.ia.sak.EierskapsendringObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
@@ -65,7 +62,6 @@ import no.nav.lydia.ia.sak.api.dokument.dokumentPublisering
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.TilstandVirksomhetRepository
-import no.nav.lydia.ia.sak.api.ny.flyt.migrering.NyFlytMigreringService
 import no.nav.lydia.ia.sak.api.ny.flyt.nyFlyt
 import no.nav.lydia.ia.sak.api.ny.flyt.nyFlytKartlegging
 import no.nav.lydia.ia.sak.api.ny.flyt.nyFlytSamarbeidsplan
@@ -82,8 +78,6 @@ import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.team.IATeamRepository
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.team.iaSakTeam
-import no.nav.lydia.ia.årsak.db.ÅrsakRepository
-import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
@@ -116,9 +110,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetCo
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
-import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
-import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -154,19 +146,9 @@ fun startLydiaBackend() {
         sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
         virksomhetRepository = virksomhetRepository,
     )
-    val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnv.miljø)
     val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
-    val iaSakProdusent = IASakProdusent(kafka = naisEnv.kafka)
     val iaSakDtoProdusent = IASakDtoProdusent(kafka = naisEnv.kafka)
-    val iaSakStatistikkProdusent = IASakStatistikkProdusent(
-        kafka = naisEnv.kafka,
-        virksomhetRepository = virksomhetRepository,
-        sykefraværsstatistikkService = sykefraværsstatistikkService,
-        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-        geografiService = GeografiService(),
-        sistePubliseringService = sistePubliseringService,
-    )
     val iaSakDtoStatistikkProdusent = IASakDtoStatistikkProdusent(
         kafka = naisEnv.kafka,
         virksomhetRepository = virksomhetRepository,
@@ -209,10 +191,6 @@ fun startLydiaBackend() {
     )
 
     val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
-    val eierskapsendringObserver = EierskapsendringObserver(
-        iaTeamService = iaTeamService,
-    )
-
     val spørreundersøkelseMetrikkObserver = SpørreundersøkelseMetrikkObserver()
     val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
         kafka = naisEnv.kafka,
@@ -224,19 +202,9 @@ fun startLydiaBackend() {
         iaSakRepository = iaSakRepository,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
-        årsakService = ÅrsakService(årsakRepository = årsakRepository),
-        iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent),
         samarbeidService = samarbeidService,
         planRepository = planRepository,
-        endringsObservers = listOf(eierskapsendringObserver),
         spørreundersøkelseRepository = spørreundersøkelseRepository,
-        spørreundersøkelseObservers = listOf(
-            spørreundersøkelseProdusent,
-            spørreundersøkelseMetrikkObserver,
-            fullførtBehovsvurderingProdusent,
-            spørreundersøkelseBigqueryProdusent,
-        ),
-        iaTeamService = iaTeamService,
     )
 
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
@@ -323,10 +291,6 @@ fun startLydiaBackend() {
         statistikkViewOppdaterer = StatistikkViewOppdaterer(
             dataSource = dataSource,
         ),
-        iaSakhendelseStatusJobb = IaSakhendelseStatusJobb(
-            iaSakRepository = iaSakRepository,
-            iaSakshendelseRepository = iaSakshendelseRepository,
-        ),
         samarbeidsplanKafkaEksporterer = SamarbeidsplanKafkaEksporterer(
             samarbeidsplanProdusent = samarbeidsplanProdusent,
             planRepository = planRepository,
@@ -347,18 +311,9 @@ fun startLydiaBackend() {
             samarbeidRepository = samarbeidRepository,
             samarbeidProdusent = samarbeidProdusent,
         ),
-        iaSakSamarbeidOppdaterer = IASakSamarbeidOppdaterer(
-            iaSakService = iaSakService,
-        ),
         virksomhetService = virksomhetService,
         iaSakService = iaSakService,
         tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
-        nyFlytMigreringService = NyFlytMigreringService(
-            nyFlytService = nyFlytService,
-            iaSakService = iaSakService,
-            samarbeidService = samarbeidService,
-            geografiService = GeografiService(),
-        ),
     )
 
     listOf(
@@ -472,17 +427,14 @@ private fun jobblytter(
     iaSakEksporterer: IASakEksporterer,
     næringsDownloader: NæringsDownloader,
     statistikkViewOppdaterer: StatistikkViewOppdaterer,
-    iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
     samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
     samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
     samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer,
     spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
     samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
-    iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
-    nyFlytMigreringService: NyFlytMigreringService,
 ) {
     Jobblytter.apply {
         create(
@@ -491,17 +443,14 @@ private fun jobblytter(
             iaSakEksporterer = iaSakEksporterer,
             næringsDownloader = næringsDownloader,
             statistikkViewOppdaterer = statistikkViewOppdaterer,
-            iaSakhendelseStatusJobb = iaSakhendelseStatusJobb,
             samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer,
             samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer,
             spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer,
             samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer,
             samarbeidKafkaEksporterer = samarbeidKafkaEksporterer,
-            iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer,
             virksomhetService = virksomhetService,
             iaSakService = iaSakService,
             tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
-            nyFlytMigreringService = nyFlytMigreringService,
         )
         run()
     }
@@ -590,7 +539,6 @@ private fun Application.lydiaRestApi(
                 samarbeidService = samarbeidService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
-                azureService = azureService,
             )
             nyFlyt(
                 iaSakService = iaSakService,

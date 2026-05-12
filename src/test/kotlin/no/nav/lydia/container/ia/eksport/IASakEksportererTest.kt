@@ -6,13 +6,10 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -36,11 +33,7 @@ class IASakEksportererTest {
 
     @Test
     fun `skal trigge kafka-eksport av IASaker`() {
-        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = VirksomhetHelper.nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.saksbehandler1.token,
-            )
+        val sak = vurderVirksomhet(token = authContainerHelper.superbruker1.navIdent)
 
         runBlocking {
             kafkaContainerHelper.sendJobbMelding(iaSakEksport)
@@ -52,7 +45,7 @@ class IASakEksportererTest {
                 meldinger shouldHaveAtLeastSize 1
                 meldinger.forAtLeastOne {
                     it shouldContain sak.saksnummer
-                    it shouldContain authContainerHelper.saksbehandler1.navIdent
+                    it shouldContain authContainerHelper.superbruker1.navIdent
                     it shouldContain IASak.Status.VURDERES.name
                 }
             }
