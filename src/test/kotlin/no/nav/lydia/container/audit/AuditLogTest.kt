@@ -8,12 +8,14 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhetResponse
 import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.FYLKER
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.KOMMUNER
@@ -24,6 +26,30 @@ import kotlin.test.Test
 class AuditLogTest {
     @Test
     fun `auditlogger opprettelse av IA-sak`() {
+        val virksomhet = lastInnNyVirksomhet()
+
+        vurderVirksomhetResponse(virksomhet = virksomhet, token = authContainerHelper.saksbehandler1.token)
+            .also {
+                applikasjon shouldContainLog auditLog(
+                    request = it.first,
+                    navIdent = authContainerHelper.saksbehandler1.navIdent,
+                    orgnummer = virksomhet.orgnr,
+                    auditType = AuditType.create,
+                    tillat = Tillat.Nei,
+                )
+            }
+
+        vurderVirksomhetResponse(virksomhet = virksomhet, token = authContainerHelper.brukerUtenTilgangsrolle.token)
+            .also {
+                applikasjon shouldContainLog auditLog(
+                    request = it.first,
+                    navIdent = authContainerHelper.brukerUtenTilgangsrolle.navIdent,
+                    orgnummer = virksomhet.orgnr,
+                    auditType = AuditType.create,
+                    tillat = Tillat.Nei,
+                )
+            }
+
         vurderVirksomhetResponse(token = authContainerHelper.superbruker1.token)
             .also {
                 applikasjon shouldContainLog auditLog(
@@ -35,50 +61,28 @@ class AuditLogTest {
                     saksnummer = it.third.get().saksnummer,
                 )
             }
-
-        vurderVirksomhetResponse(token = authContainerHelper.saksbehandler1.token)
-            .also {
-                applikasjon shouldContainLog auditLog(
-                    request = it.first,
-                    navIdent = authContainerHelper.saksbehandler1.navIdent,
-                    orgnummer = it.third.get().orgnr,
-                    auditType = AuditType.create,
-                    tillat = Tillat.Nei,
-                )
-            }
-
-        vurderVirksomhetResponse(token = authContainerHelper.brukerUtenTilgangsrolle.token)
-            .also {
-                applikasjon shouldContainLog auditLog(
-                    request = it.first,
-                    navIdent = authContainerHelper.brukerUtenTilgangsrolle.navIdent,
-                    orgnummer = it.third.get().orgnr,
-                    auditType = AuditType.create,
-                    tillat = Tillat.Nei,
-                )
-            }
     }
 
     @Test
     fun `auditlogger oppdatering av IA-sak`() {
         val samarbeidsperiode = vurderVirksomhet(token = authContainerHelper.superbruker1.token)
 
-        val lesebrukerResponse = samarbeidsperiode.opprettSamarbeidResponse(authContainerHelper.lesebruker.navIdent)
+        val lesebrukerResponse = samarbeidsperiode.opprettSamarbeidResponse(token = authContainerHelper.lesebruker.token)
         applikasjon shouldContainLog auditLog(
             request = lesebrukerResponse.first,
             navIdent = authContainerHelper.lesebruker.navIdent,
             orgnummer = samarbeidsperiode.orgnr,
-            auditType = AuditType.update,
+            auditType = AuditType.create,
             tillat = Tillat.Nei,
-            saksnummer = samarbeidsperiode.saksnummer,
         )
 
-        val opprettSamarbeidResponse = samarbeidsperiode.opprettSamarbeidResponse(authContainerHelper.saksbehandler1.navIdent)
+        samarbeidsperiode.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val opprettSamarbeidResponse = samarbeidsperiode.opprettSamarbeidResponse(authContainerHelper.saksbehandler1.token)
         applikasjon shouldContainLog auditLog(
             request = opprettSamarbeidResponse.first,
             navIdent = authContainerHelper.saksbehandler1.navIdent,
             orgnummer = samarbeidsperiode.orgnr,
-            auditType = AuditType.update,
+            auditType = AuditType.create,
             tillat = Tillat.Ja,
             saksnummer = samarbeidsperiode.saksnummer,
         )

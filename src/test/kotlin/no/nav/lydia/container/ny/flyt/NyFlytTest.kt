@@ -193,7 +193,7 @@ class NyFlytTest {
     fun `Batch jobb - automatisk oppdatering av tilstand fra AlleSamarbeidIVirksomhetErAvsluttet til VirksomhetKlarTilVurdering ved slettSamarbeid`() {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
         val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
@@ -234,7 +234,7 @@ class NyFlytTest {
     fun `Batch jobb - automatisk oppdatering av tilstand fra AlleSamarbeidIVirksomhetErAvsluttet til VirksomhetKlarTilVurdering ved avsluttSamarbeid`() {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
@@ -361,7 +361,7 @@ class NyFlytTest {
     fun `nesteTilstand skal være null ved Hendelse vurderVirksomhet fra tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
@@ -388,7 +388,7 @@ class NyFlytTest {
     @Test
     fun `Hendelse EndrePlanlagtDatoForNesteTilstand fra Tilstand AlleSamarbeidIVirksomhetErAvsluttet skal gi en nyPlanlagtDato`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
@@ -568,7 +568,7 @@ class NyFlytTest {
     @Test
     fun `EndrePlanlagtDato fra AlleSamarbeidIVirksomhetErAvsluttet lagrer IASakshendelse med type ENDRE_PLANLAGT_DATO og status AVSLUTTET`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
@@ -593,7 +593,7 @@ class NyFlytTest {
     @Test
     fun `Hendelse EndreSamarbeidsNavn fra Tilstand VirksomhetHarAktiveSamarbeid skal gi et nytt samarbeidsNavn og lagre IASakshendelseType ENDRE_PROSESS`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Opprinnelig navn")
 
         val tilstandFørEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
@@ -736,7 +736,7 @@ class NyFlytTest {
         )
         sak.status shouldBe IASak.Status.VURDERES
 
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
 
         val samarbeid = sak.opprettSamarbeid(token = eierAvSak.token)
         samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = eierAvSak.token)
@@ -912,7 +912,7 @@ class NyFlytTest {
     @Test
     fun `skal ikke kunne slette et samarbeid med plan`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(
             orgnr = sak.orgnr,
@@ -929,7 +929,7 @@ class NyFlytTest {
     @Test
     fun `status er fortsatt AKTIV dersom det gjenstår en eller flere samarbeid etter slett samarbeid`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
@@ -944,7 +944,7 @@ class NyFlytTest {
     @Test
     fun `sletting av eneste samarbeid i virksomhet som er i tilstand VirksomhetHarAktiveSamarbeid fører til VirksomhetVurderes`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
@@ -955,7 +955,7 @@ class NyFlytTest {
     @Test
     fun `sletting av siste samarbeid i en virksomhet med fullførte samarbeid fører til AlleSamarbeidIVirksomhetErAvsluttet`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
         val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
@@ -971,7 +971,7 @@ class NyFlytTest {
     @Test
     fun `ved avslutning(FULLFØR) av siste samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal virksomheten gå til status AVSLUTTET`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
@@ -987,7 +987,7 @@ class NyFlytTest {
     @Test
     fun `ved avslutning(AVBRYT) av siste samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal virksomheten gå til status AVSLUTTET`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeid = sak.opprettSamarbeid()
@@ -1003,7 +1003,7 @@ class NyFlytTest {
     @Test
     fun `avslutning(AVBRYT) av samarbeid i tilstand VirksomhetHarAktiveSamarbeid med flere samarbeid skal ikke endre tilstand`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeidSomSkalAvbrytes = sak.opprettSamarbeid()
@@ -1021,7 +1021,7 @@ class NyFlytTest {
     @Test
     fun `avslutning(FULLFØR) av samarbeid i tilstand VirksomhetHarAktiveSamarbeid med flere samarbeid skal ikke endre tilstand`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
@@ -1041,7 +1041,7 @@ class NyFlytTest {
     @Test
     fun `avslutning av alle samarbeid i tilstand VirksomhetHarAktiveSamarbeid skal føre til status AVSLUTTET`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
 
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
@@ -1062,7 +1062,7 @@ class NyFlytTest {
     @Test
     fun `avsluttSamarbeid med dato setter planlagtDato til angitt dato`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         val planlagtDato = LocalDate.now().plusDays(30)
@@ -1078,7 +1078,7 @@ class NyFlytTest {
     @Test
     fun `avsluttSamarbeid uten dato bruker default 90 dager`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
@@ -1091,7 +1091,7 @@ class NyFlytTest {
     @Test
     fun `slettSamarbeid med dato setter planlagtDato til angitt dato`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
         val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
@@ -1112,7 +1112,7 @@ class NyFlytTest {
     @Test
     fun `avsluttSamarbeid med dato i fortiden gir BadRequest`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
@@ -1135,7 +1135,7 @@ class NyFlytTest {
     @Test
     fun `slettSamarbeid med dato i fortiden gir BadRequest`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
         val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
@@ -1152,7 +1152,7 @@ class NyFlytTest {
     @Test
     fun `slettSamarbeid med ugyldig datoformat gir BadRequest`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeidSomSkalFullføres = sak.opprettSamarbeid()
         val samarbeidSomSkalSlettes = sak.opprettSamarbeid(samarbeidsnavn = "Slett meg!")
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
@@ -1167,7 +1167,7 @@ class NyFlytTest {
     @Test
     fun `avsluttSamarbeid med ugyldig datoformat gir BadRequest`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
@@ -1188,7 +1188,7 @@ class NyFlytTest {
     @Test
     fun `automatisk oppdatering slettes når virksomhet revurderes fra AlleSamarbeidIVirksomhetErAvsluttet`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
@@ -1211,7 +1211,7 @@ class NyFlytTest {
     @Test
     fun `skal kunne revurdere en virksomhet som er i tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)

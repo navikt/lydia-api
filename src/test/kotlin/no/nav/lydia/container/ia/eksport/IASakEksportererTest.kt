@@ -33,7 +33,7 @@ class IASakEksportererTest {
 
     @Test
     fun `skal trigge kafka-eksport av IASaker`() {
-        val sak = vurderVirksomhet(token = authContainerHelper.superbruker1.navIdent)
+        val sak = vurderVirksomhet(token = authContainerHelper.superbruker1.token)
 
         runBlocking {
             kafkaContainerHelper.sendJobbMelding(iaSakEksport)

@@ -731,7 +731,7 @@ class BehovsvurderingApiTest {
 
     @Test
     fun `skal kunne opprette behovsvurdering for to forskjellige prosesser`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Først")
         sak.opprettSamarbeid(samarbeidsnavn = "Sist")
 
@@ -751,7 +751,7 @@ class BehovsvurderingApiTest {
 
     @Test
     fun `skal kunne flytte en spørreundersøkelse fra et samarbeid til et annet`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Først")
         sak.opprettSamarbeid(samarbeidsnavn = "Sist")
         val alleSamarbeid = sak.hentAlleSamarbeid()
@@ -781,7 +781,7 @@ class BehovsvurderingApiTest {
 
     @Test
     fun `skal sende på nytt til SF en Kafka melding om at en fullført behhovsvurdering er flyttet`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Først")
         sak.opprettSamarbeid(samarbeidsnavn = "Sist")
         val alleSamarbeid = sak.hentAlleSamarbeid()
@@ -822,7 +822,7 @@ class BehovsvurderingApiTest {
 
     @Test
     fun `skal IKKE kunne flytte spørreundersøkelse en ugyldig prosess eller som lesebruker`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid()
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 1
@@ -861,7 +861,7 @@ class BehovsvurderingApiTest {
 
     @Test
     fun `skal IKKE kunne flytte en behovsvurdering som ikke er avsluttet (fullført)`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Først")
         sak.opprettSamarbeid(samarbeidsnavn = "Sist")
 
@@ -898,7 +898,7 @@ class BehovsvurderingApiTest {
 
     @Test
     fun `Skal IKKE kunne flytte en avsluttet (fullført) behovsvurdering som er publisert`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Først")
         sak.opprettSamarbeid(samarbeidsnavn = "Sist")
 

@@ -17,6 +17,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
@@ -39,7 +40,6 @@ import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
 import no.nav.lydia.helper.PlanHelper.Companion.senesteSluttDato
-import no.nav.lydia.helper.PlanHelper.Companion.slettPlanForSamarbeid
 import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
@@ -68,8 +68,8 @@ class PlanApiTest {
     fun `skal kunne slette en tom plan`() {
         val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, plan.id)
         slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
 
         shouldFailWithMessage("HTTP Exception 404 Not Found") {
@@ -81,8 +81,8 @@ class PlanApiTest {
     fun `skal kunne opprette en ny plan etter at man har slettet en`() {
         val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, plan.id)
         val nyPlan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         val hentetPlan = sak.hentPlan(prosessId = samarbeid.id)
         hentetPlan.id shouldBe nyPlan.id
@@ -94,8 +94,8 @@ class PlanApiTest {
     fun `skal kunne slette plan dersom planen inneholder aktive temaer`() {
         val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal().inkluderAlt())
-        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, plan.id)
         slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
         slettetPlan.temaer.forAll { tema ->
             tema.inkludert shouldBe false
@@ -300,8 +300,7 @@ class PlanApiTest {
     fun `skal oppgi riktig status og dato ved republisering`() {
         val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val enTomPlanMal = hentPlanMal()
-        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+        val plan = sak.opprettEnPlan()
 
         val response = publiserDokument(
             dokumentReferanseId = plan.id,
@@ -827,7 +826,7 @@ class PlanApiTest {
         val plan = sak.opprettEnPlan(token = følgerAvSak.token)
         plan.status shouldBe IASamarbeid.Status.AKTIV
 
-        val slettetPlan = sak.slettPlanForSamarbeid(token = følgerAvSak.token, samarbeidId = sak.hentAlleSamarbeid().first().id)
+        val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, planId = plan.id)
         slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
 
         shouldFailWithMessage("HTTP Exception 404 Not Found") {

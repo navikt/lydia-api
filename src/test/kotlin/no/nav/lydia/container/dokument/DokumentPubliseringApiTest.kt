@@ -239,7 +239,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `opprettelese av behovsvurdering dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
-        val sak = aktivSamarbeidsperiode()
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
         val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val samarbeidId = fullførtBehovsvurdering.samarbeidId
         val dokumentRefId = fullførtBehovsvurdering.id
@@ -293,7 +293,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `opprettelese av samarbeidsplan dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         val dokumentRefId = plan.id
@@ -347,7 +347,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `opprettelese av evaluering dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
-        val sak = aktivSamarbeidsperiode()
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val fullførtEvaluering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering)
         val samarbeidId = fullførtEvaluering.samarbeidId

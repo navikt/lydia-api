@@ -310,7 +310,7 @@ class SakHelper {
             saksnummer: String? = null,
             token: String = authContainerHelper.saksbehandler1.token,
         ): IASakDto {
-            val triple = applikasjon.performGet("$NY_FLYT_PATH/virksomhet/$orgnummer/samarbeidsperiode${saksnummer?.let { "/$it" }}")
+            val triple = applikasjon.performGet("$NY_FLYT_PATH/virksomhet/$orgnummer/samarbeidsperiode${saksnummer?.let { "/$it" } ?: ""}")
                 .authentication().bearer(token = token)
                 .responseObject(IASakDto.serializer())
 
@@ -397,8 +397,6 @@ class SakHelper {
             )
             return requireNotNull(hentSak(this.orgnr, saksnummer = this.saksnummer, token = token))
         }
-
-        fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
     }
 }
 
@@ -778,12 +776,20 @@ class PlanHelper {
         fun IASakDto.hentPlan(
             prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
+        ) = hentPlanResponse(
+            samarbeidId = prosessId,
+            token = token,
+        ).third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
+        fun IASakDto.hentPlanResponse(
+            samarbeidId: Int = hentAlleSamarbeid().first().id,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId")
             .authentication().bearer(token)
-            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
-            )
+            .tilSingelRespons<PlanMedPubliseringStatusDto>()
 
         private fun hentPlan(
             orgnr: String,
@@ -970,7 +976,7 @@ class PlanHelper {
         // TODO: [OPPRYDDING] Bør gå bort ifra denne måten å opprette planer
         fun IASakDto.opprettEnPlan(
             token: String = authContainerHelper.saksbehandler1.token,
-            plan: PlanMalDto = hentPlanMal(),
+            plan: PlanMalDto = hentPlanMal().inkluderAlt(),
         ) = hentAlleSamarbeid().first().opprettSamarbeidsplan(
             orgnr = orgnr,
             planMal = plan,
@@ -979,24 +985,14 @@ class PlanHelper {
 
         fun IASamarbeidDto.opprettSamarbeidsplan(
             orgnr: String,
-            planMal: PlanMalDto = hentPlanMal(),
-            token: String = authContainerHelper.superbruker1.token,
-        ): PlanMedPubliseringStatusDto {
-            val plan = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan")
-                .authentication().bearer(token)
-                .jsonBody(
-                    Json.encodeToString(planMal),
-                ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.get()
-            return plan
-        }
-
-        fun IASakDto.slettPlanForSamarbeid(
+            planMal: PlanMalDto = hentPlanMal().inkluderAlt(),
             token: String = authContainerHelper.saksbehandler1.token,
-            samarbeidId: Int = hentAlleSamarbeid().first().id,
-        ) = applikasjon.performDelete("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId")
+        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan")
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
-                success = { respons -> respons },
+            .jsonBody(
+                Json.encodeToString(planMal),
+            ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+                success = { it },
                 failure = { fail(it.message) },
             )
 

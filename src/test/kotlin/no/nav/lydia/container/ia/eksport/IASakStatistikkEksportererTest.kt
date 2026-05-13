@@ -63,7 +63,7 @@ class IASakStatistikkEksportererTest {
         )
         lastInnNyVirksomhet(virksomhet)
 
-        val sak = vurderVirksomhet(virksomhet = virksomhet, token = authContainerHelper.superbruker1.navIdent)
+        val sak = vurderVirksomhet(virksomhet = virksomhet, token = authContainerHelper.superbruker1.token)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

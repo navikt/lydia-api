@@ -23,8 +23,11 @@ import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companio
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkludertInnhold
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkluderteTemaer
-import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanResponse
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.bliEier
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -36,6 +39,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent.SamarbeidValue
@@ -246,25 +250,38 @@ class NyFlytTestUtils {
         fun vurderVirksomhet(
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
             token: String = authContainerHelper.superbruker1.token,
-        ) = vurderVirksomhetResponse(virksomhet = virksomhet, token = token).third.get()
+        ) = vurderVirksomhetResponse(virksomhet = virksomhet, token = token).third.fold(
+            success = { it },
+            failure = { fail(it.message) },
+        )
 
         fun IASakDto.angreVurdering(token: String = authContainerHelper.superbruker1.token) =
             applikasjon.performPost("$NY_FLYT_PATH/$orgnr/angre-vurdering")
                 .authentication().bearer(token)
-                .tilSingelRespons<IASakDto>().third.get()
+                .tilSingelRespons<IASakDto>().third.fold(
+                    success = { it },
+                    failure = { fail(it.message) },
+                )
 
         fun aktivSamarbeidsperiode(
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
             samarbeidsnavn: String = "Samarbeid med ${virksomhet.orgnr}",
             token: String = authContainerHelper.superbruker1.token,
+            følgerToken: String? = authContainerHelper.saksbehandler1.token,
         ): IASakDto {
-            vurderVirksomhet(virksomhet = virksomhet, token = token).opprettSamarbeid(token = token, samarbeidsnavn = samarbeidsnavn)
+            vurderVirksomhet(virksomhet = virksomhet)
+                .bliEier(token = token).also { sak -> følgerToken?.let { sak.leggTilFolger(it) } }
+                .opprettSamarbeid(token = token, samarbeidsnavn = samarbeidsnavn)
+
             return SakHelper.hentSak(orgnummer = virksomhet.orgnr, token = token)
         }
 
         fun IASakDto.fullførSamarbeidsperiode(token: String = authContainerHelper.superbruker1.token): IASakDto {
             this.hentAlleSamarbeid(token = token).forEach { samarbeid ->
-                hentPlan()
+                // Dersom det ikke finnes en plan, så må vi opprette en, slik at man kan avslutte samarbeidet
+                if (hentPlanResponse().statuskode() == 404) {
+                    samarbeid.opprettSamarbeidsplan(orgnr)
+                }
                 samarbeid.avsluttSamarbeid(this.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT, token = token)
             }
             return SakHelper.hentSak(orgnummer = this.orgnr, token = token)
@@ -344,9 +361,13 @@ class NyFlytTestUtils {
             ).tilSingelRespons<IASamarbeidDto>()
 
         fun IASakDto.opprettSamarbeid(
-            token: String = authContainerHelper.superbruker1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
             samarbeidsnavn: String = "Samarbeid med $orgnr",
-        ): IASamarbeidDto = opprettSamarbeidResponse(token = token, samarbeidsnavn = samarbeidsnavn).third.get()
+        ): IASamarbeidDto =
+            opprettSamarbeidResponse(token = token, samarbeidsnavn = samarbeidsnavn).third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
 
         fun IASamarbeidDto.endreSamarbeidsNavn(
             orgnr: String,
@@ -362,26 +383,26 @@ class NyFlytTestUtils {
                         navn = nyttNavn,
                     ),
                 ),
-            ).tilSingelRespons<IASamarbeidDto>().third.get()
+            ).tilSingelRespons<IASamarbeidDto>().third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
 
         fun IASamarbeidDto.oppdaterSamarbeidsplan(
             orgnr: String,
             planId: String,
             endringer: List<EndreTemaRequest> = emptyList(),
             token: String = authContainerHelper.superbruker1.token,
-        ): PlanMedPubliseringStatusDto {
-            val plan = applikasjon.performPut(
-                url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId",
+        ) = applikasjon.performPut(
+            url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId",
+        )
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(endringer),
+            ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail("${it.message}") },
             )
-                .authentication().bearer(token)
-                .jsonBody(
-                    Json.encodeToString(endringer),
-                ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = { fail("${it.message}") },
-                )
-            return plan
-        }
 
         fun IASamarbeidDto.oppdaterTemaISamarbeidsplan(
             orgnr: String,
@@ -389,19 +410,16 @@ class NyFlytTestUtils {
             temaId: Int,
             endringer: List<EndreUndertemaRequest> = emptyList(),
             token: String = authContainerHelper.superbruker1.token,
-        ): PlanMedPubliseringStatusDto {
-            val plan = applikasjon.performPut(
-                url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId/tema/$temaId",
+        ) = applikasjon.performPut(
+            url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId/tema/$temaId",
+        )
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(endringer),
+            ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail("${it.message}") },
             )
-                .authentication().bearer(token)
-                .jsonBody(
-                    Json.encodeToString(endringer),
-                ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = { fail("${it.message}") },
-                )
-            return plan
-        }
 
         fun IASamarbeidDto.slettSamarbeidRespons(
             orgnr: String,
@@ -427,7 +445,7 @@ class NyFlytTestUtils {
         fun IASamarbeidDto.slettSamarbeidsplan(
             orgnr: String,
             planId: String,
-            token: String = authContainerHelper.superbruker1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performDelete("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId")
             .authentication().bearer(token)
             .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
@@ -442,19 +460,16 @@ class NyFlytTestUtils {
             undertemaId: Int,
             nyStatus: PlanUndertema.Status,
             token: String = authContainerHelper.superbruker1.token,
-        ): PlanMedPubliseringStatusDto {
-            val plan = applikasjon.performPut(
-                url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId/tema/$temaId/undertema/$undertemaId/status",
+        ) = applikasjon.performPut(
+            url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/$id/plan/$planId/tema/$temaId/undertema/$undertemaId/status",
+        )
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(nyStatus),
+            ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail("${it.message}") },
             )
-                .authentication().bearer(token)
-                .jsonBody(
-                    Json.encodeToString(nyStatus),
-                ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = { fail("${it.message}") },
-                )
-            return plan
-        }
 
         fun PlanMedPubliseringStatusDto.endreTema(
             temaId: Int,

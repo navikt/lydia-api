@@ -41,7 +41,9 @@ class IASakService(
         hentSakerForOrgnummer(orgnummer)
             .sortedByDescending { it.opprettetTidspunkt }
             .toDto()
-            .firstOrNull()
+            .firstOrNull {
+                !it.status.regnesSomAvsluttet()
+            }
 
     fun tilbakeførSaker(tørrKjør: Boolean): Int =
         iaSakRepository.hentUrørteSakerIVurderesUtenEier()

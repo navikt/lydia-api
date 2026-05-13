@@ -18,6 +18,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -41,7 +42,7 @@ class SamarbeidBigqueryEksportererTest {
 
     @Test
     fun `oppretting av samarbeid skal trigge kafka-eksport av samarbeid`() {
-        val sak = aktivSamarbeidsperiode()
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
         val førsteSamarbeid = sak.hentAlleSamarbeid().first()
 
         runBlocking {
@@ -58,7 +59,7 @@ class SamarbeidBigqueryEksportererTest {
                 sisteSamarbeid.id shouldBe førsteSamarbeid.id
                 sisteSamarbeid.saksnummer shouldBe førsteSamarbeid.saksnummer
                 sisteSamarbeid.status shouldBe "AKTIV"
-                sisteSamarbeid.navn shouldBe "Samarbeid uten navn"
+                sisteSamarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
             }
         }
     }

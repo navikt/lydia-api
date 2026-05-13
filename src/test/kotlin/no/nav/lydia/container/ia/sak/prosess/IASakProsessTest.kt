@@ -113,7 +113,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal få avbrutte samarbeid i listen over alle samarbeid`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
         sak.hentAlleSamarbeid().forExactlyOne { samarbeid ->
@@ -123,7 +123,7 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `skal ikke kunne avbryte samarbeid som inne holder spørreundersøkelser`() {
+    fun `skal ikke kunne avbryte samarbeid som inneholder spørreundersøkelser`() {
         val sak = vurderVirksomhet()
         val samarbeid = sak.opprettSamarbeid()
         sak.opprettBehovsvurdering()
@@ -344,7 +344,7 @@ class IASakProsessTest {
 
     @Test
     fun `tomme samarbeidsnavn skal ikke kunne lagres`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         shouldFail {
             sak.opprettSamarbeid(samarbeidsnavn = "")
         }
@@ -500,7 +500,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal kunne slette tomme samarbeid`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
 
         samarbeid.slettSamarbeid(orgnr = sak.orgnr)
@@ -511,7 +511,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal ikke kunne slette samarbeid som har en behovsvurdering knyttet til seg`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         sak.opprettBehovsvurdering()
         shouldFail {
@@ -522,7 +522,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal ikke kunne slette prosesser som har en plan knyttet til seg`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
@@ -534,7 +534,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal ikke lagre SLETT_PROSESS hendelse dersom sletting ikke er lov`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
 
         sak.opprettBehovsvurdering()
@@ -556,7 +556,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal kun kunne opprette samarbeid med unikt navn`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Navn")
         shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
         shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
@@ -566,7 +566,7 @@ class IASakProsessTest {
 
     @Test
     fun `samarbeidsnavn er begrenset til 50 tegn`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
 
         val forLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN + 1)
         val gyldigLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN)
