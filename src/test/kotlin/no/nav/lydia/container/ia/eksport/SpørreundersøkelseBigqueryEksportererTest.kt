@@ -18,6 +18,8 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvar
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -281,7 +283,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
     @Test
     fun `jobb starter re-eksport av alle behovsvurderinger til bigquery`() {
-        val sak1 = vurderVirksomhet()
+        val sak1 = vurderVirksomhet().leggTilFolger(TestContainerHelper.authContainerHelper.saksbehandler1.token)
         val samarbeid1 = sak1.opprettSamarbeid()
         sak1.opprettBehovsvurdering(samarbeidId = samarbeid1.id)
         val sak2 = vurderVirksomhet()

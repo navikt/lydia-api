@@ -230,7 +230,7 @@ class NyFlytTestUtils {
                         it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                         it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                         it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
-                        it.bransjeprogram shouldBe Bransje.ANLEGG
+                        it.bransjeprogram shouldBe hentVirksomhet(it.orgnr).bransje
                         it.endretAvRolle shouldBe rolle
                         it.enhetsnummer shouldBe "2900"
                         it.enhetsnavn shouldBe "IT-avdelingen" // -- Bør ha fallback til minst spesifikk avdeling

@@ -145,7 +145,7 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `skal IKKE avslutte aktiv sak for virksomheter som blir slettet`() {
-        val virksomhet = nyVirksomhet()
+        val virksomhet = lastInnNyVirksomhet()
         val iASakDto: IASakDto = vurderVirksomhet(virksomhet = virksomhet)
         iASakDto.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val iASamarbeidDto: IASamarbeidDto = iASakDto.opprettSamarbeid(token = authContainerHelper.saksbehandler1.token)

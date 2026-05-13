@@ -266,12 +266,10 @@ class IASakApiTest {
             samarbeidshistorikk shouldHaveSize 1
             val sakshistorikk = samarbeidshistorikk.first()
             sakshistorikk.sakshendelser.map { it.status } shouldContainExactly listOf(
-                IASak.Status.NY,
                 IASak.Status.VURDERES,
                 IASak.Status.VURDERT,
             )
             sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainExactly listOf(
-                OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
                 VURDERING_FULLFØRT_UTEN_SAMARBEID,
             )

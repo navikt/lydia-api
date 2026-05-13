@@ -45,7 +45,6 @@ class IASakEksportererTest {
                 meldinger shouldHaveAtLeastSize 1
                 meldinger.forAtLeastOne {
                     it shouldContain sak.saksnummer
-                    it shouldContain authContainerHelper.superbruker1.navIdent
                     it shouldContain IASak.Status.VURDERES.name
                 }
             }

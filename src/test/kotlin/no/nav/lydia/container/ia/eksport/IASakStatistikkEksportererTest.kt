@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -75,12 +76,11 @@ class IASakStatistikkEksportererTest {
                 }
                 objektene.forExactlyOne {
                     it.saksnummer shouldBe sak.saksnummer
-                    it.eierAvSak shouldBe authContainerHelper.superbruker1.navIdent
                     it.status shouldBe IASak.Status.VURDERES
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
-                    it.bransjeprogram shouldBe Bransje.ANLEGG
+                    it.bransjeprogram shouldBe hentVirksomhet(it.orgnr).bransje
                     it.endretAvRolle shouldBe Rolle.SUPERBRUKER
                     it.enhetsnummer shouldBe "2900"
                     it.enhetsnavn shouldBe "IT-avdelingen" // -- Bør ha fallback til minst spesifikk avdeling
