@@ -7,22 +7,23 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.bliMedITeam
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.team.MINE_SAKER_PATH
@@ -33,15 +34,15 @@ import kotlin.test.fail
 class IASakTeamApiTest {
     private fun opprettSakBliOgMedITeam(
         token: String,
-        orgnummer: String = nyttOrgnummer(),
+        virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
     ): Pair<IASakDto, BrukerITeamDto> {
-        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
+        val sak = vurderVirksomhet(virksomhet, token)
         return Pair(sak, bliMedITeam(token = token, saksnummer = sak.saksnummer))
     }
 
     @Test
     fun `skal hente alle brukere i team på en sak`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val sak = vurderVirksomhet()
 
         applikasjon.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(authContainerHelper.superbruker1.token)
@@ -117,17 +118,10 @@ class IASakTeamApiTest {
         // sanity
         authContainerHelper.saksbehandler1.navIdent shouldNotBe authContainerHelper.saksbehandler2.navIdent
 
-        val sakFørEierskapsendring = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.saksbehandler1.token,
-            )
-
-        val sakEtterEierskapBytte = sakFørEierskapsendring
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.saksbehandler2.token,
-            )
+        val sakFørEierskapsendring = vurderVirksomhet()
+        sakFørEierskapsendring.bliEier(authContainerHelper.saksbehandler1.token)
+        sakFørEierskapsendring.bliEier(authContainerHelper.saksbehandler1.token)
+        val sakEtterEierskapBytte = hentSak(sakFørEierskapsendring.orgnr)
         sakEtterEierskapBytte.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
 
         val res = applikasjon.performGet(MINE_SAKER_PATH)
@@ -145,7 +139,7 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal kunne bli med i team som lesebruker`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val sak = vurderVirksomhet()
         val res = applikasjon.performPost("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(authContainerHelper.lesebruker.token)
             .tilSingelRespons<BrukerITeamDto>().second
@@ -195,7 +189,7 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal ikke kunne fjernes fra team uten å være i teamet`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val sak = vurderVirksomhet()
         val res = applikasjon.performDelete("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<BrukerITeamDto>().second
@@ -210,21 +204,10 @@ class IASakTeamApiTest {
     @Test
     fun `skal få alle saker man er eier av`() {
         val bruker = authContainerHelper.superbruker1.token
-        val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = bruker,
-            )
-        val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = bruker,
-            )
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.superbruker2.token,
-            )
+        val sak0 = vurderVirksomhet().bliEier(bruker)
+        val sak1 = vurderVirksomhet().bliEier(bruker)
+
+        vurderVirksomhet().bliEier(authContainerHelper.superbruker2.token)
 
         val iaSakListe = listOf(sak0, sak1).sortedBy { it.orgnr }
 
@@ -243,39 +226,23 @@ class IASakTeamApiTest {
     @Test
     fun `skal få alle saker man følger eller eier`() {
         val bruker = authContainerHelper.superbruker1.token
-        val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = bruker,
-            )
-        val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = bruker,
-            )
+        val sak0 = vurderVirksomhet().bliEier(bruker)
+        val sak1 = vurderVirksomhet()
+            .bliEier(bruker)
             .leggTilFolger(token = bruker)
             .leggTilFolger(token = authContainerHelper.superbruker2.token)
             .leggTilFolger(token = authContainerHelper.saksbehandler1.token)
-        val sak2 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.superbruker2.token,
-            )
+        val sak2 = vurderVirksomhet()
+            .bliEier(authContainerHelper.superbruker2.token)
             .leggTilFolger(token = bruker)
-        val sak3 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.superbruker2.token,
-            )
+        val sak3 = vurderVirksomhet()
+            .bliEier(authContainerHelper.superbruker2.token)
             .leggTilFolger(token = bruker)
             .leggTilFolger(token = authContainerHelper.superbruker2.token)
             .leggTilFolger(token = authContainerHelper.saksbehandler1.token)
 
-        val sak4 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.superbruker2.token,
-            )
+        val sak4 = vurderVirksomhet()
+            .bliEier(authContainerHelper.superbruker2.token)
 
         val iaSakListe = listOf(sak0, sak1, sak2, sak3)
 
@@ -297,23 +264,12 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal ikke få saker man ikke eier eller følger`() {
-        val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.superbruker2.token,
-            )
-        val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.saksbehandler1.token,
-            )
+        val sak0 = vurderVirksomhet().bliEier(authContainerHelper.superbruker2.token)
+        val sak1 = vurderVirksomhet().bliEier(authContainerHelper.saksbehandler1.token)
             .leggTilFolger(token = authContainerHelper.superbruker2.token)
 
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(
-                hendelsestype = TA_EIERSKAP_I_SAK,
-                token = authContainerHelper.superbruker1.token,
-            )
+        vurderVirksomhet()
+            .bliEier(authContainerHelper.superbruker1.token)
 
         val res = applikasjon.performGet(MINE_SAKER_PATH)
             .authentication().bearer(token = authContainerHelper.superbruker1.token)

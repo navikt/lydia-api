@@ -1,7 +1,5 @@
 package no.nav.lydia.container.ny.flyt.virksomhet
 
-import ia.felles.definisjoner.bransjer.Bransje
-import ia.felles.definisjoner.bransjer.BransjeId.Næring
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
@@ -35,7 +33,7 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `skal kunne avslutte vurdering som ikke medfører et samarbeid`() {
-        val sak = NyFlytTestUtils.vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as Næring).næring}.120")
+        val sak = NyFlytTestUtils.vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         val oppdatertSakDto = sak.avsluttVurdering(
@@ -65,7 +63,7 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `avslutt vurdering med gyldig årsak gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetKlarTilVurdering`() {
-        val sak = NyFlytTestUtils.vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as Næring).næring}.120")
+        val sak = NyFlytTestUtils.vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -89,7 +87,7 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `avslutt vurdering med årsak 'skal vurderes senere' gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetVurderes`() {
-        val sak = NyFlytTestUtils.vurderVirksomhet(næringskode = "${(Bransje.ANLEGG.bransjeId as Næring).næring}.120")
+        val sak = NyFlytTestUtils.vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(

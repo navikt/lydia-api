@@ -3,8 +3,8 @@ package no.nav.lydia.container.integrasjoner.salesforce
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -35,7 +35,7 @@ class SalesforceAktivitetKonsumentTest {
 
     @Test
     fun `skal ikke lagre meldinger på sf-aktivitet topic hvis det mangler samarbeids-id`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val dto = salesforceAktivitetDto(saksnummer = sak.saksnummer, orgnummer = sak.orgnr)
         kafkaContainerHelper.sendOgVentTilKonsumert(
             dto.Id__c,
@@ -49,7 +49,7 @@ class SalesforceAktivitetKonsumentTest {
 
     @Test
     fun `kan lagre sf-aktiviteter`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeidId = sak.hentAlleSamarbeid().first().id
 
         val dto = salesforceAktivitetDto(
@@ -68,7 +68,7 @@ class SalesforceAktivitetKonsumentTest {
 
     @Test
     fun `kan slette og gjenopprette sf-aktiviteter`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeidId = sak.hentAlleSamarbeid().first().id
 
         val aktivitet = salesforceAktivitetDto(
@@ -100,7 +100,7 @@ class SalesforceAktivitetKonsumentTest {
 
     @Test
     fun `skal kun oppdatere aktivitet dersom den har nyere sistEndret`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val aktivitet = salesforceAktivitetDto(
             saksnummer = sak.saksnummer,
@@ -115,7 +115,7 @@ class SalesforceAktivitetKonsumentTest {
         )
         postgresContainerHelper.hentEnkelKolonne<String?>("SELECT plan_id FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe null
 
-        val planId = sak.opprettEnPlan(samarbeidId = samarbeid.id).id
+        val planId = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr).id
         val sistEndretISalesforce = ZonedDateTime.now()
         val oppdatertAktivitet = aktivitet.copy(
             LastModifiedDate__c = sistEndretISalesforce.format(utcFormat),
@@ -147,7 +147,7 @@ class SalesforceAktivitetKonsumentTest {
     @Test
     @Ignore("Det er noen problemer med tidsoner i github runneren som gjør at denne feiler ved bygg :O")
     fun `skal lagre tider i riktig lokal dato`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeidId = sak.hentAlleSamarbeid().first().id
 
         val møteStart = ZonedDateTime.now(atUTC)

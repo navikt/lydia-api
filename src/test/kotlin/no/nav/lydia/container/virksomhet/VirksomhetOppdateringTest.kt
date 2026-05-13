@@ -6,23 +6,23 @@ import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.Json
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettKartlegging
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
-import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -44,7 +44,7 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.brreg.Adresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
@@ -183,7 +183,7 @@ class VirksomhetOppdateringTest {
     fun `skal ikke røre ikke aktive saker når virksomhet blir slettet`() {
         val virksomhet = lastInnNyVirksomhet()
 
-        val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -193,17 +193,7 @@ class VirksomhetOppdateringTest {
         val evaluering = sak.opprettEvaluering()
         evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         evaluering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val sakEtterFullføring = sak.nyHendelse(
-            hendelsestype = IASakshendelseType.FULLFØR_PROSESS,
-            payload = Json.encodeToString(
-                IASamarbeidDto(
-                    id = samarbeid.id,
-                    saksnummer = sak.saksnummer,
-                    navn = samarbeid.navn,
-                ),
-            ),
-        )
-            .nyHendelse(hendelsestype = IASakshendelseType.FULLFØR_BISTAND)
+        samarbeid.avsluttSamarbeid(orgnr = sak.saksnummer, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
         sendSlettingForVirksomhet(virksomhet)
 
@@ -212,7 +202,7 @@ class VirksomhetOppdateringTest {
         ) shouldBe IASak.Status.FULLFØRT.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe sakEtterFullføring.endretAvHendelseId
+        ) shouldBe hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
     }
 }
 

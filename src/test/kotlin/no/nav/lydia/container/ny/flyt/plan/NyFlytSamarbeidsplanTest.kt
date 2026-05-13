@@ -16,7 +16,6 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTi
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.oppdaterSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.oppdaterTemaISamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserKafkaPlanObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
@@ -25,6 +24,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdMedStatus
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper

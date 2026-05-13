@@ -53,7 +53,7 @@ class UrørteSakerTest {
 
     @Test
     fun `skal ikke tilbakeføre andre gamle saker enn de som er i vurderes uten eier`() {
-        val sakMedEier = vurderVirksomhet().bliEier(token = authContainerHelper.superbruker1.token).third.get()
+        val sakMedEier = vurderVirksomhet().bliEier(token = authContainerHelper.superbruker1.token)
         sakMedEier.oppdaterHendelsesTidspunkter(antallDagerTilbake = 365)
 
         val sakFørRydding = hentSak(orgnummer = sakMedEier.orgnr, saksnummer = sakMedEier.saksnummer)

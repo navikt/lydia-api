@@ -14,18 +14,23 @@ import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.angreVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurderingResponse
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidRespons
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserIASakObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserSamarbeidObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
+import no.nav.lydia.helper.SakHelper.Companion.bliEierResponse
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -595,16 +600,11 @@ class NyFlytTest {
         tilstandFørEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
         val nyttNavn = "Nytt navn 123"
-        val response = endreSamarbeidsNavn(
+        samarbeid.endreSamarbeidsNavn(
             orgnr = sak.orgnr,
-            samarbeidId = samarbeid.id,
-            saksnummer = sak.saksnummer,
             nyttNavn = nyttNavn,
             token = authContainerHelper.superbruker1.token,
-        )
-
-        response.statuskode() shouldBe HttpStatusCode.OK.value
-        response.third.get().navn shouldBe nyttNavn
+        ).navn shouldBe nyttNavn
 
         val tilstandEtterEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
         tilstandEtterEndring.tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
@@ -658,8 +658,7 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
-        val angreVurderRes = sak.angreVurdering()
-        angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
+        sak.angreVurdering()
 
         val sakenErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
             """
@@ -699,8 +698,7 @@ class NyFlytTest {
         )
         harFølgereFør.shouldBeTrue()
 
-        val angreVurderRes = sak.angreVurdering(token = eierAvSak.token)
-        angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
+        sak.angreVurdering(token = eierAvSak.token)
 
         val sakenErSlettet = postgresContainerHelper.hentEnkelKolonne<Boolean>(
             """
@@ -723,8 +721,7 @@ class NyFlytTest {
         sak.leggTilFolger(token = authContainerHelper.saksbehandler1.token)
         sak.leggTilFolger(token = authContainerHelper.saksbehandler2.token)
 
-        val angreVurderRes = sak.angreVurdering(token = eierAvSak.token)
-        angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
+        sak.angreVurdering(token = eierAvSak.token)
 
         val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
@@ -744,8 +741,7 @@ class NyFlytTest {
         val samarbeid = sak.opprettSamarbeid(token = eierAvSak.token)
         samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = eierAvSak.token)
 
-        val angreVurderRes = sak.angreVurdering(token = eierAvSak.token)
-        angreVurderRes.second.statusCode shouldBe HttpStatusCode.OK.value
+        sak.angreVurdering(token = eierAvSak.token)
 
         val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
@@ -1241,11 +1237,7 @@ class NyFlytTest {
         val sak = vurderVirksomhet(token = superBruker.token)
         sak.eidAv shouldBe null
 
-        val eierskapsendringResponse = sak.bliEier(token = saksbehandler.token)
-        eierskapsendringResponse.second.statusCode shouldBe HttpStatusCode.OK.value
-
-        val sakEtterEierskapendring = eierskapsendringResponse.third.get()
-        sakEtterEierskapendring.eidAv shouldBe saksbehandler.navIdent
+        sak.bliEier(token = saksbehandler.token).eidAv shouldBe saksbehandler.navIdent
     }
 
     @Test
@@ -1266,7 +1258,7 @@ class NyFlytTest {
         val lesebruker = authContainerHelper.lesebruker
         val sak = vurderVirksomhet()
 
-        val responseLesebruker = sak.bliEier(token = lesebruker.token)
+        val responseLesebruker = sak.bliEierResponse(token = lesebruker.token)
         responseLesebruker.statuskode() shouldBe HttpStatusCode.Forbidden.value
     }
 

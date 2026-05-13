@@ -24,7 +24,7 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentForhån
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slettResponse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
@@ -306,7 +306,7 @@ class EvalueringApiTest {
             "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${evalueringUtenSvar.id}'",
         ) shouldHaveSize 0
 
-        val responseSlettFørste = evalueringUtenSvar.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val responseSlettFørste = evalueringUtenSvar.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         responseSlettFørste.statuskode() shouldBe HttpStatusCode.OK.value
 
@@ -321,7 +321,7 @@ class EvalueringApiTest {
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ) shouldHaveSize 0
 
-        val responseSlettIgjen = evalueringUtenSvar.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val responseSlettIgjen = evalueringUtenSvar.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         responseSlettIgjen.statuskode() shouldBe HttpStatusCode.Forbidden.value
 
@@ -338,7 +338,7 @@ class EvalueringApiTest {
             "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${evaluering.id}'",
         ) shouldHaveSize 3
 
-        val response = evaluering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val response = evaluering.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         response.statuskode() shouldBe HttpStatusCode.Forbidden.value
 
@@ -372,7 +372,7 @@ class EvalueringApiTest {
             token = authContainerHelper.saksbehandler1.token,
         ).statuskode() shouldBe HttpStatusCode.Created.value
 
-        val response = evaluering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val response = evaluering.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         response.statuskode() shouldBe HttpStatusCode.Forbidden.value
 

@@ -25,21 +25,15 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.Topic
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils
-import no.nav.lydia.helper.SakHelper.Companion.fullførSak
+import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
-import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
-import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentStatistikkHistorikk
@@ -83,10 +77,7 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.sykefraværsstatistikk.api.FILTERVERDIER_PATH
@@ -402,10 +393,10 @@ class SykefraværsstatistikkApiTest {
         val virksomhet3 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         val virksomhet4 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
 
-        opprettSakForVirksomhet(orgnummer = virksomhet1.orgnr)
-        opprettSakForVirksomhet(orgnummer = virksomhet2.orgnr).oppdaterHendelsesTidspunkter(antallDagerTilbake = 5)
-        opprettSakForVirksomhet(orgnummer = virksomhet3.orgnr)
-        opprettSakForVirksomhet(orgnummer = virksomhet4.orgnr).oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
+        vurderVirksomhet(virksomhet = virksomhet1)
+        vurderVirksomhet(virksomhet = virksomhet2).oppdaterHendelsesTidspunkter(antallDagerTilbake = 5)
+        vurderVirksomhet(virksomhet = virksomhet3)
+        vurderVirksomhet(virksomhet = virksomhet4).oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
 
         val sorteringsnøkkel = "sist_endret"
 
@@ -907,14 +898,14 @@ class SykefraværsstatistikkApiTest {
     fun `skal kunne filtrere på bare mine virksomheter`() {
         val testBruker1 = authContainerHelper.superbruker1
         val testBruker2 = authContainerHelper.superbruker2
-        val ornummer1 = nyttOrgnummer()
-        val ornummer2 = nyttOrgnummer()
+        val virksomhet1 = lastInnNyVirksomhet()
+        val virksomhet2 = lastInnNyVirksomhet()
 
         listOf(
-            Pair(testBruker1, ornummer1),
-            Pair(testBruker2, ornummer2),
+            Pair(testBruker1, virksomhet1),
+            Pair(testBruker2, virksomhet2),
         ).forEach { (bruker, virksomhet) ->
-            opprettSakForVirksomhet(virksomhet, bruker.token).nyHendelse(TA_EIERSKAP_I_SAK, token = bruker.token)
+            vurderVirksomhet(virksomhet, bruker.token).bliEier(token = bruker.token)
         }
 
         hentSykefravær(
@@ -942,8 +933,8 @@ class SykefraværsstatistikkApiTest {
         val superbruker1 = authContainerHelper.superbruker1
         val saksbehandler1 = authContainerHelper.saksbehandler1
 
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
+        vurderVirksomhet().bliEier(token = saksbehandler1.token)
+        vurderVirksomhet().bliEier(token = superbruker1.token)
 
         val sykefraværNårSaksbehandlerFiltrerPåSegSelv = hentSykefravær(
             eiere = saksbehandler1.navIdent,
@@ -968,9 +959,9 @@ class SykefraværsstatistikkApiTest {
         val saksbehandler1 = authContainerHelper.saksbehandler1
         val saksbehandler2 = authContainerHelper.saksbehandler2
 
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler2.token)
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
+        vurderVirksomhet().bliEier(token = saksbehandler1.token)
+        vurderVirksomhet().bliEier(token = saksbehandler2.token)
+        vurderVirksomhet().bliEier(token = superbruker1.token)
 
         val sykefraværNårSuperbrukerFiltrererPåSegSelvOgSaksbehandler1 = hentSykefravær(
             eiere = "${superbruker1.navIdent},${saksbehandler1.navIdent}",
@@ -990,10 +981,7 @@ class SykefraværsstatistikkApiTest {
         val superbruker1 = authContainerHelper.superbruker1
         val saksbehandler1 = authContainerHelper.saksbehandler1
 
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token).nyHendelse(
-            hendelsestype = TA_EIERSKAP_I_SAK,
-            token = saksbehandler1.token,
-        )
+        vurderVirksomhet().bliEier(token = saksbehandler1.token)
 
         hentSykefravær(
             eiere = saksbehandler1.navIdent,
@@ -1008,14 +996,8 @@ class SykefraværsstatistikkApiTest {
         val superbruker1 = authContainerHelper.superbruker1
         val saksbehandler1 = authContainerHelper.saksbehandler1
 
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token).nyHendelse(
-            hendelsestype = TA_EIERSKAP_I_SAK,
-            token = saksbehandler1.token,
-        )
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token).nyHendelse(
-            hendelsestype = TA_EIERSKAP_I_SAK,
-            token = superbruker1.token,
-        )
+        vurderVirksomhet().bliEier(token = saksbehandler1.token)
+        vurderVirksomhet().bliEier(token = superbruker1.token)
 
         val ufiltrertSykefravær = hentSykefravær(token = saksbehandler1.token).data
         val sykefraværFiltrertPåBrukerenSelv = hentSykefravær(
@@ -1073,59 +1055,6 @@ class SykefraværsstatistikkApiTest {
 
         virksomheterMedSykefravær shouldContain nyVirksomhet.orgnr
         virksomheterMedSykefravær shouldNotContainAnyOf slettetOgFjernetVirksomheter
-    }
-
-    @Test
-    fun `skal returnere sist endret selv om frist har gått ut`() {
-        val testKommune = Kommune(navn = "Yoloooo", nummer = "5555")
-        val virksomhet = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
-
-        // -- lag en sak som skal være den eldste saken (den første)
-        opprettSakForVirksomhet(orgnummer = virksomhet.orgnr).nyHendelse(TA_EIERSKAP_I_SAK).nyIkkeAktuellHendelse()
-            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 10)
-
-        val nyereSak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr).nyHendelse(TA_EIERSKAP_I_SAK).nyIkkeAktuellHendelse()
-            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
-
-        val virksomhetsoversiktResponsDto = hentSykefravær(kommuner = testKommune.nummer)
-        virksomhetsoversiktResponsDto.also {
-            it.data.single().status shouldBe IASak.Status.IKKE_AKTIV
-            it.data.single().sistEndret shouldBe nyereSak.endretTidspunkt?.date
-        }
-    }
-
-    @Test
-    fun `skal kunne søke på IKKE_AKTIV status endret når frist har gått ut (og ikke få de opp på de utløpte statusene)`() {
-        val testKommune = Kommune(navn = "YoYoYo", nummer = "6666")
-
-        // -- lag en virksomhet med en IkkeAktuell sak som er gått ut på dato
-        val virksomhet1 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
-        opprettSakForVirksomhet(orgnummer = virksomhet1.orgnr).nyHendelse(TA_EIERSKAP_I_SAK).nyIkkeAktuellHendelse()
-            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 10)
-
-        // -- lag en virksomhet med en Slettet sak
-        val virksomhet2 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
-        opprettSakForVirksomhet(orgnummer = virksomhet2.orgnr).slettSak() // Kan ikke sette tilbake tidspunktet på det vi sletter fra databasen
-
-        // -- lag en virksomhet med en Fullført sak som er gått ut på dato
-        val virksomhet3 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
-        nySakIViBistår(orgnummer = virksomhet3.orgnr).fullførSak().oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 8)
-
-        // -- lag en virksomhet med en ViBistår sak
-        val virksomhet4 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
-        nySakIViBistår(orgnummer = virksomhet4.orgnr).oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 7)
-
-        hentSykefravær(kommuner = testKommune.nummer).data.also { it.size shouldBe 4 }
-        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASak.Status.IKKE_AKTUELL.name).data.also { it.size shouldBe 0 }
-        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASak.Status.FULLFØRT.name).data.also { it.size shouldBe 0 }
-        hentSykefravær(
-            kommuner = testKommune.nummer,
-            iaStatus = IASak.Status.SLETTET.name,
-        ).data.also { it.size shouldBe 0 } // Ikke en bra test siden SLETTET blir borte fra databasen
-
-        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASak.Status.IKKE_AKTIV.name).data.also { it.size shouldBe 3 }.forEach {
-            it.status shouldBe IASak.Status.IKKE_AKTIV
-        }
     }
 
     @Test
@@ -1189,11 +1118,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `(ny flyt) skal kunne filtrere på tilstand AlleSamarbeidIVirksomhetErAvsluttet`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        val samarbeid = sak.opprettSamarbeid()
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+        lastInnNyVirksomhet().opprettOgFullførSamarbeidsperiode()
 
         hentTotaltAntallTreffISykefravær(virksomhetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet.name) shouldBeGreaterThan 0
         val virksomheterAktiveSamarbeid = hentSykefravær(virksomhetTilstand = VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet.name).data

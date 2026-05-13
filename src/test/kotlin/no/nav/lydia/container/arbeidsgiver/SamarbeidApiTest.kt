@@ -39,7 +39,7 @@ class SamarbeidApiTest {
     @Test
     fun `skal ikke få samarbeid som ikke har dokumenter knyttet til seg i listen`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet()
-        virksomhet.aktivSamarbeidsperiode(samarbeidsnavn = "Test")
+        aktivSamarbeidsperiode(virksomhet = virksomhet, samarbeidsnavn = "Test")
 
         val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(virksomhet.orgnr)
         samarbeidSomHarDokumenter shouldHaveSize 0
@@ -48,7 +48,7 @@ class SamarbeidApiTest {
     @Test
     fun `skal få ut en liste over samarbeid for et orgnr`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet()
-        val sak = virksomhet.aktivSamarbeidsperiode(samarbeidsnavn = "Test")
+        val sak = aktivSamarbeidsperiode(virksomhet = virksomhet, samarbeidsnavn = "Test")
         val samarbeid = sak.hentAlleSamarbeid().first()
         publiserDokument(sak = sak, samarbeid = samarbeid)
 
@@ -62,11 +62,11 @@ class SamarbeidApiTest {
     fun `skal få alle samarbeid for alle saker (også gamle) for et orgnr`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet()
 
-        val gammelSak = virksomhet.aktivSamarbeidsperiode()
+        val gammelSak = aktivSamarbeidsperiode(virksomhet = virksomhet)
         publiserDokument(sak = gammelSak)
         gammelSak.fullførSamarbeidsperiode()
 
-        val aktivSak = virksomhet.aktivSamarbeidsperiode()
+        val aktivSak = aktivSamarbeidsperiode(virksomhet = virksomhet)
         publiserDokument(sak = aktivSak)
 
         val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(virksomhet.orgnr)
@@ -76,7 +76,7 @@ class SamarbeidApiTest {
     @Test
     fun `skal få kun ett samarbeid selvom det er publisert mange dokumenter`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet()
-        val sak = virksomhet.aktivSamarbeidsperiode()
+        val sak = aktivSamarbeidsperiode(virksomhet = virksomhet)
         publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)
         publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)
         publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)

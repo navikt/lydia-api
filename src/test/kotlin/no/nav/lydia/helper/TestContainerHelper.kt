@@ -271,10 +271,12 @@ class SakHelper {
             )
             .also { it.saksnummer shouldBe saksnummer }
 
-        fun IASakDto.bliEier(token: String) =
+        fun IASakDto.bliEierResponse(token: String) =
             applikasjon.performPost("$NY_FLYT_PATH/$orgnr/bli-eier")
                 .authentication().bearer(token = token)
                 .tilSingelRespons<IASakDto>()
+
+        fun IASakDto.bliEier(token: String) = bliEierResponse(token).third.get()
 
         fun IASakDto.leggTilFolger(token: String) = also { bliMedITeam(token = token, saksnummer) }
 
@@ -483,6 +485,18 @@ class IASakSpørreundersøkelseHelper {
                 failure = { fail(it.message) },
             )
 
+        fun IASamarbeidDto.opprettKartlegging(
+            orgnr: String,
+            type: Spørreundersøkelse.Type,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = opprettSpørreundersøkelse(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            samarbeidId = id,
+            token = token,
+            type = type,
+        ).tilSingelRespons<SpørreundersøkelseDto>().third.get()
+
         fun IASakDto.opprettKartlegging(
             samarbeidId: Int = hentAlleSamarbeid().first().id,
             type: Spørreundersøkelse.Type,
@@ -622,6 +636,12 @@ class IASakSpørreundersøkelseHelper {
         }
 
         fun SpørreundersøkelseDto.slett(
+            token: String = authContainerHelper.saksbehandler1.token,
+            orgnummer: String,
+            saksnummer: String,
+        ) = slettResponse(token = token, orgnummer = orgnummer, saksnummer = saksnummer).third.get()
+
+        fun SpørreundersøkelseDto.slettResponse(
             token: String = authContainerHelper.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,

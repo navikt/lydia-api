@@ -17,7 +17,6 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
-import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
@@ -32,7 +31,6 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Evaluering
@@ -87,25 +85,27 @@ class DbDumpTest {
         )
 
         // eldgammel samarbeidsperiode
-        virksomhet.aktivSamarbeidsperiode()
+        aktivSamarbeidsperiode(virksomhet = virksomhet)
             .leggTilFolger(authContainerHelper.saksbehandler3.token)
             .fullførSamarbeidsperiode()
             .oppdaterHendelsesTidspunkter(180)
 
         // gammel samarbeidsperiode
-        virksomhet.aktivSamarbeidsperiode()
+        aktivSamarbeidsperiode(virksomhet = virksomhet)
             .leggTilFolger(authContainerHelper.saksbehandler3.token)
             .fullførSamarbeidsperiode()
             .oppdaterHendelsesTidspunkter(90)
 
         // aktiv samarbeidsperiode
-        virksomhet.aktivSamarbeidsperiode()
+        aktivSamarbeidsperiode(virksomhet = virksomhet)
             .leggTilFolger(authContainerHelper.saksbehandler3.token)
     }
 
     private fun opprettVirksomhetMedKartlegginger() {
-        val virksomhet = lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(orgnr = "123459876", navn = "SPENSTIG KATTEDYR"))
-        val sak = virksomhet.aktivSamarbeidsperiode(samarbeidsnavn = "Avdeling Pusekatt")
+        val sak = aktivSamarbeidsperiode(
+            virksomhet = lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(orgnr = "123459876", navn = "SPENSTIG KATTEDYR")),
+            samarbeidsnavn = "Avdeling Pusekatt",
+        )
 
         // -- behovsvurdering, kun opprettet
         sak.opprettBehovsvurdering()

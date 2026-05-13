@@ -29,7 +29,7 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentSpørre
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slettResponse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.svarPåSpørsmål
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
@@ -86,7 +86,7 @@ class BehovsvurderingApiTest {
         val ikkeEierEllerFølger = authContainerHelper.saksbehandler2
         val behovsvurdering = sak.opprettBehovsvurdering(token = authContainerHelper.saksbehandler1.token)
 
-        behovsvurdering.slett(token = ikkeEierEllerFølger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.slettResponse(token = ikkeEierEllerFølger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .statuskode() shouldBe HttpStatusCode.Forbidden.value
 
         val påbegyntBehovsvurdering = behovsvurdering.start(
@@ -95,13 +95,13 @@ class BehovsvurderingApiTest {
             saksnummer = sak.saksnummer,
         )
 
-        påbegyntBehovsvurdering.slett(token = ikkeEierEllerFølger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        påbegyntBehovsvurdering.slettResponse(token = ikkeEierEllerFølger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .statuskode() shouldBe HttpStatusCode.Forbidden.value
 
         val følger = authContainerHelper.saksbehandler2
         sak.leggTilFolger(token = følger.token)
 
-        påbegyntBehovsvurdering.slett(token = følger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        påbegyntBehovsvurdering.slettResponse(token = følger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             "select status from ia_sak_kartlegging where kartlegging_id = '${påbegyntBehovsvurdering.id}'",
@@ -583,7 +583,7 @@ class BehovsvurderingApiTest {
             "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${behovsvurdering.id}'",
         ) shouldHaveSize 1
 
-        behovsvurdering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -622,7 +622,7 @@ class BehovsvurderingApiTest {
         behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        behovsvurdering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${behovsvurdering.id}'",
@@ -648,7 +648,7 @@ class BehovsvurderingApiTest {
             "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${behovsvurderingUtenSvar.id}'",
         ) shouldHaveSize 0
 
-        val responseSlettFørste = behovsvurderingUtenSvar.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val responseSlettFørste = behovsvurderingUtenSvar.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         responseSlettFørste.statuskode() shouldBe HttpStatusCode.OK.value
 
@@ -663,7 +663,7 @@ class BehovsvurderingApiTest {
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ) shouldHaveSize 0
 
-        val responseSlettIgjen = behovsvurderingUtenSvar.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val responseSlettIgjen = behovsvurderingUtenSvar.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         responseSlettIgjen.statuskode() shouldBe HttpStatusCode.Forbidden.value
 
@@ -679,7 +679,7 @@ class BehovsvurderingApiTest {
             "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${behovsvurdering.id}'",
         ) shouldHaveSize 3
 
-        val response = behovsvurdering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val response = behovsvurdering.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         response.statuskode() shouldBe HttpStatusCode.Forbidden.value
 
@@ -711,7 +711,7 @@ class BehovsvurderingApiTest {
             token = authContainerHelper.saksbehandler1.token,
         ).statuskode() shouldBe HttpStatusCode.Created.value
 
-        val response = behovsvurdering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val response = behovsvurdering.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         response.statuskode() shouldBe HttpStatusCode.Forbidden.value
 

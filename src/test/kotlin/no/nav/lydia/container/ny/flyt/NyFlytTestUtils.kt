@@ -23,10 +23,7 @@ import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companio
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkludertInnhold
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkluderteTemaer
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSpørreundersøkelse
-import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
-import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -54,13 +51,10 @@ import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
@@ -260,17 +254,12 @@ class NyFlytTestUtils {
                 .tilSingelRespons<IASakDto>().third.get()
 
         fun aktivSamarbeidsperiode(
-            testVirksomhet: TestVirksomhet = lastInnNyVirksomhet(),
-            samarbeidsnavn: String = "Samarbeid med ${testVirksomhet.orgnr}",
-            token: String = authContainerHelper.superbruker1.token,
-        ) = testVirksomhet.aktivSamarbeidsperiode(samarbeidsnavn = samarbeidsnavn, token = token)
-
-        fun TestVirksomhet.aktivSamarbeidsperiode(
-            samarbeidsnavn: String = "Samarbeid med $orgnr",
+            virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
+            samarbeidsnavn: String = "Samarbeid med ${virksomhet.orgnr}",
             token: String = authContainerHelper.superbruker1.token,
         ): IASakDto {
-            vurderVirksomhet(virksomhet = this, token = token).opprettSamarbeid(token = token, samarbeidsnavn = samarbeidsnavn)
-            return SakHelper.hentSak(orgnummer = this.orgnr, token = token)
+            vurderVirksomhet(virksomhet = virksomhet, token = token).opprettSamarbeid(token = token, samarbeidsnavn = samarbeidsnavn)
+            return SakHelper.hentSak(orgnummer = virksomhet.orgnr, token = token)
         }
 
         fun IASakDto.fullførSamarbeidsperiode(token: String = authContainerHelper.superbruker1.token): IASakDto {
@@ -282,7 +271,7 @@ class NyFlytTestUtils {
         }
 
         fun TestVirksomhet.opprettOgFullførSamarbeidsperiode(token: String = authContainerHelper.superbruker1.token): IASakDto {
-            this.aktivSamarbeidsperiode(token = token).fullførSamarbeidsperiode(token = token)
+            aktivSamarbeidsperiode(virksomhet = this, token = token).fullførSamarbeidsperiode(token = token)
             return SakHelper.hentSak(orgnummer = this.orgnr, token = token)
         }
 
@@ -414,7 +403,7 @@ class NyFlytTestUtils {
             return plan
         }
 
-        private fun IASamarbeidDto.slettSamarbeidRespons(
+        fun IASamarbeidDto.slettSamarbeidRespons(
             orgnr: String,
             token: String = authContainerHelper.saksbehandler1.token,
             dato: java.time.LocalDate? = null,
