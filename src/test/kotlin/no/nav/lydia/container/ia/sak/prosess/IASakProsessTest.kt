@@ -201,6 +201,7 @@ class IASakProsessTest {
         val tema = plan.temaer.first()
         val undertema = tema.undertemaer.first()
         sak.endreStatusPåInnholdIPlan(
+            planId = plan.id,
             temaId = tema.id,
             innholdId = undertema.id,
             status = PlanUndertema.Status.AVBRUTT,
@@ -467,7 +468,10 @@ class IASakProsessTest {
                 it.size shouldBe 1
             }
         }
-        sak.endreFlereTemaerIPlan(endring = opprettetPlan.inkluderAlt().tilRequest())
+        sak.endreFlereTemaerIPlan(
+            planId = opprettetPlan.id,
+            endring = opprettetPlan.inkluderAlt().tilRequest(),
+        )
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

@@ -74,6 +74,7 @@ class SamarbeidsplanBigqueryEksportererTest {
         val planMedAlt = plan.inkluderAlt()
 
         sak.endreFlereTemaerIPlan(
+            planId = plan.id,
             endring = planMedAlt.tilRequest(),
         )
 
@@ -104,6 +105,7 @@ class SamarbeidsplanBigqueryEksportererTest {
         )
 
         sak.endreEttTemaIPlan(
+            planId = plan.id,
             temaId = plan.temaer.last().id,
             endring = plan.inkluderAlt().tilRequest().last().undertemaer,
         )
@@ -135,6 +137,7 @@ class SamarbeidsplanBigqueryEksportererTest {
         val nyStatus = PlanUndertema.Status.PÅGÅR
 
         sak.endreStatusPåInnholdIPlan(
+            planId = plan.id,
             temaId = sisteTema.id,
             innholdId = sisteInnhold.id,
             status = nyStatus,

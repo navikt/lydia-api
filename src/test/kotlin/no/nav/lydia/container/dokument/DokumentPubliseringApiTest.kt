@@ -294,7 +294,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `opprettelese av samarbeidsplan dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
         val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        val samarbeid = sak.opprettSamarbeid()
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
         val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         val dokumentRefId = plan.id
         val navIdent = authContainerHelper.saksbehandler1.navIdent

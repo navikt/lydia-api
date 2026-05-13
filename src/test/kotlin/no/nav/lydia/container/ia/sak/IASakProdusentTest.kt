@@ -40,10 +40,9 @@ class IASakProdusentTest {
                     hendelse shouldContain sak.saksnummer
                     hendelse shouldContain sak.orgnr
                 }
-                meldinger shouldHaveSize 3
-                meldinger[0] shouldContain IASak.Status.NY.name
-                meldinger[1] shouldContain IASak.Status.VURDERES.name
-                meldinger[2] shouldContain IASak.Status.SLETTET.name
+                meldinger shouldHaveSize 2
+                meldinger[0] shouldContain IASak.Status.VURDERES.name
+                meldinger[1] shouldContain IASak.Status.SLETTET.name
             }
         }
     }
@@ -58,10 +57,9 @@ class IASakProdusentTest {
                     hendelse shouldContain sak.saksnummer
                     hendelse shouldContain sak.orgnr
                 }
-                meldinger shouldHaveSize 3
-                meldinger[0] shouldContain IASak.Status.NY.name
-                meldinger[1] shouldContain IASak.Status.VURDERES.name
-                meldinger[2] shouldContain IASak.Status.VURDERT.name
+                meldinger shouldHaveSize 2
+                meldinger[0] shouldContain IASak.Status.VURDERES.name
+                meldinger[1] shouldContain IASak.Status.VURDERT.name
             }
         }
     }

@@ -200,7 +200,7 @@ class NyFlytTest {
         samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
+        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr)
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
 
@@ -936,7 +936,7 @@ class NyFlytTest {
 
         val etNyttSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Helt nytt")
 
-        etNyttSamarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
+        etNyttSamarbeid.slettSamarbeid(orgnr = sak.orgnr)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
         sak.hentAlleSamarbeid() shouldHaveSize 1
     }
@@ -947,7 +947,7 @@ class NyFlytTest {
         sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
+        samarbeid.slettSamarbeid(orgnr = sak.orgnr)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
         sak.hentAlleSamarbeid() shouldHaveSize 0
     }
@@ -1100,7 +1100,6 @@ class NyFlytTest {
 
         samarbeidSomSkalSlettes.slettSamarbeid(
             orgnr = sak.orgnr,
-            token = authContainerHelper.superbruker1.token,
             dato = planlagtDato,
         )
 

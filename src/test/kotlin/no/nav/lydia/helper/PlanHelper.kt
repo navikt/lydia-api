@@ -80,6 +80,7 @@ class PlanHelper {
 
         fun IASakDto.endreStatusPåInnholdIPlan(
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
+            planId: String,
             temaId: Int,
             innholdId: Int,
             status: PlanUndertema.Status,
@@ -87,10 +88,11 @@ class PlanHelper {
             token = token,
             orgnr = orgnr,
             saksnummer = saksnummer,
+            planId = planId,
             temaId = temaId,
             undertemaId = innholdId,
             status = status,
-            prosessId = hentAlleSamarbeid().first().id,
+            samarbeidId = hentAlleSamarbeid().first().id,
         )
 
         fun PlanMalDto.inkluderAlt(): PlanMalDto =
@@ -272,26 +274,32 @@ class PlanHelper {
             )
 
         fun IASakDto.endreEttTemaIPlan(
+            planId: String,
             temaId: Int,
             endring: List<EndreUndertemaRequest>,
-            prosessId: Int = hentAlleSamarbeid().first().id,
+            samarbeidId: Int = hentAlleSamarbeid().first().id,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
-        ) = TestContainerHelper.applikasjon.performPut("${PLAN_BASE_ROUTE}/$orgnr/$saksnummer/prosess/$prosessId/$temaId")
+        ) = TestContainerHelper.applikasjon.performPut(
+            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/$samarbeidId/plan/$planId/tema/$temaId",
+        )
             .jsonBody(Json.encodeToString(endring))
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
 
         fun IASakDto.endreFlereTemaerIPlan(
+            planId: String,
             endring: List<EndreTemaRequest>,
-            prosessId: Int = hentAlleSamarbeid().first().id,
+            samarbeidId: Int = hentAlleSamarbeid().first().id,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
-        ) = TestContainerHelper.applikasjon.performPut("${PLAN_BASE_ROUTE}/$orgnr/$saksnummer/prosess/$prosessId")
+        ) = TestContainerHelper.applikasjon.performPut(
+            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/$samarbeidId/plan/$planId",
+        )
             .jsonBody(Json.encodeToString(endring))
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -313,15 +321,18 @@ class PlanHelper {
         private fun endreStatus(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int,
+            samarbeidId: Int,
+            planId: String,
             status: PlanUndertema.Status,
             temaId: Int,
             undertemaId: Int,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
-        ) = TestContainerHelper.applikasjon.performPut("${PLAN_BASE_ROUTE}/$orgnr/$saksnummer/prosess/$prosessId/$temaId/$undertemaId")
+        ) = TestContainerHelper.applikasjon.performPut(
+            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/$samarbeidId/plan/$planId/tema/$temaId/undertema/$undertemaId/status",
+        )
             .jsonBody(Json.encodeToString(status))
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -382,9 +393,10 @@ class PlanHelper {
         }.forEach { tema ->
             tema.undertemaer.forEach {
                 endreStatus(
+                    planId = id,
                     orgnr = orgnummer,
                     saksnummer = saksnummer,
-                    prosessId = prosessId,
+                    samarbeidId = prosessId,
                     status = PlanUndertema.Status.FULLFØRT,
                     temaId = tema.id,
                     undertemaId = it.id,
