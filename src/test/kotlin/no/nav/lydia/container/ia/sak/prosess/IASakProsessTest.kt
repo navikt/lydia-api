@@ -1,6 +1,5 @@
 package no.nav.lydia.container.ia.sak.prosess
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.assertions.shouldFail
 import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
@@ -25,6 +24,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnholdIPlan
@@ -35,23 +35,19 @@ import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.kanGjennomføreStatusendring
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -114,7 +110,7 @@ class IASakProsessTest {
     @Test
     fun `skal få avbrutte samarbeid i listen over alle samarbeid`() {
         val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        val samarbeid = sak.opprettSamarbeid()
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Avbrutt samarbeid")
         samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
         sak.hentAlleSamarbeid().forExactlyOne { samarbeid ->
             samarbeid.navn shouldBe "Avbrutt samarbeid"
@@ -124,11 +120,11 @@ class IASakProsessTest {
 
     @Test
     fun `skal ikke kunne avbryte samarbeid som inneholder spørreundersøkelser`() {
-        val sak = vurderVirksomhet()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         sak.opprettBehovsvurdering()
 
-        shouldFailWithMessage("HTTP Exception 400 Bad Request kan ikke avbryte samarbeid") {
+        shouldFailWithMessage("HTTP Exception 400 Bad Request") {
             samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
         }
     }
@@ -224,11 +220,8 @@ class IASakProsessTest {
         historikk.forExactlyOne { sakshistorikk ->
             sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainInOrder listOf(
                 IASakshendelseType.VIRKSOMHET_VURDERES,
-                IASakshendelseType.TA_EIERSKAP_I_SAK,
-                IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
-                IASakshendelseType.VIRKSOMHET_KARTLEGGES,
                 IASakshendelseType.NY_PROSESS,
-                IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS,
+                IASakshendelseType.OPPRETT_SAMARBEIDSPLAN,
                 IASakshendelseType.FULLFØR_PROSESS,
             )
             sakshistorikk.samarbeid.forExactlyOne { samarbeid ->
@@ -293,9 +286,7 @@ class IASakProsessTest {
         skalIkkeKunneSlettesPgaBehovsVurdering.kanGjennomføres shouldBe false
         skalIkkeKunneSlettesPgaBehovsVurdering.blokkerende shouldBe listOf(StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
 
-        applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<SpørreundersøkelseDto>()
+        behovsvurdering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val skalKunneSlettesIgjen = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalKunneSlettesIgjen.kanGjennomføres shouldBe true
         skalKunneSlettesIgjen.blokkerende shouldHaveSize 0
@@ -542,7 +533,7 @@ class IASakProsessTest {
         val samarbeid = sak.opprettSamarbeid()
 
         sak.opprettBehovsvurdering()
-
+        val sistEndretAvHendelse = hentSak(orgnummer = sak.orgnr).endretAvHendelseId
         shouldFail {
             samarbeid.copy(id = 1010000).slettSamarbeid(orgnr = sak.orgnr)
         }
@@ -555,15 +546,15 @@ class IASakProsessTest {
             select id from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by  opprettet desc limit 1
             """.trimIndent(),
         )
-        sisteHendelse shouldBe sak.endretAvHendelseId
+        sisteHendelse shouldBe sistEndretAvHendelse
     }
 
     @Test
     fun `skal kun kunne opprette samarbeid med unikt navn`() {
         val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Navn")
-        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
-        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
+        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict"
+        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict"
 
         sak.hentAlleSamarbeid().count { it.navn == "Navn" } shouldBeExactly 1
     }

@@ -183,23 +183,23 @@ class VirksomhetOppdateringTest {
     fun `skal ikke røre ikke aktive saker når virksomhet blir slettet`() {
         val virksomhet = lastInnNyVirksomhet()
 
-        val sak = aktivSamarbeidsperiode()
+        val sak = aktivSamarbeidsperiode(virksomhet)
         val samarbeid = sak.hentAlleSamarbeid().first()
         val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-        plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, prosessId = samarbeid.id)
+        plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = samarbeid.id)
         val evaluering = sak.opprettEvaluering()
         evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         evaluering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        samarbeid.avsluttSamarbeid(orgnr = sak.saksnummer, avslutningsType = IASamarbeid.Status.FULLFØRT)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
         sendSlettingForVirksomhet(virksomhet)
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe IASak.Status.FULLFØRT.name
+        ) shouldBe IASak.Status.AVSLUTTET.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
         ) shouldBe hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)

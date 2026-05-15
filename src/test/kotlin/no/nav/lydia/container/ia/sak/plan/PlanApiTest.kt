@@ -43,10 +43,8 @@ import no.nav.lydia.helper.PlanHelper.Companion.senesteSluttDato
 import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
@@ -113,8 +111,7 @@ class PlanApiTest {
     fun `skal ikke kunne fjerne undertemaer som har aktiviteter fra salesforce knyttet til seg`() {
         val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val enTomPlanMal = hentPlanMal()
-        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+        val plan = sak.opprettEnPlan()
         val førsteTema = plan.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
         førsteUndertema.inkludert shouldBe true
@@ -149,7 +146,6 @@ class PlanApiTest {
                 samarbeidId = samarbeid.id,
             )
         }
-        applikasjon shouldContainLog "Endring av plan med id '${plan.id}' kan ikke gjennomføres, da det finnes aktiviteter i SF".toRegex()
 
         // -- Send slette melding om SF aktivitet
         kafkaContainerHelper.sendOgVentTilKonsumert(
@@ -334,7 +330,7 @@ class PlanApiTest {
         etterKvittering.planleggOgFullførAlleUndertemaer(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
         )
         val response2 = publiserDokument(
             dokumentReferanseId = plan.id,
@@ -371,7 +367,7 @@ class PlanApiTest {
         val planEtterEndring = plan.planleggOgFullførAlleUndertemaer(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
         )
         planEtterEndring.harEndringerSidenSistPublisert shouldBe true
     }

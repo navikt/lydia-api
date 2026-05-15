@@ -2,7 +2,6 @@ package no.nav.lydia.container.ny.flyt
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
-import ia.felles.definisjoner.bransjer.Bransje
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAll
@@ -322,7 +321,7 @@ class NyFlytTestUtils {
             valgtÅrsak = valgtÅrsak,
         ).third.fold(
             { it },
-            { fail(it.message) },
+            { fail("${it.message}: ${it.response.body().asString("text/plain; charset=utf-8")}") },
         )
 
         fun IASamarbeidDto.avsluttSamarbeid(
@@ -346,7 +345,7 @@ class NyFlytTestUtils {
             )
 
         fun IASakDto.opprettSamarbeidResponse(
-            token: String = authContainerHelper.superbruker1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
             samarbeidsnavn: String = "Samarbeid med $orgnr",
         ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/opprett-samarbeid")
             .authentication().bearer(token)
@@ -392,7 +391,7 @@ class NyFlytTestUtils {
             orgnr: String,
             planId: String,
             endringer: List<EndreTemaRequest> = emptyList(),
-            token: String = authContainerHelper.superbruker1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performPut(
             url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId",
         )
@@ -409,7 +408,7 @@ class NyFlytTestUtils {
             planId: String,
             temaId: Int,
             endringer: List<EndreUndertemaRequest> = emptyList(),
-            token: String = authContainerHelper.superbruker1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performPut(
             url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId/tema/$temaId",
         )
@@ -459,7 +458,7 @@ class NyFlytTestUtils {
             temaId: Int,
             undertemaId: Int,
             nyStatus: PlanUndertema.Status,
-            token: String = authContainerHelper.superbruker1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performPut(
             url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/$id/plan/$planId/tema/$temaId/undertema/$undertemaId/status",
         )

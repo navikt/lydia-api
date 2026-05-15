@@ -1,7 +1,7 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.assertions.shouldFail
+import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
@@ -33,12 +33,9 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slettRespon
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.svarPåSpørsmål
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.body
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -47,7 +44,6 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent.FullførtBehovsvurdering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
@@ -562,14 +558,9 @@ class BehovsvurderingApiTest {
         val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
-        val response = applikasjon.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}/avslutt")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<SpørreundersøkelseDto>()
-
-        response.second.statusCode shouldBe HttpStatusCode.Forbidden.value
-
-        applikasjon shouldContainLog
-            "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.PÅBEGYNT.name}', kan ikke avslutte".toRegex()
+        shouldFailWithMessage("HTTP Exception 403 Forbidden") {
+            behovsvurdering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        }
     }
 
     @Test
@@ -823,10 +814,8 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal IKKE kunne flytte spørreundersøkelse en ugyldig prosess eller som lesebruker`() {
         val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        sak.opprettSamarbeid()
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 1
-        val behovsvurdering = sak.opprettBehovsvurdering(alleSamarbeid.first().id)
+        val samarbeid = sak.opprettSamarbeid()
+        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = samarbeid.id)
 
         // -- skal ikke kunne flytte til ikke eksisterende prosess
         shouldFail {
@@ -848,7 +837,7 @@ class BehovsvurderingApiTest {
         }
 
         // -- skal ikke kunne flytte til prosess i en annen sak
-        val nysak = vurderVirksomhet()
+        val nysak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         nysak.opprettSamarbeid()
         shouldFail {
             behovsvurdering.flytt(

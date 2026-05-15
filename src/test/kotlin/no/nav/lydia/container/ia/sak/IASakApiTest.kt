@@ -7,7 +7,12 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.todayIn
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførSamarbeidsperiode
@@ -23,6 +28,7 @@ import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentSaksStatus
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -30,7 +36,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
@@ -41,10 +46,10 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_FÅ_TAPTE_DAGSVERK
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_DIALOG_MELLOM_PARTENE
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_HAR_FOR_LAVT_POTENSIALE
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_MANGLER_REPRESANTANTER_ELLER_ETABLERT_PARTSGRUPPE
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import kotlin.test.Test
 
@@ -225,7 +230,6 @@ class IASakApiTest {
 
     @Test
     fun `tilgangskontroll - en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
-        val virksomhet = lastInnNyVirksomhet()
         val sak = vurderVirksomhet(token = authContainerHelper.superbruker1.token)
         sak.opprettSamarbeidResponse(authContainerHelper.lesebrukerAudit.token).statuskode() shouldBe 403
     }
@@ -256,20 +260,28 @@ class IASakApiTest {
     @Test
     fun `skal få samarbeidshistorikken til en virksomhet`() {
         val valgtÅrsak = ValgtÅrsak(
-            type = NAV_IGANGSETTER_IKKE_TILTAK,
-            begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK, IKKE_DIALOG_MELLOM_PARTENE),
+            type = VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
+            begrunnelser = listOf(VIRKSOMHETEN_HAR_FOR_LAVT_POTENSIALE, VIRKSOMHETEN_MANGLER_REPRESANTANTER_ELLER_ETABLERT_PARTSGRUPPE),
+            dato = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(90, DateTimeUnit.DAY),
         )
-        val orgnummer = nyttOrgnummer()
-        val sak = vurderVirksomhet().avsluttVurdering()
+        val virksomhet = lastInnNyVirksomhet()
+        val sak = vurderVirksomhet(virksomhet = virksomhet)
+            .leggTilFolger(authContainerHelper.saksbehandler1.token)
+            .avsluttVurdering(
+                token = authContainerHelper.saksbehandler1.token,
+                valgtÅrsak = valgtÅrsak,
+            )
 
-        hentSamarbeidshistorikk(orgnummer = orgnummer).also { samarbeidshistorikk ->
+        hentSamarbeidshistorikk(orgnummer = virksomhet.orgnr).also { samarbeidshistorikk ->
             samarbeidshistorikk shouldHaveSize 1
             val sakshistorikk = samarbeidshistorikk.first()
             sakshistorikk.sakshendelser.map { it.status } shouldContainExactly listOf(
+                IASak.Status.NY,
                 IASak.Status.VURDERES,
                 IASak.Status.VURDERT,
             )
             sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainExactly listOf(
+                OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
                 VURDERING_FULLFØRT_UTEN_SAMARBEID,
             )

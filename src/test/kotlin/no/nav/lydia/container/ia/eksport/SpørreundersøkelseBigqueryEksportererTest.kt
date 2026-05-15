@@ -286,7 +286,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
         val sak1 = vurderVirksomhet().leggTilFolger(TestContainerHelper.authContainerHelper.saksbehandler1.token)
         val samarbeid1 = sak1.opprettSamarbeid()
         sak1.opprettBehovsvurdering(samarbeidId = samarbeid1.id)
-        val sak2 = vurderVirksomhet()
+        val sak2 = vurderVirksomhet().leggTilFolger(TestContainerHelper.authContainerHelper.saksbehandler1.token)
         val samarbeid2 = sak2.opprettSamarbeid()
         sak2.opprettBehovsvurdering(samarbeidId = samarbeid2.id)
 

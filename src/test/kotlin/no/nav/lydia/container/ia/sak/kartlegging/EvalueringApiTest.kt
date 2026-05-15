@@ -253,7 +253,7 @@ class EvalueringApiTest {
     @Test
     fun `skal ikke kunne opprette en tom evaluering pga tom plan`() {
         val sak = aktivSamarbeidsperiode()
-        sak.opprettEnPlan()
+        sak.opprettEnPlan(plan = hentPlanMal())
         shouldFail { sak.opprettEvaluering() }.message shouldBe "HTTP Exception 400 Bad Request"
     }
 

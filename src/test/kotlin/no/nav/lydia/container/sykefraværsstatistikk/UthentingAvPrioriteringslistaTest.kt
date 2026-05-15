@@ -37,7 +37,7 @@ class UthentingAvPrioriteringslistaTest {
 
         virksomheter.data.first { it.orgnr == fullførtSak.orgnr }
             .also { virksomhet ->
-                virksomhet.status shouldBe IASak.Status.KONTAKTES
+                virksomhet.status shouldBe IASak.Status.AVSLUTTET
             }
     }
 
@@ -59,7 +59,7 @@ class UthentingAvPrioriteringslistaTest {
         val oppdaterteVirksomheter = hentSykefravær(kommuner = testKommune.nummer)
         oppdaterteVirksomheter.data.first { it.orgnr == virksomhet.orgnr }.also { virksomhet ->
             virksomhet.saksnummer shouldBe sak.saksnummer
-            virksomhet.status shouldBe IASak.Status.VI_BISTÅR
+            virksomhet.status shouldBe IASak.Status.AKTIV
         }
     }
 }

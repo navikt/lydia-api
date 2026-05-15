@@ -11,6 +11,8 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsN
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -74,7 +76,7 @@ class SamarbeidBigqueryEksportererTest {
 
         samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sakMedSamarbeidSomSkalSlettes.orgnr)
 
-        val sakMedNavngittSamarbeid = vurderVirksomhet()
+        val sakMedNavngittSamarbeid = vurderVirksomhet().leggTilFolger(TestContainerHelper.authContainerHelper.saksbehandler1.token)
         val samarbeidUtenNavn = sakMedNavngittSamarbeid.opprettSamarbeid(samarbeidsnavn = "SAMARBEID UTEN NAVN")
         val samarbeidMedNyttNavn = samarbeidUtenNavn.endreSamarbeidsNavn(orgnr = sakMedNavngittSamarbeid.orgnr, nyttNavn = "NAVNGITT SAMARBEID")
 

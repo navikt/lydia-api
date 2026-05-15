@@ -80,7 +80,7 @@ class KvitteringConsumerTest {
         val planEtterEndring = plan.planleggOgFullførAlleUndertemaer(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
         )
 
         val dokumentV2 = publiserDokument(

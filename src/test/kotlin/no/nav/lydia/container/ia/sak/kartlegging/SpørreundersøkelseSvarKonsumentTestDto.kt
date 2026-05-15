@@ -1,6 +1,5 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -9,26 +8,22 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.sak.kartlegging.BehovsvurderingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.sendKartleggingFlervalgSvarTilKafka
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.sendKartleggingSvarTilKafka
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.svarAlternativerTilEtFlervalgSpørsmål
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.svarAlternativerTilEtSpørsmål
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
-import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
-import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.AntallSvarKafkaDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdatering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.postgresql.util.PGobject
@@ -98,16 +93,12 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         ) shouldHaveSize 1
 
         // AVSLUTTET
-        applikasjon.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}/avslutt")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<SpørreundersøkelseDto>()
+        kartlegging.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         kartlegging.sendKartleggingSvarTilKafka()
         applikasjon.shouldContainLog("Kan ikke svare på en kartlegging i status AVSLUTTET".toRegex())
 
         // SLETTET
-        applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<SpørreundersøkelseDto>()
+        kartlegging.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         kartlegging.sendKartleggingSvarTilKafka()
         applikasjon.shouldContainLog("Kan ikke svare på en kartlegging i status SLETTET".toRegex())
     }

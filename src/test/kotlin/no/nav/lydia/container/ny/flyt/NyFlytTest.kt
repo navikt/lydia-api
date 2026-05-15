@@ -603,7 +603,7 @@ class NyFlytTest {
         samarbeid.endreSamarbeidsNavn(
             orgnr = sak.orgnr,
             nyttNavn = nyttNavn,
-            token = authContainerHelper.superbruker1.token,
+            token = authContainerHelper.saksbehandler1.token,
         ).navn shouldBe nyttNavn
 
         val tilstandEtterEndring = hentVirksomhetTilstand(orgnr = sak.orgnr)
@@ -920,7 +920,7 @@ class NyFlytTest {
         )
 
         shouldFail {
-            samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
+            samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.saksbehandler1.token)
         }.message shouldMatch ("HTTP Exception 400 Bad Request")
 
         hentVirksomhetTilstand(sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
@@ -962,7 +962,7 @@ class NyFlytTest {
         samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.superbruker1.token)
+        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sak.orgnr)
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
         sak.hentAlleSamarbeid() shouldHaveSize 1

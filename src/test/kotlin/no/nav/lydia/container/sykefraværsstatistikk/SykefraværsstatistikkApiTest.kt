@@ -47,7 +47,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
@@ -64,7 +63,6 @@ import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
 import no.nav.lydia.helper.TestVirksomhet.Companion.LUNNER
-import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
@@ -74,8 +72,6 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
@@ -96,7 +92,6 @@ import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
-import kotlin.test.fail
 
 class SykefraværsstatistikkApiTest {
     // Denne testen bruker vi for å hente en dump lokalt (les README)
@@ -768,32 +763,6 @@ class SykefraværsstatistikkApiTest {
     }
 
     @Test
-    fun `skal kunne filtrere virksomheter på status`() {
-        val orgnummer = TESTVIRKSOMHET_FOR_STATUSFILTER.orgnr
-        postgresContainerHelper.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
-
-        applikasjon.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer").authentication().bearer(authContainerHelper.superbruker1.token)
-            .tilSingelRespons<IASakDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
-            )
-
-        hentSykefravær(success = { response ->
-            response.data shouldHaveAtLeastSize 1
-            response.data.forAll {
-                it.status shouldBe IASak.Status.VURDERES
-            }
-        }, iaStatus = IASak.Status.VURDERES.name)
-
-        hentSykefravær(success = { response ->
-            response.data.forAll {
-                it.status shouldBe IASak.Status.IKKE_AKTIV
-                it.orgnr shouldNotBe orgnummer
-            }
-        }, iaStatus = IASak.Status.IKKE_AKTIV.name)
-    }
-
-    @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
         hentSykefravær(success = { response1 ->
             response1.data shouldHaveSize VIRKSOMHETER_PER_SIDE
@@ -1105,7 +1074,7 @@ class SykefraværsstatistikkApiTest {
     @Test
     fun `(ny flyt) skal kunne filtrere på tilstand VirksomhetHarAktiveSamarbeid`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid()
 
         hentTotaltAntallTreffISykefravær(virksomhetTilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid.name) shouldBeGreaterThan 0

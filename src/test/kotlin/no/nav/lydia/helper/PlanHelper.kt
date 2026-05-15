@@ -307,13 +307,16 @@ class PlanHelper {
         private fun endrePlan(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int,
+            samarbeidId: Int,
+            planId: String,
             endring: List<EndreTemaRequest>,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
-        ) = TestContainerHelper.applikasjon.performPut("${PLAN_BASE_ROUTE}/$orgnr/$saksnummer/prosess/$prosessId")
+        ) = TestContainerHelper.applikasjon.performPut(
+            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/$samarbeidId/plan/$planId",
+        )
             .jsonBody(Json.encodeToString(endring))
             .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
+            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -367,7 +370,7 @@ class PlanHelper {
         fun PlanMedPubliseringStatusDto.planleggOgFullførAlleUndertemaer(
             orgnummer: String,
             saksnummer: String,
-            prosessId: Int,
+            samarbeidId: Int,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
         ) = this.copy(
             temaer = temaer.map { tema ->
@@ -386,7 +389,8 @@ class PlanHelper {
             endrePlan(
                 orgnr = orgnummer,
                 saksnummer = saksnummer,
-                prosessId = prosessId,
+                samarbeidId = samarbeidId,
+                planId = id,
                 endring = endringer,
                 token = token,
             )
@@ -396,7 +400,7 @@ class PlanHelper {
                     planId = id,
                     orgnr = orgnummer,
                     saksnummer = saksnummer,
-                    samarbeidId = prosessId,
+                    samarbeidId = samarbeidId,
                     status = PlanUndertema.Status.FULLFØRT,
                     temaId = tema.id,
                     undertemaId = it.id,
@@ -406,7 +410,7 @@ class PlanHelper {
             hentPlan(
                 orgnr = orgnummer,
                 saksnummer = saksnummer,
-                prosessId = prosessId,
+                prosessId = samarbeidId,
                 token = token,
             )
         }
