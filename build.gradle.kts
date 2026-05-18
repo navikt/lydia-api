@@ -57,7 +57,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.11")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:12.5.0")
+    implementation("org.flywaydb:flyway-database-postgresql:12.6.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -105,7 +105,7 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:3.0.1")
+    testImplementation("no.nav.security:mock-oauth2-server:3.0.3")
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
@@ -141,7 +141,7 @@ dependencies {
                 require("1.84")
             }
             because(
-                "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.1",
+                "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.3",
             )
         }
         testImplementation("org.bouncycastle:bcpkix-jdk18on") {
@@ -149,7 +149,7 @@ dependencies {
                 require("1.84")
             }
             because(
-                "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.1",
+                "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.3",
             )
         }
     }
