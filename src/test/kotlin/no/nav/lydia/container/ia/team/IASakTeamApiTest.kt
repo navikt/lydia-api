@@ -120,7 +120,7 @@ class IASakTeamApiTest {
 
         val sakFørEierskapsendring = vurderVirksomhet()
         sakFørEierskapsendring.bliEier(authContainerHelper.saksbehandler1.token)
-        sakFørEierskapsendring.bliEier(authContainerHelper.saksbehandler1.token)
+        sakFørEierskapsendring.bliEier(authContainerHelper.saksbehandler2.token)
         val sakEtterEierskapBytte = hentSak(sakFørEierskapsendring.orgnr)
         sakEtterEierskapBytte.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
 

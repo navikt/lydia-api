@@ -65,24 +65,8 @@ class NyFlytService(
         iaSakObservers.forEach { observer -> observer.receive(input = sakDto) }
     }
 
-    fun hentAlleAndreIASakDto(
-        orgnummer: String,
-        saksnummer: String,
-    ): List<IASakDto> =
-        iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer)
-            .sortedByDescending { it.opprettetTidspunkt }
-            .filter { it.status.regnesSomAvsluttet() }
-            .filterNot { it.saksnummer == saksnummer }
-
     fun hentSisteIASakDto(orgnummer: String): IASakDto? =
         iaSakRepository.hentAlleSakerForVirksomhet(orgnummer = orgnummer).maxByOrNull { it.opprettetTidspunkt }
-
-    fun hentAlleSisteIASakDtoForFylke(fylkenummer: String): List<IASakDto> {
-        val sakerGruppertPåOrgnr: Map<String, List<IASakDto>> = iaSakRepository.hentAlleSakerDtoForFylke(fylkenummer = fylkenummer).groupBy { it.orgnr }
-        return sakerGruppertPåOrgnr.map { it.value.maxBy { it.opprettetTidspunkt } }.toList()
-    }
-
-    fun hentTilstandVirksomhet(orgnummer: String): VirksomhetTilstandDto? = tilstandVirksomhetRepository.hentVirksomhetTilstand(orgnr = orgnummer)
 
     fun bliEier(
         orgnr: String,
@@ -95,7 +79,24 @@ class NyFlytService(
         if (aktivSak.eidAv == navAnsatt.navIdent) {
             return aktivSak.right()
         }
-        return iaSakRepository.oppdaterEierPåSak(aktivSak.saksnummer, navAnsatt.navIdent)?.right() ?: IASakError.`fikk ikke oppdatert sak`.left()
+
+        val forrigeEier = aktivSak.eidAv
+
+        val oppdatertSak = iaSakRepository.oppdaterEierPåSak(aktivSak.saksnummer, navAnsatt.navIdent) ?: return IASakError.`fikk ikke oppdatert sak`.left()
+
+        if (forrigeEier != null) {
+            iaTeamService.knyttBrukerTilSak(
+                iaSakDto = oppdatertSak,
+                navAnsatt = NavAnsattMedSaksbehandlerRolle.Saksbehandler(
+                    navIdent = forrigeEier,
+                    navn = "",
+                    token = "",
+                    ansattesGrupper = emptySet(),
+                ),
+            )
+        }
+
+        return oppdatertSak.right()
     }
 
     fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): Either<Feil, List<IASamarbeid>> =
