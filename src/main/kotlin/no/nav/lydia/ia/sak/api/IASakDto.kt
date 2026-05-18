@@ -22,6 +22,7 @@ data class IASakDto(
     val eidAv: String?,
     val endretAvHendelseId: String,
     val gyldigeNesteHendelser: List<GyldigHendelse>,
+    val lukket: Boolean = false, // TODO: [OPPRYDDING] kan fjernes etter at den er fjernet fra frontend
 ) {
     @Transient
     private val sakshendelser = mutableListOf<IASakshendelse>()
