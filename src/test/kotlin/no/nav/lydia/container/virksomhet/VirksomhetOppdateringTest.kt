@@ -202,7 +202,7 @@ class VirksomhetOppdateringTest {
         ) shouldBe IASak.Status.AVSLUTTET.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        ) shouldBe hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).endretAvHendelseId
     }
 }
 

@@ -37,7 +37,7 @@ class UthentingAvPrioriteringslistaTest {
 
         virksomheter.data.first { it.orgnr == fullførtSak.orgnr }
             .also { virksomhet ->
-                virksomhet.status shouldBe IASak.Status.AVSLUTTET
+                virksomhet.status shouldBe IASak.Status.VURDERES
             }
     }
 

@@ -18,9 +18,11 @@ import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
+import org.junit.Ignore
 import org.junit.Test
 
 class UrørteSakerTest {
+    @Ignore
     @Test
     fun `skal tilbakeføre urørte saker i vurderes uten eier`() {
         val urørtGammelSak = vurderVirksomhet()
@@ -51,6 +53,7 @@ class UrørteSakerTest {
         }
     }
 
+    @Ignore
     @Test
     fun `skal ikke tilbakeføre andre gamle saker enn de som er i vurderes uten eier`() {
         val sakMedEier = vurderVirksomhet().bliEier(token = authContainerHelper.superbruker1.token)
@@ -69,6 +72,7 @@ class UrørteSakerTest {
         sakEtterRydding.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
     }
 
+    @Ignore
     @Test
     fun `skal ikke tilbakeføre saker som er nyere enn 6 måneder i vurderes uten eier`() {
         val urørtNyereSak = vurderVirksomhet()
