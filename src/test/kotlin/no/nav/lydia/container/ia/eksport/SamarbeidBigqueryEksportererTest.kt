@@ -6,16 +6,21 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.helper.nyttNavnPåSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -39,7 +44,7 @@ class SamarbeidBigqueryEksportererTest {
 
     @Test
     fun `oppretting av samarbeid skal trigge kafka-eksport av samarbeid`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
         val førsteSamarbeid = sak.hentAlleSamarbeid().first()
 
         runBlocking {
@@ -56,26 +61,24 @@ class SamarbeidBigqueryEksportererTest {
                 sisteSamarbeid.id shouldBe førsteSamarbeid.id
                 sisteSamarbeid.saksnummer shouldBe førsteSamarbeid.saksnummer
                 sisteSamarbeid.status shouldBe "AKTIV"
-                sisteSamarbeid.navn shouldBe "Samarbeid uten navn"
+                sisteSamarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
             }
         }
     }
 
     @Test
     fun `jobb starter re-eksport av alle samarbeid til bigquery`() {
-        val sakMedAktivtSamarbeid = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "ATIVT SAMARBEID")
+        val sakMedAktivtSamarbeid = aktivSamarbeidsperiode(samarbeidsnavn = "ATIVT SAMARBEID")
         val aktivtSamarbeid = sakMedAktivtSamarbeid.hentAlleSamarbeid().first()
 
-        val sakMedSamarbeidSomSkalSlettes = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "SLETTET SAMARBEID")
+        val sakMedSamarbeidSomSkalSlettes = aktivSamarbeidsperiode(samarbeidsnavn = "SLETTET SAMARBEID")
         val samarbeidSomSkalSlettes = sakMedSamarbeidSomSkalSlettes.hentAlleSamarbeid().first()
 
-        sakMedSamarbeidSomSkalSlettes.slettSamarbeid(samarbeidSomSkalSlettes)
+        samarbeidSomSkalSlettes.slettSamarbeid(orgnr = sakMedSamarbeidSomSkalSlettes.orgnr)
 
-        val sakMedNavngittSamarbeid = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "SAMARBEID UTEN NAVN")
-        val samarbeidUtenNavn = sakMedNavngittSamarbeid.hentAlleSamarbeid().first()
-
-        sakMedNavngittSamarbeid.nyttNavnPåSamarbeid(samarbeidUtenNavn, "NAVNGITT SAMARBEID")
-        val samarbeidMedNyttNavn = sakMedNavngittSamarbeid.hentAlleSamarbeid().first()
+        val sakMedNavngittSamarbeid = vurderVirksomhet().leggTilFolger(TestContainerHelper.authContainerHelper.saksbehandler1.token)
+        val samarbeidUtenNavn = sakMedNavngittSamarbeid.opprettSamarbeid(samarbeidsnavn = "SAMARBEID UTEN NAVN")
+        val samarbeidMedNyttNavn = samarbeidUtenNavn.endreSamarbeidsNavn(orgnr = sakMedNavngittSamarbeid.orgnr, nyttNavn = "NAVNGITT SAMARBEID")
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

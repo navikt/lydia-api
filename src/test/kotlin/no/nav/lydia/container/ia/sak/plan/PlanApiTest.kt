@@ -15,6 +15,10 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidsplan
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
 import no.nav.lydia.helper.PlanHelper.Companion.SLUTT_DATO
@@ -33,22 +37,16 @@ import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgAltInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderTemaOgAltInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
 import no.nav.lydia.helper.PlanHelper.Companion.senesteSluttDato
-import no.nav.lydia.helper.PlanHelper.Companion.slettPlanForSamarbeid
 import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
@@ -66,10 +64,10 @@ import kotlin.test.Test
 class PlanApiTest {
     @Test
     fun `skal kunne slette en tom plan`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        sak.opprettEnPlan(samarbeidId = samarbeid.id)
-        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, plan.id)
         slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
 
         shouldFailWithMessage("HTTP Exception 404 Not Found") {
@@ -79,11 +77,11 @@ class PlanApiTest {
 
     @Test
     fun `skal kunne opprette en ny plan etter at man har slettet en`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        sak.opprettEnPlan(samarbeidId = samarbeid.id)
-        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
-        val nyPlan = sak.opprettEnPlan(samarbeidId = samarbeid.id)
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, plan.id)
+        val nyPlan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         val hentetPlan = sak.hentPlan(prosessId = samarbeid.id)
         hentetPlan.id shouldBe nyPlan.id
         hentetPlan.status shouldBe IASamarbeid.Status.AKTIV
@@ -92,10 +90,10 @@ class PlanApiTest {
 
     @Test
     fun `skal kunne slette plan dersom planen inneholder aktive temaer`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        sak.opprettEnPlan(samarbeidId = samarbeid.id, plan = hentPlanMal().inkluderAlt())
-        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, plan.id)
         slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
         slettetPlan.temaer.forAll { tema ->
             tema.inkludert shouldBe false
@@ -111,10 +109,9 @@ class PlanApiTest {
 
     @Test
     fun `skal ikke kunne fjerne undertemaer som har aktiviteter fra salesforce knyttet til seg`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val enTomPlanMal = hentPlanMal()
-        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+        val plan = sak.opprettEnPlan()
         val førsteTema = plan.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
         førsteUndertema.inkludert shouldBe true
@@ -137,6 +134,7 @@ class PlanApiTest {
         )
         shouldFailWithMessage("HTTP Exception 409 Conflict") {
             sak.endreEttTemaIPlan(
+                planId = plan.id,
                 temaId = førsteTema.id,
                 endring = førsteTema.undertemaer.map {
                     it.copy(
@@ -145,10 +143,9 @@ class PlanApiTest {
                         sluttDato = null,
                     )
                 }.tilRequest(),
-                prosessId = samarbeid.id,
+                samarbeidId = samarbeid.id,
             )
         }
-        applikasjon shouldContainLog "Endring av plan med id '${plan.id}' kan ikke gjennomføres, da det finnes aktiviteter i SF".toRegex()
 
         // -- Send slette melding om SF aktivitet
         kafkaContainerHelper.sendOgVentTilKonsumert(
@@ -158,6 +155,7 @@ class PlanApiTest {
         )
 
         val planEtterEndring = sak.endreEttTemaIPlan(
+            planId = plan.id,
             temaId = førsteTema.id,
             endring = førsteTema.undertemaer.map {
                 it.copy(
@@ -166,7 +164,7 @@ class PlanApiTest {
                     sluttDato = null,
                 )
             }.tilRequest(),
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
         )
         planEtterEndring.temaer.first().undertemaer.forAll {
             it.inkludert shouldBe false
@@ -175,7 +173,7 @@ class PlanApiTest {
 
     @Test
     fun `kan ikke endre en plan om forespørselen er ufullstendig`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
         val planDto = sak.opprettEnPlan(plan = enTomPlanMal)
 
@@ -211,17 +209,28 @@ class PlanApiTest {
 
         val gyldigEndring = planDto.inkluderTemaOgAltInnhold(planDto.temaer.first().id)
 
-        shouldFail { sak.endreFlereTemaerIPlan(endring = datoUtenInkludert.tilRequest()) }
-            .message shouldBe "HTTP Exception 400 Bad Request"
+        shouldFail {
+            sak.endreFlereTemaerIPlan(
+                planId = planDto.id,
+                endring = datoUtenInkludert.tilRequest(),
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
 
-        shouldFail { sak.endreFlereTemaerIPlan(endring = inkludertUtenDato.tilRequest()) }
-            .message shouldBe "HTTP Exception 400 Bad Request"
+        shouldFail {
+            sak.endreFlereTemaerIPlan(
+                planId = planDto.id,
+                endring = inkludertUtenDato.tilRequest(),
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
 
         val uendretPlan = sak.hentPlan()
         uendretPlan.antallTemaInkludert() shouldBe 0
         uendretPlan.antallInnholdInkludert() shouldBe 0
 
-        sak.endreFlereTemaerIPlan(endring = gyldigEndring.tilRequest())
+        sak.endreFlereTemaerIPlan(
+            planId = uendretPlan.id,
+            endring = gyldigEndring.tilRequest(),
+        )
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 1
@@ -229,6 +238,7 @@ class PlanApiTest {
 
         shouldFail {
             sak.endreEttTemaIPlan(
+                planId = endretPlan.id,
                 endring = datoUtenInkludert.temaer.first().undertemaer.tilRequest(),
                 temaId = planDto.temaer.first().id,
             )
@@ -236,6 +246,7 @@ class PlanApiTest {
 
         shouldFail {
             sak.endreEttTemaIPlan(
+                planId = endretPlan.id,
                 endring = inkludertUtenDato.temaer.first().undertemaer.tilRequest(),
                 temaId = planDto.temaer.first().id,
             )
@@ -251,7 +262,7 @@ class PlanApiTest {
         // TODO: Det skal vel egentlig ikke være mulig å opprette en tom plan?
         //  (hindret ved oppretting i frontend, men mulig å nullstille en plan ved endring)
 
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal)
 
@@ -262,7 +273,7 @@ class PlanApiTest {
 
     @Test
     fun `kan opprette og publisere en plan, motta kvittering, hente plan og verifisere at tidspunkt og status er korrekt`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
@@ -298,10 +309,9 @@ class PlanApiTest {
 
     @Test
     fun `skal oppgi riktig status og dato ved republisering`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val enTomPlanMal = hentPlanMal()
-        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+        val plan = sak.opprettEnPlan()
 
         val response = publiserDokument(
             dokumentReferanseId = plan.id,
@@ -320,7 +330,7 @@ class PlanApiTest {
         etterKvittering.planleggOgFullførAlleUndertemaer(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
         )
         val response2 = publiserDokument(
             dokumentReferanseId = plan.id,
@@ -337,7 +347,7 @@ class PlanApiTest {
 
     @Test
     fun `skal informere dersom en plan har endringer siden sist publisering`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
@@ -357,14 +367,14 @@ class PlanApiTest {
         val planEtterEndring = plan.planleggOgFullførAlleUndertemaer(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
         )
         planEtterEndring.harEndringerSidenSistPublisert shouldBe true
     }
 
     @Test
     fun `kan opprette en ny plan med alt inkludert`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
 
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
@@ -376,11 +386,12 @@ class PlanApiTest {
 
     @Test
     fun `kan endre status på innhold i plan`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
 
         sak.endreStatusPåInnholdIPlan(
+            planId = plan.id,
             temaId = plan.temaer.first().id,
             innholdId = plan.temaer.first().undertemaer.first().id,
             status = PlanUndertema.Status.FULLFØRT,
@@ -395,12 +406,13 @@ class PlanApiTest {
 
     @Test
     fun `kan ikke endre status på innhold i plan om innhold ikke er inkludert`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal)
 
         shouldFail {
             sak.endreStatusPåInnholdIPlan(
+                planId = plan.id,
                 temaId = plan.temaer.first().id,
                 innholdId = plan.temaer.first().undertemaer.first().id,
                 status = PlanUndertema.Status.FULLFØRT,
@@ -415,7 +427,7 @@ class PlanApiTest {
 
     @Test
     fun `kan endre på innhold i et tema som er inkludert`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val planMedEttTemaOgEttInnhold = hentPlanMal().inkluderEttTemaOgEttInnhold(
             temanummer = 3,
             innholdnummer = 1,
@@ -424,7 +436,11 @@ class PlanApiTest {
         val temaId = planDto.temaer.last().id
         val endring = planDto.inkluderTemaOgAltInnhold(temaId = temaId).tilRequest().last()
 
-        sak.endreEttTemaIPlan(temaId = temaId, endring = endring.undertemaer)
+        sak.endreEttTemaIPlan(
+            planId = planDto.id,
+            temaId = temaId,
+            endring = endring.undertemaer,
+        )
 
         val endretPlan = sak.hentPlan()
 
@@ -434,15 +450,20 @@ class PlanApiTest {
 
     @Test
     fun `kan ikke endre innhold i plan om det temaet ikke allerede er inkludert`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal)
         val førsteTema = plan.temaer.first()
 
         val endring = førsteTema.undertemaer.inkluderAltInnhold().tilRequest()
 
-        shouldFail { sak.endreEttTemaIPlan(temaId = førsteTema.id, endring = endring) }
-            .message shouldBe "HTTP Exception 400 Bad Request"
+        shouldFail {
+            sak.endreEttTemaIPlan(
+                planId = plan.id,
+                temaId = førsteTema.id,
+                endring = endring,
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 0
@@ -451,7 +472,7 @@ class PlanApiTest {
 
     @Test
     fun `kan ikke endre på innhold i et tema som ikke er inkludert`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
         val planDto = sak.opprettEnPlan(plan = enTomPlanMal)
 
@@ -463,8 +484,13 @@ class PlanApiTest {
             },
         )
 
-        shouldFail { sak.endreEttTemaIPlan(temaId = endring.temaer.first().id, endring = endring.tilRequest().first().undertemaer) }
-            .message shouldBe "HTTP Exception 400 Bad Request"
+        shouldFail {
+            sak.endreEttTemaIPlan(
+                planId = planDto.id,
+                temaId = endring.temaer.first().id,
+                endring = endring.tilRequest().first().undertemaer,
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 0
@@ -473,10 +499,13 @@ class PlanApiTest {
 
     @Test
     fun `kan endre en tom plan til å inkludere alle tema og alle undertema`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-        val plan = sak.opprettEnPlan()
+        val sak = aktivSamarbeidsperiode()
+        val plan = sak.opprettEnPlan(plan = hentPlanMal())
 
-        sak.endreFlereTemaerIPlan(endring = plan.inkluderAlt().tilRequest())
+        sak.endreFlereTemaerIPlan(
+            planId = plan.id,
+            endring = plan.inkluderAlt().tilRequest(),
+        )
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe plan.temaer.size
@@ -485,14 +514,18 @@ class PlanApiTest {
 
     @Test
     fun `kan endre en plan med ett inkludert tema til å inkludere alt innhold i temaet`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val planMalDto = hentPlanMal().inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1)
         val plan = sak.opprettEnPlan(plan = planMalDto)
 
         plan.antallTemaInkludert() shouldBe 1
         plan.antallInnholdInkludert() shouldBe 1
 
-        sak.endreEttTemaIPlan(temaId = plan.temaer.last().id, endring = plan.inkluderAlt().tilRequest().last().undertemaer)
+        sak.endreEttTemaIPlan(
+            planId = plan.id,
+            temaId = plan.temaer.last().id,
+            endring = plan.inkluderAlt().tilRequest().last().undertemaer,
+        )
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 1
@@ -501,16 +534,16 @@ class PlanApiTest {
 
     @Test
     fun `kan endre flere planer i flere samarbeid uten at de påvirker hverandre`() {
-        val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid(navn = "Først")
-            .opprettNyttSamarbeid(navn = "Sist")
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid1 = sak.opprettSamarbeid(samarbeidsnavn = "Først")
+        val samarbeid2 = sak.opprettSamarbeid(samarbeidsnavn = "Sist")
         val enTomPlanMal = hentPlanMal()
         val planMalDto = enTomPlanMal.inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1)
 
         val alleSamarbeid = sak.hentAlleSamarbeid()
 
-        val plan1 = sak.opprettEnPlan(plan = planMalDto, samarbeidId = alleSamarbeid.first().id)
-        val plan2 = sak.opprettEnPlan(plan = enTomPlanMal, samarbeidId = alleSamarbeid.last().id)
+        val plan1 = samarbeid1.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = planMalDto)
+        val plan2 = samarbeid2.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = enTomPlanMal)
 
         plan1.antallTemaInkludert() shouldBe 1
         plan1.antallInnholdInkludert() shouldBe 1
@@ -519,12 +552,17 @@ class PlanApiTest {
         plan2.antallInnholdInkludert() shouldBe 0
 
         sak.endreEttTemaIPlan(
+            planId = plan1.id,
             temaId = plan1.temaer.last().id,
             endring = plan1.inkluderAlt().tilRequest().last().undertemaer,
-            prosessId = alleSamarbeid.first().id,
+            samarbeidId = alleSamarbeid.first().id,
         )
 
-        sak.endreFlereTemaerIPlan(endring = plan2.inkluderAlt().tilRequest(), prosessId = alleSamarbeid.last().id)
+        sak.endreFlereTemaerIPlan(
+            planId = plan2.id,
+            endring = plan2.inkluderAlt().tilRequest(),
+            samarbeidId = alleSamarbeid.last().id,
+        )
 
         val endretPlan1 = sak.hentPlan(prosessId = alleSamarbeid.first().id)
         endretPlan1.antallTemaInkludert() shouldBe 1
@@ -540,7 +578,7 @@ class PlanApiTest {
         val iDag = now().toKotlinLocalDate()
         val forEnMånedSiden = iDag.minus(6, DateTimeUnit.MONTH)
         val omEnMåned = iDag.plus(6, DateTimeUnit.MONTH)
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enNyPlan = PlanMalDto(
             tema = listOf(
                 TemaMalDto(
@@ -563,7 +601,12 @@ class PlanApiTest {
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = planDto.temaer.first().undertemaer.first()
 
-        sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = PlanUndertema.Status.AVBRUTT)
+        sak.endreStatusPåInnholdIPlan(
+            planId = planDto.id,
+            temaId = førsteTema.id,
+            innholdId = førsteUndertema.id,
+            status = PlanUndertema.Status.AVBRUTT,
+        )
 
         val planMedNyStatus = sak.hentPlan()
         planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
@@ -575,7 +618,7 @@ class PlanApiTest {
         val iDag = now().toKotlinLocalDate()
         val for6MånedereSiden = iDag.minus(6, DateTimeUnit.MONTH)
         val iGår = iDag.minus(1, DateTimeUnit.DAY)
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enNyPlan = PlanMalDto(
             tema = listOf(
                 TemaMalDto(
@@ -602,7 +645,12 @@ class PlanApiTest {
         førsteUndertema.status shouldBe PlanUndertema.Status.PLANLAGT
         førsteUndertema.sluttDato shouldBe iGår
 
-        sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = PlanUndertema.Status.AVBRUTT)
+        sak.endreStatusPåInnholdIPlan(
+            planId = planDto.id,
+            temaId = førsteTema.id,
+            innholdId = førsteUndertema.id,
+            status = PlanUndertema.Status.AVBRUTT,
+        )
 
         val planMedNyStatus = sak.hentPlan()
         planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
@@ -614,7 +662,7 @@ class PlanApiTest {
         val iDag = now().toKotlinLocalDate()
         val om6Måneder = iDag.plus(6, DateTimeUnit.MONTH)
         val iMorgen = iDag.plus(1, DateTimeUnit.DAY)
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enNyPlan = PlanMalDto(
             tema = listOf(
                 TemaMalDto(
@@ -641,13 +689,19 @@ class PlanApiTest {
         planDto.temaer.first().undertemaer.first().sluttDato shouldBe om6Måneder
         planDto.temaer.first().undertemaer.first().startDato shouldBe iMorgen
 
-        shouldFail { sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = PlanUndertema.Status.AVBRUTT) }
-            .message shouldBe "HTTP Exception 400 Bad Request"
+        shouldFail {
+            sak.endreStatusPåInnholdIPlan(
+                planId = planDto.id,
+                temaId = førsteTema.id,
+                innholdId = førsteUndertema.id,
+                status = PlanUndertema.Status.AVBRUTT,
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
     }
 
     @Test
     fun `kan legge til nytt tema i plan uten uventet bieffekter`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlan = hentPlanMal()
 
         val opprettetPlan = sak.opprettEnPlan(plan = enTomPlan.inkluderEttTemaOgEttInnhold(2, 1))
@@ -660,6 +714,7 @@ class PlanApiTest {
 
         shouldFail {
             sak.endreStatusPåInnholdIPlan(
+                planId = opprettetPlan.id,
                 temaId = opprettetPlan.temaer.first().id,
                 innholdId = opprettetPlan.temaer.first().undertemaer.first().id,
                 status = nyStatus,
@@ -667,6 +722,7 @@ class PlanApiTest {
         }.message shouldBe "HTTP Exception 400 Bad Request"
 
         sak.endreStatusPåInnholdIPlan(
+            planId = opprettetPlan.id,
             temaId = opprettetPlan.temaer[1].id,
             innholdId = opprettetPlan.temaer[1].undertemaer.first().id,
             status = nyStatus,
@@ -678,7 +734,10 @@ class PlanApiTest {
         planMedNyStatus.antallInnholdInkludert() shouldBe 1
         planMedNyStatus.antallInnholdMedStatus(status = nyStatus) shouldBe 1
 
-        sak.endreFlereTemaerIPlan(endring = planMedNyStatus.inkluderAlt().tilRequest())
+        sak.endreFlereTemaerIPlan(
+            planId = planMedNyStatus.id,
+            endring = planMedNyStatus.inkluderAlt().tilRequest(),
+        )
 
         val planMedAltInnhold = sak.hentPlan()
 
@@ -692,7 +751,7 @@ class PlanApiTest {
     @Test
     fun `Kan ikke opprette eller endre en plan med sluttdato før startdato`() {
         // TODO: Kanskje litt vel lang test, dekkes noe av dette av andre tester?
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlan = hentPlanMal()
 
         val ugyldigPlan = enTomPlan.inkluderEttTemaOgAltInnhold(temanummer = 3, startDato = SLUTT_DATO, sluttDato = START_DATO)
@@ -726,8 +785,12 @@ class PlanApiTest {
             sluttDato = SLUTT_DATO,
         )
 
-        shouldFail { sak.endreFlereTemaerIPlan(endring = ugyldigEndring.tilRequest()) }
-            .message shouldBe "HTTP Exception 400 Bad Request"
+        shouldFail {
+            sak.endreFlereTemaerIPlan(
+                planId = opprettetPlan.id,
+                endring = ugyldigEndring.tilRequest(),
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
 
         val uendretPlan = sak.hentPlan()
 
@@ -738,7 +801,10 @@ class PlanApiTest {
         uendretPlan.senesteSluttDato() shouldBe SLUTT_DATO
         // det siste temaet er inkludert samme som opprettetPlan
 
-        sak.endreFlereTemaerIPlan(endring = gyldigEndring.tilRequest())
+        sak.endreFlereTemaerIPlan(
+            planId = uendretPlan.id,
+            endring = gyldigEndring.tilRequest(),
+        )
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 2
@@ -762,12 +828,14 @@ class PlanApiTest {
 
         shouldFail {
             sak.endreEttTemaIPlan(
+                planId = endretPlan.id,
                 endring = nyUgyldigEndring.tilRequest().last().undertemaer,
                 temaId = nyUgyldigEndring.temaer.last().id,
             )
         }.message shouldBe "HTTP Exception 400 Bad Request"
 
         sak.endreEttTemaIPlan(
+            planId = endretPlan.id,
             endring = nyGyldigEndring.tilRequest().last().undertemaer,
             temaId = nyGyldigEndring.temaer.last().id,
         )
@@ -786,13 +854,13 @@ class PlanApiTest {
 
     @Test
     fun `skal få feil når man henter plan uten å ha opprettet en plan`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         shouldFail { sak.hentPlan() }.message shouldBe "HTTP Exception 404 Not Found"
     }
 
     @Test
     fun `følgere av sak som er saksbehandlere skal kunne opprette en plan`() {
-        val sak = nySakIViBistår(token = authContainerHelper.saksbehandler1.token)
+        val sak = aktivSamarbeidsperiode(token = authContainerHelper.saksbehandler1.token)
         sak.leggTilFolger(token = authContainerHelper.saksbehandler2.token)
 
         val plan = sak.opprettEnPlan(token = authContainerHelper.saksbehandler2.token)
@@ -801,7 +869,7 @@ class PlanApiTest {
 
     @Test
     fun `følgere av sak som er lesebrukere skal IKKE kunne opprette en plan`() {
-        val sak = nySakIViBistår(token = authContainerHelper.saksbehandler1.token)
+        val sak = aktivSamarbeidsperiode(token = authContainerHelper.saksbehandler1.token)
         sak.leggTilFolger(token = authContainerHelper.lesebruker.token)
         shouldFail {
             sak.opprettEnPlan(token = authContainerHelper.lesebruker.token)
@@ -810,7 +878,7 @@ class PlanApiTest {
 
     @Test
     fun `saksbehandlere som ikke er eier eller følger av sak skal IKKE kunne opprette en plan`() {
-        val sak = nySakIViBistår(token = authContainerHelper.saksbehandler1.token)
+        val sak = aktivSamarbeidsperiode(token = authContainerHelper.saksbehandler1.token)
         shouldFail {
             sak.opprettEnPlan(token = authContainerHelper.saksbehandler2.token)
         }
@@ -820,14 +888,14 @@ class PlanApiTest {
     fun `følgere av sak som er saksbehandlere skal kunne slette plan`() {
         val eierAvSak = authContainerHelper.saksbehandler1
         val følgerAvSak = authContainerHelper.saksbehandler2
-        val sak = nySakIViBistår(token = eierAvSak.token)
+        val sak = aktivSamarbeidsperiode(token = eierAvSak.token)
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.leggTilFolger(token = følgerAvSak.token)
 
         val plan = sak.opprettEnPlan(token = følgerAvSak.token)
         plan.status shouldBe IASamarbeid.Status.AKTIV
 
-        val slettetPlan = sak.slettPlanForSamarbeid(token = følgerAvSak.token, samarbeidId = sak.hentAlleSamarbeid().first().id)
+        val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, planId = plan.id)
         slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
 
         shouldFailWithMessage("HTTP Exception 404 Not Found") {
@@ -839,7 +907,7 @@ class PlanApiTest {
     fun `følgere av sak som er saksbehandlere skal kunne endre status på innhold i plan`() {
         val eierAvSak = authContainerHelper.saksbehandler1
         val følgerAvSak = authContainerHelper.saksbehandler2
-        val sak = nySakIViBistår(token = eierAvSak.token)
+        val sak = aktivSamarbeidsperiode(token = eierAvSak.token)
         sak.leggTilFolger(token = følgerAvSak.token)
 
         val plan = sak.opprettEnPlan(
@@ -856,6 +924,7 @@ class PlanApiTest {
 
         val endretPlan = sak.endreStatusPåInnholdIPlan(
             token = følgerAvSak.token,
+            planId = plan.id,
             temaId = tema.id,
             innholdId = innhold.id,
             status = PlanUndertema.Status.FULLFØRT,
@@ -869,7 +938,7 @@ class PlanApiTest {
     fun `følgere av sak som er saksbehandlere skal kunne redigere tema i plan`() {
         val eierAvSak = authContainerHelper.saksbehandler1
         val følgerAvSak = authContainerHelper.saksbehandler2
-        val sak = nySakIViBistår(token = eierAvSak.token)
+        val sak = aktivSamarbeidsperiode(token = eierAvSak.token)
         sak.leggTilFolger(token = følgerAvSak.token)
 
         val plan = sak.opprettEnPlan(
@@ -886,6 +955,7 @@ class PlanApiTest {
 
         val nySluttdato = SLUTT_DATO.plus(1, DateTimeUnit.YEAR)
         val endretPlan = sak.endreEttTemaIPlan(
+            planId = plan.id,
             token = følgerAvSak.token,
             temaId = temaDto.id,
             endring = listOf(
@@ -904,7 +974,7 @@ class PlanApiTest {
     fun `følgere av sak som er saksbehandlere skal kunne redigere plan`() {
         val eierAvSak = authContainerHelper.saksbehandler1
         val følgerAvSak = authContainerHelper.saksbehandler2
-        val sak = nySakIViBistår(token = eierAvSak.token)
+        val sak = aktivSamarbeidsperiode(token = eierAvSak.token)
         val planMal = hentPlanMal().inkluderEttTemaOgEttInnhold(
             temanummer = 3,
             innholdnummer = 1,
@@ -915,9 +985,10 @@ class PlanApiTest {
 
         val planMedAltInkludert = plan.inkluderAlt()
         sak.endreFlereTemaerIPlan(
+            planId = planMedAltInkludert.id,
             token = følgerAvSak.token,
             endring = planMedAltInkludert.tilRequest(),
-            prosessId = sak.hentAlleSamarbeid().first().id,
+            samarbeidId = sak.hentAlleSamarbeid().first().id,
         )
 
         val endretPlan = sak.hentPlan(token = følgerAvSak.token)
@@ -926,7 +997,7 @@ class PlanApiTest {
 
     @Test
     fun `skal kunne hente plan uten å være eier som lesebruker`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
 
         val opprettetPlan = sak.opprettEnPlan()
 
@@ -945,7 +1016,7 @@ class PlanApiTest {
 
     @Test
     fun `Skal oppdatere sist endret dato ved endring av plan`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
 
         val opprettetPlan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
@@ -954,6 +1025,7 @@ class PlanApiTest {
         val førsteUndertema = førsteTema.undertemaer.first()
 
         sak.endreStatusPåInnholdIPlan(
+            planId = opprettetPlan.id,
             temaId = førsteTema.id,
             innholdId = førsteUndertema.id,
             status = PlanUndertema.Status.PÅGÅR,

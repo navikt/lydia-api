@@ -16,7 +16,6 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTi
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.oppdaterSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.oppdaterTemaISamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserKafkaPlanObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
@@ -25,6 +24,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdMedStatus
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -66,7 +66,7 @@ class NyFlytSamarbeidsplanTest {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
@@ -80,7 +80,7 @@ class NyFlytSamarbeidsplanTest {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Samarbeid med ${sak.orgnr}")
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
@@ -242,7 +242,7 @@ class NyFlytSamarbeidsplanTest {
     @Test
     fun `kan endre status på undertema i samarbeidsplan`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal().inkluderAlt())
 
@@ -269,7 +269,7 @@ class NyFlytSamarbeidsplanTest {
     @Test
     fun `kan ikke endre status på undertema som ikke er inkludert`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal())
 
@@ -294,7 +294,7 @@ class NyFlytSamarbeidsplanTest {
         val om6Måneder = iDag.plus(6, DateTimeUnit.MONTH)
 
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         val plan = samarbeid.opprettSamarbeidsplan(
             orgnr = sak.orgnr,
@@ -337,7 +337,7 @@ class NyFlytSamarbeidsplanTest {
     @Test
     fun `Tilstand og status er uendret etter sletting av samarbeidsplan`() {
         val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
         val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal())
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid

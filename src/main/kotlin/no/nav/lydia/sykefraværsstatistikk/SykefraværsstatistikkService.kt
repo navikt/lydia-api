@@ -4,11 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
@@ -36,7 +32,6 @@ import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKateg
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDate.now
 import kotlin.system.measureTimeMillis
 
 const val LANDKODE_NO = "NO"
@@ -136,15 +131,7 @@ class SykefraværsstatistikkService(
         val sykefravær = virksomhetsinformasjonRepository.søkEtterVirksomheter(søkeparametere = søkeparametere)
 
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
-        return sykefravær.map {
-            if (it.status.erAvsluttet() && it.sistEndret.erForeldet()) {
-                it.copy(
-                    status = IASak.Status.IKKE_AKTIV,
-                )
-            } else {
-                it
-            }
-        }
+        return sykefravær
     }
 
     private fun filterPåKategoriOgLogInfo(
@@ -159,20 +146,6 @@ class SykefraværsstatistikkService(
         }
         return statistikkForKategori
     }
-
-    private fun LocalDate?.erForeldet() =
-        when (this) {
-            null -> false
-            else -> {
-                this < now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES).toKotlinLocalDate()
-            }
-        }
-
-    private fun IASak.Status?.erAvsluttet() =
-        when (this) {
-            null -> true
-            else -> regnesSomAvsluttet()
-        }
 
     fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere) =
         virksomhetsinformasjonRepository.hentTotaltAntallVirksomheter(søkeparametere)

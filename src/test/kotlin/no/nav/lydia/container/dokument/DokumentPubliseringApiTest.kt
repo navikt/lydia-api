@@ -8,6 +8,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
@@ -19,9 +22,8 @@ import no.nav.lydia.helper.PlanHelper.Companion.antallTemaInkludert
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -61,7 +63,7 @@ class DokumentPubliseringApiTest {
         val saksbehandlerToken = authContainerHelper.saksbehandler1.token
         val følgerToken = authContainerHelper.saksbehandler2.token
 
-        val sak = nySakIKartleggesMedEtSamarbeid(token = saksbehandlerToken)
+        val sak = aktivSamarbeidsperiode(token = saksbehandlerToken)
         sak.leggTilFolger(token = følgerToken)
 
         val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
@@ -80,7 +82,7 @@ class DokumentPubliseringApiTest {
         val saksbehandlerToken = authContainerHelper.saksbehandler1.token
         val lesebrukerToken = authContainerHelper.lesebruker.token
 
-        val sak = nySakIKartleggesMedEtSamarbeid(token = saksbehandlerToken)
+        val sak = aktivSamarbeidsperiode(token = saksbehandlerToken)
         sak.leggTilFolger(token = lesebrukerToken)
 
         val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
@@ -99,7 +101,7 @@ class DokumentPubliseringApiTest {
         val saksbehandlerToken = authContainerHelper.saksbehandler1.token
         val lesebrukerToken = authContainerHelper.lesebruker.token
 
-        val sak = nySakIViBistår(token = saksbehandlerToken)
+        val sak = aktivSamarbeidsperiode(token = saksbehandlerToken)
         sak.leggTilFolger(token = lesebrukerToken)
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
@@ -119,7 +121,7 @@ class DokumentPubliseringApiTest {
         val saksbehandlerToken = authContainerHelper.saksbehandler1.token
         val følgerToken = authContainerHelper.saksbehandler2.token
 
-        val sak = nySakIViBistår(token = saksbehandlerToken)
+        val sak = aktivSamarbeidsperiode(token = saksbehandlerToken)
         sak.leggTilFolger(token = følgerToken)
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
@@ -136,7 +138,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `skal ikke kunne publisere en plan dersom planen ikke har innhold`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal)
 
@@ -155,7 +157,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `skal ikke kunne publisere en plan dersom planen ikke har endringer siden sist publisering`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
 
@@ -181,7 +183,6 @@ class DokumentPubliseringApiTest {
     @Test
     fun `opprettelese av et dokument til publisering returnerer 400 Bad Request dersom referanse ikke er funnet`() {
         // TODO: Feil for uthenting av spørreundersøkelser returnerer 400 Bad Request, men burde kanskje endre det til 404 Not Found?
-        nySakIKartleggesMedEtSamarbeid()
         val dokumentRefId = UUID.randomUUID().toString()
 
         val response = publiserDokument(
@@ -196,7 +197,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `opprettelese av et dokument av type Behovsvurdering returnerer 403 Forbidden dersom status ikke er FULLFØRT`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val startetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .also { it.svarPåSpørsmål(antallSvarPåSpørsmål = 3) }
@@ -214,7 +215,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `opprettelese av dokument til publisering returnerer 409 Conflict dersom dokument allerede er opprettet`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val dokumentRefId = fullførtBehovsvurdering.id
 
@@ -238,7 +239,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `opprettelese av behovsvurdering dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
         val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val samarbeidId = fullførtBehovsvurdering.samarbeidId
         val dokumentRefId = fullførtBehovsvurdering.id
@@ -292,11 +293,9 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `opprettelese av samarbeidsplan dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
-        val sak = nySakIViBistår()
-        val samarbeid = sak.hentAlleSamarbeid().first()
-        val samarbeidId = samarbeid.id
-        val enTomPlanMal = hentPlanMal()
-        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
         val dokumentRefId = plan.id
         val navIdent = authContainerHelper.saksbehandler1.navIdent
 
@@ -317,7 +316,7 @@ class DokumentPubliseringApiTest {
         // 2- verifiser at dokumentet + innhold er sent til Kafka
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPubliseringDto.Type.SAMARBEIDSPLAN),
+                key = getKafkaMeldingKey(samarbeidId = samarbeid.id, referanseId = dokumentRefId, type = DokumentPubliseringDto.Type.SAMARBEIDSPLAN),
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
@@ -326,7 +325,7 @@ class DokumentPubliseringApiTest {
                         dokumentPubliseringMedInnhold.referanseId shouldBe dokumentRefId
                         dokumentPubliseringMedInnhold.virksomhet.orgnummer shouldBe sak.orgnr
                         dokumentPubliseringMedInnhold.sak.saksnummer shouldBe sak.saksnummer
-                        dokumentPubliseringMedInnhold.samarbeid.id shouldBe samarbeidId
+                        dokumentPubliseringMedInnhold.samarbeid.id shouldBe samarbeid.id
                         dokumentPubliseringMedInnhold.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
                         dokumentPubliseringMedInnhold.dokumentOpprettetAv shouldBe navIdent
                         val innhold = Json.decodeFromJsonElement<PlanDto>(dokumentPubliseringMedInnhold.innhold)
@@ -348,7 +347,7 @@ class DokumentPubliseringApiTest {
 
     @Test
     fun `opprettelese av evaluering dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val fullførtEvaluering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering)
         val samarbeidId = fullførtEvaluering.samarbeidId

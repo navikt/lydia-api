@@ -10,7 +10,7 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -41,7 +41,7 @@ class SamarbeidEksportererTest {
 
     @Test
     fun `skal trigge kafka-eksport av enkelt samarbeid`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
 
         // Opprettelse av ett samarbeid på en sak trigger utsendelse til Kafka -> vi må lese denne meldingen først
@@ -82,7 +82,7 @@ class SamarbeidEksportererTest {
 
     @Test
     fun `skal trigge kafka-eksport av alle samarbeid`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
 
         // Opprettelse av ett samarbeid på en sak trigger utsendelse til Kafka -> vi må lese denne meldingen først

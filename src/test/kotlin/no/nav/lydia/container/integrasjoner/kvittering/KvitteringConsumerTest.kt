@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
@@ -15,7 +16,6 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -33,7 +33,7 @@ class KvitteringConsumerTest {
 
     @Test
     fun `skal lagre kvittering for publisert dokument`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val dokumentRefId = fullførtBehovsvurdering.id
         val dokument = publiserDokument(
@@ -63,7 +63,7 @@ class KvitteringConsumerTest {
 
     @Test
     fun `skal kunne publisere samarbeidsplan flere ganger`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
@@ -80,7 +80,7 @@ class KvitteringConsumerTest {
         val planEtterEndring = plan.planleggOgFullførAlleUndertemaer(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
         )
 
         val dokumentV2 = publiserDokument(

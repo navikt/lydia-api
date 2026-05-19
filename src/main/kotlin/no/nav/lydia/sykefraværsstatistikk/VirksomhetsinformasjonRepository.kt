@@ -25,7 +25,6 @@ import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrer
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåSnitt
-import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåStatus
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåTilstand
 import no.nav.lydia.sykefraværsstatistikk.domene.Statistikkdata
 import no.nav.lydia.sykefraværsstatistikk.domene.Virksomhetsoversikt
@@ -75,7 +74,6 @@ class VirksomhetsinformasjonRepository(
                     
                     ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
                     ${filtrerPåKommuner(søkeparametere = søkeparametere)}
-                    ${filtrerPåStatus(søkeparametere = søkeparametere)}
                     ${filtrerPåTilstand(søkeparametere = søkeparametere)}
                     ${filtrerPåSektor(søkeparametere = søkeparametere)}
                     ${filtrerPåEiere(søkeparametere = søkeparametere)}
@@ -121,7 +119,6 @@ class VirksomhetsinformasjonRepository(
                 WHERE true = true
                     ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
                     ${filtrerPåKommuner(søkeparametere = søkeparametere)}
-                    ${filtrerPåStatus(søkeparametere = søkeparametere)}
                     ${filtrerPåTilstand(søkeparametere = søkeparametere)}
                     ${filtrerPåSektor(søkeparametere = søkeparametere)}
                     ${filtrerPåEiere(søkeparametere = søkeparametere)}

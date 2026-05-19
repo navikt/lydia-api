@@ -4,15 +4,18 @@ import com.github.kittinunf.fuel.core.Request
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidResponse
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhetResponse
 import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.FYLKER
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.KOMMUNER
@@ -23,124 +26,91 @@ import kotlin.test.Test
 class AuditLogTest {
     @Test
     fun `auditlogger opprettelse av IA-sak`() {
-        nyttOrgnummer().also { orgnummer ->
-            SakHelper.opprettSakForVirksomhetRespons(
-                orgnummer = orgnummer,
-                token = authContainerHelper.superbruker1.token,
-            ).also {
+        val virksomhet = lastInnNyVirksomhet()
+
+        vurderVirksomhetResponse(virksomhet = virksomhet, token = authContainerHelper.saksbehandler1.token)
+            .also {
+                applikasjon shouldContainLog auditLog(
+                    request = it.first,
+                    navIdent = authContainerHelper.saksbehandler1.navIdent,
+                    orgnummer = virksomhet.orgnr,
+                    auditType = AuditType.create,
+                    tillat = Tillat.Nei,
+                )
+            }
+
+        vurderVirksomhetResponse(virksomhet = virksomhet, token = authContainerHelper.brukerUtenTilgangsrolle.token)
+            .also {
+                applikasjon shouldContainLog auditLog(
+                    request = it.first,
+                    navIdent = authContainerHelper.brukerUtenTilgangsrolle.navIdent,
+                    orgnummer = virksomhet.orgnr,
+                    auditType = AuditType.create,
+                    tillat = Tillat.Nei,
+                )
+            }
+
+        vurderVirksomhetResponse(token = authContainerHelper.superbruker1.token)
+            .also {
                 applikasjon shouldContainLog auditLog(
                     request = it.first,
                     navIdent = authContainerHelper.superbruker1.navIdent,
-                    orgnummer = orgnummer,
+                    orgnummer = it.third.get().orgnr,
                     auditType = AuditType.create,
                     tillat = Tillat.Ja,
                     saksnummer = it.third.get().saksnummer,
                 )
             }
-        }
-
-        nyttOrgnummer().also { orgnummer ->
-            SakHelper.opprettSakForVirksomhetRespons(
-                orgnummer = orgnummer,
-                token = authContainerHelper.saksbehandler1.token,
-            ).also {
-                applikasjon shouldContainLog auditLog(
-                    request = it.first,
-                    navIdent = authContainerHelper.saksbehandler1.navIdent,
-                    orgnummer = orgnummer,
-                    auditType = AuditType.create,
-                    tillat = Tillat.Nei,
-                )
-            }
-        }
-
-        nyttOrgnummer().also { orgnummer ->
-            SakHelper.opprettSakForVirksomhetRespons(
-                orgnummer = orgnummer,
-                token = authContainerHelper.brukerUtenTilgangsrolle.token,
-            )
-                .also {
-                    applikasjon shouldContainLog auditLog(
-                        request = it.first,
-                        navIdent = authContainerHelper.brukerUtenTilgangsrolle.navIdent,
-                        orgnummer = orgnummer,
-                        auditType = AuditType.create,
-                        tillat = Tillat.Nei,
-                    )
-                }
-        }
     }
 
     @Test
     fun `auditlogger oppdatering av IA-sak`() {
-        val orgnummer = nyttOrgnummer()
-        SakHelper.opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
-            .also { responsForOpprettSakForVirksomhetMedSuperbruker ->
-                val iaSak = responsForOpprettSakForVirksomhetMedSuperbruker.third.get()
-                applikasjon shouldContainLog auditLog(
-                    request = responsForOpprettSakForVirksomhetMedSuperbruker.first,
-                    navIdent = authContainerHelper.superbruker1.navIdent,
-                    orgnummer = orgnummer,
-                    auditType = AuditType.create,
-                    tillat = Tillat.Ja,
-                    saksnummer = iaSak.saksnummer,
-                )
-                SakHelper.nyHendelsePåSakMedRespons(
-                    iaSak,
-                    IASakshendelseType.TA_EIERSKAP_I_SAK,
-                    token = authContainerHelper.lesebrukerAudit.token,
-                ).also { responsPåTaEierskapMedLesebruker ->
-                    applikasjon shouldContainLog auditLog(
-                        request = responsPåTaEierskapMedLesebruker.first,
-                        navIdent = authContainerHelper.lesebrukerAudit.navIdent,
-                        orgnummer = orgnummer,
-                        auditType = AuditType.update,
-                        tillat = Tillat.Nei,
-                        saksnummer = iaSak.saksnummer,
-                    )
-                }
+        val samarbeidsperiode = vurderVirksomhet(token = authContainerHelper.superbruker1.token)
 
-                SakHelper.nyHendelsePåSakMedRespons(
-                    iaSak,
-                    IASakshendelseType.TA_EIERSKAP_I_SAK,
-                    token = authContainerHelper.saksbehandler1.token,
-                ).also { responsPåTaEierskapMedSaksbehandler ->
-                    applikasjon shouldContainLog auditLog(
-                        request = responsPåTaEierskapMedSaksbehandler.first,
-                        navIdent = authContainerHelper.saksbehandler1.navIdent,
-                        orgnummer = orgnummer,
-                        auditType = AuditType.update,
-                        tillat = Tillat.Ja,
-                        saksnummer = iaSak.saksnummer,
-                    )
-                }
-            }
+        val lesebrukerResponse = samarbeidsperiode.opprettSamarbeidResponse(token = authContainerHelper.lesebruker.token)
+        applikasjon shouldContainLog auditLog(
+            request = lesebrukerResponse.first,
+            navIdent = authContainerHelper.lesebruker.navIdent,
+            orgnummer = samarbeidsperiode.orgnr,
+            auditType = AuditType.create,
+            tillat = Tillat.Nei,
+        )
+
+        samarbeidsperiode.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val opprettSamarbeidResponse = samarbeidsperiode.opprettSamarbeidResponse(authContainerHelper.saksbehandler1.token)
+        applikasjon shouldContainLog auditLog(
+            request = opprettSamarbeidResponse.first,
+            navIdent = authContainerHelper.saksbehandler1.navIdent,
+            orgnummer = samarbeidsperiode.orgnr,
+            auditType = AuditType.create,
+            tillat = Tillat.Ja,
+            saksnummer = samarbeidsperiode.saksnummer,
+        )
     }
 
     @Test
     fun `auditlogger uthenting av hendelser på IA-sak på et gyldig saksnummer`() {
-        val orgnummer = nyttOrgnummer()
-        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
-        SakHelper.hentSamarbeidshistorikkRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
+        val sak = vurderVirksomhet()
+        SakHelper.hentSamarbeidshistorikkRespons(orgnummer = sak.orgnr, token = authContainerHelper.superbruker1.token)
             .also {
                 applikasjon shouldContainLog auditLog(
                     request = it.first,
                     navIdent = authContainerHelper.superbruker1.navIdent,
-                    orgnummer = orgnummer,
+                    orgnummer = sak.orgnr,
                     auditType = AuditType.access,
                     tillat = Tillat.Ja,
                     saksnummer = sak.saksnummer,
                 )
             }
         SakHelper.hentSamarbeidshistorikkRespons(
-            orgnummer = orgnummer,
+            orgnummer = sak.orgnr,
             token = authContainerHelper.brukerUtenTilgangsrolle.token,
         )
             .also {
                 applikasjon shouldContainLog auditLog(
                     request = it.first,
                     navIdent = authContainerHelper.brukerUtenTilgangsrolle.navIdent,
-                    orgnummer = orgnummer,
+                    orgnummer = sak.orgnr,
                     auditType = AuditType.access,
                     tillat = Tillat.Nei,
                 )

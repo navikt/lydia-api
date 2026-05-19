@@ -1,7 +1,6 @@
 package no.nav.lydia.sykefraværsstatistikk.api
 
 import arrow.core.Either
-import arrow.core.NonEmptyList
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.raise.either
@@ -14,7 +13,6 @@ import io.ktor.http.Parameters
 import io.ktor.server.request.ApplicationRequest
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
@@ -23,7 +21,6 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import no.nav.lydia.virksomhet.domene.Sektor
 import no.nav.lydia.virksomhet.domene.tilSektor
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class Søkeparametere(
@@ -36,7 +33,7 @@ data class Søkeparametere(
     val snittFilter: SnittFilter?,
     val ansatteFra: Int?,
     val ansatteTil: Int?,
-    val status: IASak.Status?,
+    val status: IASak.Status?, // TODO: [OPPRYDDING] Fjern fra frontend ?
     val tilstand: VirksomhetIATilstand?,
     val side: Int,
     val navIdenter: Set<String>,
@@ -82,7 +79,7 @@ data class Søkeparametere(
         fun ApplicationRequest.søkeparametere(
             geografiService: GeografiService,
             navAnsatt: NavAnsatt,
-        ) = either<NonEmptyList<String>, Søkeparametere> {
+        ) = either {
             zipOrAccumulate(
                 { queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().bind() },
                 { queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent().bind() },
@@ -140,26 +137,6 @@ data class Søkeparametere(
 
                     else -> {
                         " AND tilstand_virksomhet.tilstand = '${tilstand.name}' "
-                    }
-                }
-            } ?: ""
-
-        fun filtrerPåStatus(søkeparametere: Søkeparametere) =
-            søkeparametere.status?.let { status ->
-                when (status) {
-                    IASak.Status.IKKE_AKTIV -> {
-                        " AND (ia_sak.status IS NULL " +
-                            "OR ((ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET') " +
-                            "AND ia_sak.endret < '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'))"
-                    }
-
-                    IASak.Status.IKKE_AKTUELL, IASak.Status.FULLFØRT, IASak.Status.SLETTET -> {
-                        " AND ia_sak.status = '$status' " +
-                            "AND ia_sak.endret >= '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'"
-                    }
-
-                    else -> {
-                        " AND ia_sak.status = '$status'"
                     }
                 }
             } ?: ""
@@ -371,14 +348,14 @@ class Sykefraværsprosent private constructor(
 private fun String.tilValidertFlyttall() =
     try {
         this.toDouble().right()
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         "$this er ikke et gyldig flyttall".left()
     }
 
 private fun String.tilValidertHeltall() =
     try {
         this.toInt().right()
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         "$this er ikke et gyldig heltall".left()
     }
 

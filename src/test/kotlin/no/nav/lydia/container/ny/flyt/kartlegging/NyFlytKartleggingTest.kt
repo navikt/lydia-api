@@ -4,18 +4,16 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførKartlegging
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettKartlegging
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettKartleggingMedRåType
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidsplan
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettKartlegging
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettKartleggingDeprecatedPathINyFlyt
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.startKartlegging
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
-import no.nav.lydia.helper.SakHelper.Companion.hentSakNyFlyt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -46,66 +44,18 @@ class NyFlytKartleggingTest {
     }
 
     @Test
-    fun `Opprett kartlegging aksepterer SCREAMING_CASE type`() {
+    fun `Opprett kartlegging fungerer`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
         sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid()
 
-        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "BEHOVSVURDERING")
+        val behovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, Spørreundersøkelse.Type.Behovsvurdering)
         behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
 
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
-        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "EVALUERING")
-        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
-    }
-
-    @Test
-    fun `Opprett kartlegging aksepterer lowercase type`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
-        val samarbeid = sak.opprettSamarbeid()
-
-        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "behovsvurdering")
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "evaluering")
-        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
-    }
-
-    @Test
-    fun `Opprett kartlegging aksepterer Pascalcase type`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
-        val samarbeid = sak.opprettSamarbeid()
-
-        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "Behovsvurdering")
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "Evaluering")
-        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
-    }
-
-    @Test
-    fun `Opprett kartlegging aksepterer type med tilfeldig sammensetning av stor og liten bokstav`() {
-        val sak = vurderVirksomhet()
-        sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
-        val samarbeid = sak.opprettSamarbeid()
-
-        val behovsvurdering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "BeHoVsVuRDERINg")
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-
-        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
-
-        val evaluering = samarbeid.opprettKartleggingMedRåType(orgnr = sak.orgnr, råType = "EVALuering")
+        val evaluering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, Spørreundersøkelse.Type.Evaluering)
         evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
     }
 
@@ -164,16 +114,16 @@ class NyFlytKartleggingTest {
         )
         opprettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
-        val startetBehovsvurdering = samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetBehovsvurdering.id,
+        val startetBehovsvurdering = opprettetBehovsvurdering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
         startetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
-        val fullførtBehovsvurdering = samarbeid.fullførKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetBehovsvurdering.id,
+        val fullførtBehovsvurdering = startetBehovsvurdering.fullfør(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
 
         fullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
@@ -192,17 +142,17 @@ class NyFlytKartleggingTest {
 
         val opprettetBehovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
 
-        samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetBehovsvurdering.id,
+        opprettetBehovsvurdering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
-        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
+        val sakFørKartleggingErSlettet = hentSak(orgnummer = sak.orgnr)
 
-        val slettetBehovsvurdering = samarbeid.slettKartlegging(orgnr = sak.orgnr, kartleggingId = opprettetBehovsvurdering.id)
+        val slettetBehovsvurdering = opprettetBehovsvurdering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         slettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.SLETTET
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+        hentSak(orgnummer = sak.orgnr).let {
             it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
             it.status shouldBe sakFørKartleggingErSlettet.status
         }
@@ -221,17 +171,17 @@ class NyFlytKartleggingTest {
 
         val opprettetBehovsvurdering = samarbeid.opprettKartlegging(orgnr = sak.orgnr, type = Spørreundersøkelse.Type.Behovsvurdering)
 
-        samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetBehovsvurdering.id,
+        opprettetBehovsvurdering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
-        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
+        val sakFørKartleggingErSlettet = hentSak(orgnummer = sak.orgnr)
 
-        val slettetBehovsvurdering = samarbeid.slettKartleggingDeprecatedPathINyFlyt(orgnr = sak.orgnr, kartleggingId = opprettetBehovsvurdering.id)
+        val slettetBehovsvurdering = opprettetBehovsvurdering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         slettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.SLETTET
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+        hentSak(orgnummer = sak.orgnr).let {
             it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
             it.status shouldBe sakFørKartleggingErSlettet.status
         }
@@ -255,16 +205,16 @@ class NyFlytKartleggingTest {
         )
         opprettetEvaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
-        val startetEvaluering = samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetEvaluering.id,
+        val startetEvaluering = opprettetEvaluering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
         startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
 
-        val fullførtEvaluering = samarbeid.fullførKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetEvaluering.id,
+        val fullførtEvaluering = startetEvaluering.fullfør(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
 
         fullførtEvaluering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
@@ -289,22 +239,22 @@ class NyFlytKartleggingTest {
         )
         opprettetEvaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
-        val startetEvaluering = samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetEvaluering.id,
+        val startetEvaluering = opprettetEvaluering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
         startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
+        val sakFørKartleggingErSlettet = hentSak(orgnummer = sak.orgnr)
 
-        val slettetEvaluering = samarbeid.slettKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetEvaluering.id,
+        val slettetEvaluering = startetEvaluering.slett(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
 
         slettetEvaluering.status shouldBe Spørreundersøkelse.Status.SLETTET
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+        hentSak(orgnummer = sak.orgnr).let {
             it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
             it.status shouldBe sakFørKartleggingErSlettet.status
         }
@@ -329,22 +279,22 @@ class NyFlytKartleggingTest {
         )
         opprettetEvaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
-        val startetEvaluering = samarbeid.startKartlegging(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetEvaluering.id,
+        val startetEvaluering = opprettetEvaluering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
         startetEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        val sakFørKartleggingErSlettet = hentSakNyFlyt(orgnummer = sak.orgnr)
+        val sakFørKartleggingErSlettet = hentSak(orgnummer = sak.orgnr)
 
-        val slettetEvaluering = samarbeid.slettKartleggingDeprecatedPathINyFlyt(
-            orgnr = sak.orgnr,
-            kartleggingId = opprettetEvaluering.id,
+        val slettetEvaluering = startetEvaluering.slett(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
         )
 
         slettetEvaluering.status shouldBe Spørreundersøkelse.Status.SLETTET
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        hentSakNyFlyt(orgnummer = sak.orgnr).let {
+        hentSak(orgnummer = sak.orgnr).let {
             it.saksnummer shouldBe sakFørKartleggingErSlettet.saksnummer
             it.status shouldBe sakFørKartleggingErSlettet.status
         }

@@ -8,7 +8,7 @@ import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
-import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
@@ -239,7 +239,7 @@ class VirksomhetApiTest {
 
     @Test
     fun `skal få lenke til samarbeid i salesforce`() {
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val salesforceSamarbeid = samarbeid.hentSalesforceSamarbeidslenke()
 

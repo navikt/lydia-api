@@ -15,28 +15,28 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.flytt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentForhåndsvisning
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slettResponse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.body
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
@@ -65,7 +65,7 @@ class EvalueringApiTest {
 
     @Test
     fun `kan opprette en spørreundersøkelse av type evaluering i status VI_BISTÅR`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val evaluering = sak.opprettEvaluering()
 
@@ -96,19 +96,19 @@ class EvalueringApiTest {
 
     @Test
     fun `kan ikke opprette en spørreundersøkelse av type evaluering i en annen status enn VI_BISTÅR`() {
-        val sakIKartleggesMedSamarbeid = nySakIKartleggesMedEtSamarbeid()
+        val sakIKartleggesMedSamarbeid = aktivSamarbeidsperiode()
         shouldFail { sakIKartleggesMedSamarbeid.opprettEvaluering() }
     }
 
     @Test
     fun `kan ikke opprette en spørreundersøkelse av typen evaluering om det ikke eksisterer en plan`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         shouldFail { sak.opprettEvaluering() }
     }
 
     @Test
     fun `kan hente liste av alle spørreundersøkelser av typen Evaluering`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val evaluering = sak.opprettEvaluering()
 
@@ -130,7 +130,7 @@ class EvalueringApiTest {
 
     @Test
     fun `kan starte en Spørreundersøkelse av typen Evaluering`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val opprettetPlan = sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val type = Spørreundersøkelse.Type.Evaluering
         val evaluering = sak.opprettEvaluering()
@@ -170,7 +170,7 @@ class EvalueringApiTest {
 
     @Test
     fun `skal kun evaluere temaer som er inkludert i plan`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(
             plan = PlanMalDto().inkluderEttTemaOgEttInnhold(
                 temanummer = 3, // "Arbeidsmiljø"
@@ -213,11 +213,11 @@ class EvalueringApiTest {
 
     @Test
     fun `skal kunne hente en forhåndsvisning av en spørreundersøkelse av typen evaluering`() {
-        val sak = nySakIViBistår(navnPåSamarbeid = "Samarbeid 1")
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = "Samarbeid 1")
         val samarbeid = sak.hentAlleSamarbeid().first()
-        sak.opprettEnPlan(
-            samarbeidId = samarbeid.id,
-            plan = PlanMalDto().inkluderEttTemaOgEttInnhold(
+        samarbeid.opprettSamarbeidsplan(
+            orgnr = sak.orgnr,
+            planMal = PlanMalDto().inkluderEttTemaOgEttInnhold(
                 temanummer = 3, // "Arbeidsmiljø"
                 innholdnummer = 1,
             ),
@@ -252,21 +252,21 @@ class EvalueringApiTest {
 
     @Test
     fun `skal ikke kunne opprette en tom evaluering pga tom plan`() {
-        val sak = nySakIViBistår()
-        sak.opprettEnPlan()
+        val sak = aktivSamarbeidsperiode()
+        sak.opprettEnPlan(plan = hentPlanMal())
         shouldFail { sak.opprettEvaluering() }.message shouldBe "HTTP Exception 400 Bad Request"
     }
 
     @Test
     fun `skal ikke flytte evaluering mellom samarbeid`() {
-        val sak = nySakIViBistår(navnPåSamarbeid = "Samarbeid 1")
-        sak.opprettNyttSamarbeid(navn = "Samarbeid 2")
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = "Samarbeid 1")
+        sak.opprettSamarbeid(samarbeidsnavn = "Samarbeid 2")
         val samarbeid1 = sak.hentAlleSamarbeid().first()
         val samarbeid2 = sak.hentAlleSamarbeid().last()
-        sak.opprettEnPlan(samarbeidId = samarbeid1.id, plan = PlanMalDto().inkluderAlt())
+        samarbeid1.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanMalDto().inkluderAlt())
         val evaluering = sak.opprettEvaluering(prosessId = samarbeid1.id)
         evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        evaluering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        evaluering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
@@ -298,7 +298,7 @@ class EvalueringApiTest {
 
     @Test
     fun `skal IKKE kunne slette en spørreunderøkelse av typen 'EVALUERING' som allerede er slettet`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val evalueringUtenSvar = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering, antallSvarPåSpørsmål = 0)
 
@@ -306,7 +306,7 @@ class EvalueringApiTest {
             "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${evalueringUtenSvar.id}'",
         ) shouldHaveSize 0
 
-        val responseSlettFørste = evalueringUtenSvar.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val responseSlettFørste = evalueringUtenSvar.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         responseSlettFørste.statuskode() shouldBe HttpStatusCode.OK.value
 
@@ -321,7 +321,7 @@ class EvalueringApiTest {
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ) shouldHaveSize 0
 
-        val responseSlettIgjen = evalueringUtenSvar.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val responseSlettIgjen = evalueringUtenSvar.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         responseSlettIgjen.statuskode() shouldBe HttpStatusCode.Forbidden.value
 
@@ -330,7 +330,7 @@ class EvalueringApiTest {
 
     @Test
     fun `skal IKKE kunne slette en spørreunderøkelse av typen 'EVALUERING' som har resultater å vise`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val evaluering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering)
 
@@ -338,7 +338,7 @@ class EvalueringApiTest {
             "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${evaluering.id}'",
         ) shouldHaveSize 3
 
-        val response = evaluering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val response = evaluering.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         response.statuskode() shouldBe HttpStatusCode.Forbidden.value
 
@@ -358,7 +358,7 @@ class EvalueringApiTest {
 
     @Test
     fun `skal IKKE kunne slette en spørreunderøkelse av typen 'EVALUERING' som er publisert`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val evaluering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Evaluering)
 
@@ -372,7 +372,7 @@ class EvalueringApiTest {
             token = authContainerHelper.saksbehandler1.token,
         ).statuskode() shouldBe HttpStatusCode.Created.value
 
-        val response = evaluering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val response = evaluering.slettResponse(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         response.statuskode() shouldBe HttpStatusCode.Forbidden.value
 

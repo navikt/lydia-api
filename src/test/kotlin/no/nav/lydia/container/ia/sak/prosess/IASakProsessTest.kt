@@ -1,10 +1,8 @@
 package no.nav.lydia.container.ia.sak.prosess
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.assertions.shouldFail
 import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSize
@@ -17,9 +15,16 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnholdIPlan
@@ -27,35 +32,22 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
-import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
+import no.nav.lydia.helper.SakHelper.Companion.bliEier
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.kanGjennomføreStatusendring
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
-import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.helper.nyttNavnPåSamarbeid
-import no.nav.lydia.helper.opprettNyttSamarbeid
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
-import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -89,63 +81,61 @@ class IASakProsessTest {
     @Test
     fun `følger av sak skal kunne opprette og endre samarbeid`() {
         val eierAvSak = authContainerHelper.saksbehandler1
-        val sakIKartlegges = nySakIKartlegges(token = eierAvSak.token)
+        val sak = vurderVirksomhet()
+        sak.bliEier(eierAvSak.token)
 
         val følgerAvSak = authContainerHelper.saksbehandler2
-        sakIKartlegges.leggTilFolger(token = følgerAvSak.token)
+        sak.leggTilFolger(token = følgerAvSak.token)
 
-        val sakMedEndretSamarbeid = sakIKartlegges.opprettNyttSamarbeid(
-            navn = "Første",
-            token = følgerAvSak.token,
-        ).nyttNavnPåSamarbeid(
-            nyttNavn = "Nytt navn",
-            token = følgerAvSak.token,
-        ).avbrytSamarbeid(
-            samarbeidDto = sakIKartlegges.hentAlleSamarbeid().first(),
+        val samarbeid = sak.opprettSamarbeid(
+            samarbeidsnavn = "Første",
             token = følgerAvSak.token,
         )
-        sakMedEndretSamarbeid.hentAlleSamarbeid().forExactlyOne {
+        samarbeid.endreSamarbeidsNavn(
+            orgnr = sak.orgnr,
+            nyttNavn = "Nytt navn",
+            token = følgerAvSak.token,
+        )
+        samarbeid.avsluttSamarbeid(
+            orgnr = sak.orgnr,
+            avslutningsType = IASamarbeid.Status.AVBRUTT,
+            token = følgerAvSak.token,
+        )
+        sak.hentAlleSamarbeid().forExactlyOne {
             it.status shouldBe IASamarbeid.Status.AVBRUTT
             it.navn shouldBe "Nytt navn"
         }
     }
 
     @Test
-    fun `skal kunne avbryte et samarbeid fra både KARTLEGGES og VI BISTÅR`() {
-        val sakIKartlegges = nySakIKartlegges().opprettNyttSamarbeid()
-        sakIKartlegges.avbrytSamarbeid().hentAlleSamarbeid().first().status shouldBe IASamarbeid.Status.AVBRUTT
-
-        val sakIViBistår = nySakIViBistår()
-        sakIViBistår.avbrytSamarbeid().hentAlleSamarbeid().first().status shouldBe IASamarbeid.Status.AVBRUTT
-    }
-
-    @Test
     fun `skal få avbrutte samarbeid i listen over alle samarbeid`() {
-        nySakIViBistår(navnPåSamarbeid = "Avbrutt samarbeid")
-            .avbrytSamarbeid()
-            .hentAlleSamarbeid().forExactlyOne { samarbeid ->
-                samarbeid.navn shouldBe "Avbrutt samarbeid"
-                samarbeid.status shouldBe IASamarbeid.Status.AVBRUTT
-            }
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Avbrutt samarbeid")
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
+        sak.hentAlleSamarbeid().forExactlyOne { samarbeid ->
+            samarbeid.navn shouldBe "Avbrutt samarbeid"
+            samarbeid.status shouldBe IASamarbeid.Status.AVBRUTT
+        }
     }
 
     @Test
-    fun `skal ikke kunne avbryte samarbeid som inne holder spørreundersøkelser`() {
-        val sak = nySakIViBistår()
+    fun `skal ikke kunne avbryte samarbeid som inneholder spørreundersøkelser`() {
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
         sak.opprettBehovsvurdering()
 
-        shouldFailWithMessage("HTTP Exception 400 Bad Request kan ikke avbryte samarbeid") {
-            sak.avbrytSamarbeid()
+        shouldFailWithMessage("HTTP Exception 400 Bad Request") {
+            samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
         }
     }
 
     @Test
     fun `skal kunne fullføre et samarbeid`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
-        sak.fullførSamarbeid(samarbeid)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
         postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT status FROM ia_prosess WHERE id = ${samarbeid.id}",
         ) shouldBe IASamarbeid.Status.FULLFØRT.name
@@ -153,11 +143,11 @@ class IASakProsessTest {
 
     @Test
     fun `fullføring av samarbeid skal oppdatere fullført_tidspunkt`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
-        sak.fullførSamarbeid(samarbeid)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
         postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT fullfort_tidspunkt FROM ia_prosess WHERE id = ${samarbeid.id}",
         ).shouldNotBeNull()
@@ -165,11 +155,11 @@ class IASakProsessTest {
 
     @Test
     fun `avbryting av samarbeid skal oppdatere avbrutt_tidspunkt`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
-        sak.avbrytSamarbeid(samarbeid)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
         postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT avbrutt_tidspunkt FROM ia_prosess WHERE id = ${samarbeid.id}",
         ).shouldNotBeNull()
@@ -177,44 +167,20 @@ class IASakProsessTest {
 
     @Test
     fun `fullførte samarbeid skal inkluderes i listen over samarbeid for en sak`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
-        sak.fullførSamarbeid(samarbeid)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
         sak.hentAlleSamarbeid() shouldHaveSize 1
     }
 
     @Test
-    fun `skal kunne starte nytt samarbeid etter å ha fullført et samarbeid`() {
-        var sak = nySakIViBistår()
-        val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
-        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-
-        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
-        sak = sak.opprettNyttSamarbeid(navn = "Det andre samarbeid")
-        sak.hentAlleSamarbeid().filter { it.status == IASamarbeid.Status.AKTIV }.map { it.navn } shouldBe listOf("Det andre samarbeid")
-    }
-
-    @Test
-    fun `skal kunne gå frem og tilbake i saksgang selv med fullført samarbeid`() {
-        var sak = nySakIViBistår()
-        val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
-        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-
-        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
-        sak = sak.nyHendelse(IASakshendelseType.TILBAKE)
-        sak = sak.nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
-        sak = sak.nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
-        sak.status shouldBe IASak.Status.FULLFØRT
-    }
-
-    @Test
     fun `skal fullføre alle inkluderte undertemaer i plan når samarbeid fullføres`() {
-        var sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
+        samarbeidSomFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
         val plan = sak.hentPlan(prosessId = samarbeidSomFullføres.id)
         plan.temaer.forAll { tema ->
             tema.undertemaer.forAll { undertema ->
@@ -225,17 +191,18 @@ class IASakProsessTest {
 
     @Test
     fun `skal ikke fullføre avbrutte undertemaer når samarbeid fullføres`() {
-        var sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val tema = plan.temaer.first()
         val undertema = tema.undertemaer.first()
         sak.endreStatusPåInnholdIPlan(
+            planId = plan.id,
             temaId = tema.id,
             innholdId = undertema.id,
             status = PlanUndertema.Status.AVBRUTT,
         )
-        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
+        samarbeidSomFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
         val planEtterFullføring = sak.hentPlan(prosessId = samarbeidSomFullføres.id)
         planEtterFullføring.temaer.flatMap { it.undertemaer }.forExactlyOne {
             it.status shouldBe PlanUndertema.Status.AVBRUTT
@@ -244,20 +211,17 @@ class IASakProsessTest {
 
     @Test
     fun `skal få riktig historikk for saken etter fullført samarbeid`() {
-        var sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
-        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
+        samarbeidSomFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
         val historikk = hentSamarbeidshistorikk(sak.orgnr)
         historikk.forExactlyOne { sakshistorikk ->
             sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainInOrder listOf(
                 IASakshendelseType.VIRKSOMHET_VURDERES,
-                IASakshendelseType.TA_EIERSKAP_I_SAK,
-                IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
-                IASakshendelseType.VIRKSOMHET_KARTLEGGES,
                 IASakshendelseType.NY_PROSESS,
-                IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS,
+                IASakshendelseType.OPPRETT_SAMARBEIDSPLAN,
                 IASakshendelseType.FULLFØR_PROSESS,
             )
             sakshistorikk.samarbeid.forExactlyOne { samarbeid ->
@@ -269,7 +233,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal få riktige begrunnelser for om et samarbeid kan avbrytes`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         sak.opprettBehovsvurdering()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val kanIkkeGjennomføres = sak.kanGjennomføreStatusendring(samarbeid, "avbrytes")
@@ -279,7 +243,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal få riktige begrunnelser for om et samarbeid kan fullføres`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val manglerPlan = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
         manglerPlan.kanGjennomføres shouldBe false
@@ -302,7 +266,7 @@ class IASakProsessTest {
 
         evaluering
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val kanFullføresUtenAdvarsler = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
         kanFullføresUtenAdvarsler.kanGjennomføres shouldBe true
         kanFullføresUtenAdvarsler.advarsler shouldHaveSize 0
@@ -311,7 +275,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal få riktige begrunnelser for om et samarbeid kan slettes (NY)`() {
-        val sak = nySakIViBistår()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val skalKunneSlettes = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalKunneSlettes.kanGjennomføres shouldBe true
@@ -322,9 +286,7 @@ class IASakProsessTest {
         skalIkkeKunneSlettesPgaBehovsVurdering.kanGjennomføres shouldBe false
         skalIkkeKunneSlettesPgaBehovsVurdering.blokkerende shouldBe listOf(StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
 
-        applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<SpørreundersøkelseDto>()
+        behovsvurdering.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val skalKunneSlettesIgjen = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalKunneSlettesIgjen.kanGjennomføres shouldBe true
         skalKunneSlettesIgjen.blokkerende shouldHaveSize 0
@@ -357,12 +319,13 @@ class IASakProsessTest {
 
     @Test
     fun `endring på samarbeid oppdaterer sistEndret`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val samarbeid = sak.hentAlleSamarbeid().first()
 
-        sak.nyttNavnPåSamarbeid(samarbeid, "Første")
-            .nyttNavnPåSamarbeid(samarbeid, "Andre")
-            .nyttNavnPåSamarbeid(samarbeid, "Tredje")
+        samarbeid
+            .endreSamarbeidsNavn(orgnr = sak.orgnr, nyttNavn = "Første")
+            .endreSamarbeidsNavn(orgnr = sak.orgnr, nyttNavn = "Andre")
+            .endreSamarbeidsNavn(orgnr = sak.orgnr, nyttNavn = "Tredje")
 
         val samarbeidMedNyttNavn = sak.hentAlleSamarbeid().first()
 
@@ -373,14 +336,13 @@ class IASakProsessTest {
 
     @Test
     fun `tomme samarbeidsnavn skal ikke kunne lagres`() {
-        val sak = nySakIKartlegges()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         shouldFail {
-            sak.opprettNyttSamarbeid(navn = "")
+            sak.opprettSamarbeid(samarbeidsnavn = "")
         }
-        val sakMedEttSamarbeid = sak.opprettNyttSamarbeid(navn = DEFAULT_SAMARBEID_NAVN)
-        val samarbeid = sakMedEttSamarbeid.hentAlleSamarbeid().first()
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = DEFAULT_SAMARBEID_NAVN)
         shouldFail {
-            sakMedEttSamarbeid.nyttNavnPåSamarbeid(samarbeid, " ")
+            samarbeid.endreSamarbeidsNavn(orgnr = sak.orgnr, nyttNavn = " ")
         }
         postgresContainerHelper.hentEnkelKolonne<String?>(
             """
@@ -391,7 +353,7 @@ class IASakProsessTest {
 
     @Test
     fun `oppdater endret_tidspunkt i DB ved endring av samarbeidsnavn`() {
-        val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Avdeling 1")
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = "Avdeling 1")
         val samarbeid = sak.hentAlleSamarbeid().first()
 
         val endretTidspunktVedOpprettelse = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
@@ -401,7 +363,7 @@ class IASakProsessTest {
         )?.toLocalDateTime()
         endretTidspunktVedOpprettelse shouldNotBe null
 
-        sak.nyttNavnPåSamarbeid(samarbeid, "Avdeling 1 - Fysio")
+        samarbeid.endreSamarbeidsNavn(orgnr = sak.orgnr, nyttNavn = "Avdeling 1 - Fysio")
         val endretTidspunktEtterUpdate = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
@@ -413,7 +375,7 @@ class IASakProsessTest {
 
     @Test
     fun `oppdater endret_tidspunkt i DB ved sletting av samarbeid`() {
-        val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Avdeling 1")
+        val sak = aktivSamarbeidsperiode(samarbeidsnavn = "Avdeling 1")
         val samarbeid = sak.hentAlleSamarbeid().first()
 
         val endretTidspunktVedOpprettelse = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
@@ -423,7 +385,7 @@ class IASakProsessTest {
         )?.toLocalDateTime()
         endretTidspunktVedOpprettelse shouldNotBe null
 
-        sak.slettSamarbeid(samarbeid)
+        samarbeid.slettSamarbeid(orgnr = sak.orgnr)
         val endretTidspunktEtterSlett = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
@@ -434,44 +396,28 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `skal beholde tildelt prosess selvom man går frem og TILBAKE i saksgang`() {
-        val sakIKartlegges = nySakIKartleggesMedEtSamarbeid()
-        val alleSamarbeid = sakIKartlegges.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 1
-
-        val førsteSamarbeid = alleSamarbeid.first()
-
-        val sakIKartleggesTilbakeOgFrem = sakIKartlegges
-            .nyHendelse(hendelsestype = IASakshendelseType.TILBAKE)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-        val alleSamarbeidEtterStatusEndring = sakIKartleggesTilbakeOgFrem.hentAlleSamarbeid()
-        alleSamarbeidEtterStatusEndring shouldHaveSize 1
-
-        alleSamarbeidEtterStatusEndring.first() shouldBe førsteSamarbeid
-    }
-
-    @Test
     fun `skal kunne opprette flere prosesser på samme sak`() {
-        val sakIKartlegges = nySakIKartleggesMedEtSamarbeid()
-        sakIKartlegges.hentAlleSamarbeid() shouldHaveSize 1
-        sakIKartlegges.opprettNyttSamarbeid(navn = "Annet samarbeidsnavn").hentAlleSamarbeid() shouldHaveSize 2
+        val sak = aktivSamarbeidsperiode()
+        sak.hentAlleSamarbeid() shouldHaveSize 1
+        sak.opprettSamarbeid(samarbeidsnavn = "Annet samarbeidsnavn")
+        sak.hentAlleSamarbeid() shouldHaveSize 2
     }
 
     @Test
     fun `skal kunne opprette kartlegginger på saker der det er flere prosesser`() {
-        val sakMedEttSamarbeid = nySakIKartleggesMedEtSamarbeid()
-        sakMedEttSamarbeid.hentAlleSamarbeid() shouldHaveSize 1
+        val sak = aktivSamarbeidsperiode()
+        sak.hentAlleSamarbeid() shouldHaveSize 1
 
-        val sakMedFlereSamarbeid = sakMedEttSamarbeid.opprettNyttSamarbeid(navn = "Annet samarbeidsnavn")
-        sakMedFlereSamarbeid.hentAlleSamarbeid() shouldHaveSize 2
+        sak.opprettSamarbeid(samarbeidsnavn = "Annet samarbeidsnavn")
+        sak.hentAlleSamarbeid() shouldHaveSize 2
 
-        val behovsvurdering = sakMedFlereSamarbeid.opprettBehovsvurdering()
+        val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
     }
 
     @Test
     fun `skal sende plan ved opprettelse av en ny plan på kafka`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 1
 
@@ -501,7 +447,7 @@ class IASakProsessTest {
 
     @Test
     fun `skal sende plan ved endringer i plan på kafka`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val førsteSamarbeid = sak.hentAlleSamarbeid().first()
         val opprettetPlan = sak.opprettEnPlan()
 
@@ -513,7 +459,10 @@ class IASakProsessTest {
                 it.size shouldBe 1
             }
         }
-        sak.endreFlereTemaerIPlan(endring = opprettetPlan.inkluderAlt().tilRequest())
+        sak.endreFlereTemaerIPlan(
+            planId = opprettetPlan.id,
+            endring = opprettetPlan.inkluderAlt().tilRequest(),
+        )
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -538,203 +487,55 @@ class IASakProsessTest {
 
     @Test
     fun `skal kunne hente ut alle aktive prosesser i en sak`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = aktivSamarbeidsperiode()
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 1
         alleSamarbeid.first().saksnummer shouldBe sak.saksnummer
     }
 
     @Test
-    fun `skal ikke få feil i historikken dersom man endrer navn på prosess flere ganger`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+    fun `skal kunne slette tomme samarbeid`() {
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
 
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 1
-
-        val førsteSamarbeid = alleSamarbeid.first()
-        sak.nyttNavnPåSamarbeid(førsteSamarbeid, "Første")
-            .nyttNavnPåSamarbeid(førsteSamarbeid, "Andre")
-            .nyttNavnPåSamarbeid(førsteSamarbeid, "Tredje")
-            .hentAlleSamarbeid().first().navn shouldBe "Tredje"
-
-        val samarbeidshistorikk = hentSamarbeidshistorikk(
-            sak.orgnr,
-        )
-        samarbeidshistorikk shouldHaveSize 1
-        samarbeidshistorikk.forExactlyOne { sakshistorikk ->
-            sakshistorikk.samarbeid.forExactlyOne { samarbeid ->
-                samarbeid.navn shouldBe "Tredje"
-            }
-        }
-        val sakshendelser = samarbeidshistorikk.first().sakshendelser
-        sakshendelser shouldHaveSize 9
-        sakshendelser.map { it.hendelsestype } shouldBe listOf(
-            IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
-            IASakshendelseType.VIRKSOMHET_VURDERES,
-            IASakshendelseType.TA_EIERSKAP_I_SAK,
-            IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
-            IASakshendelseType.VIRKSOMHET_KARTLEGGES,
-            IASakshendelseType.NY_PROSESS,
-            IASakshendelseType.ENDRE_PROSESS,
-            IASakshendelseType.ENDRE_PROSESS,
-            IASakshendelseType.ENDRE_PROSESS,
-        )
-        sakshendelser.last().status shouldBe IASak.Status.KARTLEGGES
-    }
-
-    @Test
-    fun `skal ikke få feil i sakshistorikk dersom man sletter flere samarbeid på rad`() {
-        val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid(navn = "First")
-            .opprettNyttSamarbeid(navn = "Sist")
-
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 2
-
-        sak.slettSamarbeid(alleSamarbeid.first()).slettSamarbeid(alleSamarbeid.last())
-        sak.hentAlleSamarbeid() shouldHaveSize 0
-
-        val samarbeidshistorikk = hentSamarbeidshistorikk(
-            sak.orgnr,
-        )
-        samarbeidshistorikk shouldHaveSize 1
-        samarbeidshistorikk.forExactlyOne {
-            it.samarbeid shouldHaveSize 0
-        }
-        val sakshendelser = samarbeidshistorikk.first().sakshendelser
-        sakshendelser shouldHaveSize 9
-        sakshendelser.map { it.hendelsestype } shouldBe listOf(
-            IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
-            IASakshendelseType.VIRKSOMHET_VURDERES,
-            IASakshendelseType.TA_EIERSKAP_I_SAK,
-            IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
-            IASakshendelseType.VIRKSOMHET_KARTLEGGES,
-            IASakshendelseType.NY_PROSESS,
-            IASakshendelseType.NY_PROSESS,
-            IASakshendelseType.SLETT_PROSESS,
-            IASakshendelseType.SLETT_PROSESS,
-        )
-        sakshendelser.last().status shouldBe IASak.Status.KARTLEGGES
-    }
-
-    @Test
-    fun `skal ikke få feil i historikken dersom man oppretter flere prosesser på rad`() {
-        val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Navn 1")
-
-        sak.hentAlleSamarbeid() shouldHaveSize 1
-
-        sak.opprettNyttSamarbeid(navn = "Navn 2")
-            .opprettNyttSamarbeid(navn = "Navn 3")
-            .opprettNyttSamarbeid(navn = "Navn 4")
-            .hentAlleSamarbeid() shouldHaveSize 4
-
-        sak.hentAlleSamarbeid() shouldHaveSize 4
-
-        val samarbeidshistorikk = hentSamarbeidshistorikk(
-            sak.orgnr,
-        )
-        samarbeidshistorikk shouldHaveSize 1
-        samarbeidshistorikk.forExactlyOne { sakshistorikk ->
-            sakshistorikk.samarbeid shouldHaveSize 4
-            sakshistorikk.samarbeid.map { it.navn } shouldContainAll listOf(
-                "Navn 1",
-                "Navn 2",
-                "Navn 3",
-                "Navn 4",
-            )
-        }
-
-        val sakshendelser = samarbeidshistorikk.first().sakshendelser
-        sakshendelser shouldHaveSize 9
-        sakshendelser.map { it.hendelsestype } shouldBe listOf(
-            IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
-            IASakshendelseType.VIRKSOMHET_VURDERES,
-            IASakshendelseType.TA_EIERSKAP_I_SAK,
-            IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
-            IASakshendelseType.VIRKSOMHET_KARTLEGGES,
-            IASakshendelseType.NY_PROSESS,
-            IASakshendelseType.NY_PROSESS,
-            IASakshendelseType.NY_PROSESS,
-            IASakshendelseType.NY_PROSESS,
-        )
-        sakshendelser.last().status shouldBe IASak.Status.KARTLEGGES
-    }
-
-    @Test
-    fun `skal kunne slette tomme prosesser`() {
-        val sak = nySakIKartlegges().opprettNyttSamarbeid()
-        val samarbeidFørSletting = sak.hentAlleSamarbeid()
-        samarbeidFørSletting shouldHaveSize 1
-
-        val samarbeidSomSkalSlettes = samarbeidFørSletting.first()
-        sak.slettSamarbeid(samarbeidSomSkalSlettes)
+        samarbeid.slettSamarbeid(orgnr = sak.orgnr)
 
         val samarbeidEtterSletting = sak.hentAlleSamarbeid()
         samarbeidEtterSletting shouldBe emptyList()
     }
 
     @Test
-    fun `skal ikke kunne slette prosesser som har en behovsvurdering knyttet til seg`() {
-        val sak = nySakIKartlegges().opprettNyttSamarbeid()
-        val alleSamarbeidFørSletting = sak.hentAlleSamarbeid()
-        val samarbeidSomSkalSlettes = alleSamarbeidFørSletting.first()
-        sak.opprettBehovsvurdering(samarbeidId = samarbeidSomSkalSlettes.id)
+    fun `skal ikke kunne slette samarbeid som har en behovsvurdering knyttet til seg`() {
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        sak.opprettBehovsvurdering()
         shouldFail {
-            sak.slettSamarbeid(samarbeidSomSkalSlettes)
+            samarbeid.slettSamarbeid(orgnr = sak.orgnr)
         }
-        sak.hentAlleSamarbeid() shouldBe alleSamarbeidFørSletting
+        sak.hentAlleSamarbeid() shouldBe listOf(samarbeid)
     }
 
     @Test
     fun `skal ikke kunne slette prosesser som har en plan knyttet til seg`() {
-        val sak = nySakIKartlegges().opprettNyttSamarbeid()
-        val alleSamarbeidFørSletting = sak.hentAlleSamarbeid()
-        val førsteSamarbeid = alleSamarbeidFørSletting.first()
-        sak.opprettEnPlan()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
         shouldFail {
-            sak.slettSamarbeid(samarbeidDto = førsteSamarbeid)
+            samarbeid.slettSamarbeid(orgnr = sak.orgnr)
         }
-        sak.hentAlleSamarbeid() shouldBe alleSamarbeidFørSletting
-    }
-
-    @Test
-    fun `skal få feilmelding dersom man sender inn feil data ved sletting`() {
-        val sak = nySakIKartlegges()
-
-        shouldFail {
-            sak.nyHendelse(
-                hendelsestype = IASakshendelseType.SLETT_PROSESS,
-                payload = Json.encodeToString(
-                    IASamarbeidDto(
-                        id = 1010000,
-                        saksnummer = sak.saksnummer,
-                        navn = DEFAULT_SAMARBEID_NAVN,
-                    ),
-                ),
-            )
-        }
+        sak.hentAlleSamarbeid() shouldBe listOf(samarbeid)
     }
 
     @Test
     fun `skal ikke lagre SLETT_PROSESS hendelse dersom sletting ikke er lov`() {
-        val sak = nySakIKartlegges().opprettNyttSamarbeid()
-        val samarbeid = sak.hentAlleSamarbeid()
-        samarbeid shouldHaveSize 1
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
 
         sak.opprettBehovsvurdering()
-
+        val sistEndretAvHendelse = hentSak(orgnummer = sak.orgnr).endretAvHendelseId
         shouldFail {
-            sak.nyHendelse(
-                hendelsestype = IASakshendelseType.SLETT_PROSESS,
-                payload = Json.encodeToString(
-                    IASamarbeidDto(
-                        id = 1010000,
-                        saksnummer = sak.saksnummer,
-                        navn = DEFAULT_SAMARBEID_NAVN,
-                    ),
-                ),
-            )
+            samarbeid.copy(id = 1010000).slettSamarbeid(orgnr = sak.orgnr)
         }
 
         val samarbeidEtterSlett = sak.hentAlleSamarbeid()
@@ -745,52 +546,33 @@ class IASakProsessTest {
             select id from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by  opprettet desc limit 1
             """.trimIndent(),
         )
-        sisteHendelse shouldBe sak.endretAvHendelseId
-    }
-
-    @Test
-    fun `skal kunne opprette et nytt samarbeid med navn`() {
-        val sak = nySakIKartlegges().opprettNyttSamarbeid(navn = "Navn")
-        sak.hentAlleSamarbeid().forExactlyOne {
-            it.navn shouldBe "Navn"
-        }
+        sisteHendelse shouldBe sistEndretAvHendelse
     }
 
     @Test
     fun `skal kun kunne opprette samarbeid med unikt navn`() {
-        val sak = nySakIKartlegges().opprettNyttSamarbeid(navn = "Navn")
-        shouldFail { sak.opprettNyttSamarbeid(navn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
-        shouldFail { sak.opprettNyttSamarbeid(navn = "navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
+        sak.opprettSamarbeid(samarbeidsnavn = "Navn")
+        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict"
+        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict"
 
         sak.hentAlleSamarbeid().count { it.navn == "Navn" } shouldBeExactly 1
     }
 
     @Test
     fun `samarbeidsnavn er begrenset til 50 tegn`() {
-        val sak = nySakIKartlegges()
+        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
 
         val forLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN + 1)
         val gyldigLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN)
         val nyttGydigLangtNavn = "o".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN)
         shouldFail {
-            sak.opprettNyttSamarbeid(navn = forLangtNavn)
+            sak.opprettSamarbeid(samarbeidsnavn = forLangtNavn)
         }
-        val sakMedSamarbeid = sak.opprettNyttSamarbeid(navn = gyldigLangtNavn)
-        val samarbeid = sakMedSamarbeid.hentAlleSamarbeid().first()
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = gyldigLangtNavn)
         shouldFail {
-            sakMedSamarbeid.nyttNavnPåSamarbeid(samarbeid, forLangtNavn)
+            samarbeid.endreSamarbeidsNavn(orgnr = sak.orgnr, nyttNavn = forLangtNavn)
         }
-        sakMedSamarbeid.nyttNavnPåSamarbeid(samarbeid, nyttGydigLangtNavn)
-    }
-
-    @Test
-    fun `skal gå tilbake til forrige status dersom man trykker tilbake etter å ha slettet prosess`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-        val samarbeid = sak.hentAlleSamarbeid().first()
-        val sakEtterSlettetSamarbeid = sak.slettSamarbeid(samarbeid)
-        sakEtterSlettetSamarbeid.status shouldBe IASak.Status.KARTLEGGES
-
-        val sakEtterTilbake = sakEtterSlettetSamarbeid.nyHendelse(IASakshendelseType.TILBAKE)
-        sakEtterTilbake.status shouldBe IASak.Status.KONTAKTES
+        samarbeid.endreSamarbeidsNavn(orgnr = sak.orgnr, nyttNavn = nyttGydigLangtNavn)
     }
 }

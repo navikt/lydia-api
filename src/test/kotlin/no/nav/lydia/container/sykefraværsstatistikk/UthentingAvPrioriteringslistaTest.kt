@@ -1,10 +1,10 @@
 package no.nav.lydia.container.sykefraværsstatistikk
 
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.SakHelper.Companion.fullførSak
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKontaktes
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
@@ -21,9 +21,9 @@ class UthentingAvPrioriteringslistaTest {
         val virksomhet =
             lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
 
-        val fullførtSak = nySakIViBistår(orgnummer = virksomhet.orgnr).fullførSak()
+        val fullførtSak = virksomhet.opprettOgFullførSamarbeidsperiode()
         virksomhet.orgnr shouldBe fullførtSak.orgnr
-        nySakIKontaktes(orgnummer = fullførtSak.orgnr)
+        vurderVirksomhet(virksomhet)
         // Oppdater 'endret' dato for å simulere 'maskinelt oppdatering' på en eldre sak
         TestContainerHelper.postgresContainerHelper.performUpdate(
             "update ia_sak set endret = now() " +
@@ -37,7 +37,7 @@ class UthentingAvPrioriteringslistaTest {
 
         virksomheter.data.first { it.orgnr == fullførtSak.orgnr }
             .also { virksomhet ->
-                virksomhet.status shouldBe IASak.Status.KONTAKTES
+                virksomhet.status shouldBe IASak.Status.VURDERES
             }
     }
 
@@ -54,12 +54,12 @@ class UthentingAvPrioriteringslistaTest {
                 virksomhet.saksnummer shouldBe null
             }
 
-        val sak = nySakIViBistår(orgnummer = virksomhet.orgnr)
+        val sak = aktivSamarbeidsperiode(virksomhet = virksomhet)
 
         val oppdaterteVirksomheter = hentSykefravær(kommuner = testKommune.nummer)
         oppdaterteVirksomheter.data.first { it.orgnr == virksomhet.orgnr }.also { virksomhet ->
             virksomhet.saksnummer shouldBe sak.saksnummer
-            virksomhet.status shouldBe IASak.Status.VI_BISTÅR
+            virksomhet.status shouldBe IASak.Status.AKTIV
         }
     }
 }

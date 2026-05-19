@@ -2,9 +2,8 @@ package no.nav.lydia.container.statusoversikt
 
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.SakHelper.Companion.fullførSak
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.StatusoversiktHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
@@ -55,11 +54,10 @@ class StatusoversiktApiTest {
             sektor = Sektor.KOMMUNAL,
         )
 
-        nySakIViBistår(orgnummer = virksomhet.orgnr)
-            .fullførSak()
+        virksomhet.opprettOgFullførSamarbeidsperiode()
 
         val aktivSak = hentSak(orgnummer = virksomhet.orgnr)
-        aktivSak.status shouldBe IASak.Status.FULLFØRT
+        aktivSak.status shouldBe IASak.Status.AVSLUTTET
 
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
@@ -68,7 +66,7 @@ class StatusoversiktApiTest {
             ).third.get().data
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
         statusoversiktKommunalSektor.first { statusoversikt ->
-            statusoversikt.status == IASak.Status.FULLFØRT
+            statusoversikt.status == IASak.Status.AVSLUTTET
         }.antall shouldBeGreaterThan 0
     }
 
@@ -79,10 +77,9 @@ class StatusoversiktApiTest {
                 næringer = listOf(OPPFØRING_AV_BYGNINGER),
             ),
         )
-        nySakIViBistår(orgnummer = virksomhet.orgnr)
-            .fullførSak()
+        virksomhet.opprettOgFullførSamarbeidsperiode()
         val aktivSak = hentSak(orgnummer = virksomhet.orgnr)
-        aktivSak.status shouldBe IASak.Status.FULLFØRT
+        aktivSak.status shouldBe IASak.Status.AVSLUTTET
 
         VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
@@ -99,7 +96,7 @@ class StatusoversiktApiTest {
 
         statusoversiktResults.size shouldBeGreaterThan 1
         statusoversiktResults.first { statusoversikt ->
-            statusoversikt.status == IASak.Status.FULLFØRT
+            statusoversikt.status == IASak.Status.AVSLUTTET
         }.antall shouldBeGreaterThan 0
         statusoversiktResults.first { statusoversikt ->
             statusoversikt.status == IASak.Status.IKKE_AKTIV
