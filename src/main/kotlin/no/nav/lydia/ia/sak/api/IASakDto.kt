@@ -4,11 +4,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import no.nav.lydia.ia.sak.domene.GyldigHendelse
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 
 @Serializable
 data class IASakDto(
@@ -21,7 +18,7 @@ data class IASakDto(
     val endretTidspunkt: LocalDateTime?,
     val eidAv: String?,
     val endretAvHendelseId: String,
-    val gyldigeNesteHendelser: List<GyldigHendelse>,
+    val gyldigeNesteHendelser: List<Unit>, // TODO: [OPPRYDDING] kan fjernes etter at den er fjernet fra frontend
     val lukket: Boolean = false, // TODO: [OPPRYDDING] kan fjernes etter at den er fjernet fra frontend
 ) {
     @Transient

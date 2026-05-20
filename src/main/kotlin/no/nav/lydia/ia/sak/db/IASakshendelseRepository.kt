@@ -21,37 +21,6 @@ import javax.sql.DataSource
 class IASakshendelseRepository(
     val dataSource: DataSource,
 ) {
-    fun hentHendelserForSaksnummer(saksnummer: String) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    SELECT 
-                        id,
-                        type,
-                        orgnr,
-                        opprettet_av,
-                        opprettet_av_rolle,
-                        saksnummer,
-                        opprettet,
-                        nav_enhet_nummer,
-                        nav_enhet_navn,
-                        resulterende_status,
-                        aarsak_enum,
-                        array_agg(begrunnelse_enum) as begrunnelser
-                    FROM ia_sak_hendelse
-                    LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
-                    WHERE saksnummer = :saksnummer
-                    GROUP BY aarsak_enum, id, type, orgnr, opprettet_av, saksnummer, opprettet
-                    ORDER BY opprettet ASC
-                    """.trimIndent(),
-                    mapOf(
-                        "saksnummer" to saksnummer,
-                    ),
-                ).map(this::mapRow).asList,
-            )
-        }.verifiserAtViIkkeHarDuplikater()
-
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> {
         val orgnrKolonneNavn = "orgnr"
         return using(sessionOf(dataSource)) { session ->
@@ -246,25 +215,5 @@ class IASakshendelseRepository(
             }
             return this
         }
-    }
-
-    fun lagreResulterendeStatus(
-        hendelse: IASakshendelse,
-        resulterendeStatus: IASak.Status,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
-                UPDATE ia_sak_hendelse SET
-                 resulterende_status = :resulterendeStatus
-                WHERE id = :hendelseId
-                AND resulterende_status is null
-                """.trimIndent(),
-                mapOf(
-                    "resulterendeStatus" to resulterendeStatus.name,
-                    "hendelseId" to hendelse.id,
-                ),
-            ).asUpdate,
-        )
     }
 }

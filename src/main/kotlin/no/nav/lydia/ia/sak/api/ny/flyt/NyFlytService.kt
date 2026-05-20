@@ -31,7 +31,6 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -219,7 +218,7 @@ class NyFlytService(
 
                 Spørreundersøkelse.Type.Evaluering -> {
                     val sakStatus = iaSakRepository.hentStatusForSaksnummer(saksnummer)
-                    ensure(sakStatus == IASak.Status.VI_BISTÅR || sakStatus == AKTIV) {
+                    ensure(sakStatus == AKTIV) {
                         IASakSpørreundersøkelseError.`sak ikke i rett status`
                     }
                     val plan = planService.hentPlan(samarbeidId = samarbeidId).bind()

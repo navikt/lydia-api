@@ -8,11 +8,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetK
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.AlleSamarbeidIVirksomhetErAvsluttet
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.Tilstand
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetErVurdert
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetHarAktiveSamarbeid
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.tilstand.VirksomhetVurderes
-import no.nav.lydia.ia.sak.domene.IASak.Status
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicReference
@@ -121,50 +117,4 @@ class TilstandsmaskinBuilder private constructor(
 
         return eksisterendeTilstand?.tilstand?.tilTilstand() ?: VirksomhetKlarTilVurdering
     }
-
-    @Deprecated("Bruk denne til migrering")
-    private fun beregnTilstandFraIASakOgIASamarbeid(orgnr: String): Tilstand =
-        fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = orgnr)?.let { iASakDto ->
-            when (iASakDto.status) {
-                Status.NY,
-                Status.IKKE_AKTIV,
-                Status.IKKE_AKTUELL,
-                Status.SLETTET,
-                Status.FULLFØRT,
-                -> {
-                    VirksomhetKlarTilVurdering
-                }
-
-                Status.VURDERES,
-                -> {
-                    VirksomhetVurderes
-                }
-
-                Status.VURDERT,
-                -> {
-                    VirksomhetErVurdert
-                }
-
-                Status.KONTAKTES,
-                Status.KARTLEGGES,
-                Status.VI_BISTÅR,
-                -> {
-                    if (harAktiveSamarbeid(fiaKontekst = fiaKontekst, saksnummer = iASakDto.saksnummer)) {
-                        VirksomhetHarAktiveSamarbeid
-                    } else {
-                        VirksomhetVurderes
-                    }
-                }
-
-                Status.AKTIV,
-                -> {
-                    VirksomhetHarAktiveSamarbeid
-                }
-
-                Status.AVSLUTTET,
-                -> {
-                    AlleSamarbeidIVirksomhetErAvsluttet
-                }
-            }
-        } ?: VirksomhetKlarTilVurdering
 }

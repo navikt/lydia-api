@@ -35,8 +35,6 @@ class IASakService(
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun hentStatusForSaksnummer(saksnummer: String) = iaSakRepository.hentStatusForSaksnummer(saksnummer = saksnummer)
-
     fun hentAktivSak(orgnummer: String): IASakDto? =
         hentSakerForOrgnummer(orgnummer)
             .sortedByDescending { it.opprettetTidspunkt }
