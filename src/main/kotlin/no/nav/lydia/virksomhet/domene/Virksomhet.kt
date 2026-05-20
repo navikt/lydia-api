@@ -1,7 +1,6 @@
 package no.nav.lydia.virksomhet.domene
 
 import ia.felles.definisjoner.bransjer.Bransje
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
 data class Virksomhet(
@@ -24,8 +23,8 @@ data class Virksomhet(
     val bransje: Bransje? = næringsundergruppe1.tilBransje(),
     val sektor: Sektor?,
     val oppdatertAvBrregOppdateringsId: Long?,
-    val opprettetTidspunkt: Instant,
-    val sistEndretTidspunkt: Instant,
+    val opprettetTidspunkt: kotlin.time.Instant,
+    val sistEndretTidspunkt: kotlin.time.Instant,
 )
 
 enum class VirksomhetStatus {

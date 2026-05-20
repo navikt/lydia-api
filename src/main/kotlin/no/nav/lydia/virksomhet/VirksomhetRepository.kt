@@ -2,7 +2,6 @@ package no.nav.lydia.virksomhet
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotliquery.queryOf
@@ -13,6 +12,7 @@ import no.nav.lydia.virksomhet.domene.Virksomhet
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import no.nav.lydia.virksomhet.domene.tilSektor
 import javax.sql.DataSource
+import kotlin.time.Instant
 
 class VirksomhetRepository(
     val dataSource: DataSource,
@@ -197,8 +197,8 @@ class VirksomhetRepository(
                         ),
                         sektor = row.stringOrNull("sektor")?.tilSektor(),
                         oppdatertAvBrregOppdateringsId = row.longOrNull("oppdatertAvBrregOppdateringsId"),
-                        opprettetTidspunkt = row.instant("opprettetTidspunkt").toKotlinInstant(),
-                        sistEndretTidspunkt = row.instant("sistEndretTidspunkt").toKotlinInstant(),
+                        opprettetTidspunkt = row.instant("opprettetTidspunkt").toKxInstant(),
+                        sistEndretTidspunkt = row.instant("sistEndretTidspunkt").toKxInstant(),
                     )
                 }.asSingle,
             )
@@ -298,6 +298,8 @@ class VirksomhetRepository(
                 }.asList,
             )
         }
+
+    private fun java.time.Instant.toKxInstant(): Instant = Instant.fromEpochMilliseconds(toEpochMilli())
 }
 
 @Serializable

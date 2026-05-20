@@ -1,7 +1,6 @@
 package no.nav.lydia.virksomhet.api
 
 import ia.felles.definisjoner.bransjer.Bransje
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -19,8 +18,8 @@ data class VirksomhetDto(
     val postnummer: String,
     val poststed: String,
     val oppdatertAvBrregOppdateringsId: Long? = null,
-    val opprettetTidspunkt: Instant,
-    val sistEndretTidspunkt: Instant,
+    val opprettetTidspunkt: kotlin.time.Instant,
+    val sistEndretTidspunkt: kotlin.time.Instant,
     val sektor: String,
     val næringsundergruppe1: Næringsgruppe,
     val næringsundergruppe2: Næringsgruppe?,

@@ -5,7 +5,6 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
-import kotlinx.datetime.Clock
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhet
@@ -51,6 +50,7 @@ import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 class VirksomhetOppdateringTest {
     @Test
@@ -235,9 +235,11 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     virksomhetDto.næringsundergruppe2 shouldBe this.næringsundergruppe2
     virksomhetDto.næringsundergruppe3 shouldBe this.næringsundergruppe3
     virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe genererOppdateringsid(this)
-    virksomhetDto.opprettetTidspunkt.minus(1.seconds) shouldBeLessThan Clock.System.now()
+    virksomhetDto.opprettetTidspunkt.minus(1.seconds) shouldBeLessThan nowInstant()
     return virksomhetDto
 }
+
+private fun nowInstant(): Instant = Instant.fromEpochMilliseconds(System.currentTimeMillis())
 
 private fun TestVirksomhet.skalHaRiktigTilstandEtterNy(navn: String = this.navn) {
     val virksomhetDto = skalHaRiktigTilstand(status = VirksomhetStatus.AKTIV, navn)

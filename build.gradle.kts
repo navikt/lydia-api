@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion = "3.4.3"
+val ktorVersion = "3.5.0"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
 val kotestVerstion = "6.1.11"
@@ -57,7 +57,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.11")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:12.6.0")
+    implementation("org.flywaydb:flyway-database-postgresql:12.6.1")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -83,7 +83,7 @@ dependencies {
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:$iaFellesVersion")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0-0.6.x-compat")
 
     implementation("com.nimbusds:nimbus-jose-jwt:10.9")
 
@@ -105,20 +105,20 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:3.0.3")
+    testImplementation("no.nav.security:mock-oauth2-server:4.0.0")
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
-            version { require("2.21.1") }
+            version { require("2.21.3") }
             because("versjoner < 2.21.1 har sårbarhet. inkludert i ktor-server-auth:3.4.0")
         }
         implementation("tools.jackson.core:jackson-core") {
-            version { require("3.1.1") }
+            version { require("3.1.3") }
             because("versjoner <= 3.1.0 har sårbarhet. inkludert i logstash-logback-encoder:9.0")
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.11.Final")
+                require("4.2.13.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
@@ -126,7 +126,7 @@ dependencies {
         }
         implementation("joda-time:joda-time") {
             version {
-                require("2.14.0")
+                require("2.14.2")
             }
             because("kotliquery har sårbar versjon på v2.11.0")
         }
