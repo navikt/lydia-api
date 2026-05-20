@@ -11,7 +11,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
@@ -66,21 +65,6 @@ class Metrics {
             .help("Antall evalueringer slettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val virksomheterPrioritert: Counter = Counter.builder()
-            .name("${NAMESPACE}_ia_virksomheter_vurdert")
-            .help("Antall virksomheter som blir vurdert for ia-samarbeid")
-            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
-
-        private val virksomheterSattTilBistår = Counter.builder()
-            .name("${NAMESPACE}_ia_virksomheter_vi_bistar")
-            .help("Antall virksomheter som blir bistått med ia-samarbeid")
-            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
-
-        private val virksomheterFulført = Counter.builder()
-            .name("${NAMESPACE}_ia_virksomheter_fulfort")
-            .help("Antall virksomheter som har fullført ia-samarbeid")
-            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
-
         private val iaSakFulgt = Counter.builder()
             .name("${NAMESPACE}_ia_saker_fulgt")
             .help("Antall saker som har blitt fulgt")
@@ -95,14 +79,6 @@ class Metrics {
             .name("${NAMESPACE}_samarbeidsplan_opprettet")
             .help("Antall samarbeidsplan opprettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
-
-        fun loggHendelse(hendelsesType: IASakshendelseType) {
-            when (hendelsesType) {
-                IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> virksomheterSattTilBistår.inc()
-                IASakshendelseType.FULLFØR_BISTAND -> virksomheterFulført.inc()
-                else -> {}
-            }
-        }
 
         fun loggBehovsvurdering(status: Spørreundersøkelse.Status) {
             when (status) {

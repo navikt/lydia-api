@@ -3,7 +3,6 @@ package no.nav.lydia.ia.sak.db
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import kotliquery.Row
@@ -18,14 +17,12 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaInfo
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -106,110 +103,6 @@ class SpørreundersøkelseRepository(
                 )
             }
         }
-
-    fun opprettSpørreundersøkelse(
-        orgnummer: String,
-        spørreundersøkelseId: UUID,
-        prosessId: Int,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        temaer: List<TemaInfo>,
-        type: Spørreundersøkelse.Type,
-    ): Either<Feil, Spørreundersøkelse> {
-        using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                val opprettet = LocalDateTime.now()
-                tx.run(
-                    queryOf(
-                        """
-                            INSERT INTO ia_sak_kartlegging (
-                                kartlegging_id,
-                                orgnr,
-                                ia_prosess,
-                                status,
-                                opprettet_av,
-                                type,
-                                opprettet,
-                                gyldig_til
-                            )
-                            VALUES (
-                                :kartlegging_id,
-                                :orgnr,
-                                :prosessId,
-                                :status,
-                                :opprettet_av,
-                                :sporreundersokelseType,
-                                :opprettet,
-                                :gyldigTil
-                            )
-                        """.trimMargin(),
-                        mapOf(
-                            "kartlegging_id" to spørreundersøkelseId,
-                            "orgnr" to orgnummer,
-                            "prosessId" to prosessId,
-                            "status" to "OPPRETTET",
-                            "opprettet_av" to saksbehandler.navIdent,
-                            "sporreundersokelseType" to type.name,
-                            "opprettet" to opprettet,
-                            "gyldigTil" to opprettet.plusHours(ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG),
-                        ),
-                    ).asUpdate,
-                )
-
-                temaer.sortedBy { it.rekkefølge }.forEach { tema ->
-                    tx.run(
-                        queryOf(
-                            """
-                    INSERT INTO ia_sak_kartlegging_kartlegging_til_tema (
-                        kartlegging_id,
-                        tema_id
-                    )
-                    VALUES (
-                        :kartlegging_id,
-                        :tema_id
-                    )
-                            """.trimMargin(),
-                            mapOf(
-                                "kartlegging_id" to spørreundersøkelseId,
-                                "tema_id" to tema.id,
-                            ),
-                        ).asUpdate,
-                    )
-                }
-
-                temaer.sortedBy { it.rekkefølge }.forEach { tema ->
-                    tema.undertemaer.sortedBy { it.rekkefølge }.forEach { undertema ->
-                        tx.run(
-                            queryOf(
-                                """
-                        INSERT INTO ia_sak_kartlegging_kartlegging_til_undertema (
-                            kartlegging_id,
-                            tema_id, 
-                            undertema_id
-                        )
-                        VALUES (
-                            :kartlegging_id,
-                            :tema_id, 
-                            :undertema_id
-                        )
-                                """.trimMargin(),
-                                mapOf(
-                                    "kartlegging_id" to spørreundersøkelseId,
-                                    "tema_id" to tema.id,
-                                    "undertema_id" to undertema.id,
-                                ),
-                            ).asUpdate,
-                        )
-                    }
-                }
-            }
-        }
-
-        return hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)?.right()
-            ?: Feil(
-                feilmelding = "Kunne ikke opprette kartlegging",
-                httpStatusCode = HttpStatusCode.InternalServerError,
-            ).left()
-    }
 
     private fun Row.tilSpørreundersøkelse(transactionalSession: TransactionalSession): Spørreundersøkelse {
         val spørreundersøkelseId = string("id").tilUUID(hvaErJeg = "spørreundersøkelseId")
