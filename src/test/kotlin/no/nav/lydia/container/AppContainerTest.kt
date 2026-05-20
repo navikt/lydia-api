@@ -60,9 +60,6 @@ class AppContainerTest {
         assert(response.isSuccessful)
         result.fold(
             success = { metrikker ->
-                metrikker shouldContain "ia_virksomheter_vurdert_total"
-                metrikker shouldContain "ia_virksomheter_vi_bistar_total"
-                metrikker shouldContain "ia_virksomheter_fulfort_total"
                 metrikker shouldContain "ia_behovsvurdering_opprettet_total"
                 metrikker shouldContain "ia_behovsvurdering_startet_total"
                 metrikker shouldContain "ia_behovsvurdering_fullfort_total"

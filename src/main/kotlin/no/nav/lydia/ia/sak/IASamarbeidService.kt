@@ -4,9 +4,6 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.Observer
-import no.nav.lydia.appstatus.ObservedPlan
-import no.nav.lydia.appstatus.PlanHendelseType
 import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING
@@ -21,20 +18,11 @@ import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.SAK_I_FE
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
-import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
-import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.slf4j.LoggerFactory
@@ -43,9 +31,7 @@ class IASamarbeidService(
     private val iaSakRepository: IASakRepository,
     private val samarbeidRepository: IASamarbeidRepository,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
-    private val samarbeidObservers: List<Observer<IASamarbeid>>,
     private val planRepository: PlanRepository,
-    private val planObservers: List<Observer<ObservedPlan>>,
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -96,74 +82,6 @@ class IASamarbeidService(
         samarbeidRepository.hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId)?.right()
             ?: IASamarbeidFeil.`ugyldig samarbeidId`.left()
 
-    fun oppdaterSamarbeid(
-        sakshendelse: IASakshendelse,
-        sak: IASak,
-    ) {
-        when (sakshendelse) {
-            is ProsessHendelse -> {
-                when (sakshendelse.hendelsesType) {
-                    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> {
-                        fullførSamarbeidMaskineltPåEnFullførtSak(
-                            sakshendelse = sakshendelse,
-                        ).let { samarbeid ->
-                            samarbeidObservers.forEach { it.receive(input = samarbeid) }
-                        }
-                    }
-
-                    FULLFØR_PROSESS -> {
-                        fullførSamarbeid(
-                            samarbeidDto = sakshendelse.samarbeidDto,
-                            saksnummer = sak.saksnummer,
-                        )?.let { samarbeid ->
-                            samarbeidObservers.forEach { it.receive(input = samarbeid) }
-                        }
-                    }
-
-                    AVBRYT_PROSESS -> {
-                        avbrytSamarbeid(
-                            samarbeidDto = sakshendelse.samarbeidDto,
-                            saksnummer = sak.saksnummer,
-                        )?.let { samarbeid ->
-                            samarbeidObservers.forEach { it.receive(input = samarbeid) }
-                        }
-                    }
-
-                    ENDRE_PROSESS -> {
-                        oppdaterNavnPåSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)
-                            ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(input = samarbeid) } }
-                    }
-
-                    SLETT_PROSESS -> {
-                        slettSamarbeid(samarbeidDto = sakshendelse.samarbeidDto, saksnummer = sak.saksnummer)
-                            ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(input = samarbeid) } }
-                    }
-
-                    NY_PROSESS -> {
-                        samarbeidRepository.opprettNyttSamarbeid(
-                            saksnummer = sakshendelse.saksnummer,
-                            navn = sakshendelse.samarbeidDto.navn,
-                        ).also { samarbeid ->
-                            samarbeidObservers.forEach { it.receive(input = samarbeid) }
-                        }
-                    }
-
-                    else -> {}
-                }
-            }
-
-            else -> {}
-        }
-    }
-
-    fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid? {
-        samarbeidRepository.oppdaterNavnPåSamarbeid(samarbeidDto = samarbeidDto)
-        return samarbeidRepository.hentSamarbeid(
-            saksnummer = samarbeidDto.saksnummer,
-            samarbeidId = samarbeidDto.id,
-        )
-    }
-
     enum class StatusendringBegrunnelser {
         // -- fullføre
         INGEN_EVALUERING,
@@ -192,9 +110,7 @@ class IASamarbeidService(
 
         val statusPåSak = iaSakRepository.hentStatusForSaksnummer(saksnummer)
 
-        if (statusPåSak != IASak.Status.VI_BISTÅR &&
-            statusPåSak != IASak.Status.AKTIV
-        ) {
+        if (statusPåSak != IASak.Status.AKTIV) {
             blokkerende.add(SAK_I_FEIL_STATUS)
         }
 
@@ -276,61 +192,6 @@ class IASamarbeidService(
             advarsler = emptyList(),
         )
     }
-
-    fun fullførSamarbeid(
-        samarbeidDto: IASamarbeidDto,
-        saksnummer: String,
-    ): IASamarbeid? =
-        if (kanFullføreSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
-            planRepository.hentPlan(samarbeidId = samarbeidDto.id)?.let { plan ->
-                planRepository.settPlanTilFullført(plan)
-                planRepository.hentPlan(samarbeidId = samarbeidDto.id)?.let { oppdatertPlan ->
-                    planObservers.forEach {
-                        it.receive(
-                            input = ObservedPlan(
-                                plan = oppdatertPlan,
-                                hendelsesType = PlanHendelseType.ENDRE_STATUS,
-                            ),
-                        )
-                    }
-                }
-            }
-            samarbeidRepository.fullførSamarbeid(samarbeidDto = samarbeidDto)
-        } else {
-            samarbeidRepository.hentSamarbeid(
-                saksnummer = samarbeidDto.saksnummer,
-                samarbeidId = samarbeidDto.id,
-            )
-        }
-
-    private fun fullførSamarbeidMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid =
-        samarbeidRepository.fullførSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)
-
-    fun avbrytSamarbeid(
-        samarbeidDto: IASamarbeidDto,
-        saksnummer: String,
-    ): IASamarbeid? =
-        if (kanAvbryteSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
-            samarbeidRepository.avbrytSamarbeid(samarbeidDto = samarbeidDto)
-        } else {
-            samarbeidRepository.hentSamarbeid(
-                saksnummer = samarbeidDto.saksnummer,
-                samarbeidId = samarbeidDto.id,
-            )
-        }
-
-    fun slettSamarbeid(
-        samarbeidDto: IASamarbeidDto,
-        saksnummer: String,
-    ): IASamarbeid? =
-        if (kanSletteSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidDto.id).kanGjennomføres) {
-            samarbeidRepository.slettSamarbeid(samarbeidDto = samarbeidDto)
-        } else {
-            samarbeidRepository.hentSamarbeid(
-                saksnummer = samarbeidDto.saksnummer,
-                samarbeidId = samarbeidDto.id,
-            )
-        }
 }
 
 const val DEFAULT_SAMARBEID_NAVN = "Samarbeid uten navn"

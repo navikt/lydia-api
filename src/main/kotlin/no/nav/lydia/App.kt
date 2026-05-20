@@ -186,8 +186,6 @@ fun startLydiaBackend() {
         samarbeidRepository = samarbeidRepository,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         planRepository = planRepository,
-        samarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
-        planObservers = listOf(oppdaterSistEndretPlanObserver, sendPlanPåKafkaObserver),
     )
 
     val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
@@ -210,7 +208,6 @@ fun startLydiaBackend() {
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
 
     val planService = PlanService(
-        samarbeidService = samarbeidService,
         planRepository = planRepository,
         planObservers = listOf(
             oppdaterSistEndretPlanObserver,
@@ -265,8 +262,6 @@ fun startLydiaBackend() {
     brregConsumer(naisEnv = naisEnv, virksomhetService)
 
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
-
-    val iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
 
     val tilstandVirksomhetOppdaterer = TilstandVirksomhetOppdaterer(
         nyFlytService = nyFlytService,
@@ -616,7 +611,6 @@ private fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 planService = planService,
                 iaSakService = iaSakService,
-                iaTeamService = iaTeamService,
                 dokumentPubliseringService = dokumentPubliseringService,
             )
             virksomhet(

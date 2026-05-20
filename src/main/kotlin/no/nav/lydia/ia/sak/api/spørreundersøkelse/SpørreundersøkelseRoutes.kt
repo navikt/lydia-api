@@ -1,20 +1,15 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
-import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import io.ktor.http.ContentDisposition
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
-import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toJavaLocalDateTime
@@ -25,7 +20,6 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
@@ -36,13 +30,11 @@ import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.extensions.type
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
@@ -61,36 +53,6 @@ fun Route.iaSakSpørreundersøkelse(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
-    post("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/type/{type}") {
-        // Opprett spørreundersøkelse av en gitt type
-        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val prosessId = call.prosessId ?: return@post call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
-        val type = call.type ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
-
-        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            spørreundersøkelseService.opprettSpørreundersøkelse(
-                orgnummer = orgnummer,
-                saksbehandler = saksbehandler,
-                iaSak = iaSak,
-                prosessId = prosessId,
-                type = type,
-            )
-        }.also { spørreundersøkelseEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelseEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                saksnummer = spørreundersøkelseEither.getOrNull()?.saksnummer,
-            )
-        }.map {
-            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
-            call.respond(HttpStatusCode.Created, it.tilDto(publiseringStatus))
-        }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
-
     get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/") {
         // hent alle spørreundersøkelser i et samarbeid
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -205,77 +167,6 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
-    post("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/avslutt") {
-        val id = call.spørreundersøkelseId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
-
-        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
-            spørreundersøkelseService.endreSpørreundersøkelseStatus(
-                spørreundersøkelseId = id,
-                statusViSkalEndreTil = Spørreundersøkelse.Status.AVSLUTTET,
-            )
-        }.also { spørreundersøkelseEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelseEither,
-                orgnummer = call.orgnummer,
-                auditType = AuditType.access,
-                saksnummer = call.saksnummer,
-            )
-        }.map {
-            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
-            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
-        }.mapLeft {
-            call.application.log.error(it.feilmelding)
-            call.sendFeil(it)
-        }
-    }
-
-    delete("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}") {
-        val id = call.spørreundersøkelseId ?: return@delete call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
-
-        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService, adGrupper = adGrupper) { _, _ ->
-            spørreundersøkelseService.slettSpørreundersøkelse(spørreundersøkelseId = id)
-        }.also { spørreundersøkelseEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelseEither,
-                orgnummer = call.orgnummer,
-                auditType = AuditType.delete,
-                saksnummer = call.saksnummer,
-            )
-        }.map {
-            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
-            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
-        }.mapLeft {
-            call.application.log.error(it.feilmelding)
-            call.sendFeil(it)
-        }
-    }
-
-    post("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/start") {
-        val id = call.spørreundersøkelseId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
-
-        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService, adGrupper = adGrupper) { _, _ ->
-            spørreundersøkelseService.endreSpørreundersøkelseStatus(
-                spørreundersøkelseId = id,
-                statusViSkalEndreTil = Spørreundersøkelse.Status.PÅBEGYNT,
-            )
-        }.also { spørreundersøkelse ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelse,
-                orgnummer = call.orgnummer,
-                auditType = AuditType.access,
-                saksnummer = call.saksnummer,
-            )
-        }.map {
-            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
-            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
-        }.mapLeft {
-            call.sendFeil(it)
-        }
-    }
-
     put("$SPØRREUNDERSØKELSE_BASE_ROUTE/{sporreundersokelseId}") {
         val id = call.spørreundersøkelseId ?: return@put call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
         val input = call.receive<OppdaterBehovsvurderingDto>()
@@ -368,32 +259,6 @@ private fun Spørreundersøkelse.filnavn(): String {
         ${type.name.lowercase().replaceFirstChar { it.uppercase() }}-$gjennomført.pdf
         """.trimIndent()
     return filnavn
-}
-
-fun <T> ApplicationCall.somFølgerAvSakIProsess(
-    iaSakService: IASakService,
-    iaTeamService: IATeamService,
-    adGrupper: ADGrupper,
-    block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASakDto) -> Either<Feil, T>,
-) = somSaksbehandler(adGrupper) { saksbehandler ->
-    val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-    val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
-    val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).getOrNull()
-        ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-    if (iaSak.orgnr != orgnummer) {
-        IASakError.`ugyldig orgnummer`.left()
-    } else if (!iaTeamService.erEierEllerFølgerAvSak(
-            saksnummer = iaSak.saksnummer,
-            eierAvSak = iaSak.eidAv,
-            saksbehandler = saksbehandler,
-        )
-    ) {
-        IASakError.`er ikke følger eller eier av sak`.left()
-    } else if (iaSak.status != IASak.Status.KARTLEGGES && iaSak.status != IASak.Status.VI_BISTÅR) {
-        IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
-    } else {
-        block(saksbehandler, iaSak)
-    }
 }
 
 object IASakSpørreundersøkelseError {

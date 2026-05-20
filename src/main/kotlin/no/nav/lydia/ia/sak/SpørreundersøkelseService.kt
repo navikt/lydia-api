@@ -5,8 +5,6 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
-import io.ktor.http.HttpStatusCode
-import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
@@ -21,17 +19,14 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseErr
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Evaluering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaInfo
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
 import java.util.UUID
 
 class SpørreundersøkelseService(
@@ -98,123 +93,6 @@ class SpørreundersøkelseService(
             return IASakSpørreundersøkelseError.`ikke avsluttet`.left()
         }
         return spørreundersøkelse.right()
-    }
-
-    fun opprettSpørreundersøkelse(
-        orgnummer: String,
-        iaSak: IASakDto,
-        prosessId: Int,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        type: Spørreundersøkelse.Type,
-    ): Either<Feil, Spørreundersøkelse> =
-        samarbeidService.hentSamarbeid(iaSak.saksnummer, prosessId).flatMap { samarbeid ->
-            opprettSpørreundersøkelse(
-                orgnummer = orgnummer,
-                saksnummer = iaSak.saksnummer,
-                samarbeidId = samarbeid.id,
-                type = type,
-                saksbehandler = saksbehandler,
-            )
-        }
-
-    fun opprettSpørreundersøkelse(
-        orgnummer: String,
-        saksnummer: String,
-        samarbeidId: Int,
-        type: Spørreundersøkelse.Type,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-    ): Either<Feil, Spørreundersøkelse> =
-        when (type) {
-            Behovsvurdering -> {
-                samarbeidService.hentSamarbeid(saksnummer, samarbeidId).flatMap { samarbeid ->
-                    spørreundersøkelseRepository.opprettSpørreundersøkelse(
-                        orgnummer = orgnummer,
-                        prosessId = samarbeid.id,
-                        saksbehandler = saksbehandler,
-                        spørreundersøkelseId = UUID.randomUUID(),
-                        temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
-                        type = type,
-                    )
-                }.onRight { behovsvurdering ->
-                    spørreundersøkelseObservers.forEach { observer -> observer.receive(behovsvurdering) }
-                }
-            }
-
-            Evaluering -> {
-                if (iaSakService.hentStatusForSaksnummer(saksnummer) == IASak.Status.VI_BISTÅR ||
-                    iaSakService.hentStatusForSaksnummer(saksnummer) == IASak.Status.AKTIV
-                ) {
-                    planService.hentPlan(samarbeidId = samarbeidId).flatMap { plan ->
-                        val temaerInkludertIPlan = plan.temaer.filter {
-                            it.inkludert
-                        }.ifEmpty {
-                            return Feil(
-                                feilmelding = "Kan ikke opprette en evaluering basert på en tom plan",
-                                httpStatusCode = HttpStatusCode.BadRequest,
-                            ).left()
-                        }.map {
-                            it.navn
-                        }
-                        val aktiveTemaer = spørreundersøkelseRepository.hentAktiveTemaer(type)
-                        val temaerSomSkalEvalueres = aktiveTemaer.filter {
-                            temaerInkludertIPlan.contains(it.navn)
-                        }
-
-                        val undertemaerInkludertIPlan: List<String> = plan.temaer.filter {
-                            it.inkludert
-                        }.flatMap { it.undertemaer }.filter { it.inkludert }.map { it.navn }
-
-                        val temaerMedUndertemaerSomIPlan = temaerSomSkalEvalueres.map {
-                            it.copy(
-                                undertemaer = it.undertemaer.filter { undertemaInfo -> undertemaerInkludertIPlan.contains(undertemaInfo.navn) } +
-                                    spørreundersøkelseRepository.hentObligatoriskeAktiveUndertemaer(it.id),
-                            )
-                        }
-
-                        samarbeidService.hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).flatMap { samarbeid ->
-                            spørreundersøkelseRepository.opprettSpørreundersøkelse(
-                                orgnummer = orgnummer,
-                                prosessId = samarbeid.id,
-                                saksbehandler = saksbehandler,
-                                spørreundersøkelseId = UUID.randomUUID(),
-                                temaer = temaerMedUndertemaerSomIPlan,
-                                type = type,
-                            )
-                        }.onRight { evaluering ->
-                            spørreundersøkelseObservers.forEach { observer -> observer.receive(evaluering) }
-                        }
-                    }
-                } else {
-                    IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
-                }
-            }
-        }
-
-    fun slettSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, Spørreundersøkelse> {
-        val spørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId).getOrElse { return it.left() }
-
-        if (spørreundersøkelse.status == Spørreundersøkelse.Status.SLETTET) {
-            return IASakSpørreundersøkelseError.`allerede slettet`.left()
-        }
-
-        if (erPublisertEllerUnderPublisering(spørreundersøkelse)) {
-            return IASakSpørreundersøkelseError.`publisert, kan ikke slettes`.left()
-        }
-
-        if (spørreundersøkelse.status == Spørreundersøkelse.Status.AVSLUTTET && spørreundersøkelse.harMinstEttResultat()) {
-            return IASakSpørreundersøkelseError.`kan ikke slettes`.left()
-        }
-
-        spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
-
-        val oppdatertSpørreundersøkelse = spørreundersøkelse.copy(
-            status = Spørreundersøkelse.Status.SLETTET,
-            endretTidspunkt = LocalDateTime.now().toKotlinLocalDateTime(),
-        )
-
-        spørreundersøkelseObservers.forEach { it.receive(oppdatertSpørreundersøkelse) }
-
-        return oppdatertSpørreundersøkelse.right()
     }
 
     fun hentSpørreundersøkelser(
