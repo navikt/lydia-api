@@ -244,7 +244,9 @@ class DbDumpTest {
             vurderVirksomhet().bliEier(token = token)
 
             // -- Virksomhet biståes med ett samarbeid
-            vurderVirksomhet().opprettSamarbeid(token = token)
+            vurderVirksomhet()
+                .leggTilFolger(token = token)
+                .opprettSamarbeid(token = token)
         }
     }
 
