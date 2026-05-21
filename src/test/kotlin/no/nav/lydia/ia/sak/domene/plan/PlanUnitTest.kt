@@ -2,7 +2,6 @@ package no.nav.lydia.ia.sak.domene.plan
 
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import java.util.UUID
@@ -15,7 +14,6 @@ class PlanUnitTest {
             id = UUID.randomUUID(),
             samarbeidId = 1,
             sistEndret = java.time.LocalDateTime.now().toKotlinLocalDateTime(),
-            sistPublisert = java.time.LocalDate.now().toKotlinLocalDate(),
             status = IASamarbeid.Status.AKTIV,
             temaer = listOf(
                 PlanTema(

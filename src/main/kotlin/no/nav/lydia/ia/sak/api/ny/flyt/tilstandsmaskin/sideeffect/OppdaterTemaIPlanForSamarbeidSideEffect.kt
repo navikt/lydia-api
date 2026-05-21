@@ -7,7 +7,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.Transaction
 import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterTemaISamarbeidsplan
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
-import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import java.util.UUID
@@ -19,9 +19,9 @@ class OppdaterTemaIPlanForSamarbeidSideEffect(
     val planId: UUID,
     val temaId: Int,
     val endringer: List<EndreUndertemaRequest>,
-) : SideEffect<PlanMedPubliseringStatusDto>() {
+) : SideEffect<PlanDto>() {
     context(nyFlytService: NyFlytService)
-    override fun apply(): Either<Feil, PlanMedPubliseringStatusDto> =
+    override fun apply(): Either<Feil, PlanDto> =
         nyFlytService.validerOppdateringAvTemaISamarbeidsplan(
             samarbeidId = samarbeidId,
             planId = planId,
@@ -37,12 +37,12 @@ class OppdaterTemaIPlanForSamarbeidSideEffect(
                         endringer = endringer,
                     ) ?: error("Kunne ikke oppdatere tema med id '$temaId' i samarbeidsplan med id '$planId' for samarbeid $samarbeidId i sak $saksnummer")
 
-                    val planMedPubliseringStatusDto: PlanMedPubliseringStatusDto =
+                    val planMedPubliseringStatusDto: PlanDto =
                         oppdatertSamarbeidsplan.tilDtoMedPubliseringStatus()
 
                     Pair(oppdatertSamarbeidsplan, planMedPubliseringStatusDto)
                 }
-            }.also { planOgIASak: Pair<Plan, PlanMedPubliseringStatusDto> ->
+            }.also { planOgIASak: Pair<Plan, PlanDto> ->
                 nyFlytService.planService.varslePlanObservers(planOgIASak.first, PlanHendelseType.OPPDATER)
             }.second
         }

@@ -30,7 +30,7 @@ import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -100,7 +100,7 @@ class NyFlytSamarbeidsplanTest {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid(authContainerHelper.saksbehandler1.token)
-        val opprinneligPlan: PlanMedPubliseringStatusDto = samarbeid.opprettSamarbeidsplan(sak.orgnr, token = authContainerHelper.saksbehandler1.token)
+        val opprinneligPlan: PlanDto = samarbeid.opprettSamarbeidsplan(sak.orgnr, token = authContainerHelper.saksbehandler1.token)
 
         // Gjør bare en endring på sluttDato i første tema og eksluder andre tema
 
@@ -140,7 +140,7 @@ class NyFlytSamarbeidsplanTest {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid(authContainerHelper.saksbehandler1.token)
-        val opprinneligPlan: PlanMedPubliseringStatusDto = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, token = authContainerHelper.saksbehandler1.token)
+        val opprinneligPlan: PlanDto = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, token = authContainerHelper.saksbehandler1.token)
         val førsteTema = opprinneligPlan.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
         førsteUndertema.inkludert shouldBe true
@@ -205,7 +205,7 @@ class NyFlytSamarbeidsplanTest {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
         val samarbeid = sak.opprettSamarbeid(authContainerHelper.saksbehandler1.token)
-        val opprinneligPlan: PlanMedPubliseringStatusDto = samarbeid.opprettSamarbeidsplan(sak.orgnr, token = authContainerHelper.saksbehandler1.token)
+        val opprinneligPlan: PlanDto = samarbeid.opprettSamarbeidsplan(sak.orgnr, token = authContainerHelper.saksbehandler1.token)
 
         // Gjør bare en endring på sluttDato i første tema og eksluder andre tema
 
