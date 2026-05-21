@@ -5,6 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import no.nav.lydia.Topic
@@ -19,6 +21,7 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.svarPåSpørsmål
 import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdInkludert
 import no.nav.lydia.helper.PlanHelper.Companion.antallTemaInkludert
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
@@ -40,6 +43,7 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
 import kotlin.test.Test
+import kotlin.time.Clock
 
 class DokumentPubliseringApiTest {
     companion object {
@@ -398,5 +402,26 @@ class DokumentPubliseringApiTest {
                     }
             }
         }
+    }
+
+    @Test
+    fun `publiserte planer skal returnere sistPublisert i dto`() {
+        val sak = aktivSamarbeidsperiode()
+        val plan = sak.opprettEnPlan()
+        plan.sistPublisert shouldBe null
+
+        val response = publiserDokument(
+            dokumentReferanseId = plan.id,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        sendKvittering(
+            dokument = response.third.get(),
+            samarbeidId = sak.hentAlleSamarbeid().first().id,
+        )
+
+        val publisertPlan = sak.hentPlan()
+        publisertPlan.sistPublisert shouldNotBe null
+        publisertPlan.sistPublisert?.date shouldBe Clock.System.todayIn(TimeZone.currentSystemDefault())
     }
 }

@@ -63,7 +63,7 @@ fun PlanDto.tilPlanKafkaMeldingDto() =
     PlanKafkaMeldingDto(
         id = this.id,
         sistEndret = this.sistEndret,
-        sistPublisert = this.sistPublisert,
+        sistPublisert = this.sistPublisert?.date,
         status = this.status,
         temaer = this.temaer.tilPlanTemaKafkaMeldingDtoer(),
     )

@@ -6,7 +6,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.ny.flyt.NyFlytService
 import no.nav.lydia.ia.sak.api.ny.flyt.Transaction
 import no.nav.lydia.ia.sak.api.ny.flyt.endreStatusPåUndertemaISamarbeidsplan
-import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -20,9 +20,9 @@ class EndreStatusPåUndertemaISamarbeidsplanSideEffect(
     val temaId: Int,
     val undertemaId: Int,
     val nyStatus: PlanUndertema.Status,
-) : SideEffect<PlanMedPubliseringStatusDto>() {
+) : SideEffect<PlanDto>() {
     context(nyFlytService: NyFlytService)
-    override fun apply(): Either<Feil, PlanMedPubliseringStatusDto> =
+    override fun apply(): Either<Feil, PlanDto> =
         nyFlytService.validerEndringAvStatusPåUndertema(
             samarbeidId = samarbeidId,
             planId = planId,
@@ -39,12 +39,12 @@ class EndreStatusPåUndertemaISamarbeidsplanSideEffect(
                         nyStatus = nyStatus,
                     ) ?: error("Kunne ikke oppdatere status på undertema '$undertemaId' i plan '$planId' for samarbeid $samarbeidId i sak $saksnummer")
 
-                    val planMedPubliseringStatusDto: PlanMedPubliseringStatusDto =
+                    val planDto: PlanDto =
                         oppdatertPlan.tilDtoMedPubliseringStatus()
 
-                    Pair(oppdatertPlan, planMedPubliseringStatusDto)
+                    Pair(oppdatertPlan, planDto)
                 }
-            }.also { planOgDto: Pair<Plan, PlanMedPubliseringStatusDto> ->
+            }.also { planOgDto: Pair<Plan, PlanDto> ->
                 nyFlytService.planService.varslePlanObservers(planOgDto.first, PlanHendelseType.ENDRE_STATUS)
             }.second
         }

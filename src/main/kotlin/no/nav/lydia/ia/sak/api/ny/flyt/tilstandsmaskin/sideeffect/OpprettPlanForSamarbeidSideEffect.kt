@@ -13,7 +13,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.lagreEllerOppdaterVirksomhetTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.lagreHendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterStatusPåSak
 import no.nav.lydia.ia.sak.api.ny.flyt.opprettSamarbeidsplan
-import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -31,9 +31,9 @@ class OpprettPlanForSamarbeidSideEffect(
     val plan: PlanMalDto,
     val saksbehandler: NavAnsattMedSaksbehandlerRolle,
     val navEnhet: NavEnhet,
-) : SideEffect<PlanMedPubliseringStatusDto>() {
+) : SideEffect<PlanDto>() {
     context(nyFlytService: NyFlytService)
-    override fun apply(): Either<Feil, PlanMedPubliseringStatusDto> {
+    override fun apply(): Either<Feil, PlanDto> {
         val nyPlanId = UUID.randomUUID()
 
         return nyFlytService.validerOpprettelseAvSamarbeidsplan(
@@ -51,7 +51,7 @@ class OpprettPlanForSamarbeidSideEffect(
                         mal = planMalDto,
                     ) ?: error("Kunne ikke opprette samarbeidsplan for samarbeid $samarbeidId i sak $saksnummer")
 
-                    val planMedPubliseringStatusDto: PlanMedPubliseringStatusDto =
+                    val planDto: PlanDto =
                         opprettetSamarbeidsplan.tilDtoMedPubliseringStatus()
 
                     val opprettPlanHendelse = lagreHendelse(
@@ -80,9 +80,9 @@ class OpprettPlanForSamarbeidSideEffect(
                         orgnr = orgnummer,
                         tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
                     )
-                    Triple(opprettetSamarbeidsplan, planMedPubliseringStatusDto, oppdatertSakDto)
+                    Triple(opprettetSamarbeidsplan, planDto, oppdatertSakDto)
                 }
-            }.also { planOgIASak: Triple<Plan, PlanMedPubliseringStatusDto, IASakDto> ->
+            }.also { planOgIASak: Triple<Plan, PlanDto, IASakDto> ->
                 nyFlytService.varsleIASakObservers(sakDto = planOgIASak.third)
                 nyFlytService.planService.varslePlanObservers(planOgIASak.first, PlanHendelseType.OPPRETT)
             }.second

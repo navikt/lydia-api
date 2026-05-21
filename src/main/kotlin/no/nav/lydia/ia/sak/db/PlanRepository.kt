@@ -280,7 +280,6 @@ class PlanRepository(
             id = planIdLestFraDB,
             samarbeidId = row.int("ia_prosess"),
             sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
-            sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
             status = IASamarbeid.Status.valueOf(row.string("status")),
             temaer = hentTema(planIdLestFraDB, session),
         )

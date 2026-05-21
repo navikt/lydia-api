@@ -35,7 +35,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.OpprettPlanForSa
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
-import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -123,8 +123,8 @@ fun Route.nyFlytSamarbeidsplan(
                     samarbeidId = samarbeidId,
                 ),
             )
-            konsekvens.endring.map { (it as PlanMedPubliseringStatusDto) }
-        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanMedPubliseringStatusDto> ->
+            konsekvens.endring.map { (it as PlanDto) }
+        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
                 either = planMedPlubliseringStatusDtoEither,
@@ -132,8 +132,8 @@ fun Route.nyFlytSamarbeidsplan(
                 auditType = AuditType.update,
                 saksnummer = saksnummerUrlParameter,
             )
-        }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->
-            call.respond(status = HttpStatusCode.OK, message = planMedPubliseringStatusDto)
+        }.map { planDto: PlanDto ->
+            call.respond(status = HttpStatusCode.OK, message = planDto)
         }.mapLeft { feil: Feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
@@ -163,8 +163,8 @@ fun Route.nyFlytSamarbeidsplan(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.endring.map { (it as PlanMedPubliseringStatusDto) }
-        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanMedPubliseringStatusDto> ->
+            konsekvens.endring.map { (it as PlanDto) }
+        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
                 either = planMedPlubliseringStatusDtoEither,
@@ -172,8 +172,8 @@ fun Route.nyFlytSamarbeidsplan(
                 auditType = AuditType.update,
                 saksnummer = saksnummerUrlParameter,
             )
-        }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->
-            call.respond(status = HttpStatusCode.OK, message = planMedPubliseringStatusDto)
+        }.map { planDto: PlanDto ->
+            call.respond(status = HttpStatusCode.OK, message = planDto)
         }.mapLeft { feil: Feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
@@ -210,8 +210,8 @@ fun Route.nyFlytSamarbeidsplan(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.endring.map { (it as PlanMedPubliseringStatusDto) }
-        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanMedPubliseringStatusDto> ->
+            konsekvens.endring.map { (it as PlanDto) }
+        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
                 either = planMedPlubliseringStatusDtoEither,
@@ -219,8 +219,8 @@ fun Route.nyFlytSamarbeidsplan(
                 auditType = AuditType.update,
                 saksnummer = saksnummerUrlParameter,
             )
-        }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->
-            call.respond(status = HttpStatusCode.OK, message = planMedPubliseringStatusDto)
+        }.map { planDto: PlanDto ->
+            call.respond(status = HttpStatusCode.OK, message = planDto)
         }.mapLeft { feil: Feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
@@ -266,8 +266,8 @@ fun Route.nyFlytSamarbeidsplan(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.endring.map { (it as PlanMedPubliseringStatusDto) }
-        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanMedPubliseringStatusDto> ->
+            konsekvens.endring.map { (it as PlanDto) }
+        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
                 either = planMedPlubliseringStatusDtoEither,
@@ -275,8 +275,8 @@ fun Route.nyFlytSamarbeidsplan(
                 auditType = AuditType.update,
                 saksnummer = saksnummerUrlParameter,
             )
-        }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->
-            call.respond(status = HttpStatusCode.OK, message = planMedPubliseringStatusDto)
+        }.map { planDto: PlanDto ->
+            call.respond(status = HttpStatusCode.OK, message = planDto)
         }.mapLeft { feil: Feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
@@ -302,7 +302,7 @@ fun Route.nyFlytSamarbeidsplan(
                 ),
             )
             konsekvens.endring.map { (it as Plan).tilDtoMedPubliseringStatus() }
-        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanMedPubliseringStatusDto> ->
+        }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
                 either = planMedPlubliseringStatusDtoEither,
@@ -310,8 +310,8 @@ fun Route.nyFlytSamarbeidsplan(
                 auditType = AuditType.delete,
                 saksnummer = saksnummerUrlParameter,
             )
-        }.map { planMedPubliseringStatusDto: PlanMedPubliseringStatusDto ->
-            call.respond(status = HttpStatusCode.OK, message = planMedPubliseringStatusDto)
+        }.map { planDto: PlanDto ->
+            call.respond(status = HttpStatusCode.OK, message = planDto)
         }.mapLeft { feil: Feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }

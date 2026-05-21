@@ -52,7 +52,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
-import no.nav.lydia.ia.sak.api.plan.PlanMedPubliseringStatusDto
+import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -129,7 +129,7 @@ class NyFlytTestUtils {
         fun verifiserKafkaPlanObserversErVarslet(
             iASakDto: IASakDto,
             iASamarbeidDto: IASamarbeidDto,
-            plan: PlanMedPubliseringStatusDto,
+            plan: PlanDto,
         ) {
             runBlocking {
                 kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -398,7 +398,7 @@ class NyFlytTestUtils {
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(endringer),
-            ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+            ).tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail("${it.message}") },
             )
@@ -415,7 +415,7 @@ class NyFlytTestUtils {
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(endringer),
-            ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+            ).tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail("${it.message}") },
             )
@@ -447,7 +447,7 @@ class NyFlytTestUtils {
             token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performDelete("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId")
             .authentication().bearer(token)
-            .tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+            .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -465,18 +465,18 @@ class NyFlytTestUtils {
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(nyStatus),
-            ).tilSingelRespons<PlanMedPubliseringStatusDto>().third.fold(
+            ).tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail("${it.message}") },
             )
 
-        fun PlanMedPubliseringStatusDto.endreTema(
+        fun PlanDto.endreTema(
             temaId: Int,
             inkluderTema: Boolean = true,
             inkluderUnderTema: Boolean = true,
             nyStartDato: LocalDate? = null,
             nySluttDato: LocalDate? = null,
-        ): PlanMedPubliseringStatusDto =
+        ): PlanDto =
             this.copy(
                 temaer = this.temaer.map { tema ->
                     if (tema.id == temaId) {

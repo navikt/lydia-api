@@ -9,7 +9,6 @@ data class Plan(
     val id: UUID,
     val samarbeidId: Int,
     val sistEndret: LocalDateTime,
-    val sistPublisert: LocalDate?,
     val status: IASamarbeid.Status,
     val temaer: List<PlanTema>,
 ) {
