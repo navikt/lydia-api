@@ -1,7 +1,6 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import kotlinx.datetime.Clock.System.now
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -27,6 +26,7 @@ import no.nav.lydia.virksomhet.domene.Sektor
 import java.net.URLEncoder
 import java.nio.charset.Charset
 import kotlin.test.fail
+import kotlin.time.Clock.System.now
 
 class VirksomhetHelper {
     companion object {

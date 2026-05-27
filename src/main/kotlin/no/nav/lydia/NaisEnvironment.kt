@@ -6,6 +6,7 @@ import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.serialization.StringSerializer
+import java.net.URI
 import java.net.URL
 
 class NaisEnvironment(
@@ -57,7 +58,7 @@ class Security(
 class AzureConfig(
     val clientId: String = getEnvVar("AZURE_APP_CLIENT_ID"),
     val clientSecret: String = getEnvVar("AZURE_APP_CLIENT_SECRET"),
-    val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
+    val jwksUri: URL = URI(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")).toURL(),
     val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
     val tokenEndpoint: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
     val privateJwk: String = getEnvVar("AZURE_APP_JWK"),
@@ -68,7 +69,7 @@ class AzureConfig(
 
 class TokenXConfig(
     val tokenxIssuer: String = System.getenv("TOKEN_X_ISSUER"),
-    val tokenxJwksUri: URL = URL(getEnvVar("TOKEN_X_JWKS_URI")),
+    val tokenxJwksUri: URL = URI(getEnvVar("TOKEN_X_JWKS_URI")).toURL(),
     val tokenxClientId: String = System.getenv("TOKEN_X_CLIENT_ID"),
 )
 

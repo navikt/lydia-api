@@ -245,18 +245,19 @@ class SpørreundersøkelseService(
     private fun sendResultaterForTemaPåKafka(
         spørreundersøkelseId: UUID,
         temaId: Int,
-    ) = spørreundersøkelseOppdateringProdusent.sendPåKafka(
-        oppdatering = SpørreundersøkelseOppdateringProdusent.ResultaterForTema(
-            spørreundersøkelseId = spørreundersøkelseId.toString(),
-            resultaterForTema = hentSvarForTema(
-                spørreundersøkelseId = spørreundersøkelseId,
-                temaId = temaId,
-            ).getOrElse {
-                log.error("Kunne ikke hente resultat for tema")
-                return
-            },
-        ),
-    )
+    ): Unit =
+        spørreundersøkelseOppdateringProdusent.sendPåKafka(
+            oppdatering = SpørreundersøkelseOppdateringProdusent.ResultaterForTema(
+                spørreundersøkelseId = spørreundersøkelseId.toString(),
+                resultaterForTema = hentSvarForTema(
+                    spørreundersøkelseId = spørreundersøkelseId,
+                    temaId = temaId,
+                ).getOrElse {
+                    log.error("Kunne ikke hente resultat for tema")
+                    return
+                },
+            ),
+        )
 
     private fun hentSvarForTema(
         spørreundersøkelseId: UUID,

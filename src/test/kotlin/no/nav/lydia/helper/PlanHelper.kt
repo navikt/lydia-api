@@ -23,8 +23,8 @@ import kotlin.test.fail
 
 class PlanHelper {
     companion object {
-        val START_DATO = LocalDate(year = 2021, monthNumber = 1, dayOfMonth = 1)
-        val SLUTT_DATO = LocalDate(year = 2022, monthNumber = 2, dayOfMonth = 2)
+        val START_DATO = LocalDate(year = 2021, month = 1, day = 1)
+        val SLUTT_DATO = LocalDate(year = 2022, month = 2, day = 2)
 
         fun PlanDto.antallTemaInkludert() = temaer.filter { it.inkludert }.size
 
@@ -105,8 +105,8 @@ class PlanHelper {
                                 rekkefølge = innhold.rekkefølge,
                                 navn = innhold.navn,
                                 inkludert = true,
-                                startDato = LocalDate(2021, 1, 1),
-                                sluttDato = LocalDate(2021, 1, 2),
+                                startDato = LocalDate(year = 2021, month = 1, day = 1),
+                                sluttDato = LocalDate(year = 2021, month = 1, day = 2),
                             )
                         },
                     )

@@ -6,9 +6,10 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.runMigration
 import org.slf4j.Logger
 import org.testcontainers.containers.Network
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
+import org.testcontainers.postgresql.PostgreSQLContainer
+import org.testcontainers.utility.DockerImageName
 
 class PostgresContainerHelper(
     network: Network,
@@ -17,7 +18,7 @@ class PostgresContainerHelper(
     private val postgresNetworkAlias = "postgrescontainer"
     private val lydiaDbName = "lydia-api-container-db"
     private var migreringErKjørt = false
-    val container: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:14")
+    val container: PostgreSQLContainer = PostgreSQLContainer(DockerImageName.parse("postgres:14"))
         .withNetwork(network)
         .withDatabaseName(lydiaDbName)
         .waitingFor(HostPortWaitStrategy())

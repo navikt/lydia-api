@@ -11,11 +11,11 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Salesforce
 import no.nav.lydia.ia.sak.api.Feil
 import org.slf4j.LoggerFactory.getLogger
+import kotlin.time.Clock
 
 class SalesforceTokenFormidler(
     private val salesforceKonfig: Salesforce = Salesforce(),

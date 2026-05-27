@@ -39,8 +39,8 @@ class IASakshendelseUnitTest {
         statistikkPeriodeForHendelseFørPublisering shouldBe Periode(kvartal = 3, årstall = 2025)
 
         val publiseringsinfo2025K4 = PubliseringsinfoDto(
-            sistePubliseringsdato = LocalDate(2026, Month.FEBRUARY, 26),
-            nestePubliseringsdato = LocalDate(2026, Month.MAY, 28),
+            sistePubliseringsdato = LocalDate(year = 2026, month = 2, day = 26),
+            nestePubliseringsdato = LocalDate(year = 2026, month = 5, day = 28),
             gjeldendePeriode = PeriodeDto(årstall = 2025, kvartal = 4),
         )
         // Legger til en ny "publiseringsinfo" på samme dato som hendelsen, så hendelsen nå faller etter ny publiseringsdato er lagret i databasen
@@ -83,23 +83,23 @@ class IASakshendelseUnitTest {
 
         private fun lagAllPubliseringsinfo(): List<PubliseringsinfoDto> {
             val publiseringsinfo2024K4 = PubliseringsinfoDto(
-                sistePubliseringsdato = LocalDate(2025, Month.FEBRUARY, 27),
-                nestePubliseringsdato = LocalDate(2024, Month.NOVEMBER, 19),
+                sistePubliseringsdato = LocalDate(year = 2025, month = 2, day = 27),
+                nestePubliseringsdato = LocalDate(year = 2024, month = 11, day = 19),
                 gjeldendePeriode = PeriodeDto(årstall = 2024, kvartal = 4),
             )
             val publiseringsinfo2025K1 = PubliseringsinfoDto(
-                sistePubliseringsdato = LocalDate(2025, Month.MAY, 28),
-                nestePubliseringsdato = LocalDate(2026, Month.SEPTEMBER, 4),
+                sistePubliseringsdato = LocalDate(year = 2025, month = 5, day = 28),
+                nestePubliseringsdato = LocalDate(year = 2026, month = 9, day = 4),
                 gjeldendePeriode = PeriodeDto(årstall = 2025, kvartal = 1),
             )
             val publiseringsinfo2025K2 = PubliseringsinfoDto(
-                sistePubliseringsdato = LocalDate(2025, Month.SEPTEMBER, 4),
-                nestePubliseringsdato = LocalDate(2026, Month.FEBRUARY, 26),
+                sistePubliseringsdato = LocalDate(year = 2025, month = 9, day = 4),
+                nestePubliseringsdato = LocalDate(year = 2026, month = 2, day = 26),
                 gjeldendePeriode = PeriodeDto(årstall = 2025, kvartal = 2),
             )
             val publiseringsinfo2025K3 = PubliseringsinfoDto(
-                sistePubliseringsdato = LocalDate(2025, Month.NOVEMBER, 27),
-                nestePubliseringsdato = LocalDate(2026, Month.FEBRUARY, 26),
+                sistePubliseringsdato = LocalDate(year = 2025, month = 11, day = 27),
+                nestePubliseringsdato = LocalDate(year = 2026, month = 2, day = 26),
                 gjeldendePeriode = PeriodeDto(årstall = 2025, kvartal = 3),
             )
             return listOf(publiseringsinfo2025K3, publiseringsinfo2025K2, publiseringsinfo2025K1, publiseringsinfo2024K4)

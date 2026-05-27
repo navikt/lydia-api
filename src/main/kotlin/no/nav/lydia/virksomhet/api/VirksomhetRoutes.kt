@@ -7,7 +7,6 @@ import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import kotlinx.datetime.Clock
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -18,6 +17,7 @@ import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.virksomhet.VirksomhetService
+import kotlin.time.Clock
 
 const val VIRKSOMHET_PATH = "virksomhet"
 const val SALESFORCE_INFO_PATH = "${VIRKSOMHET_PATH}/salesforce"

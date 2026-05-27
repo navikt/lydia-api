@@ -182,8 +182,9 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         val lagredeSvarIder = postgresContainerHelper.hentEnkelKolonne<PGobject>(
             "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
         )
-        lagredeSvarIder.value shouldNotBe null
-        lagredeSvarIder.value?.let { Json.decodeFromString<List<String>>(it) shouldBe kartleggingSvarDto.svarIder }
+        val lagredeSvarIderJson: String? = lagredeSvarIder.value
+        lagredeSvarIderJson shouldNotBe null
+        lagredeSvarIderJson?.let { Json.decodeFromString<List<String>>(it) shouldBe kartleggingSvarDto.svarIder }
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
@@ -200,8 +201,9 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         val oppdaterteSvarIderEtterNyttSvar = postgresContainerHelper.hentEnkelKolonne<PGobject>(
             "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
         )
-        oppdaterteSvarIderEtterNyttSvar.value shouldNotBe null
-        oppdaterteSvarIderEtterNyttSvar.value?.let { Json.decodeFromString<List<String>>(it) shouldBe nyeSvarIder }
+        val oppdaterteSvarIderEtterNyttSvarJson: String? = oppdaterteSvarIderEtterNyttSvar.value
+        oppdaterteSvarIderEtterNyttSvarJson shouldNotBe null
+        oppdaterteSvarIderEtterNyttSvarJson?.let { Json.decodeFromString<List<String>>(it) shouldBe nyeSvarIder }
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
@@ -220,8 +222,9 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         val lagredeSvarIder = postgresContainerHelper.hentEnkelKolonne<PGobject>(
             "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
         )
-        lagredeSvarIder.value shouldNotBe null
-        lagredeSvarIder.value?.let { Json.decodeFromString<List<String>>(it) shouldBe spørreundersøkelseSvarDto.svarIder }
+        val lagredeSvarIderJson: String? = lagredeSvarIder.value
+        lagredeSvarIderJson shouldNotBe null
+        lagredeSvarIderJson?.let { Json.decodeFromString<List<String>>(it) shouldBe spørreundersøkelseSvarDto.svarIder }
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
@@ -239,8 +242,9 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         val oppdaterteSvarIderEtterNyttSvar = postgresContainerHelper.hentEnkelKolonne<PGobject>(
             "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
         )
-        oppdaterteSvarIderEtterNyttSvar.value shouldNotBe null
-        oppdaterteSvarIderEtterNyttSvar.value?.let { Json.decodeFromString<List<String>>(it) shouldBe nyeSvarIder }
+        val oppdaterteSvarIderEtterNyttSvarJson: String? = oppdaterteSvarIderEtterNyttSvar.value
+        oppdaterteSvarIderEtterNyttSvarJson shouldNotBe null
+        oppdaterteSvarIderEtterNyttSvarJson?.let { Json.decodeFromString<List<String>>(it) shouldBe nyeSvarIder }
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",

@@ -10,7 +10,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -65,6 +64,7 @@ import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import kotlin.test.fail
+import kotlin.time.Clock
 
 class NyFlytTestUtils {
     companion object {
