@@ -66,7 +66,7 @@ spec:
     enabled: true
   gcp:
     sqlInstances:
-    - type: POSTGRES_14
+    - type: POSTGRES_15
       diskAutoresize: {{dbAutoresizeDisk}}
       tier: {{dbTier}}
       databases:
