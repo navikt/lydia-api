@@ -7,7 +7,7 @@ val kotestVerstion = "6.1.11"
 val testcontainersVersion = "2.0.5"
 val logbackVersion = "1.5.32"
 val logstashLogbackEncoderVersion = "9.0"
-val opentelemetryLogbackMdcVersion = "2.27.0-alpha"
+val opentelemetryLogbackMdcVersion = "2.28.1-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -57,7 +57,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.11")
     implementation("com.zaxxer:HikariCP:7.0.2")
-    implementation("org.flywaydb:flyway-database-postgresql:12.6.1")
+    implementation("org.flywaydb:flyway-database-postgresql:12.6.2")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -66,7 +66,7 @@ dependencies {
 
     // Kafka
     implementation("at.yawk.lz4:lz4-java:1.11.0")
-    implementation("org.apache.kafka:kafka-clients:4.2.0") {
+    implementation("org.apache.kafka:kafka-clients:4.2.1") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
     }
