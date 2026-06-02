@@ -21,6 +21,7 @@ object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
                     orgnummer = hendelse.orgnr,
                     superbruker = hendelse.superbruker,
                     navEnhet = hendelse.navEnhet,
+                    valgtÅrsak = hendelse.valgtÅrsak,
                 )
                 with(fiaKontekst.nyFlytService) {
                     val resultat = sideEffect.apply()

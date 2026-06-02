@@ -3,7 +3,6 @@ package no.nav.lydia.ia.årsak.domene
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak.Companion
-import no.nav.lydia.ia.årsak.domene.GyldigÅrsak.Companion.GYLDIGE_ÅRSAKER_FOR_IKKE_AKTUELL
 
 @Serializable
 class ValgtÅrsak(
@@ -12,14 +11,16 @@ class ValgtÅrsak(
     val dato: LocalDate? = null,
 )
 
-fun ValgtÅrsak.validerBegrunnelser() =
-    begrunnelser.all { begrunnelse ->
-        GYLDIGE_ÅRSAKER_FOR_IKKE_AKTUELL.find { årsak -> årsak.type == type }
-            ?.begrunnelser
-            ?.map { gyldigBegrunnelse -> gyldigBegrunnelse.type }
-            ?.contains(begrunnelse)
-            ?: false
-    }
+fun ValgtÅrsak.validerBegrunnelserForVurderingAvVirksomhet() =
+    type == ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET &&
+        begrunnelser.size == 1 &&
+        begrunnelser.all { begrunnelse ->
+            Companion.GYLDIGE_ÅRSAKER_FOR_BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET.find { årsak -> årsak.type == type }
+                ?.begrunnelser
+                ?.map { gyldigBegrunnelse -> gyldigBegrunnelse.type }
+                ?.contains(begrunnelse)
+                ?: false
+        }
 
 fun ValgtÅrsak.validerBegrunnelserForVurdering() =
     when (type) {

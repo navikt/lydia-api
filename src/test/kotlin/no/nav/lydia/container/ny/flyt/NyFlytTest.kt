@@ -26,6 +26,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidRe
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserIASakObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserSamarbeidObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhetResponse
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
@@ -624,6 +625,162 @@ class NyFlytTest {
             .tilSingelRespons<IASakDto>()
 
         res.second.statusCode shouldBe HttpStatusCode.Created.value
+    }
+
+    @Test
+    fun `vurder virksomhet med bakgrunn lagrer begrunnelse på VIRKSOMHET_VURDERES-hendelsen`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val sak = vurderVirksomhet(
+            virksomhet = virksomhet,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
+        )
+        sak.status shouldBe IASak.Status.VURDERES
+
+        val begrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            """
+            SELECT hb.begrunnelse_enum
+                 FROM hendelse_begrunnelse hb
+                 JOIN ia_sak_hendelse h ON h.id = hb.hendelse_id
+                 WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
+            """.trimIndent(),
+        )
+        begrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name)
+    }
+
+    @Test
+    fun `vurder virksomhet med bakgrunn Virksomheten har tatt kontakt lagrer riktig begrunnelse`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val sak = vurderVirksomhet(
+            virksomhet = virksomhet,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT),
+            ),
+        )
+
+        val begrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            """
+            SELECT hb.begrunnelse_enum
+                 FROM hendelse_begrunnelse hb
+                 JOIN ia_sak_hendelse h ON h.id = hb.hendelse_id
+                 WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
+            """.trimIndent(),
+        )
+        begrunnelser shouldBe listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
+    }
+
+    @Test
+    fun `vurder virksomhet uten bakgrunn lagrer ingen begrunnelse`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val sak = vurderVirksomhet(virksomhet = virksomhet)
+
+        val antallBegrunnelser = postgresContainerHelper.hentEnkelKolonne<Long>(
+            """
+            SELECT count(*)
+                 FROM hendelse_begrunnelse hb
+                 JOIN ia_sak_hendelse h ON h.id = hb.hendelse_id
+                 WHERE h.orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+        antallBegrunnelser shouldBe 0L
+    }
+
+    @Test
+    fun `vurder virksomhet med ugyldig bakgrunn returnerer 400 - BAD REQUEST`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val res = vurderVirksomhetResponse(
+            virksomhet = virksomhet,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
+        )
+        res.second.statusCode shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `vurder virksomhet med flere begrunnelser returnerer 400 - BAD REQUEST`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val res = vurderVirksomhetResponse(
+            virksomhet = virksomhet,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                begrunnelser = listOf(
+                    BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN,
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT,
+                ),
+            ),
+        )
+        res.second.statusCode shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `vurder virksomhet på nytt fra VirksomhetErVurdert lagrer begrunnelse på ny VIRKSOMHET_VURDERES-hendelse`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val sak = vurderVirksomhet(virksomhet = virksomhet)
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
+                    BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
+                ),
+                dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
+            ),
+        )
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+
+        val gjenvurdertSak = vurderVirksomhet(
+            virksomhet = virksomhet,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT),
+            ),
+        )
+        gjenvurdertSak.status shouldBe IASak.Status.VURDERES
+
+        val begrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            """
+            SELECT hb.begrunnelse_enum
+                 FROM hendelse_begrunnelse hb
+                 JOIN ia_sak_hendelse h ON h.id = hb.hendelse_id
+                 WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
+            """.trimIndent(),
+        )
+        begrunnelser shouldBe listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
+    }
+
+    @Test
+    fun `vurder virksomhet på nytt fra AlleSamarbeidIVirksomhetErAvsluttet lagrer begrunnelse på ny VIRKSOMHET_VURDERES-hendelse`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val sak = vurderVirksomhet(virksomhet = virksomhet)
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+
+        val gjenvurdertSak = vurderVirksomhet(
+            virksomhet = virksomhet,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
+        )
+        gjenvurdertSak.status shouldBe IASak.Status.VURDERES
+
+        val begrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            """
+            SELECT hb.begrunnelse_enum
+                 FROM hendelse_begrunnelse hb
+                 JOIN ia_sak_hendelse h ON h.id = hb.hendelse_id
+                 WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
+            """.trimIndent(),
+        )
+        begrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name)
     }
 
     @Test

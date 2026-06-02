@@ -242,14 +242,17 @@ class NyFlytTestUtils {
         fun vurderVirksomhetResponse(
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
             token: String = authContainerHelper.superbruker1.token,
+            valgtÅrsak: ValgtÅrsak? = null,
         ) = applikasjon.performPost("$NY_FLYT_PATH/${virksomhet.orgnr}/vurder")
             .authentication().bearer(token)
+            .apply { valgtÅrsak?.let { jsonBody(Json.encodeToString(it)) } }
             .tilSingelRespons<IASakDto>()
 
         fun vurderVirksomhet(
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
             token: String = authContainerHelper.superbruker1.token,
-        ) = vurderVirksomhetResponse(virksomhet = virksomhet, token = token).third.fold(
+            valgtÅrsak: ValgtÅrsak? = null,
+        ) = vurderVirksomhetResponse(virksomhet = virksomhet, token = token, valgtÅrsak = valgtÅrsak).third.fold(
             success = { it },
             failure = { fail(it.message) },
         )
