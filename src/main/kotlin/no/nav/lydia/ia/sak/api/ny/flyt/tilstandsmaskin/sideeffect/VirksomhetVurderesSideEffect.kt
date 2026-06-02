@@ -12,6 +12,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.Transaction
 import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.lagreEllerOppdaterVirksomhetTilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.lagreHendelse
+import no.nav.lydia.ia.sak.api.ny.flyt.lagreÅrsakForHendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.api.ny.flyt.oppdaterStatusPåSak
 import no.nav.lydia.ia.sak.api.ny.flyt.opprettSak
@@ -20,6 +21,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Status.NY
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
@@ -27,6 +29,7 @@ class VirksomhetVurderesSideEffect(
     val orgnummer: String,
     val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
     val navEnhet: NavEnhet,
+    val valgtÅrsak: ValgtÅrsak? = null,
 ) : SideEffect<IASakDto>() {
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASakDto> =
@@ -50,7 +53,7 @@ class VirksomhetVurderesSideEffect(
 
                     // Steg #2 lagre i DB en ny hendelse VIRKSOMHET_VURDERES, og oppdatere SakDto til status VURDERES
                     val iaSakshendelseVurderes = lagreHendelse(
-                        hendelse = iaSakDto.`nyHendelseBasertPåSak`(
+                        hendelse = iaSakDto.nyHendelseBasertPåSak(
                             hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
                             superbruker = superbruker,
                             navEnhet = navEnhet,
@@ -58,7 +61,13 @@ class VirksomhetVurderesSideEffect(
                         sistEndretAvHendelseId = null,
                         resulterendeStatus = IASak.Status.VURDERES,
                     )
-                    val oppdatertIaSakDto = `oppdaterStatusPåSak`(
+                    valgtÅrsak?.let {
+                        lagreÅrsakForHendelse(
+                            hendelseId = iaSakshendelseVurderes.id,
+                            valgtÅrsak = it,
+                        )
+                    }
+                    val oppdatertIaSakDto = oppdaterStatusPåSak(
                         saksnummer = iaSakDto.saksnummer,
                         status = IASak.Status.VURDERES,
                         endretAv = superbruker.navIdent,

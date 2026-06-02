@@ -11,6 +11,16 @@ class GyldigÅrsak(
     val begrunnelser: List<GyldigBegrunnelse>,
 ) {
     companion object {
+        val GYLDIGE_ÅRSAKER_FOR_BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET = listOf(
+            GyldigÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                begrunnelser = listOf(
+                    BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN,
+                    BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT,
+                ).somGyldigeBegrunnelser(),
+            ),
+        )
+
         val GYLDIGE_ÅRSAKER_FOR_VURDERES_PÅ_ET_SENERE_TIDSPUNKT = listOf(
             GyldigÅrsak(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
@@ -78,14 +88,15 @@ class GyldigBegrunnelse(
 ) {
     companion object {
         fun List<BegrunnelseType>.somGyldigeBegrunnelser() = this.map { GyldigBegrunnelse(type = it) }
-
-        fun List<GyldigBegrunnelse>.somBegrunnelseType() = this.map { it.type }
     }
 }
 
 enum class ÅrsakType(
     val navn: String,
 ) {
+    // bakgrunn for vurdering av virksomhet
+    BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET(navn = "Bakgrunn for vurdering av virksomhet"),
+
     // avslutt-vurdering v1
     VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT(navn = "Virksomheten vurderes på et senere tidspunkt"),
     VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING(navn = "Virksomheten er ferdig vurdert med intern vurdering"),
@@ -99,6 +110,10 @@ enum class ÅrsakType(
 enum class BegrunnelseType(
     val navn: String,
 ) {
+    // bakgrunn for vurdering av virksomhet
+    NAV_VURDERER_VIRKSOMHETEN(navn = "Nav vurderer virksomheten"),
+    VIRKSOMHETEN_HAR_TATT_KONTAKT(navn = "Virksomheten har tatt kontakt"),
+
     // avslutt-vurdering v1
     // Vurderes på et senere tidspunkt
     VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE(navn = "Virksomheten ønsker å bli kontaktet senere"),

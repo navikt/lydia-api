@@ -7,6 +7,7 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveNullable
 import java.time.LocalDate
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -53,6 +54,8 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.tilSakshistorikk
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurderingAvVirksomhet
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -244,11 +247,21 @@ fun Route.nyFlyt(
 
     post("$NY_FLYT_PATH/{orgnummer}/vurder") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val valgtÅrsak = runCatching { call.receiveNullable<ValgtÅrsak>() }.getOrNull()
+
+        if (valgtÅrsak != null && !valgtÅrsak.validerBegrunnelserForVurderingAvVirksomhet()) {
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Ugyldig årsak eller begrunnelse for vurdering av virksomhet",
+            )
+        }
+
         call.somSuperbrukerMedNavenhet(adGrupper, azureService) { superbruker, navEnhet ->
             val hendelse = VurderVirksomhet(
                 orgnr = orgnr,
                 superbruker = superbruker,
                 navEnhet = navEnhet,
+                valgtÅrsak = valgtÅrsak,
             )
             val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
                 hendelse = hendelse,
