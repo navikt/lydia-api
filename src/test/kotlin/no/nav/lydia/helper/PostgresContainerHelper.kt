@@ -18,7 +18,7 @@ class PostgresContainerHelper(
     private val postgresNetworkAlias = "postgrescontainer"
     private val lydiaDbName = "lydia-api-container-db"
     private var migreringErKjørt = false
-    val container: PostgreSQLContainer = PostgreSQLContainer(DockerImageName.parse("postgres:17"))
+    val container: PostgreSQLContainer = PostgreSQLContainer(DockerImageName.parse("postgres:18"))
         .withNetwork(network)
         .withDatabaseName(lydiaDbName)
         .waitingFor(HostPortWaitStrategy())
