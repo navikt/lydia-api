@@ -57,7 +57,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     Konsekvens(
                         nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -83,7 +82,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                                 ),
                             )
                         },
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -108,7 +106,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                                 ),
                             )
                         },
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -133,7 +130,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                                 ),
                             )
                         },
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -158,7 +154,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                                 ),
                             )
                         },
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -177,7 +172,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     Konsekvens(
                         nyTilstand = VirksomhetHarAktiveSamarbeid,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -195,7 +189,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     Konsekvens(
                         nyTilstand = VirksomhetHarAktiveSamarbeid,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -214,7 +207,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     Konsekvens(
                         nyTilstand = VirksomhetHarAktiveSamarbeid,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -234,7 +226,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     Konsekvens(
                         nyTilstand = VirksomhetHarAktiveSamarbeid,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -252,7 +243,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     Konsekvens(
                         nyTilstand = VirksomhetHarAktiveSamarbeid,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -292,7 +282,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                             harSamarbeidOgAlleErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
                             else -> VirksomhetVurderes
                         },
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -312,7 +301,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     Konsekvens(
                         nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -331,7 +319,6 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     Konsekvens(
                         nyTilstand = VirksomhetHarAktiveSamarbeid,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }

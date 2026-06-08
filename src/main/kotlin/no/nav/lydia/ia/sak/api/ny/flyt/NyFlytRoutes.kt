@@ -144,27 +144,6 @@ fun Route.nyFlyt(
         }
     }
 
-    // TODO: Fjern denne når frontend er oppdatert til å bruke /virksomhet/{orgnummer}/samarbeidsperiode istedet
-    get("$NY_FLYT_PATH/{orgnummer}") {
-        val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        call.somLesebruker(adGrupper) {
-            nyFlytService.hentSisteIASakDto(orgnr)?.right()
-                ?: Feil(feilmelding = "Fant ingen aktiv sak på virksomheten", httpStatusCode = HttpStatusCode.NoContent).left()
-        }.also { iaSakEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = iaSakEither,
-                orgnummer = orgnr,
-                auditType = AuditType.access,
-                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.OK, message = it)
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
     get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper) {

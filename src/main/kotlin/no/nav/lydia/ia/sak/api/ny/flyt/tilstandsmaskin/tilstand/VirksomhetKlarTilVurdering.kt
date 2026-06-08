@@ -8,7 +8,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilVirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.Konsekvens
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.VirksomhetVurderesSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.VurderVirksomhetSideEffect
 
 object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
     override fun utførTransisjon(
@@ -17,7 +17,7 @@ object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
     ): Konsekvens =
         when (hendelse) {
             is VurderVirksomhet -> {
-                val sideEffect = VirksomhetVurderesSideEffect(
+                val sideEffect = VurderVirksomhetSideEffect(
                     orgnummer = hendelse.orgnr,
                     superbruker = hendelse.superbruker,
                     navEnhet = hendelse.navEnhet,
@@ -28,7 +28,6 @@ object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
                     Konsekvens(
                         nyTilstand = if (resultat.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }

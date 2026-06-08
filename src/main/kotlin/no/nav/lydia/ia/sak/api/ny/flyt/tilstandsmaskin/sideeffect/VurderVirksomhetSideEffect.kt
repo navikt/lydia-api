@@ -25,7 +25,7 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
-class VirksomhetVurderesSideEffect(
+class VurderVirksomhetSideEffect(
     val orgnummer: String,
     val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
     val navEnhet: NavEnhet,
