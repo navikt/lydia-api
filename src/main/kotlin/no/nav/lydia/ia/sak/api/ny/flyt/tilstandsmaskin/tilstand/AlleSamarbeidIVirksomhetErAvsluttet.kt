@@ -13,7 +13,7 @@ import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.EndrePlanlagtDatoForNesteTilstandSideEffect
 import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.GjørVirksomhetKlarTilNyVurderingSideEffect
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.VirksomhetVurderesSideEffect
+import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.sideeffect.VurderVirksomhetSideEffect
 import no.nav.lydia.ia.sak.domene.IASak
 
 object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
@@ -23,7 +23,7 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
     ): Konsekvens {
         val endring: Either<Feil, IASakDto> = when (hendelse) {
             is VurderVirksomhet -> {
-                val sideEffect = VirksomhetVurderesSideEffect(
+                val sideEffect = VurderVirksomhetSideEffect(
                     orgnummer = hendelse.orgnr,
                     superbruker = hendelse.superbruker,
                     navEnhet = hendelse.navEnhet,
@@ -34,7 +34,6 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
                     return Konsekvens(
                         nyTilstand = if (resultat.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -48,7 +47,6 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
                     return Konsekvens(
                         nyTilstand = if (resultat.isRight()) VirksomhetKlarTilVurdering else AlleSamarbeidIVirksomhetErAvsluttet,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -67,7 +65,6 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
                     return Konsekvens(
                         nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }

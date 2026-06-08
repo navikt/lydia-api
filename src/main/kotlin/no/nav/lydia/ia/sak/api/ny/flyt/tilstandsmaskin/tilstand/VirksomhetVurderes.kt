@@ -31,7 +31,6 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     Konsekvens(
                         nyTilstand = if (resultat.isRight()) VirksomhetKlarTilVurdering else VirksomhetVurderes,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -48,7 +47,6 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     Konsekvens(
                         nyTilstand = VirksomhetErVurdert,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }
@@ -66,7 +64,6 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     Konsekvens(
                         nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
                         endring = resultat,
-                        sideEffect = sideEffect,
                     )
                 }
             }

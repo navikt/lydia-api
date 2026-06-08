@@ -34,22 +34,6 @@ class Tilstandsmaskin(
     fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
         val konsekvensAvUtførtTransisjon: Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
 
-        val sideEffectHarLagretTilstand = konsekvensAvUtførtTransisjon.sideEffect != null
-
-        if (!sideEffectHarLagretTilstand) {
-            val nåværendeSakDto = fiaKontekst.nyFlytService.hentSisteIASakDto(orgnummer = hendelse.orgnr)
-            val harFortsattMinstEnSamarbeidsperiode = nåværendeSakDto != null
-
-            if (harFortsattMinstEnSamarbeidsperiode &&
-                konsekvensAvUtførtTransisjon.endring.isRight()
-            ) {
-                fiaKontekst.tilstandVirksomhetRepository.lagreEllerOppdaterVirksomhetTilstand(
-                    orgnr = nåværendeSakDto.orgnr,
-                    tilstand = konsekvensAvUtførtTransisjon.nyTilstand.tilVirksomhetIATilstand(),
-                )
-            }
-        }
-
         nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
         return konsekvensAvUtførtTransisjon
     }
