@@ -4,7 +4,7 @@ import no.nav.lydia.EndringsObserver
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
-import no.nav.lydia.ia.team.IATeamService
+import no.nav.lydia.abc.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
 class EierskapsendringObserver(

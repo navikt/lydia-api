@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.team
+package no.nav.lydia.abc.team
 
 import kotliquery.Row
 import kotliquery.queryOf

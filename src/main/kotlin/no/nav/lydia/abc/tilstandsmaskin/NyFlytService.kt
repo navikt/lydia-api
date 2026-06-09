@@ -28,6 +28,7 @@ import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.abc.samarbeidsplan.tilDto
+import no.nav.lydia.abc.team.IATeamService
 import no.nav.lydia.ia.sak.PlanFeil
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.PlanService.Companion.erGyldig
@@ -38,7 +39,6 @@ import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

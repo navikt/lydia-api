@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.team
+package no.nav.lydia.abc.team
 
 import kotlinx.serialization.Serializable
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
