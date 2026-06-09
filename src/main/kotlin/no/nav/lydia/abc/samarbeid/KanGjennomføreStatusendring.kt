@@ -1,7 +1,6 @@
-package no.nav.lydia.ia.sak.api
+package no.nav.lydia.abc.samarbeid
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.IASamarbeidService
 
 @Serializable
 data class KanGjennomføreStatusendring(

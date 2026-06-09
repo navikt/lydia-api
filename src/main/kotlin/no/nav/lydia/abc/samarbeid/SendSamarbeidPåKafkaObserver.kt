@@ -1,8 +1,7 @@
-package no.nav.lydia.ia.sak
+package no.nav.lydia.abc.samarbeid
 
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
 class SendSamarbeidPåKafkaObserver(
     val samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,

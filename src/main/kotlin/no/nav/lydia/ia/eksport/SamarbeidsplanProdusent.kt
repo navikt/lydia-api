@@ -6,10 +6,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.abc.samarbeidsplan.PlanTemaDto
 import no.nav.lydia.abc.samarbeidsplan.PlanUndertemaDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
 class SamarbeidsplanProdusent(
     kafka: Kafka,

@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.abc.samarbeid.IASamarbeid
 
 class SamarbeidBigqueryProdusent(
     kafka: Kafka,

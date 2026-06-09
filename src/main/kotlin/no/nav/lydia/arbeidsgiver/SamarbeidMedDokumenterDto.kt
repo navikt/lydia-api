@@ -2,7 +2,7 @@ package no.nav.lydia.arbeidsgiver
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.abc.samarbeid.IASamarbeid
 
 @Serializable
 data class SamarbeidMedDokumenterDto(

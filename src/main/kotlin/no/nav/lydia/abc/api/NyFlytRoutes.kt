@@ -21,6 +21,9 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
+import no.nav.lydia.abc.samarbeid.IASamarbeid
+import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
+import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.samarbeidsperiode.SakshistorikkDto
@@ -44,8 +47,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.ia.eksport.SamarbeidDto
-import no.nav.lydia.ia.sak.IASamarbeidFeil
-import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
@@ -57,7 +58,6 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurderingAvVirksomhet
 import no.nav.lydia.integrasjoner.azure.AzureService

@@ -13,10 +13,10 @@ import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.Spørsmål
 import no.nav.lydia.abc.kartlegging.Svaralternativ
 import no.nav.lydia.abc.kartlegging.Tema
+import no.nav.lydia.abc.samarbeid.IASamarbeidRepository
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.abc.samarbeidsplan.tilDto
-import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import kotlin.collections.flatMap
 
 class SpørreundersøkelseProdusent(
