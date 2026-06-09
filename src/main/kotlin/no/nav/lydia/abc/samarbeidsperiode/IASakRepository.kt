@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.db
+package no.nav.lydia.abc.samarbeidsperiode
 
 import arrow.core.Either
 import arrow.core.left
@@ -9,12 +9,10 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
+import no.nav.lydia.abc.samarbeidsperiode.IASak.Companion.tilIASak
+import no.nav.lydia.abc.samarbeidsperiode.IASak.Companion.tilIASakDto
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
-import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASakDto
 import java.time.LocalDateTime
 import javax.sql.DataSource
 

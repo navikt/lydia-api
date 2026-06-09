@@ -1,8 +1,7 @@
-package no.nav.lydia.ia.sak.domene
+package no.nav.lydia.abc.samarbeidsperiode
 
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
-import no.nav.lydia.ia.sak.api.IASakDto
 import java.time.LocalDateTime
 
 class IASak private constructor(

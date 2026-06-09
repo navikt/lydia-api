@@ -6,6 +6,9 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
+import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
 import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
@@ -19,11 +22,8 @@ import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.INGEN_EV
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.INGEN_PLAN
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.SAK_I_FEIL_STATUS
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
-import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.slf4j.LoggerFactory
 

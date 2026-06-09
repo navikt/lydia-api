@@ -5,12 +5,11 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.collections.map
 
 class IATeamService(
     val iaTeamRepository: IATeamRepository,

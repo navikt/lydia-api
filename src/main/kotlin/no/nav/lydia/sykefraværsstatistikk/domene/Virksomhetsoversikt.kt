@@ -1,8 +1,8 @@
 package no.nav.lydia.sykefraværsstatistikk.domene
 
 import kotlinx.datetime.LocalDate
+import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.domene.IASak
 
 data class Virksomhetsoversikt(
     val virksomhetsnavn: String,

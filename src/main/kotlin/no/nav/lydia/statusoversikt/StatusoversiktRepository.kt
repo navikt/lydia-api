@@ -4,7 +4,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåBransjeOgNæring
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåEiere

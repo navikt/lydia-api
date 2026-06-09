@@ -22,11 +22,11 @@ import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.abc.kartlegging.tilDto
 import no.nav.lydia.abc.kartlegging.tilResultatDto
 import no.nav.lydia.abc.kartlegging.tilUtenInnholdDto
-import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.abc.samarbeidsperiode.IASakService
+import no.nav.lydia.abc.samarbeidsperiode.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer

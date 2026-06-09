@@ -9,15 +9,15 @@ import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.TilstandVirksomhetRepository
 import no.nav.lydia.abc.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.AvsluttVurdering
-import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer

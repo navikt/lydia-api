@@ -1,6 +1,8 @@
 package no.nav.lydia.statusoversikt
 
-@kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class StatusoversiktResponsDto(
     val data: List<Statusoversikt>,
 )

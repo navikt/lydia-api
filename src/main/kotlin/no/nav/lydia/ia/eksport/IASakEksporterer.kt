@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.eksport
 
+import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
 import no.nav.lydia.ia.eksport.ny.flyt.IASakDtoProdusent
-import no.nav.lydia.ia.sak.db.IASakRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean

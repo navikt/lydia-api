@@ -1,6 +1,6 @@
 package no.nav.lydia.statusoversikt
 
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

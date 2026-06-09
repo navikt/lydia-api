@@ -1,6 +1,6 @@
 package no.nav.lydia.vedlikehold
 
-import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

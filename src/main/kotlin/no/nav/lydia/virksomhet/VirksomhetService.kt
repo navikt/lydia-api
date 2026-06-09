@@ -1,7 +1,7 @@
 package no.nav.lydia.virksomhet
 
-import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Sletting

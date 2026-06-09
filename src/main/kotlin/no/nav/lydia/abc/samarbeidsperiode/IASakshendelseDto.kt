@@ -1,7 +1,6 @@
-package no.nav.lydia.ia.sak.api
+package no.nav.lydia.abc.samarbeidsperiode
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 
 @Serializable
 open class IASakshendelseDto(

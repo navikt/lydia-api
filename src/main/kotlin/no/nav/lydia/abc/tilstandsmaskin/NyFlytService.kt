@@ -14,6 +14,9 @@ import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.abc.kartlegging.TemaInfo
 import no.nav.lydia.abc.kartlegging.tilDto
+import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
 import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
@@ -25,15 +28,12 @@ import no.nav.lydia.ia.sak.PlanFeil
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.PlanService.Companion.erGyldig
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
-import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
-import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.UUID
 import javax.sql.DataSource
+import kotlin.collections.maxByOrNull
 
 class NyFlytService(
     val dataSource: DataSource,
@@ -219,7 +220,7 @@ class NyFlytService(
 
                 Spørreundersøkelse.Type.Evaluering -> {
                     val sakStatus = iaSakRepository.hentStatusForSaksnummer(saksnummer)
-                    ensure(sakStatus == AKTIV) {
+                    ensure(sakStatus == IASak.Status.AKTIV) {
                         IASakSpørreundersøkelseError.`sak ikke i rett status`
                     }
                     val plan = planService.hentPlan(samarbeidId = samarbeidId).bind()

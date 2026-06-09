@@ -2,6 +2,9 @@ package no.nav.lydia.abc.tilstandsmaskin.sideeffect
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
+import no.nav.lydia.abc.samarbeidsperiode.IASak.Status.AKTIV
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.Transaction
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
@@ -12,9 +15,6 @@ import no.nav.lydia.abc.tilstandsmaskin.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
-import no.nav.lydia.ia.sak.domene.IASak.Status.AKTIV
-import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import java.time.LocalDateTime

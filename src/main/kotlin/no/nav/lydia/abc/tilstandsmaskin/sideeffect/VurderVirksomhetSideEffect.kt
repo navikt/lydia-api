@@ -5,6 +5,11 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.lydia.abc.samarbeidsperiode.IASak.Status.NY
+import no.nav.lydia.abc.samarbeidsperiode.IASak.Status.VURDERES
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.Transaction
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
@@ -16,11 +21,6 @@ import no.nav.lydia.abc.tilstandsmaskin.oppdaterStatusPåSak
 import no.nav.lydia.abc.tilstandsmaskin.opprettSak
 import no.nav.lydia.abc.tilstandsmaskin.slettVirksomhetTilstandAutomatiskOppdatering
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASak.Status.NY
-import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
@@ -59,7 +59,7 @@ class VurderVirksomhetSideEffect(
                             navEnhet = navEnhet,
                         ),
                         sistEndretAvHendelseId = null,
-                        resulterendeStatus = IASak.Status.VURDERES,
+                        resulterendeStatus = VURDERES,
                     )
                     valgtÅrsak?.let {
                         lagreÅrsakForHendelse(
@@ -69,7 +69,7 @@ class VurderVirksomhetSideEffect(
                     }
                     val oppdatertIaSakDto = oppdaterStatusPåSak(
                         saksnummer = iaSakDto.saksnummer,
-                        status = IASak.Status.VURDERES,
+                        status = VURDERES,
                         endretAv = superbruker.navIdent,
                         endretAvHendelseId = iaSakshendelseVurderes.id,
                     )

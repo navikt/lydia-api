@@ -1,13 +1,9 @@
-package no.nav.lydia.ia.sak.db
+package no.nav.lydia.abc.samarbeidsperiode
 
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.IASakLeveranse
-import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
-import no.nav.lydia.ia.sak.domene.IATjeneste
-import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import javax.sql.DataSource
 

@@ -8,11 +8,11 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.utledPeriodeForStatistikk
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
+import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse.Companion.utledPeriodeForStatistikk
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseRepository
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsperiode.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService

@@ -26,6 +26,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
@@ -33,7 +34,6 @@ import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.ia.eksport.ny.flyt.TilstandVirksomhetOppdaterer
-import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer

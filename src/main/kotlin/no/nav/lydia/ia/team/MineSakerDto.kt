@@ -1,8 +1,8 @@
 package no.nav.lydia.ia.team
 
 import kotlinx.serialization.Serializable
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.IASakDto
 
 @Serializable
 data class MineSakerDto(
