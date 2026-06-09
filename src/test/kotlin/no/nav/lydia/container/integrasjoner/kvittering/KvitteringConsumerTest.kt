@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
@@ -20,7 +21,6 @@ import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemae
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import java.time.LocalDateTime
 import java.util.UUID

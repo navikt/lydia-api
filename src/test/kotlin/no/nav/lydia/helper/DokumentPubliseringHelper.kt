@@ -5,9 +5,9 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import java.time.ZoneId
 import java.time.ZonedDateTime

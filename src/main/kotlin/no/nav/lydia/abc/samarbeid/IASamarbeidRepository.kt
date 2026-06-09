@@ -6,9 +6,9 @@ import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto
 import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.ia.eksport.SamarbeidDto
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
