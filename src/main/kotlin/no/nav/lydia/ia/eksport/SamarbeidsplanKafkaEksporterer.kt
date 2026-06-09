@@ -1,6 +1,6 @@
 package no.nav.lydia.ia.eksport
 
-import no.nav.lydia.ia.sak.db.PlanRepository
+import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean

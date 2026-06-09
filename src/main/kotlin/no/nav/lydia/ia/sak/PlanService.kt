@@ -5,12 +5,12 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
+import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
+import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
+import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
-import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
-import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema

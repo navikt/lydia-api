@@ -19,6 +19,9 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.abc.api.NY_FLYT_API_PATH
 import no.nav.lydia.abc.api.NY_FLYT_PATH
+import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
+import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
+import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetTilstandDto
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
@@ -49,9 +52,6 @@ import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent.InnholdIPlanMelding
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
-import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
-import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType

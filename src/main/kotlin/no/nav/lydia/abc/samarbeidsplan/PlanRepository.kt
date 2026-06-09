@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.db
+package no.nav.lydia.abc.samarbeidsplan
 
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -11,7 +11,6 @@ import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.eksport.tilPlanKafkaMeldingDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
-import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema

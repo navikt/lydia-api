@@ -2,6 +2,8 @@ package no.nav.lydia.abc.tilstandsmaskin.sideeffect
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
+import no.nav.lydia.abc.samarbeidsplan.PlanDto
+import no.nav.lydia.abc.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.Transaction
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
@@ -13,8 +15,6 @@ import no.nav.lydia.abc.tilstandsmaskin.opprettSamarbeidsplan
 import no.nav.lydia.appstatus.PlanHendelseType
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.plan.PlanDto
-import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.Plan

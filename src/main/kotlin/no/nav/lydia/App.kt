@@ -21,6 +21,7 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
+import no.nav.lydia.abc.api.iaSakPlan
 import no.nav.lydia.abc.api.iaSakSpørreundersøkelse
 import no.nav.lydia.abc.api.nyFlyt
 import no.nav.lydia.abc.api.nyFlytKartlegging
@@ -29,6 +30,7 @@ import no.nav.lydia.abc.api.nyFlytVirksomhet
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseMetrikkObserver
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
+import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.TilstandVirksomhetRepository
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
@@ -68,13 +70,11 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.dokument.dokumentPublisering
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
-import no.nav.lydia.ia.sak.api.plan.iaSakPlan
 import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
-import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.team.IATeamRepository
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.team.iaSakTeam
