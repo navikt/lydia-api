@@ -23,7 +23,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.team.MINE_SAKER_PATH

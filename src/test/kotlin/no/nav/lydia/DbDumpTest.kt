@@ -32,7 +32,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import org.junit.experimental.categories.Category
 import java.util.UUID

@@ -24,7 +24,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilListeRespons
-import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import kotlin.test.Test
 import kotlin.test.fail

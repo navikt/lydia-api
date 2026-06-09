@@ -2,7 +2,9 @@ package no.nav.lydia.ia.sak.domene
 
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
-import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.utledPeriodeForStatistikk
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse.Companion.utledPeriodeForStatistikk
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.sykefraværsstatistikk.PeriodeDto
 import no.nav.lydia.sykefraværsstatistikk.PubliseringsinfoDto
