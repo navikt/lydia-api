@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak.domene
 
 import io.kotest.matchers.collections.shouldContainInOrder
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
+import no.nav.lydia.abc.kartlegging.TemaInfo
 import kotlin.test.Test
 
 class TemaTest {

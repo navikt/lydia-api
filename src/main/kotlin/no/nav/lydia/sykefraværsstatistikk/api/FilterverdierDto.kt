@@ -2,7 +2,7 @@ package no.nav.lydia.sykefraværsstatistikk.api
 
 import ia.felles.definisjoner.bransjer.Bransje
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
+import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.Fylke
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune

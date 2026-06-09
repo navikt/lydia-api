@@ -9,14 +9,14 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
+import no.nav.lydia.abc.kartlegging.Spørsmål
+import no.nav.lydia.abc.kartlegging.Svaralternativ
+import no.nav.lydia.abc.kartlegging.Tema
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import kotlin.collections.flatMap
 
 class SpørreundersøkelseProdusent(

@@ -2,9 +2,9 @@ package no.nav.lydia.container.ny.flyt.virksomhet
 
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType

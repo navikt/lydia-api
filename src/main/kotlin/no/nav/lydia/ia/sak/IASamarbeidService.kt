@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING
@@ -21,10 +23,8 @@ import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.slf4j.LoggerFactory
 
 class IASamarbeidService(

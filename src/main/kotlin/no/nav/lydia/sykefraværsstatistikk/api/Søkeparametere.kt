@@ -11,8 +11,8 @@ import ia.felles.definisjoner.bransjer.BransjeId
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.server.request.ApplicationRequest
+import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService

@@ -2,7 +2,7 @@ package no.nav.lydia.integrasjoner.kartlegging
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseSvarDto
 import org.apache.kafka.clients.consumer.ConsumerRecord
 
 class StengTema(

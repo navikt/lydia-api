@@ -8,6 +8,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.UUIDVersion
 import io.kotest.matchers.string.shouldBeUUID
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.arbeidsgiver.ARBEIDSGIVER_SAMARBEID_PATH
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
@@ -25,7 +26,6 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import kotlin.test.Test
 import kotlin.test.fail
 

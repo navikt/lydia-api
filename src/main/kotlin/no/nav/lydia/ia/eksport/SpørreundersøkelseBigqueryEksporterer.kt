@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.eksport
 
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean

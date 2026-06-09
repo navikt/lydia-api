@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.abc.api.NY_FLYT_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.ia.sak.api.IASakDto
@@ -14,7 +15,6 @@ import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SaksStatusDto
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
-import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH

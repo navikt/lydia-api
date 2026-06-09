@@ -9,9 +9,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
-import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.errors.WakeupException

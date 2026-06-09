@@ -4,14 +4,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository.SpørreundersøkelseAntallSvar
+import no.nav.lydia.abc.kartlegging.Spørsmål
+import no.nav.lydia.abc.kartlegging.Svaralternativ
+import no.nav.lydia.abc.kartlegging.Tema
+import no.nav.lydia.abc.kartlegging.Undertema
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.SpørreundersøkelseAntallSvar
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 

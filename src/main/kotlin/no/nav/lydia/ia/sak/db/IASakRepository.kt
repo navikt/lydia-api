@@ -8,13 +8,13 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASakDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import java.time.LocalDateTime
 import javax.sql.DataSource
 

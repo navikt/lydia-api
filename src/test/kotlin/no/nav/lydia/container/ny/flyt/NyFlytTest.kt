@@ -14,6 +14,11 @@ import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
+import no.nav.lydia.abc.api.NY_FLYT_PATH
+import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
+import no.nav.lydia.abc.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
+import no.nav.lydia.abc.tilstandsmaskin.VirksomhetTilstandDto
+import no.nav.lydia.abc.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.angreVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
@@ -49,11 +54,6 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.ny.flyt.NY_FLYT_PATH
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandAutomatiskOppdateringDto
-import no.nav.lydia.ia.sak.api.ny.flyt.VirksomhetTilstandDto
-import no.nav.lydia.ia.sak.api.ny.flyt.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType

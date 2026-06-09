@@ -1,0 +1,79 @@
+package no.nav.lydia.abc.tilstandsmaskin.sideeffect
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
+import no.nav.lydia.abc.tilstandsmaskin.Transaction
+import no.nav.lydia.abc.tilstandsmaskin.hentAlleSakerDtoForVirksomhet
+import no.nav.lydia.abc.tilstandsmaskin.hentSisteIASakDto
+import no.nav.lydia.abc.tilstandsmaskin.lagreHendelse
+import no.nav.lydia.abc.tilstandsmaskin.nyHendelseBasertPåSak
+import no.nav.lydia.abc.tilstandsmaskin.oppdaterVirksomhetTilstand
+import no.nav.lydia.abc.tilstandsmaskin.settSakTilSlettet
+import no.nav.lydia.abc.tilstandsmaskin.slettVirksomhetTilstand
+import no.nav.lydia.abc.tilstandsmaskin.tilVirksomhetIATilstand
+import no.nav.lydia.abc.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
+import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+class AngreVurderVirksomhetSideEffect(
+    val orgnummer: String,
+    val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
+    val navEnhet: NavEnhet,
+) : SideEffect<IASakDto>() {
+    val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
+    context(nyFlytService: NyFlytService)
+    override fun apply(): Either<Feil, IASakDto> =
+        try {
+            Transaction(nyFlytService.dataSource).transactional { tx ->
+                with(tx) {
+                    val sakDto = hentSisteIASakDto(orgnummer = orgnummer)
+                        ?: throw IllegalStateException("Fant ingen sak for virksomhet $orgnummer")
+
+                    val alleSaker = hentAlleSakerDtoForVirksomhet(
+                        orgnummer = orgnummer,
+                    )
+                        .sortedByDescending { it.opprettetTidspunkt }
+                    val nestSisteSakDto = if (alleSaker.size >= 2) alleSaker[alleSaker.size - 2] else null
+
+                    if (nestSisteSakDto != null) {
+                        oppdaterVirksomhetTilstand(
+                            orgnr = orgnummer,
+                            tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
+                        )
+                    } else {
+                        slettVirksomhetTilstand(orgnr = orgnummer)
+                    }
+
+                    val angreVurdering = lagreHendelse(
+                        hendelse = sakDto.nyHendelseBasertPåSak(
+                            hendelsestype = IASakshendelseType.SLETT_SAK,
+                            superbruker = superbruker,
+                            navEnhet = navEnhet,
+                        ),
+                        sistEndretAvHendelseId = null,
+                        resulterendeStatus = IASak.Status.SLETTET,
+                    )
+
+                    settSakTilSlettet(
+                        saksnummer = sakDto.saksnummer,
+                        hendelse = angreVurdering,
+                    )
+                    sakDto.copy(status = IASak.Status.SLETTET)
+                }
+            }.also { nyFlytService.varsleIASakObservers(it) }
+                .right()
+        } catch (e: Exception) {
+            logger.warn("Feil ved angring av vurdering for virksomhet '$orgnummer': ${e.message}", e)
+            Feil("Feil ved angring av vurdering: ${e.message}", HttpStatusCode.InternalServerError).left()
+        }
+}
