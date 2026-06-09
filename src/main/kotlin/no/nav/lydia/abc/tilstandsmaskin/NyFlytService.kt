@@ -14,6 +14,10 @@ import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.abc.kartlegging.TemaInfo
 import no.nav.lydia.abc.kartlegging.tilDto
+import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
+import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
+import no.nav.lydia.abc.samarbeidsplan.PlanDto
+import no.nav.lydia.abc.samarbeidsplan.tilDto
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
@@ -25,10 +29,6 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
-import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
-import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
-import no.nav.lydia.ia.sak.api.plan.PlanDto
-import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.db.IASakRepository

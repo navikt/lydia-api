@@ -14,6 +14,10 @@ import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
+import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
+import no.nav.lydia.abc.samarbeidsplan.PlanDto
+import no.nav.lydia.abc.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.TilstandVirksomhetRepository
@@ -36,10 +40,6 @@ import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.samarbeidId
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.temaId
-import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
-import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
-import no.nav.lydia.ia.sak.api.plan.PlanDto
-import no.nav.lydia.ia.sak.api.plan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema

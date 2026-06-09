@@ -1,9 +1,9 @@
 package no.nav.lydia.ia.sak
 
 import no.nav.lydia.Observer
+import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.ia.eksport.SamarbeidsplanProdusent
-import no.nav.lydia.ia.sak.db.PlanRepository
 
 class SendPlanPåKafkaObserver(
     val planRepository: PlanRepository,

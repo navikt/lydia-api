@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.plan
+package no.nav.lydia.abc.samarbeidsplan
 
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.plan.PlanTema

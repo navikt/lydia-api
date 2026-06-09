@@ -1,8 +1,8 @@
 package no.nav.lydia.integrasjoner.salesforce.aktiviteter
 
+import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
-import no.nav.lydia.ia.sak.db.PlanRepository
 import org.slf4j.LoggerFactory
 
 class SalesforceAktivitetService(

@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
@@ -24,7 +25,6 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema

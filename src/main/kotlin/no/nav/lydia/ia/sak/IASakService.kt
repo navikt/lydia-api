@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
+import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
@@ -15,7 +16,6 @@ import no.nav.lydia.ia.sak.api.ÅrsaksType
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakshendelse

@@ -1,6 +1,6 @@
 package no.nav.lydia.abc.tilstandsmaskin.hendelse
 
-import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
+import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
