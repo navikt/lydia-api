@@ -1,6 +1,6 @@
 package no.nav.lydia.ia.eksport
 
-import no.nav.lydia.ia.sak.db.IASamarbeidRepository
+import no.nav.lydia.abc.samarbeid.IASamarbeidRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

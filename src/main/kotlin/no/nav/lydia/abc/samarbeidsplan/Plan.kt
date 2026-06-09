@@ -2,7 +2,7 @@ package no.nav.lydia.ia.sak.domene.plan
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.abc.samarbeid.IASamarbeid
 import java.util.UUID
 
 data class Plan(

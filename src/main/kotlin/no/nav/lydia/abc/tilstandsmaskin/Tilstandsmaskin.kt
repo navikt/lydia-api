@@ -1,10 +1,10 @@
 package no.nav.lydia.abc.tilstandsmaskin
 
+import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.abc.tilstandsmaskin.tilstand.AlleSamarbeidIVirksomhetErAvsluttet
 import no.nav.lydia.abc.tilstandsmaskin.tilstand.Tilstand
 import no.nav.lydia.abc.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicReference
 
@@ -27,7 +27,7 @@ class Tilstandsmaskin(
     }
 
     fun prosesserHendelse(hendelse: no.nav.lydia.abc.tilstandsmaskin.hendelse.Hendelse): no.nav.lydia.abc.tilstandsmaskin.Konsekvens {
-        val konsekvensAvUtførtTransisjon: no.nav.lydia.abc.tilstandsmaskin.Konsekvens = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
+        val konsekvensAvUtførtTransisjon = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
 
         nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
         return konsekvensAvUtførtTransisjon

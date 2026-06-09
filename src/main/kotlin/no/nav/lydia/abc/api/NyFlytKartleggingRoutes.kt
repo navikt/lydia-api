@@ -14,6 +14,7 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
+import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
@@ -23,7 +24,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.FullførKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.OpprettKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
-import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError

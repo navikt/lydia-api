@@ -14,6 +14,8 @@ import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
+import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
@@ -28,8 +30,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.OppdaterPlanForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.OppdaterTemaIPlanForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.OpprettPlanForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
-import no.nav.lydia.ia.sak.IASamarbeidFeil
-import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError

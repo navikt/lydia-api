@@ -14,6 +14,11 @@ import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.abc.kartlegging.TemaInfo
 import no.nav.lydia.abc.kartlegging.tilDto
+import no.nav.lydia.abc.samarbeid.IASamarbeid
+import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
+import no.nav.lydia.abc.samarbeid.IASamarbeidRepository
+import no.nav.lydia.abc.samarbeid.IASamarbeidService
+import no.nav.lydia.abc.samarbeid.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
@@ -21,9 +26,6 @@ import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.abc.samarbeidsplan.tilDto
-import no.nav.lydia.ia.sak.IASamarbeidFeil
-import no.nav.lydia.ia.sak.IASamarbeidService
-import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.PlanFeil
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.PlanService.Companion.erGyldig
@@ -33,11 +35,9 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Companion.tilDoku
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
-import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import org.slf4j.Logger

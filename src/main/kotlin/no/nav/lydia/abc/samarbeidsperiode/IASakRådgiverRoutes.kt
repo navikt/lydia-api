@@ -9,7 +9,7 @@ import io.ktor.server.routing.get
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.ia.sak.IASamarbeidService
+import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.saksnummer

@@ -1,6 +1,6 @@
 package no.nav.lydia.abc.tilstandsmaskin.hendelse
 
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDate

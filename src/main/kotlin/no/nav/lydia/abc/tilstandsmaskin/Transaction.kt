@@ -15,6 +15,9 @@ import no.nav.lydia.abc.kartlegging.Spørsmål
 import no.nav.lydia.abc.kartlegging.Svaralternativ
 import no.nav.lydia.abc.kartlegging.Tema
 import no.nav.lydia.abc.kartlegging.Undertema
+import no.nav.lydia.abc.samarbeid.DEFAULT_SAMARBEID_NAVN
+import no.nav.lydia.abc.samarbeid.IASamarbeid
+import no.nav.lydia.abc.samarbeid.mapRowToIASamarbeid
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASak.Companion.tilIASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
@@ -26,16 +29,13 @@ import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.abc.samarbeidsplan.PlanTemaDto
 import no.nav.lydia.abc.samarbeidsplan.PlanUndertemaDto
-import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.db.mapRowToIASamarbeid
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet

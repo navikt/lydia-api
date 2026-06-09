@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.domene.samarbeid
+package no.nav.lydia.abc.samarbeid
 
 import kotlinx.datetime.LocalDateTime
 import java.util.UUID

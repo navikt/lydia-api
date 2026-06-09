@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.db
+package no.nav.lydia.abc.samarbeid
 
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
@@ -8,15 +8,10 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.ia.eksport.SamarbeidDto
-import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
-import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
-import java.time.LocalDateTime
-import java.util.UUID
 import javax.sql.DataSource
 
 class IASamarbeidRepository(
@@ -179,111 +174,6 @@ class IASamarbeidRepository(
                     """.trimIndent(),
                 ).map { it.mapRowToIASamarbeid() }.asList,
             )
-        }
-
-    fun opprettNyttSamarbeid(
-        offentligId: UUID = UUID.randomUUID(),
-        saksnummer: String,
-        navn: String? = DEFAULT_SAMARBEID_NAVN,
-    ): IASamarbeid =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    INSERT INTO ia_prosess (offentlig_id, saksnummer, navn) 
-                    values (:offentligId, :saksnummer, :navn)
-                     returning *
-                    """.trimIndent(),
-                    mapOf(
-                        "offentligId" to offentligId,
-                        "saksnummer" to saksnummer,
-                        "navn" to navn.nullIfEmpty(),
-                    ),
-                ).map { it.mapRowToIASamarbeid() }.asSingle,
-            )!!
-        }
-
-    fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto) {
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE ia_prosess SET navn = :navn, endret_tidspunkt = :endret_tidspunkt 
-                    WHERE id = :prosessId
-                    """.trimIndent(),
-                    mapOf(
-                        "navn" to samarbeidDto.navn,
-                        "prosessId" to samarbeidDto.id,
-                        "endret_tidspunkt" to LocalDateTime.now(),
-                    ),
-                ).asUpdate,
-            )
-        }
-    }
-
-    private fun String?.nullIfEmpty(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
-
-    fun slettSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE ia_prosess
-                     SET status = :status, endret_tidspunkt = :endret_tidspunkt
-                     WHERE id = :prosessId
-                     AND saksnummer = :saksnummer
-                     returning *
-                    """.trimIndent(),
-                    mapOf(
-                        "prosessId" to samarbeidDto.id,
-                        "saksnummer" to samarbeidDto.saksnummer,
-                        "status" to IASamarbeid.Status.SLETTET.name,
-                        "endret_tidspunkt" to LocalDateTime.now(),
-                    ),
-                ).map { it.mapRowToIASamarbeid() }.asSingle,
-            )!!
-        }
-
-    fun fullførSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE ia_prosess
-                     SET status = :status, endret_tidspunkt = :tidspunkt, fullfort_tidspunkt = :tidspunkt
-                     WHERE id = :prosessId
-                     AND saksnummer = :saksnummer
-                     returning *
-                    """.trimIndent(),
-                    mapOf(
-                        "prosessId" to samarbeidDto.id,
-                        "saksnummer" to samarbeidDto.saksnummer,
-                        "status" to IASamarbeid.Status.FULLFØRT.name,
-                        "tidspunkt" to LocalDateTime.now(),
-                    ),
-                ).map { it.mapRowToIASamarbeid() }.asSingle,
-            )!!
-        }
-
-    fun avbrytSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE ia_prosess
-                     SET status = :status, endret_tidspunkt = :tidspunkt, avbrutt_tidspunkt = :tidspunkt
-                     WHERE id = :prosessId
-                     AND saksnummer = :saksnummer
-                     returning *
-                    """.trimIndent(),
-                    mapOf(
-                        "prosessId" to samarbeidDto.id,
-                        "saksnummer" to samarbeidDto.saksnummer,
-                        "status" to IASamarbeid.Status.AVBRUTT.name,
-                        "tidspunkt" to LocalDateTime.now(),
-                    ),
-                ).map { it.mapRowToIASamarbeid() }.asSingle,
-            )!!
         }
 
     fun hentSamarbeidIVirksomhetDto(samarbeidId: Int): SamarbeidIVirksomhetDto? =
