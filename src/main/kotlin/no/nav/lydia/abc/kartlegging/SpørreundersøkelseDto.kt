@@ -2,8 +2,8 @@ package no.nav.lydia.abc.kartlegging
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
-import no.nav.lydia.ia.sak.api.dokument.PubliseringStatus
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto
+import no.nav.lydia.abc.dokument.PubliseringStatus
 
 @Serializable
 data class SpørreundersøkelseDto(

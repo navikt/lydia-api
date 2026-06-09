@@ -2,8 +2,8 @@ package no.nav.lydia.abc.kartlegging
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
+import no.nav.lydia.abc.dokument.SpørreundersøkelseInnholdIDokumentDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Companion.MINIMUM_ANTALL_DELTAKERE
-import no.nav.lydia.ia.sak.api.dokument.SpørreundersøkelseInnholdIDokumentDto
 
 @Serializable
 data class SpørreundersøkelseResultatDto(

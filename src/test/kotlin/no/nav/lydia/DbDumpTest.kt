@@ -2,12 +2,14 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Evaluering
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
 import no.nav.lydia.abc.kartlegging.SpørsmålDto
 import no.nav.lydia.abc.kartlegging.TemaDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
@@ -32,8 +34,6 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.abc.samarbeidsperiode.IASakDto
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import org.junit.experimental.categories.Category
 import java.util.UUID
 import kotlin.test.Test

@@ -15,6 +15,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto
 import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
@@ -49,7 +50,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema

@@ -14,6 +14,7 @@ import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.abc.dokument.DokumentPubliseringService
 import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
@@ -33,7 +34,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.planId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer

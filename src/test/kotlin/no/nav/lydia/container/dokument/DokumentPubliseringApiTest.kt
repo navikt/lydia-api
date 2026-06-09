@@ -10,6 +10,10 @@ import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto
+import no.nav.lydia.abc.dokument.DokumentPubliseringMedInnhold
+import no.nav.lydia.abc.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
+import no.nav.lydia.abc.dokument.SpørreundersøkelseInnholdIDokumentDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.samarbeid.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.abc.samarbeid.IASamarbeid
@@ -35,10 +39,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
-import no.nav.lydia.ia.sak.api.dokument.SpørreundersøkelseInnholdIDokumentDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID

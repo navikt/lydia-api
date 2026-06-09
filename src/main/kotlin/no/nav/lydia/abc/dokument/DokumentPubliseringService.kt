@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.dokument
+package no.nav.lydia.abc.dokument
 
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -9,6 +9,10 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Type.BEHOVSVURDERING
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Type.EVALUERING
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Type.SAMARBEIDSPLAN
+import no.nav.lydia.abc.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.abc.kartlegging.tilResultatDto
 import no.nav.lydia.abc.kartlegging.tilSpørreundersøkelseInnholdDto
@@ -18,10 +22,6 @@ import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.abc.samarbeidsplan.erEtter
 import no.nav.lydia.abc.samarbeidsplan.tilDto
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.BEHOVSVURDERING
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.EVALUERING
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.SAMARBEIDSPLAN
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt

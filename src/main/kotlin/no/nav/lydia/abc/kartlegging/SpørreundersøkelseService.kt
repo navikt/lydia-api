@@ -7,6 +7,8 @@ import arrow.core.left
 import arrow.core.right
 import no.nav.lydia.Observer
 import no.nav.lydia.abc.api.IASakSpørreundersøkelseError
+import no.nav.lydia.abc.dokument.DokumentPubliseringDto
+import no.nav.lydia.abc.dokument.DokumentPubliseringRepository
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Evaluering
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
@@ -18,8 +20,6 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResu
 import no.nav.lydia.ia.eksport.tilTemaResultatKafkaDto
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import org.slf4j.Logger

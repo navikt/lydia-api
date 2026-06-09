@@ -27,6 +27,10 @@ import no.nav.lydia.abc.api.nyFlyt
 import no.nav.lydia.abc.api.nyFlytKartlegging
 import no.nav.lydia.abc.api.nyFlytSamarbeidsplan
 import no.nav.lydia.abc.api.nyFlytVirksomhet
+import no.nav.lydia.abc.dokument.DokumentPubliseringProdusent
+import no.nav.lydia.abc.dokument.DokumentPubliseringRepository
+import no.nav.lydia.abc.dokument.DokumentPubliseringService
+import no.nav.lydia.abc.dokument.dokumentPublisering
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseMetrikkObserver
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
@@ -70,10 +74,6 @@ import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
 import no.nav.lydia.ia.sak.SendPlanPåKafkaObserver
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
-import no.nav.lydia.ia.sak.api.dokument.dokumentPublisering
 import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
 import no.nav.lydia.ia.team.IATeamRepository
 import no.nav.lydia.ia.team.IATeamService

@@ -1,9 +1,9 @@
 package no.nav.lydia.abc.tilstandsmaskin
 
+import no.nav.lydia.abc.dokument.DokumentPubliseringService
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.ia.sak.PlanService
-import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 
 data class FiaKontekst(
     val iaSakService: IASakService,
