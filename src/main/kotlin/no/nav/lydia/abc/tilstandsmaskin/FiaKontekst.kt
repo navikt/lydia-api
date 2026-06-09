@@ -1,6 +1,6 @@
 package no.nav.lydia.abc.tilstandsmaskin
 
-import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService

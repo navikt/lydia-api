@@ -1,14 +1,10 @@
-package no.nav.lydia.ia.sak.db
+package no.nav.lydia.abc.samarbeidsperiode
 
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.db.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
+import no.nav.lydia.abc.samarbeidsperiode.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType

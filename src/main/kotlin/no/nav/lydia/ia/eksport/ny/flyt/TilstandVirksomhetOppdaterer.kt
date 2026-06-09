@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.eksport.ny.flyt
 
+import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.TilstandVirksomhetRepository
@@ -8,7 +9,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurderi
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.abc.tilstandsmaskin.tilTilstand
-import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService

@@ -1,14 +1,10 @@
-package no.nav.lydia.ia.sak.api
+package no.nav.lydia.abc.samarbeidsperiode
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.IASakLeveranse
-import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
-import no.nav.lydia.ia.sak.domene.IATjeneste
-import no.nav.lydia.ia.sak.domene.Modul
 
 @Serializable
 data class IASakLeveranseDto(

@@ -21,6 +21,10 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakService
+import no.nav.lydia.abc.samarbeidsperiode.SakshistorikkDto
+import no.nav.lydia.abc.samarbeidsperiode.tilSakshistorikk
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.TilstandVirksomhetRepository
@@ -40,14 +44,11 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.ia.eksport.SamarbeidDto
-import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -56,7 +57,6 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
-import no.nav.lydia.ia.sak.api.tilSakshistorikk
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurderingAvVirksomhet

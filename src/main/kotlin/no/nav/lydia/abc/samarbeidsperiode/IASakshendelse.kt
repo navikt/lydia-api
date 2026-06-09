@@ -1,10 +1,9 @@
-package no.nav.lydia.ia.sak.domene
+package no.nav.lydia.abc.samarbeidsperiode
 
 import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.sykefraværsstatistikk.PubliseringsinfoDto
@@ -35,7 +34,7 @@ open class IASakshendelse(
                 id = saksnummer,
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = saksnummer,
-                hendelsesType = OPPRETT_SAK_FOR_VIRKSOMHET,
+                hendelsesType = IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
                 orgnummer = orgnummer,
                 opprettetAv = superbruker.navIdent,
                 opprettetAvRolle = superbruker.rolle,

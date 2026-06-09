@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api
+package no.nav.lydia.abc.samarbeidsperiode
 
 import kotlinx.serialization.Serializable
 

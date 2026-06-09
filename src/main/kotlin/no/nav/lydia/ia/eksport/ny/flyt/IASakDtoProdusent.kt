@@ -6,9 +6,9 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.ia.eksport.KafkaProdusent
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.domene.IASak
 
 class IASakDtoProdusent(
     kafka: Kafka,

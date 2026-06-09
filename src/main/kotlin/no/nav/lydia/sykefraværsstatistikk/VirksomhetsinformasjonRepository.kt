@@ -9,8 +9,8 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraværsstatistikk.api.Sorteringsnøkkel.ANTALL_PERSONER
