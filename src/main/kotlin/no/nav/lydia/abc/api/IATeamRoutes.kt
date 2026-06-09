@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.team
+package no.nav.lydia.abc.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.log
@@ -11,6 +11,7 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
+import no.nav.lydia.abc.team.IATeamService
 import no.nav.lydia.appstatus.Metrics.Companion.loggFølging
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.sendFeil

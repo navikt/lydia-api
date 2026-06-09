@@ -11,7 +11,6 @@ import no.nav.lydia.abc.dokument.DokumentPubliseringDto
 import no.nav.lydia.abc.dokument.DokumentPubliseringService
 import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
-import no.nav.lydia.abc.samarbeidsperiode.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.abc.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.IASakError

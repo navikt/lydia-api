@@ -7,6 +7,11 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.api.IA_SAK_TEAM_PATH
+import no.nav.lydia.abc.api.MINE_SAKER_PATH
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
+import no.nav.lydia.abc.team.BrukerITeamDto
+import no.nav.lydia.abc.team.MineSakerDto
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.bliMedITeam
@@ -23,11 +28,6 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.abc.samarbeidsperiode.IASakDto
-import no.nav.lydia.ia.team.BrukerITeamDto
-import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
-import no.nav.lydia.ia.team.MINE_SAKER_PATH
-import no.nav.lydia.ia.team.MineSakerDto
 import kotlin.test.Test
 import kotlin.test.fail
 

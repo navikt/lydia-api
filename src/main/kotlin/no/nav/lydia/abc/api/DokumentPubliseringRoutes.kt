@@ -1,4 +1,4 @@
-package no.nav.lydia.abc.dokument
+package no.nav.lydia.abc.api
 
 import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
@@ -7,7 +7,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
-import no.nav.lydia.abc.samarbeidsperiode.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.abc.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.extensions.dokumentReferanseId
 import no.nav.lydia.ia.sak.api.extensions.dokumentType
