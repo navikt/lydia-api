@@ -36,3 +36,9 @@ spec:
     - team: pia
       application: pia-jobbsender-prosesser-planlagte-hendelser
       access: write
+    - team: pia
+      application: pia-jobbsender-sjekk-publiseringsdato
+      access: write
+    - team: pia
+      application: pia-jobbsender-publiseringsdato-dvh-import
+      access: write
