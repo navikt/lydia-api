@@ -62,7 +62,7 @@ Denne filen bruker samme testdata som integrasjonstestene våre, dvs kunstig dat
 2. Verifiser at du har psql installert ved å kjøre `psql --version` i terminalen
 3. Kjør `./gradlew cleanTest test --tests no.nav.lydia.DbDumpTest -PlokalDbDump=true`
 
-### Oppdater run.sh med ny sql fil
+### Oppdater run.sh med ny sql fil (`run.sh` er slettet, men kunnskapen er fremdeles nyttig :-)
 I script filen `run.sh` kan du oppdatere lenken til filen du har generert og lastet opp (commit) på github
 1. Gå til repoet på GitHub (https://github.com/navikt/lydia-api).
 2. Finn dump-fila, `/lydia-api/scripts/db/[filnavn_her].sql` (Sannsynleg lenke til mappa: https://github.com/navikt/lydia-api/tree/main/scripts/db).
@@ -72,7 +72,6 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 6. Oppdater `run.sh` i [lydia-rådgiver-frontend](https://github.com/navikt/lydia-radgiver-frontend) med den same lenka.
 
 ## Koble til database lokalt
-1. Kjør `./run.sh` i roten av repoet for å starte appen i docker med alle avhengigheter
 
 ### Med psql (terminal)
 
@@ -131,6 +130,13 @@ Næringskoder oppdateres kjeldent av SSB. Men i det tilfelle, må man laste ned 
 3. Lagre filen som `scripts/db/næringer.json`
 
 Filen er lest i `TestData` som lager testdata for integrasjonstester og lokalt kjøring.
+
+## Linting og formatering
+Vi bruker ktlint.
+1. Installer [pluginen](https://plugins.jetbrains.com/plugin/15057-ktlint) i IntelliJ
+2. Naviger til Settings -> Tools -> KtLint
+3. Velg mode "Distract free"
+4. Huk av for formatering "On save"
 
 # Henvendelser
 Spørsmål knyttet til koden eller prosjektet kan stilles som et [issue her på GitHub](https://github.com/navikt/lydia-api/issues).
