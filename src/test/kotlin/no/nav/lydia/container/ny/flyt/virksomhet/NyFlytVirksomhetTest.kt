@@ -5,8 +5,8 @@ import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType

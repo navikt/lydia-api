@@ -11,9 +11,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
+import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.Rolle

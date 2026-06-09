@@ -13,7 +13,7 @@ import no.nav.lydia.abc.samarbeidsplan.PlanUndertemaDto
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
-import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto

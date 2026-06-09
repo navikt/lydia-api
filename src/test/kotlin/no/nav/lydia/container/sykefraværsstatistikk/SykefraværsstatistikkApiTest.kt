@@ -73,7 +73,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.sykefraværsstatistikk.api.FILTERVERDIER_PATH

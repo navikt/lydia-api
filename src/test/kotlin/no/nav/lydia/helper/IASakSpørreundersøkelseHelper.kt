@@ -18,7 +18,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
-import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.integrasjoner.kartlegging.HendelsType
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel

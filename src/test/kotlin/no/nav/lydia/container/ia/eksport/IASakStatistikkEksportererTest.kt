@@ -16,7 +16,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
