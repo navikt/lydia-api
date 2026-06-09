@@ -9,8 +9,10 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
+import no.nav.lydia.abc.kartlegging.tilResultatDto
+import no.nav.lydia.abc.kartlegging.tilSpørreundersøkelseInnholdDto
 import no.nav.lydia.ia.sak.IASamarbeidService
-import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.BEHOVSVURDERING
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.EVALUERING
@@ -18,8 +20,6 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto.Type.SAMARBEIDSPL
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
 import no.nav.lydia.ia.sak.api.plan.erEtter
 import no.nav.lydia.ia.sak.api.plan.tilDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilSpørreundersøkelseInnholdDto
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.azure.NavEnhet

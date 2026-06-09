@@ -2,6 +2,12 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Evaluering
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
+import no.nav.lydia.abc.kartlegging.SpørsmålDto
+import no.nav.lydia.abc.kartlegging.TemaDto
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
@@ -28,12 +34,6 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Behovsvurdering
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Type.Evaluering
 import org.junit.experimental.categories.Category
 import java.util.UUID
 import kotlin.test.Test

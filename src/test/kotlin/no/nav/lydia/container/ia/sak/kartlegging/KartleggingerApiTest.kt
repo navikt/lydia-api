@@ -2,6 +2,7 @@ package no.nav.lydia.container.ia.sak.kartlegging
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentKartleggingresultatPdf
@@ -12,7 +13,6 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.pdfgen.lokalTestPdf
 import kotlin.test.Test
 

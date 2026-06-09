@@ -10,6 +10,7 @@ import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
@@ -38,7 +39,6 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.g
 import no.nav.lydia.ia.sak.api.dokument.SpørreundersøkelseInnholdIDokumentDto
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID

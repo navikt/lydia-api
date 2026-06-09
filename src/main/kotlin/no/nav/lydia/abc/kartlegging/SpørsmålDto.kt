@@ -1,0 +1,23 @@
+package no.nav.lydia.abc.kartlegging
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class SpørsmålDto(
+    val id: String,
+    val undertemanavn: String,
+    val spørsmål: String,
+    val svaralternativer: List<SvaralternativDto>,
+    val flervalg: Boolean,
+)
+
+fun List<Spørsmål>.tilDto(undertemanavn: String): List<SpørsmålDto> = map { it.tilDto(undertemanavn) }
+
+fun Spørsmål.tilDto(undertemanavn: String): SpørsmålDto =
+    SpørsmålDto(
+        id = id.toString(),
+        undertemanavn = undertemanavn,
+        spørsmål = tekst,
+        svaralternativer = svaralternativer.tilDto(),
+        flervalg = flervalg,
+    )

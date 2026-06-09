@@ -11,8 +11,8 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
+import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt

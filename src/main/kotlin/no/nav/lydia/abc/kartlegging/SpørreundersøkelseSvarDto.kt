@@ -1,0 +1,11 @@
+package no.nav.lydia.abc.kartlegging
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class SpørreundersøkelseSvarDto(
+    val spørreundersøkelseId: String,
+    val sesjonId: String,
+    val spørsmålId: String,
+    val svarIder: List<String>,
+)

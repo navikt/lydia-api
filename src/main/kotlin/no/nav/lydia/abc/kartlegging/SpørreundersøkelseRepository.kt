@@ -1,0 +1,567 @@
+package no.nav.lydia.abc.kartlegging
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.serialization.json.Json
+import kotliquery.Row
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
+import no.nav.lydia.abc.api.IASakSpørreundersøkelseError
+import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.extensions.tilUUID
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import java.time.LocalDateTime
+import java.util.UUID
+import javax.sql.DataSource
+
+class SpørreundersøkelseRepository(
+    private val dataSource: DataSource,
+) {
+    fun hentSpørreundersøkelser(
+        samarbeid: IASamarbeid,
+        type: Spørreundersøkelse.Type = Spørreundersøkelse.Type.Behovsvurdering,
+    ): List<Spørreundersøkelse> =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                        SELECT sporreundersokelse.kartlegging_id AS id,
+                               sporreundersokelse.type,
+                               sporreundersokelse.status,
+                               sporreundersokelse.opprettet_av,
+                               sporreundersokelse.opprettet,
+                               sporreundersokelse.gyldig_til,
+                               sporreundersokelse.endret,
+                               sporreundersokelse.pabegynt,
+                               sporreundersokelse.fullfort,
+                               virksomhet.navn,
+                               virksomhet.orgnr,
+                               sak.saksnummer,
+                               samarbeid.id                      AS samarbeid_id
+                        FROM ia_sak_kartlegging sporreundersokelse
+                                 JOIN ia_prosess samarbeid
+                                      ON sporreundersokelse.ia_prosess = samarbeid.id
+                                 JOIN ia_sak sak USING (saksnummer, orgnr)
+                                 JOIN virksomhet USING (orgnr)
+                        WHERE samarbeid.id = :samarbeidId
+                            AND sporreundersokelse.status != '${Spørreundersøkelse.Status.SLETTET}'
+                            AND sporreundersokelse.type = :type;
+                        """.trimMargin(),
+                        mapOf(
+                            "samarbeidId" to samarbeid.id,
+                            "type" to type.name,
+                        ),
+                    ).map { it.tilSpørreundersøkelse(tx) }.asList,
+                )
+            }
+        }
+
+    fun hentSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                        SELECT sporreundersokelse.kartlegging_id AS id,
+                               sporreundersokelse.type,
+                               sporreundersokelse.status,
+                               sporreundersokelse.opprettet_av,
+                               sporreundersokelse.opprettet,
+                               sporreundersokelse.gyldig_til,
+                               sporreundersokelse.endret,
+                               sporreundersokelse.pabegynt,
+                               sporreundersokelse.fullfort,
+                               virksomhet.navn,
+                               virksomhet.orgnr,
+                               sak.saksnummer,
+                               samarbeid.id                      AS samarbeid_id
+                        FROM ia_sak_kartlegging sporreundersokelse
+                                 JOIN ia_prosess samarbeid
+                                      ON sporreundersokelse.ia_prosess = samarbeid.id
+                                 JOIN ia_sak sak USING (saksnummer, orgnr)
+                                 JOIN virksomhet USING (orgnr)
+                        WHERE sporreundersokelse.kartlegging_id = :kartleggingId;
+                        """.trimMargin(),
+                        mapOf(
+                            "kartleggingId" to spørreundersøkelseId.toString(),
+                        ),
+                    ).map { it.tilSpørreundersøkelse(tx) }.asSingle,
+                )
+            }
+        }
+
+    private fun Row.tilSpørreundersøkelse(transactionalSession: TransactionalSession): Spørreundersøkelse {
+        val spørreundersøkelseId = string("id").tilUUID(hvaErJeg = "spørreundersøkelseId")
+        return Spørreundersøkelse(
+            id = spørreundersøkelseId,
+            saksnummer = string("saksnummer"),
+            samarbeidId = int("samarbeid_id"),
+            orgnummer = string("orgnr"),
+            virksomhetsNavn = string("navn"),
+            status = Spørreundersøkelse.Status.valueOf(string("status")),
+            temaer = hentTemaer(
+                spørreundersøkelseId = spørreundersøkelseId,
+                transactionalSession = transactionalSession,
+            ),
+            opprettetAv = string("opprettet_av"),
+            opprettetTidspunkt = localDateTime("opprettet").toKotlinLocalDateTime(),
+            type = Spørreundersøkelse.Type.valueOf(string("type")),
+            endretTidspunkt = localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
+            påbegyntTidspunkt = localDateTimeOrNull("pabegynt")?.toKotlinLocalDateTime(),
+            fullførtTidspunkt = localDateTimeOrNull("fullfort")?.toKotlinLocalDateTime(),
+            gyldigTilTidspunkt = localDateTime("gyldig_til").toKotlinLocalDateTime(),
+        )
+    }
+
+    private fun hentTemaer(
+        spørreundersøkelseId: UUID,
+        transactionalSession: TransactionalSession,
+    ): List<Tema> =
+        transactionalSession.run(
+            queryOf(
+                """
+                SELECT sporreundersokelse_tema.tema_id AS id,
+                       tema.navn,
+                       tema.status,
+                       tema.rekkefolge,
+                       tema.sist_endret,
+                       sporreundersokelse_tema.stengt
+                FROM ia_sak_kartlegging_kartlegging_til_tema sporreundersokelse_tema
+                         JOIN ia_sak_kartlegging_tema tema
+                              ON tema.tema_id = sporreundersokelse_tema.tema_id
+                WHERE sporreundersokelse_tema.kartlegging_id = :kartleggingId;
+                """.trimMargin(),
+                mapOf(
+                    "kartleggingId" to spørreundersøkelseId.toString(),
+                ),
+            ).map { it.tilSpørreundersøkelseTema(transactionalSession, spørreundersøkelseId) }.asList,
+        )
+
+    fun hentAntallSvar(
+        spørreundersøkelseId: UUID,
+        spørsmålId: UUID,
+    ): SpørreundersøkelseAntallSvar =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT COUNT(*) AS antallSvar
+                        FROM ia_sak_kartlegging_svar
+                        WHERE kartlegging_id = :kartleggingId
+                        AND sporsmal_id = :sporsmalId
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId.toString(),
+                        "sporsmalId" to spørsmålId.toString(),
+                    ),
+                ).map { rad ->
+                    SpørreundersøkelseAntallSvar(
+                        spørreundersøkelseId = spørreundersøkelseId,
+                        spørsmålId = spørsmålId,
+                        antallSvar = rad.int("antallSvar"),
+                    )
+                }.asSingle,
+            )
+        } ?: SpørreundersøkelseAntallSvar(
+            spørreundersøkelseId = spørreundersøkelseId,
+            spørsmålId = spørsmålId,
+            antallSvar = 0,
+        )
+
+    fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto): Int =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        INSERT INTO ia_sak_kartlegging_svar (
+                            kartlegging_id,
+                            sesjon_id,
+                            sporsmal_id,
+                            svar_ider
+                        )
+                        VALUES (
+                            :kartleggingId,
+                            :sesjonId,
+                            :sporsmalId,
+                            :svar_ider::jsonb
+                        )
+                        ON CONFLICT ON CONSTRAINT ia_sak_kartlegging_svar_kartlegging_sesjon_spm DO UPDATE SET
+                            svar_ider = :svar_ider::jsonb,
+                            endret = now()
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to karleggingSvarDto.spørreundersøkelseId,
+                        "sesjonId" to karleggingSvarDto.sesjonId,
+                        "sporsmalId" to karleggingSvarDto.spørsmålId,
+                        "svar_ider" to Json.encodeToString(karleggingSvarDto.svarIder),
+                    ),
+                ).asUpdate,
+            )
+        }
+
+    fun slettSpørreundersøkelse(
+        spørreundersøkelseId: UUID,
+        sistEndret: LocalDateTime = LocalDateTime.now(),
+    ): Spørreundersøkelse? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET
+                        status = '${Spørreundersøkelse.Status.SLETTET}',
+                        endret = :sistEndret
+                    WHERE kartlegging_id = :kartleggingId
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId.toString(),
+                        "sistEndret" to sistEndret,
+                    ),
+                ).asUpdate,
+            )
+            hentSpørreundersøkelse(spørreundersøkelseId)
+        }
+
+    fun startSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET
+                        status = '${Spørreundersøkelse.Status.PÅBEGYNT.name}',
+                        endret = :navaerendeTidspunkt,
+                        pabegynt = :navaerendeTidspunkt
+                    WHERE kartlegging_id = :kartleggingId
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId.toString(),
+                        "navaerendeTidspunkt" to LocalDateTime.now(),
+                    ),
+                ).asUpdate,
+            )
+            hentSpørreundersøkelse(spørreundersøkelseId)
+        }
+
+    fun avsluttSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET
+                        status = '${Spørreundersøkelse.Status.AVSLUTTET.name}',
+                        endret = :navaerendeTidspunkt,
+                        fullfort = :navaerendeTidspunkt
+                        WHERE kartlegging_id = :kartleggingId
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId.toString(),
+                        "navaerendeTidspunkt" to LocalDateTime.now(),
+                    ),
+                ).asUpdate,
+            )
+            hentSpørreundersøkelse(spørreundersøkelseId)
+        }
+
+    private fun mapTilTema(row: Row): TemaInfo {
+        val temaId = row.int("tema_id")
+        return TemaInfo(
+            id = temaId,
+            rekkefølge = row.int("rekkefolge"),
+            navn = row.string("navn"),
+            undertemaer = hentAktiveUndertemaer(temaId = temaId),
+        )
+    }
+
+    fun stengTema(
+        spørreundersøkelseId: UUID,
+        temaId: Int,
+    ) {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging_kartlegging_til_tema
+                      SET stengt = true 
+                      WHERE kartlegging_id = :kartleggingId
+                      AND tema_id = :temaId 
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId.toString(),
+                        "temaId" to temaId,
+                    ),
+                ).asUpdate,
+            )
+        }
+    }
+
+    fun hentAktiveTemaer(type: Spørreundersøkelse.Type): List<TemaInfo> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM ia_sak_kartlegging_tema
+                    WHERE status = :status
+                    AND type = :type
+                    """.trimIndent(),
+                    mapOf(
+                        "status" to Tema.Status.AKTIV.name,
+                        "type" to type.name,
+                    ),
+                ).map(this::mapTilTema).asList,
+            )
+        }
+
+    fun hentObligatoriskeAktiveUndertemaer(temaId: Int): List<UndertemaInfo> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM ia_sak_kartlegging_undertema
+                    WHERE status = :status
+                    AND obligatorisk = true
+                    AND tema_id = :temaId
+                    """.trimIndent(),
+                    mapOf(
+                        "status" to Tema.Status.AKTIV.name,
+                        "temaId" to temaId,
+                    ),
+                ).map(this::mapTilUndertema).asList,
+            )
+        }
+
+    private fun hentAktiveUndertemaer(temaId: Int): List<UndertemaInfo> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM ia_sak_kartlegging_undertema
+                    WHERE status = '${Tema.Status.AKTIV}'
+                    AND tema_id = '$temaId'
+                    """.trimIndent(),
+                ).map(this::mapTilUndertema).asList,
+            )
+        }
+
+    private fun mapTilUndertema(row: Row): UndertemaInfo =
+        UndertemaInfo(
+            id = row.int("undertema_id"),
+            navn = row.string("navn"),
+            rekkefølge = row.int("rekkefolge"),
+        )
+
+    fun oppdaterBehovsvurdering(
+        behovsvurderingId: UUID,
+        oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto,
+    ): Either<Feil, Spørreundersøkelse> {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET 
+                    ia_prosess = :prosessId,
+                    endret = now()
+                    WHERE kartlegging_id = :behovsvurderingId
+                    """.trimIndent(),
+                    mapOf(
+                        "prosessId" to oppdaterBehovsvurderingDto.prosessId,
+                        "behovsvurderingId" to behovsvurderingId.toString(),
+                    ),
+                ).asUpdate,
+            )
+        }
+        return hentSpørreundersøkelse(behovsvurderingId)?.right()
+            ?: IASakSpørreundersøkelseError.`feil under oppdatering`.left()
+    }
+
+    fun hentAlleSpørreundersøkelser(): List<Spørreundersøkelse> =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                        SELECT sporreundersokelse.kartlegging_id AS id,
+                               sporreundersokelse.type,
+                               sporreundersokelse.status,
+                               sporreundersokelse.opprettet_av,
+                               sporreundersokelse.opprettet,
+                               sporreundersokelse.gyldig_til,
+                               sporreundersokelse.endret,
+                               sporreundersokelse.pabegynt,
+                               sporreundersokelse.fullfort,
+                               virksomhet.navn,
+                               virksomhet.orgnr,
+                               sak.saksnummer,
+                               samarbeid.id                      AS samarbeid_id
+                        FROM ia_sak_kartlegging sporreundersokelse
+                                 JOIN ia_prosess samarbeid
+                                      ON sporreundersokelse.ia_prosess = samarbeid.id
+                                 JOIN ia_sak sak USING (saksnummer, orgnr)
+                                 JOIN virksomhet USING (orgnr)
+                        """.trimMargin(),
+                    ).map { it.tilSpørreundersøkelse(tx) }.asList,
+                )
+            }
+        }
+
+    fun hentUndertemaer(
+        transactionalSession: TransactionalSession,
+        spørreundersøkelseId: UUID,
+        temaId: Int,
+    ): List<Undertema> =
+        transactionalSession.run(
+            queryOf(
+                """
+                SELECT undertema.undertema_id AS id,
+                       undertema.navn,
+                       undertema.status,
+                       undertema.rekkefolge,
+                       undertema.sist_endret
+                FROM ia_sak_kartlegging_kartlegging_til_undertema ktu
+                         JOIN ia_sak_kartlegging_undertema undertema
+                              ON ktu.undertema_id = undertema.undertema_id
+                WHERE ktu.kartlegging_id = :kartleggingId
+                  AND undertema.tema_id = :temaId;
+                """.trimMargin(),
+                mapOf(
+                    "kartleggingId" to spørreundersøkelseId.toString(),
+                    "temaId" to temaId,
+                ),
+            ).map { it.tilSpørreundersøkelseUndertema(transactionalSession, spørreundersøkelseId) }.asList,
+        )
+
+    fun hentSpørsmål(
+        transactionalSession: TransactionalSession,
+        spørreundersøkelseId: UUID,
+        undertemaId: Int,
+    ): List<Spørsmål> =
+        transactionalSession.run(
+            queryOf(
+                """
+                SELECT sporsmal.sporsmal_id                            AS id,
+                       sporsmal.sporsmal_tekst                         AS tekst,
+                       sporsmal_undertema.rekkefolge,
+                       sporsmal.flervalg,
+                       (SELECT COUNT(DISTINCT svar.sesjon_id)
+                        FROM ia_sak_kartlegging_svar svar
+                        WHERE svar.kartlegging_id = :kartleggingId
+                          AND svar.sporsmal_id = sporsmal.sporsmal_id) AS antall_svar_per_sporsmal
+                FROM ia_sak_kartlegging_sporsmal_til_undertema sporsmal_undertema
+                         JOIN ia_sak_kartlegging_sporsmal sporsmal
+                              ON sporsmal_undertema.sporsmal_id = sporsmal.sporsmal_id
+                WHERE sporsmal_undertema.undertema_id = :undertemaId;
+                """.trimMargin(),
+                mapOf(
+                    "kartleggingId" to spørreundersøkelseId.toString(),
+                    "undertemaId" to undertemaId,
+                ),
+            ).map {
+                it.tilSpørreundersøkelseSpørsmål(
+                    transactionalSession,
+                    spørreundersøkelseId,
+                )
+            }.asList,
+        )
+
+    fun hentSvar(
+        transactionalSession: TransactionalSession,
+        spørreundersøkelseId: UUID,
+        spørsmålId: UUID,
+    ): List<Svaralternativ> =
+        transactionalSession.run(
+            queryOf(
+                """
+                SELECT svaralternativ.svaralternativ_id,
+                       svaralternativ.svaralternativ_tekst,
+                       COALESCE(
+                               (SELECT CASE
+                                           WHEN (SELECT COUNT(DISTINCT us.sesjon_id)
+                                                 FROM ia_sak_kartlegging_svar us
+                                                 WHERE us.kartlegging_id = :kartleggingId
+                                                   AND us.sporsmal_id = :sporsmalId) < $MINIMUM_ANTALL_SVAR_FØR_MASKERING
+                                               THEN 0
+                                           ELSE COUNT(DISTINCT svar.sesjon_id)
+                                           END
+                                FROM ia_sak_kartlegging_svar svar
+                                WHERE svar.kartlegging_id = :kartleggingId
+                                  AND svar.sporsmal_id = :sporsmalId
+                                  AND svar.svar_ider @> ('["' || svaralternativ.svaralternativ_id || '"]')::jsonb), 0
+                       ) AS antall_svar
+                FROM ia_sak_kartlegging_svaralternativer svaralternativ
+                WHERE svaralternativ.sporsmal_id = :sporsmalId;
+                """.trimMargin(),
+                mapOf(
+                    "kartleggingId" to spørreundersøkelseId.toString(),
+                    "sporsmalId" to spørsmålId.toString(),
+                ),
+            ).map { it.mapRowToSpørreundersøkelseSvar() }.asList,
+        )
+
+    private fun Row.tilSpørreundersøkelseTema(
+        transactionalSession: TransactionalSession,
+        spørreundersøkelseId: UUID,
+    ): Tema {
+        val temaId = int("id")
+        return Tema(
+            id = temaId,
+            navn = string("navn"),
+            status = Tema.Status.valueOf(string("status")),
+            rekkefølge = int("rekkefolge"),
+            sistEndret = localDateTime("sist_endret").toKotlinLocalDateTime(),
+            stengtForSvar = boolean("stengt"),
+            undertemaer = hentUndertemaer(transactionalSession, spørreundersøkelseId, temaId),
+        )
+    }
+
+    private fun Row.tilSpørreundersøkelseUndertema(
+        transactionalSession: TransactionalSession,
+        spørreundersøkelseId: UUID,
+    ): Undertema {
+        val undertemaId = int("id")
+        return Undertema(
+            id = undertemaId,
+            navn = string("navn"),
+            status = Undertema.Status.valueOf(string("status")),
+            rekkefølge = int("rekkefolge"),
+            sistEndret = localDateTime("sist_endret").toKotlinLocalDateTime(),
+            spørsmål = hentSpørsmål(transactionalSession, spørreundersøkelseId, undertemaId),
+        )
+    }
+
+    private fun Row.tilSpørreundersøkelseSpørsmål(
+        transactionalSession: TransactionalSession,
+        spørreundersøkelseId: UUID,
+    ): Spørsmål {
+        val spørsmålId = string("id").tilUUID(hvaErJeg = "spørsmålId")
+        return Spørsmål(
+            id = spørsmålId,
+            tekst = string("tekst"),
+            rekkefølge = int("rekkefolge"),
+            flervalg = boolean("flervalg"),
+            antallSvar = int("antall_svar_per_sporsmal"),
+            svaralternativer = hentSvar(transactionalSession, spørreundersøkelseId, spørsmålId),
+        )
+    }
+
+    private fun Row.mapRowToSpørreundersøkelseSvar(): Svaralternativ {
+        val svaralternativId = string("svaralternativ_id").tilUUID(hvaErJeg = "svaralternativId")
+        return Svaralternativ(
+            id = svaralternativId,
+            tekst = string("svaralternativ_tekst"),
+            antallSvar = intOrNull("antall_svar") ?: 0,
+        )
+    }
+
+    data class SpørreundersøkelseAntallSvar(
+        val spørreundersøkelseId: UUID,
+        val spørsmålId: UUID,
+        val antallSvar: Int,
+    )
+
+    companion object {
+        const val MINIMUM_ANTALL_SVAR_FØR_MASKERING = Spørreundersøkelse.MINIMUM_ANTALL_DELTAKERE
+    }
+}
