@@ -102,7 +102,7 @@ fun Route.nyFlytKartlegging(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as SpørreundersøkelseDto }
+            konsekvens.map { it.endring as SpørreundersøkelseDto }
         }.also { kartleggingEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -130,7 +130,7 @@ fun Route.nyFlytKartlegging(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as SpørreundersøkelseDto }
+            konsekvens.map { it.endring as SpørreundersøkelseDto }
         }.also { kartleggingEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -158,7 +158,7 @@ fun Route.nyFlytKartlegging(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as SpørreundersøkelseDto }
+            konsekvens.map { it.endring as SpørreundersøkelseDto }
         }.also { kartleggingEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -186,7 +186,7 @@ fun Route.nyFlytKartlegging(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as SpørreundersøkelseDto }
+            konsekvens.map { it.endring as SpørreundersøkelseDto }
         }.also { kartleggingEither ->
             auditLog.auditloggEither(
                 call = call,

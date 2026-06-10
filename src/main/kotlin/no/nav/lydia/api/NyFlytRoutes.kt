@@ -5,12 +5,10 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveNullable
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.application
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -244,7 +242,7 @@ fun Route.nyFlyt(
                 hendelse = hendelse,
             )
 
-            konsekvens.map { it as IASakDto }
+            konsekvens.map { it.endring as IASakDto }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -271,7 +269,7 @@ fun Route.nyFlyt(
                     navEnhet = enhet,
                 ),
             )
-            konsekvens.map { it as IASakDto }
+            konsekvens.map { it.endring as IASakDto }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -300,7 +298,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as IASamarbeidDto }
+            konsekvens.map { it.endring as IASamarbeidDto }
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -334,7 +332,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as SpørreundersøkelseDto }
+            konsekvens.map { it.endring as SpørreundersøkelseDto }
         }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -364,7 +362,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as SpørreundersøkelseDto }
+            konsekvens.map { it.endring as SpørreundersøkelseDto }
         }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -394,7 +392,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as SpørreundersøkelseDto }
+            konsekvens.map { it.endring as SpørreundersøkelseDto }
         }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -424,7 +422,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as SpørreundersøkelseDto }
+            konsekvens.map { it.endring as SpørreundersøkelseDto }
         }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -464,7 +462,7 @@ fun Route.nyFlyt(
                     dato = dato,
                 ),
             )
-            konsekvens.map { it as IASamarbeidDto }
+            konsekvens.map { it.endring as IASamarbeidDto }
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -510,7 +508,7 @@ fun Route.nyFlyt(
                     dato = dato,
                 ),
             )
-            konsekvens.map { it as IASamarbeidDto }
+            konsekvens.map { it.endring as IASamarbeidDto }
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -542,7 +540,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as IASamarbeidDto }
+            konsekvens.map { it.endring as IASamarbeidDto }
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -572,7 +570,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it as VirksomhetTilstandAutomatiskOppdateringDto }
+            konsekvens.map { it.endring as VirksomhetTilstandAutomatiskOppdateringDto }
         }.also { either ->
             auditLog.auditloggEither(
                 call = call,
