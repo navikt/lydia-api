@@ -21,7 +21,6 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
-import no.nav.lydia.UautorisertException
 import no.nav.lydia.abc.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.abc.api.dokumentPublisering
 import no.nav.lydia.abc.api.iaSakPlan
@@ -94,7 +93,6 @@ import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetServ
 import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.konfigurasjon.configureSecurity
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.statusoversikt.api.statusoversikt

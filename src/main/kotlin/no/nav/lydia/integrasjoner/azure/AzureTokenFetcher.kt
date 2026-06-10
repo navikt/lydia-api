@@ -6,7 +6,6 @@ import com.github.kittinunf.fuel.httpPost
 import com.nimbusds.jose.jwk.RSAKey
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.integrasjoner.azure.AzureException
 import no.nav.lydia.tilgangskontroll.TokenResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

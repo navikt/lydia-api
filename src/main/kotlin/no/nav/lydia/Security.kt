@@ -1,4 +1,4 @@
-package no.nav.lydia.konfigurasjon
+package no.nav.lydia
 
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.interfaces.Claim
@@ -9,7 +9,6 @@ import io.ktor.server.application.log
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
-import no.nav.lydia.NaisEnvironment
 import java.util.concurrent.TimeUnit
 
 fun Application.configureSecurity(naisEnv: NaisEnvironment) {
