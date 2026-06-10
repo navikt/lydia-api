@@ -5,7 +5,6 @@ import io.ktor.server.response.respond
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.ia.sak.api.Feil
-import java.util.UUID
 
 val ApplicationCall.orgnummer
     get() = parameters["orgnummer"]
@@ -35,13 +34,3 @@ val ApplicationCall.samarbeidsplanId
     get() = parameters["samarbeidsplanId"]?.tilUUID(hvaErJeg = "samarbeidsplanId")
 
 suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)
-
-fun String.tilUUID(hvaErJeg: String): UUID =
-    try {
-        UUID.fromString(this)
-    } catch (e: Exception) {
-        throw IllegalArgumentException(
-            "Kunne ikke konvertere '$this' til UUID for $hvaErJeg",
-            e,
-        )
-    }
