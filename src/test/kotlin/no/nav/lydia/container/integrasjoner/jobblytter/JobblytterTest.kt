@@ -11,10 +11,10 @@ import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
-import no.nav.lydia.abc.samarbeid.SAMARBEID_ID_PREFIKS
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.samarbeid.SAMARBEID_ID_PREFIKS
 import org.junit.Test
 
 class JobblytterTest {

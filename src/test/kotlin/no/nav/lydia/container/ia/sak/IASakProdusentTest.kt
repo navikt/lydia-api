@@ -9,7 +9,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.angreVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.IASak
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test

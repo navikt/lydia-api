@@ -3,10 +3,7 @@ package no.nav.lydia.container.ny.flyt.kartlegging
 import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.abc.api.NY_FLYT_API_PATH
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
-import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
+import no.nav.lydia.api.NY_FLYT_API_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
@@ -24,6 +21,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.kartlegging.Spørreundersøkelse
+import no.nav.lydia.kartlegging.SpørreundersøkelseDto
+import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test

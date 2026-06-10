@@ -2,13 +2,13 @@ package no.nav.lydia.ia.sak.domene
 
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse.Companion.utledPeriodeForStatistikk
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.sykefraværsstatistikk.PeriodeDto
-import no.nav.lydia.sykefraværsstatistikk.PubliseringsinfoDto
-import no.nav.lydia.sykefraværsstatistikk.api.Periode
+import no.nav.lydia.prioritering.sykefraværsstatistikk.PeriodeDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.PubliseringsinfoDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Periode
+import no.nav.lydia.samarbeidsperiode.IASakshendelse
+import no.nav.lydia.samarbeidsperiode.IASakshendelse.Companion.utledPeriodeForStatistikk
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import java.time.LocalDateTime
 import java.time.Month

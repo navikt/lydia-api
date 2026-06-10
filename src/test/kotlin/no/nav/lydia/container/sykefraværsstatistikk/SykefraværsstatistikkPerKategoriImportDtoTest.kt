@@ -2,12 +2,12 @@ package no.nav.lydia.container.sykefraværsstatistikk
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
 import kotlin.test.Test
 
 class SykefraværsstatistikkPerKategoriImportDtoTest {

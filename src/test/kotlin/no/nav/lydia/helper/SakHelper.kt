@@ -4,20 +4,20 @@ import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.abc.api.IA_SAK_LEVERANSE_PATH
-import no.nav.lydia.abc.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.abc.api.IA_SAK_TEAM_PATH
-import no.nav.lydia.abc.api.NY_FLYT_PATH
-import no.nav.lydia.abc.api.SAMARBEIDSHISTORIKK_PATH
-import no.nav.lydia.abc.samarbeid.KanGjennomføreStatusendring
-import no.nav.lydia.abc.samarbeidsperiode.IASakDto
-import no.nav.lydia.abc.samarbeidsperiode.IASakLeveranserPerTjenesteDto
-import no.nav.lydia.abc.samarbeidsperiode.SaksStatusDto
-import no.nav.lydia.abc.samarbeidsperiode.SakshistorikkDto
-import no.nav.lydia.abc.team.BrukerITeamDto
+import no.nav.lydia.api.IA_SAK_LEVERANSE_PATH
+import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.api.IA_SAK_TEAM_PATH
+import no.nav.lydia.api.NY_FLYT_PATH
+import no.nav.lydia.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeid.KanGjennomføreStatusendring
+import no.nav.lydia.samarbeidsperiode.IASakDto
+import no.nav.lydia.samarbeidsperiode.IASakLeveranserPerTjenesteDto
+import no.nav.lydia.samarbeidsperiode.SaksStatusDto
+import no.nav.lydia.samarbeidsperiode.SakshistorikkDto
+import no.nav.lydia.team.BrukerITeamDto
 import kotlin.test.fail
 
 class SakHelper {

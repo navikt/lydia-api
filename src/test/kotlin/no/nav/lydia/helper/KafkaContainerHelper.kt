@@ -12,11 +12,11 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
-import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
-import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraværsstatistikkMetadataVirksomhet
-import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraværsstatistikkPerKategori
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GradertSykemeldingImportDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.KeySykefraværsstatistikkMetadataVirksomhet
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.KeySykefraværsstatistikkPerKategori
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -321,36 +321,6 @@ class KafkaContainerHelper(
                     }
                 }
                 block(alleMeldinger)
-            }
-        }
-    }
-
-    suspend fun tømTopicForMeldinger(
-        key: String,
-        konsument: KafkaConsumer<String, String>,
-        søkFunksjon: (meldinger: List<String>) -> Boolean,
-    ) {
-        withTimeout(Duration.ofSeconds(5)) {
-            launch {
-                delay(20) // -- vent noen millisec fordi vi vet at det er forventet at noe skal ligge i kafka
-                val harKonsumertMeldingerMinstEnGang = AtomicBoolean()
-                val søketErOppfylt = AtomicBoolean()
-                val alleMeldinger = mutableListOf<String>()
-
-                while (
-                    this.isActive && !søketErOppfylt.get()
-                ) {
-                    val records = konsument.poll(Duration.ofMillis(1))
-                    val meldinger = records
-                        .filter { it.key() == key }
-                        .map { it.value() }
-                    if (meldinger.isNotEmpty()) {
-                        harKonsumertMeldingerMinstEnGang.set(true)
-                        alleMeldinger.addAll(meldinger)
-                        søketErOppfylt.set(søkFunksjon(alleMeldinger))
-                        konsument.commitSync()
-                    }
-                }
             }
         }
     }

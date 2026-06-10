@@ -6,7 +6,7 @@ import arrow.core.right
 import com.github.kittinunf.fuel.httpPost
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.abc.felles.Feil
+import no.nav.lydia.felles.Feil
 import no.nav.lydia.tilgangskontroll.TilgangskontrollFeil
 import no.nav.lydia.tilgangskontroll.TokenResponse
 import org.slf4j.LoggerFactory

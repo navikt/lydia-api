@@ -11,10 +11,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseSvarDto
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
+import no.nav.lydia.kartlegging.SpørreundersøkelseService
+import no.nav.lydia.kartlegging.SpørreundersøkelseSvarDto
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer

@@ -4,9 +4,9 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
-import no.nav.lydia.virksomhet.domene.Sektor
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kvartal
+import no.nav.lydia.prioritering.virksomhet.domene.Sektor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

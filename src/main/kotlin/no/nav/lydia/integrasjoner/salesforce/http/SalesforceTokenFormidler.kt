@@ -13,7 +13,7 @@ import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Salesforce
-import no.nav.lydia.abc.felles.Feil
+import no.nav.lydia.felles.Feil
 import org.slf4j.LoggerFactory.getLogger
 import kotlin.time.Clock
 

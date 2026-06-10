@@ -4,12 +4,12 @@ import com.google.gson.Gson
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GraderingSiste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SistePubliserteKvartal
 import java.sql.ResultSet
 
 class SykefraværsstatistikkImportTestUtils {

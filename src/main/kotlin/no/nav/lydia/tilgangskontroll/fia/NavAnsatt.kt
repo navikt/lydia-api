@@ -5,7 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ADGrupper
-import no.nav.lydia.abc.felles.Feil
+import no.nav.lydia.felles.Feil
 import no.nav.lydia.tilgangskontroll.TilgangskontrollFeil
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Saksbehandler
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker

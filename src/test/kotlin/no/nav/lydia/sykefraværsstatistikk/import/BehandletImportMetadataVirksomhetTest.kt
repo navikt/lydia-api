@@ -3,9 +3,9 @@ package no.nav.lydia.sykefraværsstatistikk.import
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.sykefraværsstatistikk.import.BehandletImportMetadataVirksomhet.Companion.tilBehandletImportMetadataVirksomhet
-import no.nav.lydia.virksomhet.domene.Sektor
-import java.lang.IllegalStateException
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.BehandletImportMetadataVirksomhet.Companion.tilBehandletImportMetadataVirksomhet
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.prioritering.virksomhet.domene.Sektor
 import kotlin.test.Test
 
 class BehandletImportMetadataVirksomhetTest {

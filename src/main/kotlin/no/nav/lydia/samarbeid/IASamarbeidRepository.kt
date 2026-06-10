@@ -1,0 +1,272 @@
+package no.nav.lydia.samarbeid
+
+import kotlinx.datetime.toKotlinLocalDateTime
+import kotliquery.Row
+import kotliquery.Session
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
+import no.nav.lydia.dokumentpublisering.arbeidsgiver.DokumentMetadata
+import no.nav.lydia.felles.tilUUID
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
+import no.nav.lydia.samarbeidsplan.SamarbeidDto
+import javax.sql.DataSource
+
+class IASamarbeidRepository(
+    val dataSource: DataSource,
+) {
+    fun hentSamarbeid(samarbeidId: Int): IASamarbeid? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_prosess
+                    WHERE id = :prosessId
+                    """.trimIndent(),
+                    mapOf(
+                        "prosessId" to samarbeidId,
+                    ),
+                ).map { it.mapRowToIASamarbeid() }.asSingle,
+            )
+        }
+
+    fun hentSamarbeid(
+        saksnummer: String,
+        samarbeidId: Int,
+    ): IASamarbeid? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_prosess
+                    WHERE saksnummer = :saksnummer
+                    AND id = :prosessId
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                        "prosessId" to samarbeidId,
+                    ),
+                ).map { it.mapRowToIASamarbeid() }.asSingle,
+            )
+        }
+
+    fun hentSamarbeidSomIkkeErSlettet(saksnummer: String): List<IASamarbeid> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_prosess
+                    WHERE saksnummer = :saksnummer
+                    AND status != :slettetStatus
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                        "slettetStatus" to IASamarbeid.Status.SLETTET.name,
+                    ),
+                ).map { it.mapRowToIASamarbeid() }.asList,
+            )
+        }
+
+    fun hentAktiveSamarbeid(saksnummer: String): List<IASamarbeid> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_prosess
+                    WHERE saksnummer = :saksnummer
+                    AND status = 'AKTIV'
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                    ),
+                ).map { it.mapRowToIASamarbeid() }.asList,
+            )
+        }
+
+    fun hentSamarbeidForOrgnr(orgnr: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT 
+                        ia_prosess.*
+                    FROM ia_sak 
+                      JOIN ia_prosess using (saksnummer)
+                    WHERE orgnr = :orgnr
+                    AND ia_prosess.status != :slettetStatus
+                    """.trimIndent(),
+                    mapOf(
+                        "orgnr" to orgnr,
+                        "slettetStatus" to IASamarbeid.Status.SLETTET.name,
+                    ),
+                ).map { it.mapRowToIASamarbeid() }.asList,
+            )
+        }
+
+    fun hentSpørreundersøkelseDokumenterForSamarbeid(samarbeidId: Int) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT dok.dokument_id, dok.type, isk.fullfort
+                    FROM kvittert_dokument dok
+                    JOIN ia_sak_kartlegging isk on (isk.kartlegging_id = dok.referanse_id)
+                    WHERE dok.type IN (:behovsvurderingType, :evalueringType)
+                        AND dok.status = :publisertStatus
+                        AND dok.ia_prosess = :samarbeidId
+                    """.trimIndent(),
+                    mapOf(
+                        "behovsvurderingType" to DokumentPubliseringDto.Type.BEHOVSVURDERING.name,
+                        "evalueringType" to DokumentPubliseringDto.Type.EVALUERING.name,
+                        "samarbeidId" to samarbeidId,
+                        "publisertStatus" to DokumentPubliseringDto.Status.PUBLISERT.name,
+                    ),
+                ).map {
+                    DokumentMetadata(
+                        dokumentId = it.string("dokument_id"),
+                        type = it.string("type"),
+                        dato = it.localDateTime("fullfort").toKotlinLocalDateTime(),
+                    )
+                }.asList,
+            )
+        }
+
+    fun hentSamarbeidsplanDokumentForSamarbeid(samarbeidId: Int) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM kvittert_dokument dok
+                    WHERE type = :planType
+                        AND dok.status = :publisertStatus
+                        AND dok.ia_prosess = :samarbeidId
+                    ORDER BY publisert_tidspunkt DESC LIMIT 1
+                    """.trimIndent(),
+                    mapOf(
+                        "planType" to DokumentPubliseringDto.Type.SAMARBEIDSPLAN.name,
+                        "samarbeidId" to samarbeidId,
+                        "publisertStatus" to DokumentPubliseringDto.Status.PUBLISERT.name,
+                    ),
+                ).map {
+                    DokumentMetadata(
+                        dokumentId = it.string("dokument_id"),
+                        type = it.string("type"),
+                        dato = it.localDateTime("publisert_tidspunkt").toKotlinLocalDateTime(),
+                    )
+                }.asSingle,
+            )
+        }
+
+    fun hentAlleSamarbeid(): List<IASamarbeid> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_prosess
+                    """.trimIndent(),
+                ).map { it.mapRowToIASamarbeid() }.asList,
+            )
+        }
+
+    fun hentSamarbeidIVirksomhetDto(samarbeidId: Int): SamarbeidIVirksomhetDto? =
+        using(sessionOf(dataSource)) { session: Session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT 
+                          ia_prosess.id as ia_prosess_id,
+                          ia_prosess.navn as navn,
+                          ia_prosess.status as status,
+                          ia_prosess.endret_tidspunkt as endret_tidspunkt,
+                          ia_sak.saksnummer as saksnummer,
+                          ia_sak.orgnr as orgnr
+                          from ia_prosess 
+                        JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
+                        WHERE id = :prosessId
+                    """.trimMargin(),
+                    mapOf(
+                        "prosessId" to samarbeidId,
+                    ),
+                ).map(this::mapTilSamarbeidVirksomhetDto).asSingle,
+            )
+        }
+
+    fun hentAlleSamarbeidIVirksomhetDto(): List<SamarbeidIVirksomhetDto> =
+        using(sessionOf(dataSource)) { session: Session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT 
+                          ia_prosess.id as ia_prosess_id,
+                          ia_prosess.navn as navn,
+                          ia_prosess.status as status,
+                          ia_prosess.endret_tidspunkt as endret_tidspunkt,
+                          ia_sak.saksnummer as saksnummer,
+                          ia_sak.orgnr as orgnr
+                          from ia_prosess 
+                        JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
+                    """.trimMargin(),
+                ).map(this::mapTilSamarbeidVirksomhetDto).asList,
+            )
+        }
+
+    fun hentSalesforceAktiviteter(
+        saksnummer: String,
+        samarbeidId: Int,
+    ): List<SalesforceAktivitet> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM salesforce_aktiviteter
+                    WHERE saksnummer = :saksnummer 
+                    AND samarbeid = :samarbeidId
+                    AND slettet = false
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                        "samarbeidId" to samarbeidId,
+                    ),
+                ).map(Row::mapTilSalesforceAktivitet).asList,
+            )
+        }
+
+    private fun mapTilSamarbeidVirksomhetDto(row: Row): SamarbeidIVirksomhetDto =
+        SamarbeidIVirksomhetDto(
+            orgnr = row.string("orgnr"),
+            saksnummer = row.string("saksnummer"),
+            samarbeid = SamarbeidDto(
+                id = row.int("ia_prosess_id"),
+                navn = row.stringOrNull("navn"),
+                status = row.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
+                endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
+            ),
+        )
+
+    data class SamarbeidIVirksomhetDto(
+        val orgnr: String,
+        val saksnummer: String,
+        val samarbeid: SamarbeidDto,
+    )
+}
+
+fun Row.mapRowToIASamarbeid(): IASamarbeid =
+    IASamarbeid(
+        id = this.int("id"),
+        offentligId = this.string("offentlig_id").tilUUID("offentlig_id"),
+        saksnummer = this.string("saksnummer"),
+        navn = this.string("navn"),
+        status = this.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
+        opprettet = this.localDateTime("opprettet").toKotlinLocalDateTime(),
+        avbrutt = this.localDateTimeOrNull("avbrutt_tidspunkt")?.toKotlinLocalDateTime(),
+        fullført = this.localDateTimeOrNull("fullfort_tidspunkt")?.toKotlinLocalDateTime(),
+        sistEndret = this.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
+    )

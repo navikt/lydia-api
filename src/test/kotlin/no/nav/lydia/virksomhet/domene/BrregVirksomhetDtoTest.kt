@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.integrasjoner.brreg.Adresse
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.tilVirksomhet
+import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 
 class BrregVirksomhetDtoTest {

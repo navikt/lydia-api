@@ -10,8 +10,8 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
-import no.nav.lydia.abc.samarbeidsperiode.IASak
-import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.geografi.Kommune
+import no.nav.lydia.samarbeidsperiode.IASak
 import kotlin.test.Test
 
 class UthentingAvPrioriteringslistaTest {

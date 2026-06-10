@@ -4,7 +4,7 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransje.TRANSPORT
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.api.SYKEFRAVÆRSSTATISTIKK_PATH
+import no.nav.lydia.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -17,15 +17,15 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.lagSykefraværsstatistikkPerKategoriImportDto
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.sykefraværsstatistikk.api.Periode
-import no.nav.lydia.sykefraværsstatistikk.domene.BransjeSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.domene.NæringSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
-import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
-import no.nav.lydia.virksomhet.domene.Sektor
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Periode
+import no.nav.lydia.prioritering.sykefraværsstatistikk.domene.BransjeSykefraværsstatistikk
+import no.nav.lydia.prioritering.sykefraværsstatistikk.domene.NæringSykefraværsstatistikk
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GraderingSiste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GradertSykemeldingImportDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.prioritering.virksomhet.domene.Sektor
 import kotlin.test.Test
 import kotlin.test.fail
 

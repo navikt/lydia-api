@@ -10,8 +10,8 @@ import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
 import no.nav.lydia.helper.TestData.Companion.OPPFØRING_AV_BYGNINGER
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.abc.samarbeidsperiode.IASak
-import no.nav.lydia.virksomhet.domene.Sektor
+import no.nav.lydia.prioritering.virksomhet.domene.Sektor
+import no.nav.lydia.samarbeidsperiode.IASak
 import kotlin.test.Test
 
 class StatusoversiktApiTest {

@@ -2,19 +2,12 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Evaluering
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
-import no.nav.lydia.abc.kartlegging.SpørsmålDto
-import no.nav.lydia.abc.kartlegging.TemaDto
-import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.helper.DokumentPubliseringHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
@@ -34,6 +27,13 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.kartlegging.Spørreundersøkelse
+import no.nav.lydia.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
+import no.nav.lydia.kartlegging.Spørreundersøkelse.Type.Evaluering
+import no.nav.lydia.kartlegging.SpørreundersøkelseDto
+import no.nav.lydia.kartlegging.SpørsmålDto
+import no.nav.lydia.kartlegging.TemaDto
+import no.nav.lydia.samarbeidsperiode.IASakDto
 import org.junit.experimental.categories.Category
 import java.util.UUID
 import kotlin.test.Test

@@ -1,12 +1,12 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import no.nav.lydia.abc.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.abc.samarbeidsperiode.IASakDto
+import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeidsperiode.IASakDto
 import kotlin.test.fail
 
 fun IASakDto.hentAlleSamarbeid(token: String = authContainerHelper.saksbehandler1.token) =

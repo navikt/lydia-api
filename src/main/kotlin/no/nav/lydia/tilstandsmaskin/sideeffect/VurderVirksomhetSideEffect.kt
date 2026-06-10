@@ -1,0 +1,106 @@
+package no.nav.lydia.tilstandsmaskin.sideeffect
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import io.ktor.http.HttpStatusCode
+import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.lydia.felles.Feil
+import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.samarbeidsperiode.IASak.Status.NY
+import no.nav.lydia.samarbeidsperiode.IASak.Status.VURDERES
+import no.nav.lydia.samarbeidsperiode.IASakDto
+import no.nav.lydia.samarbeidsperiode.IASakshendelse
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import no.nav.lydia.tilstandsmaskin.NyFlytService
+import no.nav.lydia.tilstandsmaskin.Transaction
+import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
+import no.nav.lydia.tilstandsmaskin.lagreEllerOppdaterVirksomhetTilstand
+import no.nav.lydia.tilstandsmaskin.lagreHendelse
+import no.nav.lydia.tilstandsmaskin.lagreÅrsakForHendelse
+import no.nav.lydia.tilstandsmaskin.nyHendelseBasertPåSak
+import no.nav.lydia.tilstandsmaskin.oppdaterStatusPåSak
+import no.nav.lydia.tilstandsmaskin.opprettSak
+import no.nav.lydia.tilstandsmaskin.slettVirksomhetTilstandAutomatiskOppdatering
+
+class VurderVirksomhetSideEffect(
+    val orgnummer: String,
+    val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
+    val navEnhet: NavEnhet,
+    val valgtÅrsak: ValgtÅrsak? = null,
+) : SideEffect<IASakDto>() {
+    context(nyFlytService: NyFlytService)
+    override fun apply(): Either<Feil, IASakDto> =
+        try {
+            Transaction(nyFlytService.dataSource).transactional { tx ->
+                with(tx) {
+                    // Steg #1 lagre i DB en ny hendelse OPPRETT_SAK_FOR_VIRKSOMHET, og en ny SakDto med status NY
+                    val iaSakHendelseOpprettSak = IASakshendelse.nyFørsteHendelse(
+                        orgnummer = orgnummer,
+                        superbruker = superbruker,
+                        navEnhet = navEnhet,
+                    )
+                    lagreHendelse(
+                        hendelse = iaSakHendelseOpprettSak,
+                        sistEndretAvHendelseId = null,
+                        resulterendeStatus = NY,
+                    )
+                    val iaSakDto: IASakDto = opprettSak(
+                        iaSakDto = iaSakHendelseOpprettSak.tilIASakDto(),
+                    )
+
+                    // Steg #2 lagre i DB en ny hendelse VIRKSOMHET_VURDERES, og oppdatere SakDto til status VURDERES
+                    val iaSakshendelseVurderes = lagreHendelse(
+                        hendelse = iaSakDto.nyHendelseBasertPåSak(
+                            hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
+                            superbruker = superbruker,
+                            navEnhet = navEnhet,
+                        ),
+                        sistEndretAvHendelseId = null,
+                        resulterendeStatus = VURDERES,
+                    )
+                    valgtÅrsak?.let {
+                        lagreÅrsakForHendelse(
+                            hendelseId = iaSakshendelseVurderes.id,
+                            valgtÅrsak = it,
+                        )
+                    }
+                    val oppdatertIaSakDto = oppdaterStatusPåSak(
+                        saksnummer = iaSakDto.saksnummer,
+                        status = VURDERES,
+                        endretAv = superbruker.navIdent,
+                        endretAvHendelseId = iaSakshendelseVurderes.id,
+                    )
+                    lagreEllerOppdaterVirksomhetTilstand(
+                        orgnr = orgnummer,
+                        tilstand = VirksomhetIATilstand.VirksomhetVurderes,
+                    )
+
+                    slettVirksomhetTilstandAutomatiskOppdatering(
+                        orgnr = orgnummer,
+                    )
+
+                    oppdatertIaSakDto
+                }
+            }.also { nyFlytService.varsleIASakObservers(it) }
+                .right()
+        } catch (e: Exception) {
+            Feil("Feil ved vurdering av virksomhet: ${e.message}", HttpStatusCode.InternalServerError).left()
+        }
+}
+
+private fun IASakshendelse.tilIASakDto(): IASakDto =
+    IASakDto(
+        saksnummer = this.saksnummer,
+        orgnr = this.orgnummer,
+        opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
+        opprettetAv = this.opprettetAv,
+        eidAv = null,
+        endretTidspunkt = null,
+        endretAv = null,
+        endretAvHendelseId = this.id,
+        status = NY,
+        gyldigeNesteHendelser = emptyList(),
+    )

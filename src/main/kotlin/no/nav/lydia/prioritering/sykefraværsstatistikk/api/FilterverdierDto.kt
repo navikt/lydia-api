@@ -1,0 +1,46 @@
+package no.nav.lydia.prioritering.sykefraværsstatistikk.api
+
+import ia.felles.definisjoner.bransjer.Bransje
+import kotlinx.serialization.Serializable
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.geografi.Fylke
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.geografi.Kommune
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.prioritering.virksomhet.domene.Sektor
+import no.nav.lydia.samarbeidsperiode.IASak
+import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
+
+@Serializable
+data class FilterverdierDto(
+    val fylker: List<FylkeOgKommuner>,
+    val naringsgrupper: List<Næringsgruppe> = emptyList(),
+    val bransjeprogram: List<Bransje> = emptyList(),
+    val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
+    val virksomhetTilstander: List<VirksomhetIATilstand> = VirksomhetIATilstand.entries.toList(),
+    val statuser: List<IASak.Status> = IASak.Status.filtrerbareStatuser(),
+    val filtrerbareEiere: List<EierDTO> = emptyList(),
+    val sektorer: List<SektorDto> = Sektor.entries
+        .map { SektorDto(kode = it.kode, beskrivelse = it.beskrivelse) },
+)
+
+enum class SnittFilter {
+    BRANSJE_NÆRING_OVER,
+    BRANSJE_NÆRING_UNDER_ELLER_LIK,
+}
+
+@Serializable
+data class FylkeOgKommuner(
+    val fylke: Fylke,
+    val kommuner: List<Kommune>,
+)
+
+@Serializable
+data class EierDTO(
+    val navIdent: String,
+    val navn: String,
+)
+
+@Serializable
+data class SektorDto(
+    val kode: String,
+    val beskrivelse: String,
+)

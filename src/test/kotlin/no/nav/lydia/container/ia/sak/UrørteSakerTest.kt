@@ -2,10 +2,6 @@ package no.nav.lydia.container.ia.sak
 
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.abc.samarbeidsperiode.BegrunnelseType
-import no.nav.lydia.abc.samarbeidsperiode.IASak
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
@@ -16,8 +12,12 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.samarbeidsperiode.BegrunnelseType
+import no.nav.lydia.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.IASakStatusOppdaterer
+import no.nav.lydia.samarbeidsperiode.IASakshendelse
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
-import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.junit.Ignore
 import org.junit.Test
 

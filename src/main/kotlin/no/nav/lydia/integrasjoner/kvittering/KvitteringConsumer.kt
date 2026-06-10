@@ -11,9 +11,9 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.errors.WakeupException

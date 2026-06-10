@@ -19,11 +19,11 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
-import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori.VIRKSOMHET
-import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GraderingSiste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori.VIRKSOMHET
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SistePubliserteKvartal
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

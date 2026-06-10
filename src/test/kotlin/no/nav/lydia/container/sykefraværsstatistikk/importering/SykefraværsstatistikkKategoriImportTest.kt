@@ -9,11 +9,11 @@ import no.nav.lydia.container.sykefraværsstatistikk.importering.Sykefraværssta
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
-import no.nav.lydia.virksomhet.domene.Sektor
-import no.nav.lydia.virksomhet.domene.tilSektor
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.prioritering.virksomhet.domene.Sektor
+import no.nav.lydia.prioritering.virksomhet.domene.tilSektor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

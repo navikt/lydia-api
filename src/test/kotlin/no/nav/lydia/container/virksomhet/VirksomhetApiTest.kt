@@ -25,8 +25,8 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.hentSalesforceSamarbeidsle
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
-import no.nav.lydia.virksomhet.domene.VirksomhetStatus
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 
 class VirksomhetApiTest {

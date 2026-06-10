@@ -8,7 +8,7 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
 import no.nav.lydia.NaisEnvironment.Companion.Environment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`PROD-GCP`
-import no.nav.lydia.abc.felles.Feil
+import no.nav.lydia.felles.Feil
 import no.nav.lydia.tilgangskontroll.fia.innloggetNavIdent
 import org.slf4j.LoggerFactory
 

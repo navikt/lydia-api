@@ -15,11 +15,9 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.flytt
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
@@ -41,7 +39,9 @@ import no.nav.lydia.helper.body
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.kartlegging.Spørreundersøkelse
+import no.nav.lydia.kartlegging.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
+import no.nav.lydia.samarbeidsplan.PlanMalDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
