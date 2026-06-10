@@ -1,13 +1,13 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.kartlegging
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
+import no.nav.lydia.abc.felles.KafkaProdusent
+import java.time.LocalDateTime
 
 class FullførtBehovsvurderingProdusent(
     kafka: Kafka,
@@ -24,7 +24,7 @@ class FullførtBehovsvurderingProdusent(
             behovsvurderingId = input.id.toString(),
             saksnummer = input.saksnummer,
             prosessId = input.samarbeidId.toString(),
-            fullførtTidspunkt = input.endretTidspunkt ?: java.time.LocalDateTime.now().toKotlinLocalDateTime(),
+            fullførtTidspunkt = input.endretTidspunkt ?: LocalDateTime.now().toKotlinLocalDateTime(),
         )
         return nøkkel to Json.encodeToString(verdi)
     }
@@ -34,6 +34,6 @@ class FullførtBehovsvurderingProdusent(
         val behovsvurderingId: String,
         val saksnummer: String,
         val prosessId: String,
-        val fullførtTidspunkt: LocalDateTime,
+        val fullførtTidspunkt: kotlinx.datetime.LocalDateTime,
     )
 }

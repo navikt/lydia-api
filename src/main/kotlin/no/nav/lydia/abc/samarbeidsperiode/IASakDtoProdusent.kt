@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.eksport.ny.flyt
+package no.nav.lydia.abc.samarbeidsperiode
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
@@ -6,9 +6,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.samarbeidsperiode.IASak
-import no.nav.lydia.abc.samarbeidsperiode.IASakDto
-import no.nav.lydia.ia.eksport.KafkaProdusent
+import no.nav.lydia.abc.felles.KafkaProdusent
 
 class IASakDtoProdusent(
     kafka: Kafka,

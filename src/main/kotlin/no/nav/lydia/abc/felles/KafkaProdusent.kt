@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.felles
 
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic

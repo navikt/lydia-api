@@ -1,10 +1,12 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.samarbeid
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.felles.KafkaProdusent
 import no.nav.lydia.abc.samarbeid.IASamarbeidRepository.SamarbeidIVirksomhetDto
+import no.nav.lydia.abc.samarbeidsplan.SamarbeidDto
 
 class SamarbeidProdusent(
     kafka: Kafka,

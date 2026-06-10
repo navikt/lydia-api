@@ -19,6 +19,7 @@ import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsplan.SamarbeidDto
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetTilstandDto
@@ -1278,7 +1279,7 @@ class NyFlytTest {
             .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .jsonBody(
                 Json.encodeToString(
-                    no.nav.lydia.ia.eksport.SamarbeidDto(
+                    SamarbeidDto(
                         id = samarbeid.id,
                         status = IASamarbeid.Status.FULLFØRT,
                     ),
@@ -1331,7 +1332,7 @@ class NyFlytTest {
             .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .jsonBody(
                 Json.encodeToString(
-                    no.nav.lydia.ia.eksport.SamarbeidDto(
+                    SamarbeidDto(
                         id = samarbeid.id,
                         status = IASamarbeid.Status.FULLFØRT,
                     ),

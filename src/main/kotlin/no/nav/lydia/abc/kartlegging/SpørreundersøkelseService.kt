@@ -11,13 +11,11 @@ import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Evaluering
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
-import no.nav.lydia.ia.eksport.tilTemaResultatKafkaDto
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.extensions.tilUUID

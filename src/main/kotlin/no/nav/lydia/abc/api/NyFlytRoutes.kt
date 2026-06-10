@@ -29,6 +29,7 @@ import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.samarbeidsperiode.SakshistorikkDto
 import no.nav.lydia.abc.samarbeidsperiode.tilSakshistorikk
+import no.nav.lydia.abc.samarbeidsplan.SamarbeidDto
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.TilstandVirksomhetRepository
@@ -47,7 +48,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.VurderVirksomhet
-import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
