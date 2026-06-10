@@ -56,6 +56,7 @@ import no.nav.lydia.abc.samarbeidsperiode.IASakLeveranseRepository
 import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseRepository
+import no.nav.lydia.abc.samarbeidsplan.OppdaterSistEndretPlanObserver
 import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.abc.samarbeidsplan.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.abc.samarbeidsplan.SamarbeidsplanBigqueryProdusent
@@ -73,7 +74,6 @@ import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.arbeidsgiver.samarbeid
 import no.nav.lydia.exceptions.UautorisertException
-import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
 import no.nav.lydia.ia.sak.SendPlanPåKafkaObserver

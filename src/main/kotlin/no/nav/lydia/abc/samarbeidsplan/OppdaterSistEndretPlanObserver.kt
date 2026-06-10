@@ -1,7 +1,6 @@
-package no.nav.lydia.ia.sak
+package no.nav.lydia.abc.samarbeidsplan
 
 import no.nav.lydia.Observer
-import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.appstatus.ObservedPlan
 
 class OppdaterSistEndretPlanObserver(
