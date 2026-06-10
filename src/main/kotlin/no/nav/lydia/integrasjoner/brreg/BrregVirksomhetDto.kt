@@ -2,7 +2,7 @@ package no.nav.lydia.integrasjoner.brreg
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import no.nav.lydia.exceptions.UgyldigAdresseException
+import no.nav.lydia.integrasjoner.brreg.UgyldigAdresseException
 import no.nav.lydia.virksomhet.VirksomhetLagringDao
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus

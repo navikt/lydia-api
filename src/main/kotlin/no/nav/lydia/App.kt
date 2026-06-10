@@ -21,6 +21,7 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
+import no.nav.lydia.UautorisertException
 import no.nav.lydia.abc.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.abc.api.dokumentPublisering
 import no.nav.lydia.abc.api.iaSakPlan
@@ -73,7 +74,6 @@ import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
-import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
 import no.nav.lydia.ia.sak.SendPlanPåKafkaObserver

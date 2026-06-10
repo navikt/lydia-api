@@ -1,3 +1,3 @@
-package no.nav.lydia.exceptions
+package no.nav.lydia
 
 class UautorisertException : Throwable()
