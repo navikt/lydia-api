@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
-import no.nav.lydia.exceptions.UgyldigAdresseException
+import no.nav.lydia.integrasjoner.brreg.UgyldigAdresseException
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer

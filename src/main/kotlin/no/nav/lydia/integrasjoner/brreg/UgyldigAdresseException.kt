@@ -1,4 +1,4 @@
-package no.nav.lydia.exceptions
+package no.nav.lydia.integrasjoner.brreg
 
 class UgyldigAdresseException(
     message: String,
