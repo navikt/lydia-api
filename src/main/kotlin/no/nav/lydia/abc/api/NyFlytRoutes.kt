@@ -56,7 +56,6 @@ import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilgangskontroll.somSuperbrukerMedNavenhet
