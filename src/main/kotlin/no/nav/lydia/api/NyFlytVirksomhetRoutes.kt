@@ -77,7 +77,7 @@ fun Route.nyFlytVirksomhet(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { (it as IASakDto) }
+            konsekvens.map { (it.endring as IASakDto) }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,

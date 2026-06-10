@@ -120,7 +120,7 @@ fun Route.nyFlytSamarbeidsplan(
                     samarbeidId = samarbeidId,
                 ),
             )
-            konsekvens.map { (it as PlanDto) }
+            konsekvens.map { (it.endring as PlanDto) }
         }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
@@ -160,7 +160,7 @@ fun Route.nyFlytSamarbeidsplan(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { (it as PlanDto) }
+            konsekvens.map { (it.endring as PlanDto) }
         }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
@@ -207,7 +207,7 @@ fun Route.nyFlytSamarbeidsplan(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { (it as PlanDto) }
+            konsekvens.map { (it.endring as PlanDto) }
         }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
@@ -263,7 +263,7 @@ fun Route.nyFlytSamarbeidsplan(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { (it as PlanDto) }
+            konsekvens.map { (it.endring as PlanDto) }
         }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
@@ -298,7 +298,7 @@ fun Route.nyFlytSamarbeidsplan(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { (it as Plan).tilDtoMedPubliseringStatus() }
+            konsekvens.map { (it.endring as Plan).tilDtoMedPubliseringStatus() }
         }.also { planMedPlubliseringStatusDtoEither: Either<Feil, PlanDto> ->
             auditLog.auditloggEither(
                 call = call,
