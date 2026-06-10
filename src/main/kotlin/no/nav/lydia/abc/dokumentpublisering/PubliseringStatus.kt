@@ -1,4 +1,4 @@
-package no.nav.lydia.abc.dokument
+package no.nav.lydia.abc.dokumentpublisering
 
 import kotlinx.datetime.LocalDateTime
 import java.util.UUID

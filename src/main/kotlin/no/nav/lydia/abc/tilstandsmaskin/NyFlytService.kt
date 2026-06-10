@@ -9,8 +9,8 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.abc.api.IASakSpørreundersøkelseError
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
-import no.nav.lydia.abc.dokument.DokumentPubliseringService
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService

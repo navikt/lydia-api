@@ -15,7 +15,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid

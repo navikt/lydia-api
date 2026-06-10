@@ -2,7 +2,7 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Evaluering

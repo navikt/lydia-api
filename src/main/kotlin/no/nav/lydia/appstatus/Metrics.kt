@@ -10,7 +10,7 @@ import io.prometheus.metrics.core.metrics.Gauge
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.abc.dokument.DokumentPubliseringRepository
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.plan.Plan
 

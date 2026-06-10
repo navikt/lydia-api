@@ -22,9 +22,9 @@ import no.nav.fia.dokument.publisering.pdfgen.PdfType
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`DEV-GCP`
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`PROD-GCP`
-import no.nav.lydia.abc.dokument.DokumentPubliseringSakDto
-import no.nav.lydia.abc.dokument.SamarbeidDto
-import no.nav.lydia.abc.dokument.VirksomhetDto
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringSakDto
+import no.nav.lydia.abc.dokumentpublisering.SamarbeidDto
+import no.nav.lydia.abc.dokumentpublisering.VirksomhetDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.tilResultatDto
 import no.nav.lydia.abc.kartlegging.tilSpørreundersøkelseInnholdDto

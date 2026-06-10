@@ -1,4 +1,4 @@
-package no.nav.lydia.abc.dokument
+package no.nav.lydia.abc.dokumentpublisering
 
 import arrow.core.Either
 import arrow.core.left

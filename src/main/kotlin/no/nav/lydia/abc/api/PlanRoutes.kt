@@ -7,8 +7,8 @@ import io.ktor.server.routing.get
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto
-import no.nav.lydia.abc.dokument.DokumentPubliseringService
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.samarbeidsplan.tilDtoMedPubliseringStatus

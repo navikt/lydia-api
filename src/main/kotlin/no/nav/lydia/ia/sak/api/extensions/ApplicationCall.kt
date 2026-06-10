@@ -2,7 +2,7 @@ package no.nav.lydia.ia.sak.api.extensions
 
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.ia.sak.api.Feil
 import java.util.UUID
