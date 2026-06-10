@@ -1,5 +1,7 @@
 package no.nav.lydia.tilstandsmaskin
 
+import arrow.core.Either
+import no.nav.lydia.felles.Feil
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.tilstandsmaskin.hendelse.Hendelse
@@ -10,15 +12,9 @@ import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicReference
 
 class Tilstandsmaskin(
-    startTilstand: Tilstand = VirksomhetKlarTilVurdering,
+    val tilstand: Tilstand = VirksomhetKlarTilVurdering,
     private val fiaKontekst: FiaKontekst,
 ) {
-    private val tilstandRef = AtomicReference(startTilstand)
-
-    var nåværendeTilstand: Tilstand
-        get() = tilstandRef.get()
-        set(value) = tilstandRef.set(value)
-
     val saksnummer: String?
         get() = fiaKontekst.saksnummer
 
@@ -27,10 +23,8 @@ class Tilstandsmaskin(
         return eksisterendeTilstand
     }
 
-    fun prosesserHendelse(hendelse: Hendelse): Konsekvens {
-        val konsekvensAvUtførtTransisjon = nåværendeTilstand.utførTransisjon(hendelse, fiaKontekst)
-
-        nåværendeTilstand = konsekvensAvUtførtTransisjon.nyTilstand
+    fun prosesserHendelse(hendelse: Hendelse): Either<Feil, Konsekvens> {
+        val konsekvensAvUtførtTransisjon = tilstand.utførTransisjon(hendelse, fiaKontekst)
         return konsekvensAvUtførtTransisjon
     }
 }
@@ -81,7 +75,7 @@ class TilstandsmaskinBuilder private constructor(
     fun build(orgnr: String): Tilstandsmaskin {
         val tilstandTilVirksomhet = hentTilstandForVirksomhet(orgnr = orgnr)
         return Tilstandsmaskin(
-            startTilstand = tilstandTilVirksomhet,
+            tilstand = tilstandTilVirksomhet,
             fiaKontekst = fiaKontekst,
         )
     }

@@ -20,8 +20,8 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
     override fun utførTransisjon(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
-    ): Konsekvens {
-        val endring: Either<Feil, IASakDto> = when (hendelse) {
+    ): Either<Feil, Konsekvens> =
+        when (hendelse) {
             is VurderVirksomhet -> {
                 val sideEffect = VurderVirksomhetSideEffect(
                     orgnummer = hendelse.orgnr,
@@ -30,11 +30,12 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
                     valgtÅrsak = hendelse.valgtÅrsak,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    return Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetErVurdert else VirksomhetKlarTilVurdering,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetErVurdert,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -43,11 +44,12 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
                     orgnummer = hendelse.orgnr,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    return Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetKlarTilVurdering else VirksomhetErVurdert,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetKlarTilVurdering,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -61,11 +63,12 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
                     navEnhet = hendelse.navEnhet,
                 )
                 with(receiver = fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    return Konsekvens(
-                        nyTilstand = VirksomhetErVurdert,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetErVurdert,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -75,10 +78,4 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
                 )
             }
         }
-
-        return Konsekvens(
-            nyTilstand = VirksomhetErVurdert,
-            endring = endring,
-        )
-    }
 }

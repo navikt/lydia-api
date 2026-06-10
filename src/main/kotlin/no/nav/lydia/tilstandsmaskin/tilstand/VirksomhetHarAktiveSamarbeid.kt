@@ -42,7 +42,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
     override fun utførTransisjon(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
-    ): Konsekvens =
+    ): Either<Feil, Konsekvens> =
         when (hendelse) {
             is OpprettNyttSamarbeid -> {
                 val sideEffect = OpprettSamarbeidSideEffect(
@@ -53,11 +53,12 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -71,18 +72,17 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat.map {
-                            it.tilDto(
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it.tilDto(
                                 fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
                                     referanseId = it.id,
                                     type = it.type.name.tilDokumentTilPubliseringType(),
                                 ),
-                            )
-                        },
-                    )
+                            ),
+                        )
+                    }
                 }
             }
 
@@ -95,18 +95,18 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat.map {
-                            it.tilDto(
-                                fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
-                                    referanseId = it.id,
-                                    type = it.type.name.tilDokumentTilPubliseringType(),
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring =
+                                it.tilDto(
+                                    fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                        referanseId = it.id,
+                                        type = it.type.name.tilDokumentTilPubliseringType(),
+                                    ),
                                 ),
-                            )
-                        },
-                    )
+                        )
+                    }
                 }
             }
 
@@ -119,18 +119,18 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat.map {
-                            it.tilDto(
-                                fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
-                                    referanseId = it.id,
-                                    type = it.type.name.tilDokumentTilPubliseringType(),
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring =
+                                it.tilDto(
+                                    fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                        referanseId = it.id,
+                                        type = it.type.name.tilDokumentTilPubliseringType(),
+                                    ),
                                 ),
-                            )
-                        },
-                    )
+                        )
+                    }
                 }
             }
 
@@ -143,18 +143,18 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat.map {
-                            it.tilDto(
-                                fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
-                                    referanseId = it.id,
-                                    type = it.type.name.tilDokumentTilPubliseringType(),
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring =
+                                it.tilDto(
+                                    fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
+                                        referanseId = it.id,
+                                        type = it.type.name.tilDokumentTilPubliseringType(),
+                                    ),
                                 ),
-                            )
-                        },
-                    )
+                        )
+                    }
                 }
             }
 
@@ -168,11 +168,12 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -185,11 +186,12 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     endringer = hendelse.endringer,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -203,11 +205,12 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     endringer = hendelse.endringer,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -222,11 +225,12 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     nyStatus = hendelse.nyStatus,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -239,11 +243,12 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -257,32 +262,34 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                 )
 
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    val harAktiveSamarbeid = TilstandsmaskinBuilder.harAktiveSamarbeid(
-                        fiaKontekst = fiaKontekst,
-                        saksnummer = fiaKontekst.saksnummer,
-                    )
-                    val harSamarbeidOgAlleErAvsluttet = TilstandsmaskinBuilder.harSamarbeidOgAlleErAvsluttet(
-                        fiaKontekst = fiaKontekst,
-                        saksnummer = fiaKontekst.saksnummer,
-                    )
-
-                    if (harSamarbeidOgAlleErAvsluttet && resultat.isRight()) {
-                        TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
-                            orgnr = hendelse.orgnr,
+                    sideEffect.apply().map {
+                        val harAktiveSamarbeid = TilstandsmaskinBuilder.harAktiveSamarbeid(
                             fiaKontekst = fiaKontekst,
-                            planlagtDato = hendelse.dato,
+                            saksnummer = fiaKontekst.saksnummer,
+                        )
+                        val harSamarbeidOgAlleErAvsluttet = TilstandsmaskinBuilder.harSamarbeidOgAlleErAvsluttet(
+                            fiaKontekst = fiaKontekst,
+                            saksnummer = fiaKontekst.saksnummer,
+                        )
+
+                        // TODO: flyt automatisk oppdatering i SideEffekt
+                        if (harSamarbeidOgAlleErAvsluttet) {
+                            TilstandsmaskinBuilder.oppdaterTilAlleSamarbeidAvsluttetMedAutomatiskOppdatering(
+                                orgnr = hendelse.orgnr,
+                                fiaKontekst = fiaKontekst,
+                                planlagtDato = hendelse.dato,
+                            )
+                        }
+
+                        Konsekvens(
+                            endring = it,
+                            nyTilstand = when {
+                                harAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
+                                harSamarbeidOgAlleErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
+                                else -> VirksomhetVurderes
+                            },
                         )
                     }
-
-                    Konsekvens(
-                        endring = resultat,
-                        nyTilstand = when {
-                            harAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
-                            harSamarbeidOgAlleErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
-                            else -> VirksomhetVurderes
-                        },
-                    )
                 }
             }
 
@@ -297,11 +304,12 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(receiver = fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -315,24 +323,21 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetHarAktiveSamarbeid,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
             else -> {
-                val endring = Either.Left(
+                Either.Left(
                     Feil(
                         "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetHarAktiveSamarbeid.tilVirksomhetIATilstand()}'",
                         HttpStatusCode.BadRequest,
                     ),
-                )
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetVurderes,
                 )
             }
         }
