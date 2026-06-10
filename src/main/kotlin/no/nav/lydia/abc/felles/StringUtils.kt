@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.extensions
+package no.nav.lydia.abc.felles
 
 import java.util.UUID
 
