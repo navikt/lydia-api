@@ -25,6 +25,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.api.FILTERVERDIER_PATH
+import no.nav.lydia.abc.api.SYKEFRAVÆRSSTATISTIKK_PATH
+import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
@@ -73,12 +76,9 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
-import no.nav.lydia.sykefraværsstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
-import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.SnittFilter
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE

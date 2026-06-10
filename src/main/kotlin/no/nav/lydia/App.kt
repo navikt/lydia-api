@@ -22,6 +22,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
 import no.nav.lydia.abc.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.abc.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.abc.api.dokumentPublisering
 import no.nav.lydia.abc.api.iaSakPlan
 import no.nav.lydia.abc.api.iaSakRådgiver
@@ -33,6 +34,7 @@ import no.nav.lydia.abc.api.nyFlytSamarbeidsplan
 import no.nav.lydia.abc.api.nyFlytVirksomhet
 import no.nav.lydia.abc.api.samarbeid
 import no.nav.lydia.abc.api.statusoversikt
+import no.nav.lydia.abc.api.sykefraværsstatistikk
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
@@ -101,9 +103,7 @@ import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkRepository
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraværsstatistikk.VirksomhetsinformasjonRepository
-import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
-import no.nav.lydia.sykefraværsstatistikk.api.sykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer

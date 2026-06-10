@@ -1,4 +1,4 @@
-package no.nav.lydia.sykefraværsstatistikk.api
+package no.nav.lydia.abc.api
 
 import arrow.core.flatMap
 import arrow.core.getOrElse
@@ -16,8 +16,11 @@ import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
+import no.nav.lydia.sykefraværsstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktDto.Companion.toDto
+import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktResponsDto
 import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsstatistikkSiste4KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.fia.innloggetNavIdent

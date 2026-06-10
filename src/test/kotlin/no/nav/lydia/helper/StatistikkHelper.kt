@@ -1,16 +1,16 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import no.nav.lydia.abc.api.ANTALL_TREFF
+import no.nav.lydia.abc.api.FILTERVERDIER_PATH
+import no.nav.lydia.abc.api.HISTORISK_STATISTIKK
+import no.nav.lydia.abc.api.PUBLISERINGSINFO
+import no.nav.lydia.abc.api.SISTE_4_KVARTALER
+import no.nav.lydia.abc.api.SISTE_TILGJENGELIGE_KVARTAL
+import no.nav.lydia.abc.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.sykefraværsstatistikk.Publiseringsinfo
-import no.nav.lydia.sykefraværsstatistikk.api.ANTALL_TREFF
-import no.nav.lydia.sykefraværsstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.FilterverdierDto
-import no.nav.lydia.sykefraværsstatistikk.api.HISTORISK_STATISTIKK
-import no.nav.lydia.sykefraværsstatistikk.api.PUBLISERINGSINFO
-import no.nav.lydia.sykefraværsstatistikk.api.SISTE_4_KVARTALER
-import no.nav.lydia.sykefraværsstatistikk.api.SISTE_TILGJENGELIGE_KVARTAL
-import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktDto
 import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktResponsDto

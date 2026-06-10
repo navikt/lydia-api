@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.core.Request
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
+import no.nav.lydia.abc.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhetResponse
@@ -16,7 +17,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
-import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.FYLKER
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.KOMMUNER
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.NÆRINGSGRUPPER
