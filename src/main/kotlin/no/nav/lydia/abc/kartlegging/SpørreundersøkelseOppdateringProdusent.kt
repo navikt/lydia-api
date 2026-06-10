@@ -1,17 +1,10 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.kartlegging
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository.SpørreundersøkelseAntallSvar
-import no.nav.lydia.abc.kartlegging.Spørsmål
-import no.nav.lydia.abc.kartlegging.Svaralternativ
-import no.nav.lydia.abc.kartlegging.Tema
-import no.nav.lydia.abc.kartlegging.Undertema
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -129,20 +122,20 @@ class SpørreundersøkelseOppdateringProdusent(
     )
 }
 
-fun Tema.tilTemaResultatKafkaDto(): TemaResultatKafkaDto =
-    TemaResultatKafkaDto(
+fun Tema.tilTemaResultatKafkaDto(): SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto =
+    SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto(
         id = id,
         navn = navn,
         spørsmålMedSvar = undertemaer.tilResultatKafkaDto(),
     )
 
-fun List<Undertema>.tilResultatKafkaDto(): List<SpørsmålResultatKafkaDto> =
+fun List<Undertema>.tilResultatKafkaDto(): List<SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto> =
     flatMap { undertema ->
         undertema.spørsmål.map { it.tilResultatKafkaDto(undertemanavn = undertema.navn) }
     }
 
-fun Spørsmål.tilResultatKafkaDto(undertemanavn: String): SpørsmålResultatKafkaDto =
-    SpørsmålResultatKafkaDto(
+fun Spørsmål.tilResultatKafkaDto(undertemanavn: String): SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto =
+    SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto(
         id = id.toString(),
         tekst = tekst,
         flervalg = flervalg,
@@ -150,8 +143,8 @@ fun Spørsmål.tilResultatKafkaDto(undertemanavn: String): SpørsmålResultatKaf
         kategori = undertemanavn,
     )
 
-fun Svaralternativ.tilResultatKafkaDto(): SvarResultatKafkaDto =
-    SvarResultatKafkaDto(
+fun Svaralternativ.tilResultatKafkaDto(): SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto =
+    SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto(
         id = id.toString(),
         tekst = tekst,
         antallSvar = antallSvar,

@@ -8,8 +8,8 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.felles.KafkaProdusent
 import no.nav.lydia.abc.kartlegging.TemaResultatDto
-import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 
 class DokumentPubliseringProdusent(

@@ -6,6 +6,9 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseOppdateringProdusent.AntallSvarKafkaDto
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdatering
+import no.nav.lydia.abc.kartlegging.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
 import no.nav.lydia.container.ia.sak.kartlegging.BehovsvurderingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
@@ -21,9 +24,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.AntallSvarKafkaDto
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdatering
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.postgresql.util.PGobject

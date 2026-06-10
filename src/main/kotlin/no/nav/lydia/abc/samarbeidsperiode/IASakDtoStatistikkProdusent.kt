@@ -1,18 +1,14 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.samarbeidsperiode
 
 import ia.felles.definisjoner.bransjer.Bransje
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.felles.KafkaProdusent
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse.Companion.utledPeriodeForStatistikk
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseRepository
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
-import no.nav.lydia.abc.samarbeidsperiode.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
@@ -23,7 +19,7 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import no.nav.lydia.virksomhet.domene.Virksomhet
 
-class IASakStatistikkProdusent(
+class IASakDtoStatistikkProdusent(
     kafka: Kafka,
     topic: Topic = Topic.IA_SAK_STATISTIKK_TOPIC,
     private val virksomhetRepository: VirksomhetRepository,
@@ -31,14 +27,14 @@ class IASakStatistikkProdusent(
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val geografiService: GeografiService,
     sistePubliseringService: SistePubliseringService,
-) : KafkaProdusent<IASak>(kafka, topic),
-    Observer<IASak> {
+) : KafkaProdusent<IASakDto>(kafka, topic),
+    Observer<IASakDto> {
     private val allPubliseringsinfo = sistePubliseringService.hentAllPubliseringsinfo()
     private val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
 
-    override fun receive(input: IASak) = sendPåKafka(input = input)
+    override fun receive(input: IASakDto) = sendPåKafka(input = input)
 
-    override fun tilKafkaMelding(input: IASak): Pair<String, String> {
+    override fun tilKafkaMelding(input: IASakDto): Pair<String, String> {
         val virksomhet = virksomhetRepository.hentVirksomhet(input.orgnr)
         val fylkesnummer = virksomhet?.let { geografiService.finnFylke(it.kommunenummer) }?.nummer
 
@@ -55,7 +51,7 @@ class IASakStatistikkProdusent(
         ).getOrNull()
 
         val nøkkel = input.saksnummer
-        val verdi = IASakStatistikkValue(
+        val verdi = IASakDtoStatistikkValue(
             saksnummer = input.saksnummer,
             orgnr = input.orgnr,
             eierAvSak = input.eidAv,
@@ -65,9 +61,9 @@ class IASakStatistikkProdusent(
             endretAv = hendelse?.opprettetAv,
             endretAvRolle = hendelse?.opprettetAvRolle,
             ikkeAktuelBegrunnelse = if (hendelse is VirksomhetIkkeAktuellHendelse) hendelse.valgtÅrsak.begrunnelser.toString() else null,
-            opprettetTidspunkt = input.opprettetTidspunkt.toKotlinLocalDateTime(),
-            endretTidspunkt = input.endretTidspunkt?.toKotlinLocalDateTime() ?: input.opprettetTidspunkt.toKotlinLocalDateTime(),
-            avsluttetTidspunkt = if (input.status.regnesSomAvsluttet()) input.endretTidspunkt?.toKotlinLocalDateTime() else null,
+            opprettetTidspunkt = input.opprettetTidspunkt,
+            endretTidspunkt = input.endretTidspunkt ?: input.opprettetTidspunkt,
+            avsluttetTidspunkt = if (input.status.regnesSomAvsluttet()) input.endretTidspunkt else null,
             antallPersoner = virksomhetsstatistikkSisteKvartal?.antallPersoner,
             tapteDagsverk = virksomhetsstatistikkSisteKvartal?.tapteDagsverk,
             tapteDagsverkGradert = virksomhetsstatistikkSisteKvartal?.tapteDagsverkGradert,
@@ -104,7 +100,7 @@ class IASakStatistikkProdusent(
     }
 
     @Serializable
-    data class IASakStatistikkValue(
+    private data class IASakDtoStatistikkValue(
         val saksnummer: String,
         val orgnr: String,
         val eierAvSak: String?,

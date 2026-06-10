@@ -1,6 +1,5 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.samarbeidsplan
 
-import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

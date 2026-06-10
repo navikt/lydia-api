@@ -1,7 +1,5 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.kartlegging
 
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean

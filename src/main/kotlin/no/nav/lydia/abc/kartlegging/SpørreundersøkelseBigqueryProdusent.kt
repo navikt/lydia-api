@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.kartlegging
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
+import no.nav.lydia.abc.felles.KafkaProdusent
 
 class SpørreundersøkelseBigqueryProdusent(
     kafka: Kafka,

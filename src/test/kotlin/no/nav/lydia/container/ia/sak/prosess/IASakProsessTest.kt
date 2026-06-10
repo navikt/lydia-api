@@ -21,6 +21,7 @@ import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.abc.samarbeid.IASamarbeidService.StatusendringBegrunnelser
 import no.nav.lydia.abc.samarbeid.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsplan.SamarbeidsplanKafkaMelding
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
@@ -50,7 +51,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass

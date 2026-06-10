@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.eksport
+package no.nav.lydia.abc.samarbeidsplan
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -6,10 +6,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.felles.KafkaProdusent
 import no.nav.lydia.abc.samarbeid.IASamarbeid
-import no.nav.lydia.abc.samarbeidsplan.PlanDto
-import no.nav.lydia.abc.samarbeidsplan.PlanTemaDto
-import no.nav.lydia.abc.samarbeidsplan.PlanUndertemaDto
 
 class SamarbeidsplanProdusent(
     kafka: Kafka,
