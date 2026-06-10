@@ -17,9 +17,9 @@ import no.nav.lydia.Topic
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.virksomhet.domene.Sektor
+import no.nav.lydia.prioritering.sykefraværsstatistikk.LANDKODE_NO
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.prioritering.virksomhet.domene.Sektor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer

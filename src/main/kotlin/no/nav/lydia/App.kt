@@ -21,67 +21,31 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
-import no.nav.lydia.abc.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.abc.api.SYKEFRAVÆRSSTATISTIKK_PATH
-import no.nav.lydia.abc.api.VIRKSOMHET_PATH
-import no.nav.lydia.abc.api.dokumentPublisering
-import no.nav.lydia.abc.api.iaSakPlan
-import no.nav.lydia.abc.api.iaSakRådgiver
-import no.nav.lydia.abc.api.iaSakSpørreundersøkelse
-import no.nav.lydia.abc.api.iaSakTeam
-import no.nav.lydia.abc.api.nyFlyt
-import no.nav.lydia.abc.api.nyFlytKartlegging
-import no.nav.lydia.abc.api.nyFlytSamarbeidsplan
-import no.nav.lydia.abc.api.nyFlytVirksomhet
-import no.nav.lydia.abc.api.samarbeid
-import no.nav.lydia.abc.api.statusoversikt
-import no.nav.lydia.abc.api.sykefraværsstatistikk
-import no.nav.lydia.abc.api.virksomhet
-import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringProdusent
-import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringRepository
-import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
-import no.nav.lydia.abc.kartlegging.FullførtBehovsvurderingProdusent
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseBigqueryEksporterer
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseBigqueryProdusent
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseMetrikkObserver
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseOppdateringProdusent
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseProdusent
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
-import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
-import no.nav.lydia.abc.samarbeid.IASamarbeidRepository
-import no.nav.lydia.abc.samarbeid.IASamarbeidService
-import no.nav.lydia.abc.samarbeid.SamarbeidBigqueryEksporterer
-import no.nav.lydia.abc.samarbeid.SamarbeidBigqueryProdusent
-import no.nav.lydia.abc.samarbeid.SamarbeidKafkaEksporterer
-import no.nav.lydia.abc.samarbeid.SamarbeidProdusent
-import no.nav.lydia.abc.samarbeid.SendSamarbeidPåKafkaObserver
-import no.nav.lydia.abc.samarbeidsperiode.IASakDtoProdusent
-import no.nav.lydia.abc.samarbeidsperiode.IASakDtoStatistikkProdusent
-import no.nav.lydia.abc.samarbeidsperiode.IASakEksporterer
-import no.nav.lydia.abc.samarbeidsperiode.IASakLeveranseRepository
-import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
-import no.nav.lydia.abc.samarbeidsperiode.IASakService
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseRepository
-import no.nav.lydia.abc.samarbeidsplan.OppdaterSistEndretPlanObserver
-import no.nav.lydia.abc.samarbeidsplan.PlanRepository
-import no.nav.lydia.abc.samarbeidsplan.SamarbeidsplanBigqueryEksporterer
-import no.nav.lydia.abc.samarbeidsplan.SamarbeidsplanBigqueryProdusent
-import no.nav.lydia.abc.samarbeidsplan.SamarbeidsplanKafkaEksporterer
-import no.nav.lydia.abc.samarbeidsplan.SamarbeidsplanProdusent
-import no.nav.lydia.abc.team.IATeamRepository
-import no.nav.lydia.abc.team.IATeamService
-import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
-import no.nav.lydia.abc.tilstandsmaskin.TilstandVirksomhetOppdaterer
-import no.nav.lydia.abc.tilstandsmaskin.TilstandVirksomhetRepository
+import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.api.SYKEFRAVÆRSSTATISTIKK_PATH
+import no.nav.lydia.api.VIRKSOMHET_PATH
+import no.nav.lydia.api.dokumentPublisering
+import no.nav.lydia.api.iaSakPlan
+import no.nav.lydia.api.iaSakRådgiver
+import no.nav.lydia.api.iaSakSpørreundersøkelse
+import no.nav.lydia.api.iaSakTeam
+import no.nav.lydia.api.iaSamarbeid
+import no.nav.lydia.api.nyFlyt
+import no.nav.lydia.api.nyFlytKartlegging
+import no.nav.lydia.api.nyFlytSamarbeidsplan
+import no.nav.lydia.api.nyFlytVirksomhet
+import no.nav.lydia.api.samarbeid
+import no.nav.lydia.api.statusoversikt
+import no.nav.lydia.api.sykefraværsstatistikk
+import no.nav.lydia.api.virksomhet
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
-import no.nav.lydia.ia.sak.PlanService
-import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
-import no.nav.lydia.ia.sak.SendPlanPåKafkaObserver
-import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringProdusent
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringRepository
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
@@ -98,23 +62,53 @@ import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetServ
 import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.kartlegging.FullførtBehovsvurderingProdusent
+import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryEksporterer
+import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryProdusent
+import no.nav.lydia.kartlegging.SpørreundersøkelseMetrikkObserver
+import no.nav.lydia.kartlegging.SpørreundersøkelseOppdateringProdusent
+import no.nav.lydia.kartlegging.SpørreundersøkelseProdusent
+import no.nav.lydia.kartlegging.SpørreundersøkelseRepository
+import no.nav.lydia.kartlegging.SpørreundersøkelseService
+import no.nav.lydia.prioritering.StatistikkViewOppdaterer
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.geografi.GeografiService
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
+import no.nav.lydia.prioritering.virksomhet.VirksomhetRepository
+import no.nav.lydia.prioritering.virksomhet.VirksomhetService
+import no.nav.lydia.samarbeid.IASamarbeidRepository
+import no.nav.lydia.samarbeid.IASamarbeidService
+import no.nav.lydia.samarbeid.SamarbeidBigqueryEksporterer
+import no.nav.lydia.samarbeid.SamarbeidBigqueryProdusent
+import no.nav.lydia.samarbeid.SamarbeidKafkaEksporterer
+import no.nav.lydia.samarbeid.SamarbeidProdusent
+import no.nav.lydia.samarbeid.SendSamarbeidPåKafkaObserver
+import no.nav.lydia.samarbeidsperiode.IASakDtoProdusent
+import no.nav.lydia.samarbeidsperiode.IASakDtoStatistikkProdusent
+import no.nav.lydia.samarbeidsperiode.IASakEksporterer
+import no.nav.lydia.samarbeidsperiode.IASakLeveranseRepository
+import no.nav.lydia.samarbeidsperiode.IASakRepository
+import no.nav.lydia.samarbeidsperiode.IASakService
+import no.nav.lydia.samarbeidsperiode.IASakStatusOppdaterer
+import no.nav.lydia.samarbeidsperiode.IASakshendelseRepository
+import no.nav.lydia.samarbeidsplan.OppdaterSistEndretPlanObserver
+import no.nav.lydia.samarbeidsplan.PlanRepository
+import no.nav.lydia.samarbeidsplan.PlanService
+import no.nav.lydia.samarbeidsplan.SamarbeidplanMetrikkObserver
+import no.nav.lydia.samarbeidsplan.SamarbeidsplanBigqueryEksporterer
+import no.nav.lydia.samarbeidsplan.SamarbeidsplanBigqueryProdusent
+import no.nav.lydia.samarbeidsplan.SamarbeidsplanKafkaEksporterer
+import no.nav.lydia.samarbeidsplan.SamarbeidsplanProdusent
+import no.nav.lydia.samarbeidsplan.SendPlanPåKafkaObserver
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
-import no.nav.lydia.sykefraværsstatistikk.SistePubliseringRepository
-import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
-import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkRepository
-import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
-import no.nav.lydia.sykefraværsstatistikk.VirksomhetsinformasjonRepository
-import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
-import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
-import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
-import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
+import no.nav.lydia.team.IATeamRepository
+import no.nav.lydia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
-import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
-import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
-import no.nav.lydia.virksomhet.VirksomhetRepository
-import no.nav.lydia.virksomhet.VirksomhetService
-import java.util.UUID
+import no.nav.lydia.tilstandsmaskin.NyFlytService
+import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetOppdaterer
+import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -138,14 +132,24 @@ fun startLydiaBackend() {
     val samarbeidsplanProdusent = SamarbeidsplanProdusent(kafka = naisEnv.kafka)
     val samarbeidProdusent = SamarbeidProdusent(kafka = naisEnv.kafka)
 
-    val sykefraværsstatistikkService = SykefraværsstatistikkService(
-        sykefraværsstatistikkRepository = SykefraværsstatistikkRepository(dataSource = dataSource),
-        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
-        sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
+    val sykefraværsstatistikkService = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SykefraværsstatistikkService(
+        sykefraværsstatistikkRepository = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SykefraværsstatistikkRepository(
+            dataSource = dataSource,
+        ),
+        virksomhetsinformasjonRepository = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.VirksomhetsinformasjonRepository(
+            dataSource = dataSource,
+        ),
+        sistePubliseringService = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService(
+            _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringRepository(
+                dataSource = dataSource,
+            ),
+        ),
         virksomhetRepository = virksomhetRepository,
     )
     val auditLog = AuditLog(naisEnv.miljø)
-    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
+    val sistePubliseringService = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService(
+        _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringRepository(dataSource = dataSource),
+    )
     val iaSakDtoProdusent = IASakDtoProdusent(kafka = naisEnv.kafka)
     val iaSakDtoStatistikkProdusent = IASakDtoStatistikkProdusent(
         kafka = naisEnv.kafka,
@@ -317,7 +321,7 @@ fun startLydiaBackend() {
         Topic.STATISTIKK_NARINGSKODE_TOPIC,
         Topic.STATISTIKK_VIRKSOMHET_TOPIC,
     ).forEach { topic ->
-        StatistikkPerKategoriConsumer(topic = topic).apply {
+        _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer(topic = topic).apply {
             create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
             run()
         }.also { HelseMonitor.leggTilHelsesjekk(it) }
@@ -453,10 +457,10 @@ private fun Application.lydiaRestApi(
     naisEnv: NaisEnvironment,
     dataSource: DataSource,
     næringsRepository: NæringsRepository,
-    sykefraværsstatistikkService: SykefraværsstatistikkService,
+    sykefraværsstatistikkService: no.nav.lydia.prioritering.sykefraværsstatistikk.SykefraværsstatistikkService,
     auditLog: AuditLog,
     azureService: AzureService,
-    sistePubliseringService: SistePubliseringService,
+    sistePubliseringService: no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService,
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     samarbeidService: IASamarbeidService,

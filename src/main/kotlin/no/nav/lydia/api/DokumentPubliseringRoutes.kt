@@ -1,0 +1,49 @@
+package no.nav.lydia.api
+
+import arrow.core.flatMap
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.log
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.post
+import no.nav.lydia.ADGrupper
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.felles.Feil
+import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.tilgangskontroll.fia.objectId
+import no.nav.lydia.tilgangskontroll.somSaksbehandler
+
+const val DOKUMENT_PUBLISERING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/dokument"
+
+fun Route.dokumentPublisering(
+    adGrupper: ADGrupper,
+    azureService: AzureService,
+    dokumentPubliseringService: DokumentPubliseringService,
+) {
+    post(path = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/{dokumentType}/ref/{dokumentReferanseId}") {
+        val dokumentType = call.dokumentType ?: return@post call.sendFeil(DokumentPubliseringError.`ugyldig type`)
+        val dokumentReferanseId = call.dokumentReferanseId ?: return@post call.sendFeil(DokumentPubliseringError.`ugyldig id`)
+
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            azureService.hentNavenhet(objectId = call.objectId()).flatMap { navEnhet: NavEnhet ->
+                dokumentPubliseringService.publiserDokument(
+                    dokumentType = dokumentType,
+                    dokumentReferanseId = dokumentReferanseId,
+                    opprettetAv = saksbehandler,
+                    navEnhet = navEnhet,
+                )
+            }
+        }.onRight {
+            call.respond(status = HttpStatusCode.Created, message = it)
+        }.onLeft {
+            call.application.log.warn(it.feilmelding)
+            call.sendFeil(feil = it)
+        }
+    }
+}
+
+object DokumentPubliseringError {
+    val `ugyldig id` = Feil(feilmelding = "Ugyldig dokumentReferanseId", httpStatusCode = HttpStatusCode.BadRequest)
+    val `ugyldig type` = Feil(feilmelding = "Ugyldig type dokument", httpStatusCode = HttpStatusCode.BadRequest)
+}

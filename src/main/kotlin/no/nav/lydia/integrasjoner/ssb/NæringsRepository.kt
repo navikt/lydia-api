@@ -3,7 +3,7 @@ package no.nav.lydia.integrasjoner.ssb
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
 import javax.sql.DataSource
 
 class NæringsRepository(

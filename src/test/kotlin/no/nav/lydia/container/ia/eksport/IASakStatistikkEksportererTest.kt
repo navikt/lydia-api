@@ -7,8 +7,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.samarbeidsperiode.IASak
-import no.nav.lydia.abc.samarbeidsperiode.IASakStatistikkProdusent
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -17,8 +15,10 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.IASakStatistikkProdusent
 import no.nav.lydia.tilgangskontroll.fia.Rolle
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test

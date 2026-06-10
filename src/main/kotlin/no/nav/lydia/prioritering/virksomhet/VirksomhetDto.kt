@@ -1,0 +1,51 @@
+package no.nav.lydia.prioritering.virksomhet
+
+import ia.felles.definisjoner.bransjer.Bransje
+import kotlinx.datetime.LocalDate
+import kotlinx.serialization.Serializable
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.prioritering.virksomhet.domene.Virksomhet
+import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
+import kotlin.time.Instant
+
+@Serializable
+data class VirksomhetDto(
+    val orgnr: String,
+    val aktivtSaksnummer: String? = null,
+    val navn: String,
+    val status: VirksomhetStatus,
+    val oppstartsdato: LocalDate? = null,
+    val adresse: List<String>,
+    val postnummer: String,
+    val poststed: String,
+    val oppdatertAvBrregOppdateringsId: Long? = null,
+    val opprettetTidspunkt: Instant,
+    val sistEndretTidspunkt: Instant,
+    val sektor: String,
+    val næringsundergruppe1: Næringsgruppe,
+    val næringsundergruppe2: Næringsgruppe?,
+    val næringsundergruppe3: Næringsgruppe?,
+    val næring: Næringsgruppe,
+    val bransje: Bransje?,
+)
+
+fun Virksomhet.toDto(saksnummer: String?) =
+    VirksomhetDto(
+        orgnr = this.orgnr,
+        aktivtSaksnummer = saksnummer,
+        navn = this.navn,
+        adresse = this.adresse,
+        status = this.status,
+        oppstartsdato = oppstartsdato,
+        postnummer = this.postnummer,
+        poststed = this.poststed,
+        oppdatertAvBrregOppdateringsId = this.oppdatertAvBrregOppdateringsId,
+        opprettetTidspunkt = this.opprettetTidspunkt,
+        sistEndretTidspunkt = this.sistEndretTidspunkt,
+        sektor = sektor?.beskrivelse ?: "Ukjent",
+        næringsundergruppe1 = this.næringsundergruppe1,
+        næringsundergruppe2 = this.næringsundergruppe2,
+        næringsundergruppe3 = this.næringsundergruppe3,
+        næring = this.næring,
+        bransje = this.bransje,
+    )

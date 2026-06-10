@@ -1,17 +1,17 @@
 package no.nav.lydia.helper
 
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
-import no.nav.lydia.sykefraværsstatistikk.api.Periode
-import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
-import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
-import no.nav.lydia.virksomhet.domene.Sektor
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Periode
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GraderingSiste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GradertSykemeldingImportDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.prioritering.virksomhet.domene.Sektor
 import java.math.RoundingMode
 import java.time.LocalDate
 import kotlin.random.Random
@@ -38,7 +38,6 @@ class TestData(
         val NÆRING_MED_BINDESTREK = Næringsgruppe(kode = "91.112", navn = "Drift av fag- og forskningsbiblioteker")
 
         // [SN2007] 41.109 Utvikling og salg av egen fast eiendom ellers --> [SN 2025] 68.120 Utvikling og salg av byggeprosjekter
-        val BOLIGBYGGELAG = Næringsgruppe(kode = "68.120", navn = "Utvikling og salg av byggeprosjekter")
         val OPPFØRING_AV_BYGNINGER = Næringsgruppe(navn = "Oppføring av bygninger", kode = "41.000")
         val DYRKING_AV_KORN = Næringsgruppe(
             kode = "01.110",
@@ -77,8 +76,6 @@ class TestData(
         )
 
         fun Periode.lagPerioder(antall: Int): List<Periode> = rekursivtLagPerioder(antall, mutableListOf(), this)
-
-        fun datoSentIGjeldendePeriode(): LocalDate = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal * 3), 30)
 
         private fun rekursivtLagPerioder(
             perioderIgjen: Int,

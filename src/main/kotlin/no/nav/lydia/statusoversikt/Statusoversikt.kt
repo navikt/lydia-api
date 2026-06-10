@@ -1,7 +1,7 @@
 package no.nav.lydia.statusoversikt
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.IASak
 
 @Serializable
 data class Statusoversikt(

@@ -4,21 +4,21 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
-import no.nav.lydia.abc.api.NY_FLYT_API_PATH
-import no.nav.lydia.abc.api.PLAN_BASE_ROUTE
-import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
-import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
-import no.nav.lydia.abc.samarbeidsplan.PlanDto
-import no.nav.lydia.abc.samarbeidsplan.PlanUndertemaDto
+import no.nav.lydia.api.NY_FLYT_API_PATH
+import no.nav.lydia.api.PLAN_BASE_ROUTE
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
-import no.nav.lydia.abc.samarbeidsperiode.IASakDto
-import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
-import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
+import no.nav.lydia.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeidsperiode.IASakDto
+import no.nav.lydia.samarbeidsplan.EndreTemaRequest
+import no.nav.lydia.samarbeidsplan.EndreUndertemaRequest
+import no.nav.lydia.samarbeidsplan.InnholdMalDto
+import no.nav.lydia.samarbeidsplan.PlanDto
+import no.nav.lydia.samarbeidsplan.PlanMalDto
+import no.nav.lydia.samarbeidsplan.PlanUndertema
+import no.nav.lydia.samarbeidsplan.PlanUndertemaDto
+import no.nav.lydia.samarbeidsplan.TemaMalDto
 import kotlin.test.fail
 
 class PlanHelper {

@@ -2,9 +2,9 @@ package no.nav.lydia.integrasjoner.brreg
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import no.nav.lydia.virksomhet.VirksomhetLagringDao
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
-import no.nav.lydia.virksomhet.domene.VirksomhetStatus
+import no.nav.lydia.prioritering.virksomhet.VirksomhetLagringDao
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
 
 @Serializable
 data class BrregVirksomhetDto(

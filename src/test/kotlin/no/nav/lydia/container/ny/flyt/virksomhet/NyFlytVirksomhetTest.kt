@@ -2,15 +2,15 @@ package no.nav.lydia.container.ny.flyt.virksomhet
 
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toKotlinLocalDate
-import no.nav.lydia.abc.samarbeidsperiode.BegrunnelseType
-import no.nav.lydia.abc.samarbeidsperiode.IASak
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
-import no.nav.lydia.abc.samarbeidsperiode.ValgtÅrsak
-import no.nav.lydia.abc.samarbeidsperiode.ÅrsakType
-import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
+import no.nav.lydia.samarbeidsperiode.BegrunnelseType
+import no.nav.lydia.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
+import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.time.LocalDate

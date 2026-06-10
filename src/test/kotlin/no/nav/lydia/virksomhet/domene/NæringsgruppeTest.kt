@@ -2,7 +2,8 @@ package no.nav.lydia.virksomhet.domene
 
 import ia.felles.definisjoner.bransjer.Bransje
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.virksomhet.domene.Næringsgruppe.Companion.UOPPGITT
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe.Companion.UOPPGITT
 import kotlin.test.Test
 
 class NæringsgruppeTest {

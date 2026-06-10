@@ -10,14 +10,14 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.samarbeid.SAMARBEID_ID_PREFIKS
-import no.nav.lydia.abc.samarbeid.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.samarbeid.SAMARBEID_ID_PREFIKS
+import no.nav.lydia.samarbeid.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test

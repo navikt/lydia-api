@@ -3,11 +3,11 @@ package no.nav.lydia.container.ia.eksport
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.abc.samarbeidsperiode.finnBransje
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
 import no.nav.lydia.helper.TestData.Companion.NÆRING_UNDERVISNING
 import no.nav.lydia.helper.TestData.Companion.OPPFØRING_AV_BYGNINGER
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.samarbeidsperiode.finnBransje
 import kotlin.test.Test
 
 class IASakStatistikkEksportererUnitTest {

@@ -2,7 +2,7 @@ package no.nav.lydia.sykefraværsstatistikk.domene
 
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.sykefraværsstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
 import kotlin.test.Test
 
 class SykefraværsprosentTest {

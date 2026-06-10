@@ -17,19 +17,18 @@ import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
-import no.nav.fia.dokument.publisering.pdfgen.PdfDokumentDto
 import no.nav.fia.dokument.publisering.pdfgen.PdfType
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`DEV-GCP`
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`PROD-GCP`
-import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringSakDto
-import no.nav.lydia.abc.dokumentpublisering.SamarbeidDto
-import no.nav.lydia.abc.dokumentpublisering.VirksomhetDto
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
-import no.nav.lydia.abc.kartlegging.tilResultatDto
-import no.nav.lydia.abc.kartlegging.tilSpørreundersøkelseInnholdDto
-import no.nav.lydia.abc.samarbeid.IASamarbeidService
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringSakDto
+import no.nav.lydia.dokumentpublisering.SamarbeidDto
+import no.nav.lydia.dokumentpublisering.VirksomhetDto
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.kartlegging.Spørreundersøkelse
+import no.nav.lydia.kartlegging.tilResultatDto
+import no.nav.lydia.kartlegging.tilSpørreundersøkelseInnholdDto
+import no.nav.lydia.samarbeid.IASamarbeidService
 import org.productivity.java.syslog4j.util.Base64
 import java.time.LocalDateTime
 

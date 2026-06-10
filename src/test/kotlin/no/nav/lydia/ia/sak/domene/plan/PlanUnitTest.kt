@@ -3,7 +3,10 @@ package no.nav.lydia.ia.sak.domene.plan
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.lydia.abc.samarbeid.IASamarbeid
+import no.nav.lydia.samarbeid.IASamarbeid
+import no.nav.lydia.samarbeidsplan.Plan
+import no.nav.lydia.samarbeidsplan.PlanTema
+import no.nav.lydia.samarbeidsplan.PlanUndertema
 import java.util.UUID
 import kotlin.test.Test
 

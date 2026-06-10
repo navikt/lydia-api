@@ -6,9 +6,6 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.samarbeid.IASamarbeid
-import no.nav.lydia.abc.samarbeid.SamarbeidProdusent.SamarbeidKafkaMeldingValue
-import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
@@ -17,7 +14,10 @@ import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeid.IASamarbeid
+import no.nav.lydia.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeid.SamarbeidProdusent.SamarbeidKafkaMeldingValue
+import no.nav.lydia.samarbeidsperiode.IASakDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test

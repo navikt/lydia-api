@@ -11,10 +11,10 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.abc.felles.Feil
-import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
+import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
+import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import org.slf4j.LoggerFactory

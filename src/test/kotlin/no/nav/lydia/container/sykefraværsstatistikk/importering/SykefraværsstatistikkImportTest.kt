@@ -21,10 +21,10 @@ import no.nav.lydia.helper.TestData.Companion.gjeldendePeriode
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.sykefraværsstatistikk.api.KvartalDto.Companion.toDto
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.KvartalDto.Companion.toDto
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.SistePubliserteKvartal
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

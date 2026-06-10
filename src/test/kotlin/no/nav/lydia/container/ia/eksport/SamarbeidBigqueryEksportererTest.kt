@@ -6,8 +6,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.samarbeid.DEFAULT_SAMARBEID_NAVN
-import no.nav.lydia.abc.samarbeid.SamarbeidBigqueryProdusent
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
@@ -21,6 +19,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.samarbeid.DEFAULT_SAMARBEID_NAVN
+import no.nav.lydia.samarbeid.SamarbeidBigqueryProdusent
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test

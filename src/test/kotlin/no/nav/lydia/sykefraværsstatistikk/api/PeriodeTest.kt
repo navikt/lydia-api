@@ -2,6 +2,7 @@ package no.nav.lydia.sykefraværsstatistikk.api
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Periode
 import kotlin.test.Test
 
 class PeriodeTest {
