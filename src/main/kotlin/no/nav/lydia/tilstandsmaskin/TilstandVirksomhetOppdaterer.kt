@@ -28,10 +28,11 @@ class TilstandVirksomhetOppdaterer(
         log.info("Fant ${virksomhetTilstander.size} virksomheter med planlagte tilstandsoppdateringer.")
         virksomhetTilstander.forEach {
             val hendelse = utledHendelseFraString(it.nesteTilstand?.planlagtHendelse, it.orgnr)
-            val konsekvens = tilstandsmaskin(it.orgnr).prosesserHendelse(
+            tilstandsmaskin(it.orgnr).prosesserHendelse(
                 hendelse = hendelse,
             )
-            log.info("Oppdatert tilstand for virksomhet. Gammel tilstand: ${it.tilstand.tilTilstand().navn()}. Ny tilstand: ${konsekvens.nyTilstand.navn()}")
+            val nyTilstand = tilstandsmaskin(it.orgnr).tilstand
+            log.info("Oppdatert tilstand for virksomhet. Gammel tilstand: ${it.tilstand.tilTilstand().navn()}. Ny tilstand: ${nyTilstand.navn()}")
             nyFlytService.slettVirksomhetTilstandAutomatiskOppdatering(it.orgnr)
             log.info("Slettet planlagt tilstandsoppdatering for virksomhet.")
         }

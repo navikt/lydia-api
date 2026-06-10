@@ -20,8 +20,8 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
     override fun utførTransisjon(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
-    ): Konsekvens {
-        val endring: Either<Feil, IASakDto> = when (hendelse) {
+    ): Either<Feil, Konsekvens> =
+        when (hendelse) {
             is VurderVirksomhet -> {
                 val sideEffect = VurderVirksomhetSideEffect(
                     orgnummer = hendelse.orgnr,
@@ -30,11 +30,12 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
                     valgtÅrsak = hendelse.valgtÅrsak,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    return Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetVurderes,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -43,11 +44,12 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
                     orgnummer = hendelse.orgnr,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    return Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetKlarTilVurdering else AlleSamarbeidIVirksomhetErAvsluttet,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetKlarTilVurdering,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -61,11 +63,12 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
                     navEnhet = hendelse.navEnhet,
                 )
                 with(receiver = fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    return Konsekvens(
-                        nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -78,10 +81,4 @@ object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
                 )
             }
         }
-
-        return Konsekvens(
-            nyTilstand = AlleSamarbeidIVirksomhetErAvsluttet,
-            endring = endring,
-        )
-    }
 }

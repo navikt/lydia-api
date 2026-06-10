@@ -18,7 +18,7 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
     override fun utførTransisjon(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
-    ): Konsekvens =
+    ): Either<Feil, Konsekvens> =
         when (hendelse) {
             is AngreVurderVirksomhet -> {
                 val sideEffect = AngreVurderVirksomhetSideEffect(
@@ -27,11 +27,12 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetKlarTilVurdering else VirksomhetVurderes,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetKlarTilVurdering,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -43,11 +44,12 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     navEnhet = hendelse.navEnhet,
                 )
                 with(receiver = fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = VirksomhetErVurdert,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetErVurdert,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
@@ -60,21 +62,18 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     navEnhet = hendelse.navEnhet,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetHarAktiveSamarbeid else VirksomhetVurderes,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetHarAktiveSamarbeid,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
             else -> {
-                val endring = Either.Left(
+                Either.Left(
                     Feil("'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetVurderes.tilVirksomhetIATilstand()}'", HttpStatusCode.BadRequest),
-                )
-                Konsekvens(
-                    endring = endring,
-                    nyTilstand = VirksomhetVurderes,
                 )
             }
         }

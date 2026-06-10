@@ -1,6 +1,7 @@
 package no.nav.lydia.tilstandsmaskin.tilstand
 
 import arrow.core.Either
+import arrow.core.left
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
@@ -14,7 +15,7 @@ object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
     override fun utførTransisjon(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
-    ): Konsekvens =
+    ): Either<Feil, Konsekvens> =
         when (hendelse) {
             is VurderVirksomhet -> {
                 val sideEffect = VurderVirksomhetSideEffect(
@@ -24,24 +25,20 @@ object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
                     valgtÅrsak = hendelse.valgtÅrsak,
                 )
                 with(fiaKontekst.nyFlytService) {
-                    val resultat = sideEffect.apply()
-                    Konsekvens(
-                        nyTilstand = if (resultat.isRight()) VirksomhetVurderes else VirksomhetKlarTilVurdering,
-                        endring = resultat,
-                    )
+                    sideEffect.apply().map {
+                        Konsekvens(
+                            nyTilstand = VirksomhetVurderes,
+                            endring = it,
+                        )
+                    }
                 }
             }
 
             else -> {
-                Konsekvens(
-                    nyTilstand = VirksomhetKlarTilVurdering,
-                    endring = Either.Left(
-                        Feil(
-                            "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetKlarTilVurdering.tilVirksomhetIATilstand()}'",
-                            HttpStatusCode.BadRequest,
-                        ),
-                    ),
-                )
+                Feil(
+                    "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetKlarTilVurdering.tilVirksomhetIATilstand()}'",
+                    HttpStatusCode.BadRequest,
+                ).left()
             }
         }
 }
