@@ -1,9 +1,9 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import no.nav.lydia.abc.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
-import no.nav.lydia.statusoversikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 
 class StatusoversiktHelper {

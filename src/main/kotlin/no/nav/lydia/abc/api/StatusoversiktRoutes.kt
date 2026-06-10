@@ -1,4 +1,4 @@
-package no.nav.lydia.statusoversikt.api
+package no.nav.lydia.abc.api
 
 import arrow.core.right
 import io.ktor.server.response.respond
