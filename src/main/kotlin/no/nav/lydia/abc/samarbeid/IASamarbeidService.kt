@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.dokumentpublisering.arbeidsgiver.DokumentMetadata
+import no.nav.lydia.abc.dokumentpublisering.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
@@ -20,8 +22,6 @@ import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
 import no.nav.lydia.abc.samarbeidsplan.PlanRepository
-import no.nav.lydia.arbeidsgiver.DokumentMetadata
-import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import org.slf4j.LoggerFactory
 
 class IASamarbeidService(

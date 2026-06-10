@@ -1,11 +1,9 @@
-package no.nav.lydia.arbeidsgiver
+package no.nav.lydia.abc.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import no.nav.lydia.abc.api.orgnummer
-import no.nav.lydia.abc.api.sendFeil
 import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
 
