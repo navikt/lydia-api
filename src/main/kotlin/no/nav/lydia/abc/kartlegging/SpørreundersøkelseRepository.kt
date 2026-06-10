@@ -11,9 +11,9 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.abc.api.IASakSpørreundersøkelseError
+import no.nav.lydia.abc.felles.tilUUID
 import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource

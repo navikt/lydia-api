@@ -10,6 +10,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.abc.felles.tilUUID
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.Spørsmål
 import no.nav.lydia.abc.kartlegging.Svaralternativ
@@ -29,7 +30,6 @@ import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.abc.samarbeidsplan.PlanTemaDto
 import no.nav.lydia.abc.samarbeidsplan.PlanUndertemaDto
-import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
