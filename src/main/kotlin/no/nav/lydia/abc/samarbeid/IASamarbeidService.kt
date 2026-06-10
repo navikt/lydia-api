@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.abc.samarbeid.IASamarbeidService.StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING
@@ -21,7 +22,6 @@ import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
 import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
-import no.nav.lydia.ia.sak.api.Feil
 import org.slf4j.LoggerFactory
 
 class IASamarbeidService(

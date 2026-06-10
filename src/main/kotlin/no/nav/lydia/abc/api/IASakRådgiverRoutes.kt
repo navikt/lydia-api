@@ -10,10 +10,10 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
+import no.nav.lydia.abc.samarbeidsperiode.IASakError
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.samarbeidsperiode.tilIASakLeveranserPerTjenesteDto
 import no.nav.lydia.abc.samarbeidsperiode.tilSakshistorikk
-import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.tilgangskontroll.somHøyestTilgang
 import no.nav.lydia.tilgangskontroll.somLesebruker

@@ -5,9 +5,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.abc.samarbeidsperiode.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import org.slf4j.Logger

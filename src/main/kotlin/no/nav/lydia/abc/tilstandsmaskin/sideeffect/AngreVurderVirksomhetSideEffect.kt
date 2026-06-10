@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
@@ -18,7 +19,6 @@ import no.nav.lydia.abc.tilstandsmaskin.settSakTilSlettet
 import no.nav.lydia.abc.tilstandsmaskin.slettVirksomhetTilstand
 import no.nav.lydia.abc.tilstandsmaskin.tilVirksomhetIATilstand
 import no.nav.lydia.abc.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
-import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger

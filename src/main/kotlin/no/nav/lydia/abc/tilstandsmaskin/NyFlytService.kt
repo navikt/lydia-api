@@ -11,6 +11,7 @@ import no.nav.lydia.Observer
 import no.nav.lydia.abc.api.IASakSpørreundersøkelseError
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
@@ -23,6 +24,7 @@ import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeid.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
+import no.nav.lydia.abc.samarbeidsperiode.IASakError
 import no.nav.lydia.abc.samarbeidsperiode.IASakRepository
 import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
@@ -32,8 +34,6 @@ import no.nav.lydia.abc.team.IATeamService
 import no.nav.lydia.ia.sak.PlanFeil
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.PlanService.Companion.erGyldig
-import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.domene.plan.Plan

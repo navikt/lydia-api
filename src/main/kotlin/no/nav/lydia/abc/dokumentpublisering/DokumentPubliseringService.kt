@@ -13,6 +13,7 @@ import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Type.BEHOVSVU
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Type.EVALUERING
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Type.SAMARBEIDSPLAN
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.abc.kartlegging.tilResultatDto
 import no.nav.lydia.abc.kartlegging.tilSpørreundersøkelseInnholdDto
@@ -21,7 +22,6 @@ import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsplan.PlanRepository
 import no.nav.lydia.abc.samarbeidsplan.erEtter
 import no.nav.lydia.abc.samarbeidsplan.tilDto
-import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt

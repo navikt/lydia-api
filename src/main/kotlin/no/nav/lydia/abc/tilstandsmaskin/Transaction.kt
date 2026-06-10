@@ -25,6 +25,7 @@ import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
@@ -36,7 +37,6 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt

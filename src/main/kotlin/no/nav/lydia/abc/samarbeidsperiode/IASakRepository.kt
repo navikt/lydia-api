@@ -8,11 +8,10 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.samarbeidsperiode.IASak.Companion.tilIASak
 import no.nav.lydia.abc.samarbeidsperiode.IASak.Companion.tilIASakDto
-import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakError
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -212,23 +211,6 @@ class IASakRepository(
                         "saksnummer" to saksnummer,
                     ),
                 ).map { mapRowToIASakDto(it) }.asSingle,
-            )
-        }
-
-    fun hentAlleSakerDtoForFylke(fylkenummer: String) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    SELECT *
-                    FROM ia_sak join virksomhet on ia_sak.orgnr = virksomhet.orgnr
-                    WHERE kommunenummer like :fylkenummer
-                    order by endret
-                    """.trimMargin(),
-                    mapOf(
-                        "fylkenummer" to "$fylkenummer%",
-                    ),
-                ).map(this::mapRowToIASakDto).asList,
             )
         }
 

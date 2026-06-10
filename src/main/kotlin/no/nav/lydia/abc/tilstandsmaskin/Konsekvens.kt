@@ -1,8 +1,7 @@
 package no.nav.lydia.abc.tilstandsmaskin
 
 import arrow.core.Either
-import no.nav.lydia.abc.tilstandsmaskin.tilstand.Tilstand
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.abc.felles.Feil
 
 data class Konsekvens(
     val nyTilstand: no.nav.lydia.abc.tilstandsmaskin.tilstand.Tilstand,

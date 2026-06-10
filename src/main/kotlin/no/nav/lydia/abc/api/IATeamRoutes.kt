@@ -10,10 +10,10 @@ import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.abc.samarbeidsperiode.IASakError
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.team.IATeamService
 import no.nav.lydia.appstatus.Metrics.Companion.loggFølging
-import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val IA_SAK_TEAM_PATH = "iasak/team"

@@ -11,7 +11,7 @@ import io.ktor.server.routing.get
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService

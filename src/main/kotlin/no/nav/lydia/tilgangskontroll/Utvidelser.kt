@@ -6,7 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ADGrupper
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt

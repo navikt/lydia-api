@@ -1,7 +1,7 @@
 package no.nav.lydia.tilgangskontroll
 
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.abc.felles.Feil
 
 object TilgangskontrollFeil {
     val IkkeAutorisert = Feil("Ikke autorisert", HttpStatusCode.Forbidden)

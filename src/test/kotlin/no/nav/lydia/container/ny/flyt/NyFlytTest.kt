@@ -16,9 +16,12 @@ import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.abc.api.NY_FLYT_PATH
 import no.nav.lydia.abc.samarbeid.IASamarbeid
+import no.nav.lydia.abc.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.abc.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.abc.samarbeidsplan.SamarbeidDto
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
@@ -59,9 +62,6 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.AfterClass

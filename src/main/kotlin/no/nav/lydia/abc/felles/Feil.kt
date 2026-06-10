@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api
+package no.nav.lydia.abc.felles
 
 import io.ktor.http.HttpStatusCode
 

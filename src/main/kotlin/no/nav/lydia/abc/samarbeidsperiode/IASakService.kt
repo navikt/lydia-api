@@ -3,6 +3,7 @@ package no.nav.lydia.abc.samarbeidsperiode
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.abc.samarbeid.IASamarbeid
@@ -10,8 +11,6 @@ import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto.Companion.toDto
 import no.nav.lydia.abc.samarbeidsplan.PlanRepository
-import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import org.slf4j.Logger

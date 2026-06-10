@@ -1,8 +1,7 @@
-package no.nav.lydia.ia.årsak.domene
+package no.nav.lydia.abc.samarbeidsperiode
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
-import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somGyldigeBegrunnelser
+import no.nav.lydia.abc.samarbeidsperiode.GyldigBegrunnelse.Companion.somGyldigeBegrunnelser
 
 @Serializable
 class GyldigÅrsak(

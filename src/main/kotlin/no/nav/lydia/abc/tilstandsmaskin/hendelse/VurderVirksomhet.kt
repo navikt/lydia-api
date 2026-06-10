@@ -1,6 +1,6 @@
 package no.nav.lydia.abc.tilstandsmaskin.hendelse
 
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.abc.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
@@ -9,4 +9,4 @@ data class VurderVirksomhet(
     val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
     val navEnhet: NavEnhet,
     val valgtÅrsak: ValgtÅrsak? = null,
-) : no.nav.lydia.abc.tilstandsmaskin.hendelse.Hendelse()
+) : Hendelse()

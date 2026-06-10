@@ -13,9 +13,11 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseDto
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
+import no.nav.lydia.abc.samarbeidsperiode.IASakError
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.team.IATeamService
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
@@ -27,8 +29,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.OpprettKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.PlanService
-import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
