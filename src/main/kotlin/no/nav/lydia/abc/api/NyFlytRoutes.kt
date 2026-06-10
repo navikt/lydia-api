@@ -60,7 +60,6 @@ import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilgangskontroll.somSuperbrukerMedNavenhet
 import no.nav.lydia.virksomhet.VirksomhetService
-import no.nav.lydia.virksomhet.api.VirksomhetFeil
 import no.nav.lydia.virksomhet.api.toDto
 import java.time.LocalDate
 
