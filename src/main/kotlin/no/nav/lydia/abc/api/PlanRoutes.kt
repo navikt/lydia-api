@@ -14,10 +14,6 @@ import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.extensions.orgnummer
-import no.nav.lydia.ia.sak.api.extensions.prosessId
-import no.nav.lydia.ia.sak.api.extensions.saksnummer
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"

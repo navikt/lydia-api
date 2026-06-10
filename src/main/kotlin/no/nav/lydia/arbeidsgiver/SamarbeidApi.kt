@@ -4,10 +4,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.nav.lydia.abc.api.orgnummer
+import no.nav.lydia.abc.api.sendFeil
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.extensions.orgnummer
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
 
 const val ARBEIDSGIVER_SAMARBEID_PATH = "api/arbeidsgiver/samarbeid"
 

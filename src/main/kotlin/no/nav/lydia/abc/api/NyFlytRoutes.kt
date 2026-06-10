@@ -51,11 +51,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.extensions.orgnummer
-import no.nav.lydia.ia.sak.api.extensions.saksnummer
-import no.nav.lydia.ia.sak.api.extensions.samarbeidId
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
-import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
