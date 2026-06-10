@@ -23,6 +23,7 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
 import no.nav.lydia.abc.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.abc.api.SYKEFRAVÆRSSTATISTIKK_PATH
+import no.nav.lydia.abc.api.VIRKSOMHET_PATH
 import no.nav.lydia.abc.api.dokumentPublisering
 import no.nav.lydia.abc.api.iaSakPlan
 import no.nav.lydia.abc.api.iaSakRådgiver
@@ -35,6 +36,7 @@ import no.nav.lydia.abc.api.nyFlytVirksomhet
 import no.nav.lydia.abc.api.samarbeid
 import no.nav.lydia.abc.api.statusoversikt
 import no.nav.lydia.abc.api.sykefraværsstatistikk
+import no.nav.lydia.abc.api.virksomhet
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
@@ -112,8 +114,6 @@ import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
-import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
-import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource

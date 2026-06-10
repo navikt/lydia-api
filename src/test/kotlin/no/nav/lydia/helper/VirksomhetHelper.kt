@@ -2,6 +2,8 @@ package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import no.nav.lydia.Topic
+import no.nav.lydia.abc.api.SALESFORCE_INFO_PATH
+import no.nav.lydia.abc.api.VIRKSOMHET_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -19,8 +21,6 @@ import no.nav.lydia.integrasjoner.salesforce.http.SalesforceInfo
 import no.nav.lydia.integrasjoner.salesforce.http.SalesforceSamarbeid
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
-import no.nav.lydia.virksomhet.api.SALESFORCE_INFO_PATH
-import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Sektor
 import java.net.URLEncoder

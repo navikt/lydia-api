@@ -1,4 +1,4 @@
-package no.nav.lydia.virksomhet.api
+package no.nav.lydia.abc.api
 
 import arrow.core.left
 import arrow.core.right
@@ -10,13 +10,12 @@ import io.ktor.server.routing.get
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.abc.api.SykefraværsstatistikkError
-import no.nav.lydia.abc.api.prosessId
 import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.virksomhet.VirksomhetService
+import no.nav.lydia.virksomhet.api.toDto
 import kotlin.time.Clock
 
 const val VIRKSOMHET_PATH = "virksomhet"
