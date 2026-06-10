@@ -3,9 +3,9 @@ package no.nav.lydia.abc.api
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.felles.tilUUID
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
-import no.nav.lydia.ia.sak.api.Feil
 
 val ApplicationCall.orgnummer
     get() = parameters["orgnummer"]

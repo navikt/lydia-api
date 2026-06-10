@@ -2,13 +2,13 @@ package no.nav.lydia.abc.tilstandsmaskin.tilstand
 
 import arrow.core.Either
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.Konsekvens
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.abc.tilstandsmaskin.sideeffect.VurderVirksomhetSideEffect
 import no.nav.lydia.abc.tilstandsmaskin.tilVirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.Feil
 
 object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
     override fun utførTransisjon(

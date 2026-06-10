@@ -3,6 +3,7 @@ package no.nav.lydia.abc.tilstandsmaskin.tilstand
 import arrow.core.Either
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.tilDto
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.Konsekvens
@@ -35,7 +36,6 @@ import no.nav.lydia.abc.tilstandsmaskin.sideeffect.SlettPlanForSamarbeidSideEffe
 import no.nav.lydia.abc.tilstandsmaskin.sideeffect.SlettSamarbeidSideEffect
 import no.nav.lydia.abc.tilstandsmaskin.sideeffect.StartKartleggingSideEffect
 import no.nav.lydia.abc.tilstandsmaskin.tilVirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.Feil
 
 // -- Virksomheten har minst ett aktivt samarbeid
 object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV

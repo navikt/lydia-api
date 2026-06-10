@@ -2,6 +2,7 @@ package no.nav.lydia.abc.tilstandsmaskin.tilstand
 
 import arrow.core.Either
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
@@ -14,7 +15,6 @@ import no.nav.lydia.abc.tilstandsmaskin.sideeffect.EndrePlanlagtDatoForNesteTils
 import no.nav.lydia.abc.tilstandsmaskin.sideeffect.GjørVirksomhetKlarTilNyVurderingSideEffect
 import no.nav.lydia.abc.tilstandsmaskin.sideeffect.VurderVirksomhetSideEffect
 import no.nav.lydia.abc.tilstandsmaskin.tilVirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.Feil
 
 object AlleSamarbeidIVirksomhetErAvsluttet : Tilstand() { // AVSLUTTET
     override fun utførTransisjon(

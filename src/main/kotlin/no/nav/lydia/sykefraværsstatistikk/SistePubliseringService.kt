@@ -7,7 +7,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotliquery.Row
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import org.slf4j.Logger

@@ -2,7 +2,7 @@ package no.nav.lydia.abc.tilstandsmaskin.sideeffect
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
-import no.nav.lydia.abc.samarbeidsperiode.IASak
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeidsperiode.IASak.Status.*
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
@@ -14,7 +14,6 @@ import no.nav.lydia.abc.tilstandsmaskin.lagreHendelse
 import no.nav.lydia.abc.tilstandsmaskin.oppdaterStatusPåSak
 import no.nav.lydia.abc.tilstandsmaskin.settPlanTilSlettet
 import no.nav.lydia.appstatus.PlanHendelseType
-import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle

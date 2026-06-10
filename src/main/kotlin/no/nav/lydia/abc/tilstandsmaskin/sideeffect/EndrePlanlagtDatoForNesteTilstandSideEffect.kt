@@ -2,6 +2,7 @@ package no.nav.lydia.abc.tilstandsmaskin.sideeffect
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
@@ -12,7 +13,6 @@ import no.nav.lydia.abc.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringD
 import no.nav.lydia.abc.tilstandsmaskin.endrePlanlagtDatoForNesteTilstand
 import no.nav.lydia.abc.tilstandsmaskin.lagreHendelse
 import no.nav.lydia.abc.tilstandsmaskin.oppdaterStatusPåSak
-import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.LoggerFactory

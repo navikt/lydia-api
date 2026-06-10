@@ -1,6 +1,7 @@
 package no.nav.lydia.abc.tilstandsmaskin.sideeffect
 
 import arrow.core.Either
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
 import no.nav.lydia.abc.samarbeidsplan.tilDtoMedPubliseringStatus
@@ -8,7 +9,6 @@ import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.Transaction
 import no.nav.lydia.abc.tilstandsmaskin.oppdaterTemaISamarbeidsplan
 import no.nav.lydia.appstatus.PlanHendelseType
-import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import java.util.UUID
 

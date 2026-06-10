@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraværsstatistikk.api.Periode

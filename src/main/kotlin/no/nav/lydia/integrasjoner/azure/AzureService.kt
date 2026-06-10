@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.AzureConfig
 import no.nav.lydia.Security
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
 import org.slf4j.LoggerFactory
 
@@ -72,21 +72,6 @@ class AzureService(
                 NavEnhet(
                     enhetsnummer = azureAdBruker.streetAddress ?: "Ukjent",
                     enhetsnavn = azureAdBruker.department ?: azureAdBruker.city ?: "Ukjent",
-                )
-            }
-    }
-
-    fun hentNavenhetFraNavIdent(navIdent: String?): Either<Feil, NavEnhet> {
-        val accessToken = tokenFetcher.clientCredentialsToken()
-        val url =
-            "${security.azureConfig.graphDatabaseUrl}/users?\$search=\"onPremisesSamAccountName:$navIdent\"&\$select=$azureAdProps"
-        return hentFraAzure(url, accessToken, AzureType.NAVENHET_FRA_NAVIDENT)
-            .map { json -> deserializer.decodeFromString<AzureResponse>(json) }
-            .map { azureResponse -> azureResponse.value.firstOrNull() }
-            .map { azureAdBruker ->
-                NavEnhet(
-                    enhetsnummer = azureAdBruker?.streetAddress ?: "Ukjent",
-                    enhetsnavn = azureAdBruker?.department ?: "Ukjent",
                 )
             }
     }
@@ -149,7 +134,6 @@ class AzureService(
 
     enum class AzureType {
         NAVENHET_FRA_INNLOGGET_BRUKER,
-        NAVENHET_FRA_NAVIDENT,
         BRUKERE_I_GRUPPE,
     }
 

@@ -18,6 +18,7 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.kartlegging.OppdaterBehovsvurderingDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
@@ -25,10 +26,9 @@ import no.nav.lydia.abc.kartlegging.tilDto
 import no.nav.lydia.abc.kartlegging.tilResultatDto
 import no.nav.lydia.abc.kartlegging.tilUtenInnholdDto
 import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
+import no.nav.lydia.abc.samarbeidsperiode.IASakError
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.team.IATeamService
-import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService

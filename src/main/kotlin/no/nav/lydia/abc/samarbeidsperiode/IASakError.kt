@@ -1,6 +1,7 @@
-package no.nav.lydia.ia.sak.api
+package no.nav.lydia.abc.samarbeidsperiode
 
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.felles.Feil
 
 object IASakError {
     val `fikk ikke oppdatert sak` =
@@ -16,5 +17,8 @@ object IASakError {
     val `generell feil under uthenting` =
         Feil(feilmelding = "Generell feil under uthenting", httpStatusCode = HttpStatusCode.InternalServerError)
     val `kan ikke ta eierskap da det ikke finnes noen aktiv sak` =
-        Feil(feilmelding = "kan ikke ta eierskap da det ikke finnes noen aktiv sak", httpStatusCode = HttpStatusCode.BadRequest)
+        Feil(
+            feilmelding = "kan ikke ta eierskap da det ikke finnes noen aktiv sak",
+            httpStatusCode = HttpStatusCode.BadRequest,
+        )
 }

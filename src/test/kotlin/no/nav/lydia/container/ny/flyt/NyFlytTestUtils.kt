@@ -22,10 +22,13 @@ import no.nav.lydia.abc.api.NY_FLYT_PATH
 import no.nav.lydia.abc.samarbeid.IASamarbeid
 import no.nav.lydia.abc.samarbeid.SamarbeidBigqueryProdusent.SamarbeidValue
 import no.nav.lydia.abc.samarbeid.SamarbeidProdusent.SamarbeidKafkaMeldingValue
+import no.nav.lydia.abc.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.abc.samarbeidsperiode.IASak
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakStatistikkProdusent
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.abc.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.abc.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.abc.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.abc.samarbeidsplan.PlanDto
@@ -57,9 +60,6 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import org.apache.kafka.clients.consumer.KafkaConsumer

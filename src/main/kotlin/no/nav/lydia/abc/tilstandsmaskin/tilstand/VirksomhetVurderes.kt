@@ -2,6 +2,7 @@ package no.nav.lydia.abc.tilstandsmaskin.tilstand
 
 import arrow.core.Either
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.Konsekvens
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.AngreVurderVirksomhet
@@ -12,7 +13,6 @@ import no.nav.lydia.abc.tilstandsmaskin.sideeffect.AngreVurderVirksomhetSideEffe
 import no.nav.lydia.abc.tilstandsmaskin.sideeffect.AvsluttVurderingSideEffect
 import no.nav.lydia.abc.tilstandsmaskin.sideeffect.OpprettSamarbeidSideEffect
 import no.nav.lydia.abc.tilstandsmaskin.tilVirksomhetIATilstand
-import no.nav.lydia.ia.sak.api.Feil
 
 object VirksomhetVurderes : Tilstand() { // VURDERES
     override fun utførTransisjon(

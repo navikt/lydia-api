@@ -5,11 +5,13 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeidsperiode.IASak.Status.NY
 import no.nav.lydia.abc.samarbeidsperiode.IASak.Status.VURDERES
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelse
 import no.nav.lydia.abc.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.abc.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.abc.tilstandsmaskin.NyFlytService
 import no.nav.lydia.abc.tilstandsmaskin.Transaction
 import no.nav.lydia.abc.tilstandsmaskin.VirksomhetIATilstand
@@ -20,8 +22,6 @@ import no.nav.lydia.abc.tilstandsmaskin.nyHendelseBasertPåSak
 import no.nav.lydia.abc.tilstandsmaskin.oppdaterStatusPåSak
 import no.nav.lydia.abc.tilstandsmaskin.opprettSak
 import no.nav.lydia.abc.tilstandsmaskin.slettVirksomhetTilstandAutomatiskOppdatering
-import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 

@@ -15,11 +15,11 @@ import no.nav.lydia.abc.api.orgnummer
 import no.nav.lydia.abc.api.prosessId
 import no.nav.lydia.abc.api.saksnummer
 import no.nav.lydia.abc.api.sendFeil
+import no.nav.lydia.abc.felles.Feil
 import no.nav.lydia.abc.samarbeid.IASamarbeidFeil
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
+import no.nav.lydia.abc.samarbeidsperiode.IASakError
 import no.nav.lydia.abc.samarbeidsperiode.IASakService
-import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 

@@ -4,7 +4,6 @@ import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.sykefraværsstatistikk.PubliseringsinfoDto
 import no.nav.lydia.sykefraværsstatistikk.api.Periode

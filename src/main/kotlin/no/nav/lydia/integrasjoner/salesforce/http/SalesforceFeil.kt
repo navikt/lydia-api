@@ -1,7 +1,7 @@
 package no.nav.lydia.integrasjoner.salesforce.http
 
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.abc.felles.Feil
 
 object SalesforceFeil {
     val `feil ved uthenting av token` =
