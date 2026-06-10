@@ -16,8 +16,8 @@ import kotlinx.datetime.toJavaLocalDateTime
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
-import no.nav.lydia.abc.dokument.DokumentPubliseringService
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.abc.kartlegging.OppdaterBehovsvurderingDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService

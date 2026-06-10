@@ -10,10 +10,10 @@ import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import no.nav.lydia.Topic
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto
-import no.nav.lydia.abc.dokument.DokumentPubliseringMedInnhold
-import no.nav.lydia.abc.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
-import no.nav.lydia.abc.dokument.SpørreundersøkelseInnholdIDokumentDto
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringMedInnhold
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
+import no.nav.lydia.abc.dokumentpublisering.SpørreundersøkelseInnholdIDokumentDto
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse
 import no.nav.lydia.abc.samarbeid.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.abc.samarbeid.IASamarbeid

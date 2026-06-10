@@ -7,8 +7,8 @@ import arrow.core.left
 import arrow.core.right
 import no.nav.lydia.Observer
 import no.nav.lydia.abc.api.IASakSpørreundersøkelseError
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto
-import no.nav.lydia.abc.dokument.DokumentPubliseringRepository
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.abc.kartlegging.Spørreundersøkelse.Type.Evaluering
 import no.nav.lydia.abc.samarbeid.IASamarbeidService

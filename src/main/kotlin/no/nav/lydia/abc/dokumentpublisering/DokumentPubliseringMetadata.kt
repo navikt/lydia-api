@@ -1,4 +1,4 @@
-package no.nav.lydia.abc.dokument
+package no.nav.lydia.abc.dokumentpublisering
 
 data class DokumentPubliseringMetadata(
     val orgnummer: String,

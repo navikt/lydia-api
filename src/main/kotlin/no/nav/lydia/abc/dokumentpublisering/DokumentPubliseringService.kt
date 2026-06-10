@@ -1,4 +1,4 @@
-package no.nav.lydia.abc.dokument
+package no.nav.lydia.abc.dokumentpublisering
 
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -9,10 +9,10 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Type.BEHOVSVURDERING
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Type.EVALUERING
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Type.SAMARBEIDSPLAN
-import no.nav.lydia.abc.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Type.BEHOVSVURDERING
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Type.EVALUERING
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Type.SAMARBEIDSPLAN
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
 import no.nav.lydia.abc.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.abc.kartlegging.tilResultatDto
 import no.nav.lydia.abc.kartlegging.tilSpørreundersøkelseInnholdDto

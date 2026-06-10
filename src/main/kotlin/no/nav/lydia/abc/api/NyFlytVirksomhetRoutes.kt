@@ -9,7 +9,7 @@ import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.abc.dokument.DokumentPubliseringService
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.abc.samarbeid.IASamarbeidService
 import no.nav.lydia.abc.samarbeidsperiode.IASakDto
 import no.nav.lydia.abc.samarbeidsperiode.IASakService

@@ -2,7 +2,7 @@ package no.nav.lydia.abc.tilstandsmaskin.tilstand
 
 import arrow.core.Either
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.abc.dokument.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
+import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.abc.kartlegging.tilDto
 import no.nav.lydia.abc.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.abc.tilstandsmaskin.Konsekvens
