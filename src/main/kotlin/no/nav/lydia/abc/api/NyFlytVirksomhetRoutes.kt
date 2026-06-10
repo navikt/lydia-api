@@ -20,7 +20,6 @@ import no.nav.lydia.abc.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.abc.tilstandsmaskin.hendelse.AvsluttVurdering
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelserForVurdering
 import no.nav.lydia.integrasjoner.azure.AzureService

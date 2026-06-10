@@ -14,7 +14,6 @@ import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.team.IATeamService
 import no.nav.lydia.appstatus.Metrics.Companion.loggFølging
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val IA_SAK_TEAM_PATH = "iasak/team"

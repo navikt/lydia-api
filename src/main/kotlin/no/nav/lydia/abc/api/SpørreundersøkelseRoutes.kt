@@ -29,12 +29,6 @@ import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.team.IATeamService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.extensions.orgnummer
-import no.nav.lydia.ia.sak.api.extensions.prosessId
-import no.nav.lydia.ia.sak.api.extensions.saksnummer
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
-import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
-import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService

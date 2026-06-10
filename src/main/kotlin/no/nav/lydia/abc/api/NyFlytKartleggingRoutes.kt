@@ -29,11 +29,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.extensions.kartleggingId
-import no.nav.lydia.ia.sak.api.extensions.orgnummer
-import no.nav.lydia.ia.sak.api.extensions.saksnummer
-import no.nav.lydia.ia.sak.api.extensions.samarbeidId
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt

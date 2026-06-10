@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.extensions
+package no.nav.lydia.abc.api
 
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
@@ -17,8 +17,6 @@ val ApplicationCall.spørreundersøkelseId
     get() = parameters["sporreundersokelseId"]?.tilUUID(hvaErJeg = "spørreundersøkelseId")
 val ApplicationCall.kartleggingId
     get() = parameters["kartleggingId"]?.tilUUID(hvaErJeg = "kartleggingId")
-val ApplicationCall.iaSakLeveranseId
-    get() = parameters["iaSakLeveranseId"]
 val ApplicationCall.planId
     get() = parameters["planId"]?.tilUUID(hvaErJeg = "planId")
 val ApplicationCall.temaId
@@ -31,7 +29,5 @@ val ApplicationCall.dokumentType
     get() = parameters["dokumentType"]?.tilDokumentTilPubliseringType()
 val ApplicationCall.dokumentReferanseId
     get() = parameters["dokumentReferanseId"]?.tilUUID(hvaErJeg = "dokumentReferanseId")
-val ApplicationCall.samarbeidsplanId
-    get() = parameters["samarbeidsplanId"]?.tilUUID(hvaErJeg = "samarbeidsplanId")
 
 suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)

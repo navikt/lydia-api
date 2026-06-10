@@ -35,12 +35,6 @@ import no.nav.lydia.abc.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.extensions.orgnummer
-import no.nav.lydia.ia.sak.api.extensions.planId
-import no.nav.lydia.ia.sak.api.extensions.saksnummer
-import no.nav.lydia.ia.sak.api.extensions.samarbeidId
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
-import no.nav.lydia.ia.sak.api.extensions.temaId
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema

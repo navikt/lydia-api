@@ -14,9 +14,6 @@ import no.nav.lydia.abc.samarbeidsperiode.IASakService
 import no.nav.lydia.abc.samarbeidsperiode.tilIASakLeveranserPerTjenesteDto
 import no.nav.lydia.abc.samarbeidsperiode.tilSakshistorikk
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.extensions.orgnummer
-import no.nav.lydia.ia.sak.api.extensions.saksnummer
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.tilgangskontroll.somHøyestTilgang
 import no.nav.lydia.tilgangskontroll.somLesebruker

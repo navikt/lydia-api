@@ -9,9 +9,6 @@ import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.extensions.dokumentReferanseId
-import no.nav.lydia.ia.sak.api.extensions.dokumentType
-import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.objectId
