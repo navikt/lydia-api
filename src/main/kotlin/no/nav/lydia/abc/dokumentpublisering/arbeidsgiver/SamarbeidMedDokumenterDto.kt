@@ -1,4 +1,4 @@
-package no.nav.lydia.arbeidsgiver
+package no.nav.lydia.abc.dokumentpublisering.arbeidsgiver
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable

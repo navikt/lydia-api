@@ -31,6 +31,7 @@ import no.nav.lydia.abc.api.nyFlyt
 import no.nav.lydia.abc.api.nyFlytKartlegging
 import no.nav.lydia.abc.api.nyFlytSamarbeidsplan
 import no.nav.lydia.abc.api.nyFlytVirksomhet
+import no.nav.lydia.abc.api.samarbeid
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
@@ -72,7 +73,6 @@ import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
-import no.nav.lydia.arbeidsgiver.samarbeid
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
