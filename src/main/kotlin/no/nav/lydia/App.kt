@@ -32,6 +32,7 @@ import no.nav.lydia.abc.api.nyFlytKartlegging
 import no.nav.lydia.abc.api.nyFlytSamarbeidsplan
 import no.nav.lydia.abc.api.nyFlytVirksomhet
 import no.nav.lydia.abc.api.samarbeid
+import no.nav.lydia.abc.api.statusoversikt
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.abc.dokumentpublisering.DokumentPubliseringService
@@ -95,7 +96,6 @@ import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
-import no.nav.lydia.statusoversikt.api.statusoversikt
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringRepository
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkRepository
