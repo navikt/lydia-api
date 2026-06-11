@@ -1,15 +1,19 @@
 package no.nav.lydia.tilstandsmaskin.sideeffect.transactional
 
+import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toJavaLocalDateTime
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASak.Companion.tilIASakDto
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
 import no.nav.lydia.samarbeidsperiode.IASakshendelse
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
 
 class SamarbeidsperiodeTransactional {
@@ -222,6 +226,23 @@ class SamarbeidsperiodeTransactional {
                 ).asUpdate,
             )
         }
+
+        // Utils
+        fun IASakDto.nyHendelseBasertPåSak(
+            hendelsestype: IASakshendelseType,
+            superbruker: Superbruker,
+            navEnhet: NavEnhet,
+        ) = IASakshendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = this.saksnummer,
+            hendelsesType = hendelsestype,
+            orgnummer = this.orgnr,
+            opprettetAv = superbruker.navIdent,
+            opprettetAvRolle = superbruker.rolle,
+            navEnhet = navEnhet,
+            resulterendeStatus = null,
+        )
 
         // Row-mappers
         private fun mapRowToIASakDto(row: Row): IASakDto = row.tilIASakDto()
