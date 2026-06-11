@@ -16,8 +16,8 @@ import no.nav.lydia.tilstandsmaskin.hentAlleSakerDtoForVirksomhet
 import no.nav.lydia.tilstandsmaskin.hentSisteIASakDto
 import no.nav.lydia.tilstandsmaskin.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.nyHendelseBasertPåSak
-import no.nav.lydia.tilstandsmaskin.oppdaterVirksomhetTilstand
 import no.nav.lydia.tilstandsmaskin.settSakTilSlettet
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.oppdaterVirksomhetTilstand
 import no.nav.lydia.tilstandsmaskin.slettVirksomhetTilstand
 import no.nav.lydia.tilstandsmaskin.tilVirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering

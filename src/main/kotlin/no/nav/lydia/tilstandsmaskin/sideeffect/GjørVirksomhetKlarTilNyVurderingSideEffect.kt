@@ -9,7 +9,7 @@ import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandDto
-import no.nav.lydia.tilstandsmaskin.lagreEllerOppdaterVirksomhetTilstand
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
 
 class GjørVirksomhetKlarTilNyVurderingSideEffect(
     val orgnummer: String,

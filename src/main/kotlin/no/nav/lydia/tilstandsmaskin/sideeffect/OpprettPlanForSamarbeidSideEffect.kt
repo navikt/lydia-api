@@ -17,10 +17,10 @@ import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.hentSisteIASakDto
-import no.nav.lydia.tilstandsmaskin.lagreEllerOppdaterVirksomhetTilstand
 import no.nav.lydia.tilstandsmaskin.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.oppdaterStatusPåSak
 import no.nav.lydia.tilstandsmaskin.opprettSamarbeidsplan
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
 import java.time.LocalDateTime
 import java.util.UUID
 

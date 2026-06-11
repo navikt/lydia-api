@@ -13,12 +13,12 @@ import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.hentSpørreundersøkelse
-import no.nav.lydia.tilstandsmaskin.lagreEllerOppdaterVirksomhetTilstand
 import no.nav.lydia.tilstandsmaskin.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.leggTilTemaTilKartlegging
 import no.nav.lydia.tilstandsmaskin.leggTilUndertemaTilKartlegging
 import no.nav.lydia.tilstandsmaskin.oppdaterStatusPåSak
 import no.nav.lydia.tilstandsmaskin.opprettKartlegging
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
 import java.time.LocalDateTime
 import java.util.UUID
 

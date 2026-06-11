@@ -23,11 +23,11 @@ import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.tilstandsmaskin.hentPlan
 import no.nav.lydia.tilstandsmaskin.hentSamarbeid
 import no.nav.lydia.tilstandsmaskin.hentSamarbeidSomIkkeErSlettet
-import no.nav.lydia.tilstandsmaskin.lagreEllerOppdaterVirksomhetTilstand
 import no.nav.lydia.tilstandsmaskin.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.oppdaterStatusPåSak
-import no.nav.lydia.tilstandsmaskin.opprettAutomatiskOppdatering
 import no.nav.lydia.tilstandsmaskin.settPlanTilFullført
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.opprettAutomatiskOppdatering
 import java.time.LocalDate
 import java.time.LocalDateTime
 
