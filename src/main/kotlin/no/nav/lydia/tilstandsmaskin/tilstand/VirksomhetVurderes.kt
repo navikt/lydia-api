@@ -30,7 +30,7 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetKlarTilVurdering,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -47,7 +47,7 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetErVurdert,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -65,7 +65,7 @@ object VirksomhetVurderes : Tilstand() { // VURDERES
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }

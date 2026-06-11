@@ -242,7 +242,7 @@ fun Route.nyFlyt(
                 hendelse = hendelse,
             )
 
-            konsekvens.map { it.endring as IASakDto }
+            konsekvens.map { it.verdi as IASakDto }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -269,7 +269,7 @@ fun Route.nyFlyt(
                     navEnhet = enhet,
                 ),
             )
-            konsekvens.map { it.endring as IASakDto }
+            konsekvens.map { it.verdi as IASakDto }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -298,7 +298,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it.endring as IASamarbeidDto }
+            konsekvens.map { it.verdi as IASamarbeidDto }
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -332,7 +332,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it.endring as SpørreundersøkelseDto }
+            konsekvens.map { it.verdi as SpørreundersøkelseDto }
         }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -362,7 +362,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it.endring as SpørreundersøkelseDto }
+            konsekvens.map { it.verdi as SpørreundersøkelseDto }
         }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -392,7 +392,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it.endring as SpørreundersøkelseDto }
+            konsekvens.map { it.verdi as SpørreundersøkelseDto }
         }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -422,7 +422,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it.endring as SpørreundersøkelseDto }
+            konsekvens.map { it.verdi as SpørreundersøkelseDto }
         }.also { spørreundersøkelseDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -462,7 +462,7 @@ fun Route.nyFlyt(
                     dato = dato,
                 ),
             )
-            konsekvens.map { it.endring as IASamarbeidDto }
+            konsekvens.map { it.verdi as IASamarbeidDto }
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -508,7 +508,7 @@ fun Route.nyFlyt(
                     dato = dato,
                 ),
             )
-            konsekvens.map { it.endring as IASamarbeidDto }
+            konsekvens.map { it.verdi as IASamarbeidDto }
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -540,7 +540,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it.endring as IASamarbeidDto }
+            konsekvens.map { it.verdi as IASamarbeidDto }
         }.also { iaSamarbeidDtoEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -570,7 +570,7 @@ fun Route.nyFlyt(
                     navEnhet = navEnhet,
                 ),
             )
-            konsekvens.map { it.endring as VirksomhetTilstandAutomatiskOppdateringDto }
+            konsekvens.map { it.verdi as VirksomhetTilstandAutomatiskOppdateringDto }
         }.also { either ->
             auditLog.auditloggEither(
                 call = call,

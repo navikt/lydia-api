@@ -56,7 +56,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -75,7 +75,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it.tilDto(
+                            verdi = it.tilDto(
                                 fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
                                     referanseId = it.id,
                                     type = it.type.name.tilDokumentTilPubliseringType(),
@@ -98,7 +98,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring =
+                            verdi =
                                 it.tilDto(
                                     fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
                                         referanseId = it.id,
@@ -122,7 +122,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring =
+                            verdi =
                                 it.tilDto(
                                     fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
                                         referanseId = it.id,
@@ -146,7 +146,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring =
+                            verdi =
                                 it.tilDto(
                                     fiaKontekst.dokumentPubliseringService.hentPubliseringStatus(
                                         referanseId = it.id,
@@ -171,7 +171,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -189,7 +189,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -208,7 +208,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -228,7 +228,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -246,7 +246,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -282,7 +282,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                         }
 
                         Konsekvens(
-                            endring = it,
+                            verdi = it,
                             nyTilstand = when {
                                 harAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
                                 harSamarbeidOgAlleErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
@@ -307,7 +307,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -326,7 +326,7 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetHarAktiveSamarbeid,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }

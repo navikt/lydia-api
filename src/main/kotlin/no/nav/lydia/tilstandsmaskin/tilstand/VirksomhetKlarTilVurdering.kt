@@ -28,7 +28,7 @@ object VirksomhetKlarTilVurdering : Tilstand() { // IKKE_AKTIV
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetVurderes,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
