@@ -18,14 +18,14 @@ import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
-import no.nav.lydia.tilstandsmaskin.hentPlan
-import no.nav.lydia.tilstandsmaskin.settPlanTilFullført
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.avbrytSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.fullførSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.hentSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.hentSamarbeidSomIkkeErSlettet
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.hentPlan
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.settPlanTilFullført
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.opprettAutomatiskOppdatering
 import java.time.LocalDate

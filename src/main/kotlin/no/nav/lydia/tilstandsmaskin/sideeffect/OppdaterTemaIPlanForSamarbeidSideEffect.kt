@@ -9,7 +9,7 @@ import no.nav.lydia.samarbeidsplan.PlanDto
 import no.nav.lydia.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
-import no.nav.lydia.tilstandsmaskin.oppdaterTemaISamarbeidsplan
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.oppdaterTemaISamarbeidsplan
 import java.util.UUID
 
 class OppdaterTemaIPlanForSamarbeidSideEffect(

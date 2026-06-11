@@ -9,7 +9,7 @@ import no.nav.lydia.samarbeidsplan.PlanUndertema
 import no.nav.lydia.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
-import no.nav.lydia.tilstandsmaskin.endreStatusPåUndertemaISamarbeidsplan
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.endreStatusPåUndertemaISamarbeidsplan
 import java.util.UUID
 
 class EndreStatusPåUndertemaISamarbeidsplanSideEffect(
