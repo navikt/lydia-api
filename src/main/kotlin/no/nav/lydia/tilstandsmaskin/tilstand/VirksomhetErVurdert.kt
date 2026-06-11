@@ -4,7 +4,6 @@ import arrow.core.Either
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.samarbeidsperiode.IASak
-import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.tilstandsmaskin.Konsekvens
 import no.nav.lydia.tilstandsmaskin.hendelse.EndrePlanlagtDatoForNesteTilstand
@@ -33,7 +32,7 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetErVurdert,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -47,7 +46,7 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetKlarTilVurdering,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
@@ -66,7 +65,7 @@ object VirksomhetErVurdert : Tilstand() { // VURDERT
                     sideEffect.apply().map {
                         Konsekvens(
                             nyTilstand = VirksomhetErVurdert,
-                            endring = it,
+                            verdi = it,
                         )
                     }
                 }
