@@ -160,6 +160,23 @@ class TilstandVirksomhetTransactional {
                 ).asUpdate,
             )
 
+        context(tx: TransactionalSession)
+        fun slettVirksomhetTilstand(orgnr: String) {
+            tx.run(
+                queryOf(
+                    """
+                    WITH slettet_automatisk_oppdatering AS (
+                        DELETE FROM tilstand_automatisk_oppdatering
+                        WHERE orgnr = :orgnr
+                    )
+                    DELETE FROM tilstand_virksomhet
+                    WHERE orgnr = :orgnr
+                    """.trimIndent(),
+                    mapOf("orgnr" to orgnr),
+                ).asUpdate,
+            )
+        }
+
         // Row-mappers
         private fun Row.tilVirksomhetTilstandDtoMedAutomatiskOppdatering(): VirksomhetTilstandDto =
             VirksomhetTilstandDto(

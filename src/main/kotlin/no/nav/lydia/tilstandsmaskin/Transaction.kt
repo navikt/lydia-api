@@ -241,23 +241,6 @@ fun hentAlleSakerDtoForVirksomhet(orgnummer: String): List<IASakDto> =
     )
 
 context(tx: TransactionalSession)
-fun slettVirksomhetTilstand(orgnr: String) {
-    tx.run(
-        queryOf(
-            """
-            WITH slettet_automatisk_oppdatering AS (
-                DELETE FROM tilstand_automatisk_oppdatering
-                WHERE orgnr = :orgnr
-            )
-            DELETE FROM tilstand_virksomhet
-            WHERE orgnr = :orgnr
-            """.trimIndent(),
-            mapOf("orgnr" to orgnr),
-        ).asUpdate,
-    )
-}
-
-context(tx: TransactionalSession)
 fun settSakTilSlettet(
     saksnummer: String,
     hendelse: IASakshendelse,
