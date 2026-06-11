@@ -12,9 +12,9 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
-import no.nav.lydia.tilstandsmaskin.endrePlanlagtDatoForNesteTilstand
 import no.nav.lydia.tilstandsmaskin.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.oppdaterStatusPåSak
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.endrePlanlagtDatoForNesteTilstand
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
