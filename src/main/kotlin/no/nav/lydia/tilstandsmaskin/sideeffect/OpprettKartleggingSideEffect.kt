@@ -12,10 +12,10 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
-import no.nav.lydia.tilstandsmaskin.hentSpørreundersøkelse
-import no.nav.lydia.tilstandsmaskin.leggTilTemaTilKartlegging
-import no.nav.lydia.tilstandsmaskin.leggTilUndertemaTilKartlegging
-import no.nav.lydia.tilstandsmaskin.opprettKartlegging
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.KartleggingTransactional.Companion.hentSpørreundersøkelse
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.KartleggingTransactional.Companion.leggTilTemaTilKartlegging
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.KartleggingTransactional.Companion.leggTilUndertemaTilKartlegging
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.KartleggingTransactional.Companion.opprettKartlegging
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand

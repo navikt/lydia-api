@@ -12,7 +12,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
-import no.nav.lydia.tilstandsmaskin.oppdaterStatusTilSpørreundersøkelse
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.KartleggingTransactional.Companion.oppdaterStatusTilSpørreundersøkelse
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand

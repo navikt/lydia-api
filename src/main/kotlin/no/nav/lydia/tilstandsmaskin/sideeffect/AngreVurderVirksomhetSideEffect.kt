@@ -12,10 +12,10 @@ import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
-import no.nav.lydia.tilstandsmaskin.nyHendelseBasertPåSak
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.hentAlleSakerDtoForVirksomhet
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.hentSisteIASakDto
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.settSakTilSlettet
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.oppdaterVirksomhetTilstand
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.slettVirksomhetTilstand
