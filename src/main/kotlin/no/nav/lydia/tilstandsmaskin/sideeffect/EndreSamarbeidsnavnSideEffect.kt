@@ -12,8 +12,8 @@ import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
-import no.nav.lydia.tilstandsmaskin.hentSamarbeid
-import no.nav.lydia.tilstandsmaskin.oppdaterNavnPåSamarbeid
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.hentSamarbeid
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.oppdaterNavnPåSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
 import java.time.LocalDateTime
