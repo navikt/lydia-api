@@ -71,8 +71,14 @@ import no.nav.lydia.kartlegging.SpørreundersøkelseProdusent
 import no.nav.lydia.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.prioritering.StatistikkViewOppdaterer
+import no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringRepository
+import no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService
+import no.nav.lydia.prioritering.sykefraværsstatistikk.SykefraværsstatistikkRepository
+import no.nav.lydia.prioritering.sykefraværsstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.prioritering.sykefraværsstatistikk.VirksomhetsinformasjonRepository
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.prioritering.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
+import no.nav.lydia.prioritering.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.prioritering.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
 import no.nav.lydia.prioritering.virksomhet.VirksomhetRepository
 import no.nav.lydia.prioritering.virksomhet.VirksomhetService
@@ -132,23 +138,23 @@ fun startLydiaBackend() {
     val samarbeidsplanProdusent = SamarbeidsplanProdusent(kafka = naisEnv.kafka)
     val samarbeidProdusent = SamarbeidProdusent(kafka = naisEnv.kafka)
 
-    val sykefraværsstatistikkService = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SykefraværsstatistikkService(
-        sykefraværsstatistikkRepository = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SykefraværsstatistikkRepository(
+    val sykefraværsstatistikkService = SykefraværsstatistikkService(
+        sykefraværsstatistikkRepository = SykefraværsstatistikkRepository(
             dataSource = dataSource,
         ),
-        virksomhetsinformasjonRepository = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.VirksomhetsinformasjonRepository(
+        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(
             dataSource = dataSource,
         ),
-        sistePubliseringService = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService(
-            _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringRepository(
+        sistePubliseringService = SistePubliseringService(
+            SistePubliseringRepository(
                 dataSource = dataSource,
             ),
         ),
         virksomhetRepository = virksomhetRepository,
     )
     val auditLog = AuditLog(naisEnv.miljø)
-    val sistePubliseringService = _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService(
-        _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringRepository(dataSource = dataSource),
+    val sistePubliseringService = SistePubliseringService(
+        SistePubliseringRepository(dataSource = dataSource),
     )
     val iaSakDtoProdusent = IASakDtoProdusent(kafka = naisEnv.kafka)
     val iaSakDtoStatistikkProdusent = IASakDtoStatistikkProdusent(
@@ -321,7 +327,7 @@ fun startLydiaBackend() {
         Topic.STATISTIKK_NARINGSKODE_TOPIC,
         Topic.STATISTIKK_VIRKSOMHET_TOPIC,
     ).forEach { topic ->
-        _root_ide_package_.no.nav.lydia.prioritering.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer(topic = topic).apply {
+        StatistikkPerKategoriConsumer(topic = topic).apply {
             create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
             run()
         }.also { HelseMonitor.leggTilHelsesjekk(it) }

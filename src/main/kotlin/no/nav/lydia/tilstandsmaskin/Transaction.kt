@@ -2,7 +2,6 @@ package no.nav.lydia.tilstandsmaskin
 
 import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
@@ -22,13 +21,9 @@ import no.nav.lydia.samarbeid.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.mapRowToIASamarbeid
-import no.nav.lydia.samarbeidsperiode.IASak
-import no.nav.lydia.samarbeidsperiode.IASak.Companion.tilIASakDto
 import no.nav.lydia.samarbeidsperiode.IASakDto
-import no.nav.lydia.samarbeidsperiode.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
 import no.nav.lydia.samarbeidsperiode.IASakshendelse
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
-import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.samarbeidsplan.Plan
