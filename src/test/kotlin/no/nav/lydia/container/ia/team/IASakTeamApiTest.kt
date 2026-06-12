@@ -198,8 +198,7 @@ class IASakTeamApiTest {
     }
 
     // MineSakerTester
-    private fun IASakDto.sammenlignMedMineSaker(minsak: MineSakerDto) =
-        minsak.iaSak.copy(gyldigeNesteHendelser = emptyList()) == this.copy(gyldigeNesteHendelser = emptyList())
+    private fun IASakDto.sammenlignMedMineSaker(minsak: MineSakerDto) = minsak.iaSak == this
 
     @Test
     fun `skal få alle saker man er eier av`() {
