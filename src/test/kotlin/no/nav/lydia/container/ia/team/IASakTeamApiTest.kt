@@ -197,9 +197,6 @@ class IASakTeamApiTest {
         res.statusCode shouldBe HttpStatusCode.BadRequest.value
     }
 
-    // MineSakerTester
-    private fun IASakDto.sammenlignMedMineSaker(minsak: MineSakerDto) = minsak.iaSak == this
-
     @Test
     fun `skal få alle saker man er eier av`() {
         val bruker = authContainerHelper.superbruker1.token
@@ -218,7 +215,7 @@ class IASakTeamApiTest {
             )
 
         iaSakListe.all { sak ->
-            res.any { sak.sammenlignMedMineSaker(it) }
+            res.any { it.iaSak == sak }
         } shouldBe true
     }
 
@@ -253,10 +250,10 @@ class IASakTeamApiTest {
             )
 
         iaSakListe.all { sak ->
-            res.any { sak.sammenlignMedMineSaker(it) }
+            res.any { it.iaSak == sak }
         } shouldBe true
 
-        res.any { sak4.sammenlignMedMineSaker(it) } shouldBe false
+        res.any { it.iaSak == sak4 } shouldBe false
 
         res.map { it.iaSak.saksnummer }.shouldBeUnique()
     }
@@ -278,7 +275,7 @@ class IASakTeamApiTest {
             )
 
         res.none {
-            sak0.sammenlignMedMineSaker(it) || sak1.sammenlignMedMineSaker(it)
+            it.iaSak == sak0 || it.iaSak == sak1
         } shouldBe true
     }
 }
