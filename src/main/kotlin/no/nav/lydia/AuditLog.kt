@@ -60,14 +60,14 @@ class AuditLog(
                 "request=${
                     uri.substring(
                         0,
-                        uri.length.coerceAtMost(70),
+                        uri.length.coerceAtMost(1023),
                     )
                 } " +
                 "flexString1Label=Decision " +
                 "flexString1=${tillat.tillat}" +
                 (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
                 (melding?.let { " msg=$it" } ?: "") +
-                (feilkode?.let { " flexString3Label=feilkode flexString3=$it" })
+                (feilkode?.let { " flexString3Label=feilkode flexString3=$it" } ?: "")
 
         when (miljø) {
             `PROD-GCP` -> auditLog.info(logstring)

@@ -17,10 +17,22 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.ANSATTE_FRA
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.ANSATTE_TIL
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.BRANSJEPROGRAM
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.FYLKER
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.IA_SAK_EIERE
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.IA_STATUS
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.KOMMUNER
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.NÆRINGSGRUPPER
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.SEKTOR
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.SIDE
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.SNITT_FILTER
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.SORTERINGSNØKKEL
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.SORTERINGSRETNING
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_FRA
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_TIL
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere.Companion.VIRKSOMHET_TILSTAND
 import kotlin.test.Test
 
 class AuditLogTest {
@@ -201,10 +213,16 @@ class AuditLogTest {
         StatistikkHelper.hentSykefravær()
             .also {
                 applikasjon shouldContainLog auditLog(
-                    path = "/$SYKEFRAVÆRSSTATISTIKK_PATH?$KOMMUNER=&$FYLKER=&$NÆRINGSGRUPPER=&$SORTERINGSNØKKEL".substring(
-                        0,
-                        70,
-                    ),
+                    path = """
+                        /$SYKEFRAVÆRSSTATISTIKK_PATH?
+                            $KOMMUNER=&$FYLKER=&$NÆRINGSGRUPPER=&$SORTERINGSNØKKEL=
+                            &$SORTERINGSRETNING=&$SYKEFRAVÆRSPROSENT_FRA=
+                            &$SYKEFRAVÆRSPROSENT_TIL=&$SNITT_FILTER=&$ANSATTE_FRA=
+                            &$ANSATTE_TIL=&$IA_STATUS=&$VIRKSOMHET_TILSTAND=
+                            &$SIDE=&$BRANSJEPROGRAM=&$IA_SAK_EIERE=&$SEKTOR=
+                    """
+                        .trimIndent()
+                        .replace("""[\n\s]""".toRegex(), ""),
                     method = "GET",
                     navIdent = saksbehandler.navIdent,
                     auditType = AuditType.access,
@@ -234,7 +252,9 @@ class AuditLogTest {
         )
             .also {
                 applikasjon shouldContainLog auditLog(
-                    path = "/$SYKEFRAVÆRSSTATISTIKK_PATH?kommuner=1750&fylker=17&naringsgrupper=bil&sort",
+                    path = "/$SYKEFRAVÆRSSTATISTIKK_PATH?kommuner=1750&fylker=17&naringsgrupper=bil&sorteringsnokkel=b%C3%A5t" +
+                        "&sorteringsretning=asc&sykefravarsprosentFra=5&sykefravarsprosentTil=30&snittfilter=&ansatteFra=10&ansatteTil=50" +
+                        "&iaStatus=FULLF%C3%98RT&virksomhetTilstand=&side=2&bransjeprogram=fly&eiere=N123&sektor=",
                     method = "GET",
                     navIdent = saksbehandler.navIdent,
                     auditType = AuditType.access,
