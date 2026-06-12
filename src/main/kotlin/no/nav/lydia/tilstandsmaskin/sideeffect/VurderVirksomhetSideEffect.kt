@@ -102,5 +102,4 @@ private fun IASakshendelse.tilIASakDto(): IASakDto =
         endretAv = null,
         endretAvHendelseId = this.id,
         status = NY,
-        gyldigeNesteHendelser = emptyList(),
     )
