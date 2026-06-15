@@ -48,7 +48,6 @@ class IASak private constructor(
                 status = Status.valueOf(this.string("status")),
                 endretAvHendelseId = this.string("endret_av_hendelse"),
                 eidAv = this.stringOrNull("eid_av"),
-                gyldigeNesteHendelser = emptyList(),
             )
     }
 

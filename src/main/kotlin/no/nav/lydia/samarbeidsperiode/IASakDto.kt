@@ -16,8 +16,6 @@ data class IASakDto(
     val endretTidspunkt: LocalDateTime?,
     val eidAv: String?,
     val endretAvHendelseId: String,
-    val gyldigeNesteHendelser: List<Unit>, // TODO: [OPPRYDDING] kan fjernes etter at den er fjernet fra frontend
-    val lukket: Boolean = false, // TODO: [OPPRYDDING] kan fjernes etter at den er fjernet fra frontend
 ) {
     @Transient
     private val sakshendelser = mutableListOf<IASakshendelse>()
@@ -42,7 +40,7 @@ data class IASakDto(
                 endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime(),
                 eidAv = this.eidAv,
                 endretAvHendelseId = this.endretAvHendelseId,
-                gyldigeNesteHendelser = listOf(), // TODO: [OPPRYDDING] Fjern fra frontend
+                // TODO: [OPPRYDDING] Fjern fra frontend
             )
     }
 }
