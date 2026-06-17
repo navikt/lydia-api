@@ -350,6 +350,7 @@ class NyFlytTest {
 
         val nySak = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
             .tilSingelRespons<IASakDto>().third.get()
 
         nySak.orgnr shouldBe sak.orgnr
@@ -377,6 +378,7 @@ class NyFlytTest {
         virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
 
         val nySak = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
+            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
             .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>().third.get()
 
@@ -623,6 +625,7 @@ class NyFlytTest {
         val orgnummer = virksomhet.orgnr
         val res = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
             .tilSingelRespons<IASakDto>()
 
         res.second.statusCode shouldBe HttpStatusCode.Created.value
@@ -671,22 +674,6 @@ class NyFlytTest {
             """.trimIndent(),
         )
         begrunnelser shouldBe listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
-    }
-
-    @Test
-    fun `vurder virksomhet uten bakgrunn lagrer ingen begrunnelse`() {
-        val virksomhet = lastInnNyVirksomhet()
-        val sak = vurderVirksomhet(virksomhet = virksomhet)
-
-        val antallBegrunnelser = postgresContainerHelper.hentEnkelKolonne<Long>(
-            """
-            SELECT count(*)
-                 FROM hendelse_begrunnelse hb
-                 JOIN ia_sak_hendelse h ON h.id = hb.hendelse_id
-                 WHERE h.orgnr = '${sak.orgnr}'
-            """.trimIndent(),
-        )
-        antallBegrunnelser shouldBe 0L
     }
 
     @Test
@@ -751,7 +738,7 @@ class NyFlytTest {
                  WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
         )
-        begrunnelser shouldBe listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
+        begrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
     }
 
     @Test
@@ -781,7 +768,7 @@ class NyFlytTest {
                  WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
         )
-        begrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name)
+        begrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name)
     }
 
     @Test
@@ -802,11 +789,13 @@ class NyFlytTest {
         val orgnummer = VirksomhetHelper.nyttOrgnummer()
         val res1 = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
             .authentication().bearer(authContainerHelper.lesebruker.token)
+            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
             .tilSingelRespons<IASakDto>()
         res1.second.statusCode shouldBe HttpStatusCode.Forbidden.value
 
         val res2 = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
             .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
             .tilSingelRespons<IASakDto>()
         res2.second.statusCode shouldBe HttpStatusCode.Forbidden.value
     }
@@ -1002,6 +991,7 @@ class NyFlytTest {
 
         val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
             .tilSingelRespons<IASakDto>()
         revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
         revurderRes.third.get().status shouldBe IASak.Status.VURDERES
@@ -1357,6 +1347,7 @@ class NyFlytTest {
 
         val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
             .tilSingelRespons<IASakDto>()
         revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
 
@@ -1377,6 +1368,7 @@ class NyFlytTest {
 
         val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
             .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
             .tilSingelRespons<IASakDto>()
         revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
         revurderRes.third.get().status shouldBe IASak.Status.VURDERES
