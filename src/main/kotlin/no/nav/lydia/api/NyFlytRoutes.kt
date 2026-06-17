@@ -224,7 +224,14 @@ fun Route.nyFlyt(
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val valgtÅrsak = runCatching { call.receiveNullable<ValgtÅrsak>() }.getOrNull()
 
-        if (valgtÅrsak != null && !valgtÅrsak.validerBegrunnelserForVurderingAvVirksomhet()) {
+        if (valgtÅrsak == null) {
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Mangler årsak og begrunnelse for vurdering av virksomhet",
+            )
+        }
+
+        if (!valgtÅrsak.validerBegrunnelserForVurderingAvVirksomhet()) {
             return@post call.respond(
                 status = HttpStatusCode.BadRequest,
                 message = "Ugyldig årsak eller begrunnelse for vurdering av virksomhet",
