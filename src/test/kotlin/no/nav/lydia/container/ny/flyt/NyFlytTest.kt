@@ -22,6 +22,8 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.revurderVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.revurderVirksomhetResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidRespons
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserIASakObserversErVarslet
@@ -348,10 +350,7 @@ class NyFlytTest {
         virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
         virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe LocalDate.now().plusDays(1).toKotlinLocalDate()
 
-        val nySak = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
-            .tilSingelRespons<IASakDto>().third.get()
+        val nySak = sak.revurderVirksomhet()
 
         nySak.orgnr shouldBe sak.orgnr
 
@@ -377,10 +376,7 @@ class NyFlytTest {
         virksomhetsTilstand.nesteTilstand?.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
         virksomhetsTilstand.nesteTilstand?.planlagtDato shouldBe LocalDate.now().plusDays(90).toKotlinLocalDate()
 
-        val nySak = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
-            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .tilSingelRespons<IASakDto>().third.get()
+        val nySak = sak.revurderVirksomhet()
 
         nySak.orgnr shouldBe sak.orgnr
 
@@ -622,11 +618,7 @@ class NyFlytTest {
     @Test
     fun `vurder virksomhet returnerer 201 - CREATED`() {
         val virksomhet = lastInnNyVirksomhet()
-        val orgnummer = virksomhet.orgnr
-        val res = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
-            .tilSingelRespons<IASakDto>()
+        val res = vurderVirksomhetResponse(virksomhet)
 
         res.second.statusCode shouldBe HttpStatusCode.Created.value
     }
@@ -989,10 +981,8 @@ class NyFlytTest {
         avsluttVurderingRes.second.statusCode shouldBe HttpStatusCode.OK.value
         avsluttVurderingRes.third.get().status shouldBe IASak.Status.VURDERT
 
-        val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
-            .tilSingelRespons<IASakDto>()
+        val revurderRes = sak.revurderVirksomhetResponse()
+
         revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
         revurderRes.third.get().status shouldBe IASak.Status.VURDERES
 
@@ -1345,10 +1335,7 @@ class NyFlytTest {
         tilstandFørRevurdering.nesteTilstand shouldNotBe null
         tilstandFørRevurdering.nesteTilstand?.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
 
-        val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
-            .tilSingelRespons<IASakDto>()
+        val revurderRes = sak.revurderVirksomhetResponse()
         revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
 
         val tilstandEtterRevurdering = hentVirksomhetTilstand(orgnr = sak.orgnr)
@@ -1366,10 +1353,7 @@ class NyFlytTest {
 
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
 
-        val revurderRes = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/vurder")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
-            .tilSingelRespons<IASakDto>()
+        val revurderRes = sak.revurderVirksomhetResponse()
         revurderRes.second.statusCode shouldBe HttpStatusCode.Created.value
         revurderRes.third.get().status shouldBe IASak.Status.VURDERES
 

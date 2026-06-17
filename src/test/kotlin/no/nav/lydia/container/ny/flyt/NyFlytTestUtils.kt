@@ -238,6 +238,15 @@ class NyFlytTestUtils {
             }
         }
 
+        private fun vurderVirksomhetMedOrgnrResponse(
+            orgnr: String,
+            token: String = authContainerHelper.superbruker1.token,
+            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN)),
+        ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/vurder")
+            .authentication().bearer(token)
+            .jsonBody(Json.encodeToString(valgtÅrsak))
+            .tilSingelRespons<IASakDto>()
+
         // Test-case utils
         fun vurderVirksomhetResponse(
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
@@ -246,10 +255,7 @@ class NyFlytTestUtils {
                 ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
                 listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
-        ) = applikasjon.performPost("$NY_FLYT_PATH/${virksomhet.orgnr}/vurder")
-            .authentication().bearer(token)
-            .jsonBody(Json.encodeToString(valgtÅrsak))
-            .tilSingelRespons<IASakDto>()
+        ) = vurderVirksomhetMedOrgnrResponse(virksomhet.orgnr, token, valgtÅrsak)
 
         fun vurderVirksomhet(
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
@@ -259,6 +265,25 @@ class NyFlytTestUtils {
                 listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = vurderVirksomhetResponse(virksomhet = virksomhet, token = token, valgtÅrsak = valgtÅrsak).third.fold(
+            success = { it },
+            failure = { fail(it.message) },
+        )
+
+        fun IASakDto.revurderVirksomhetResponse(
+            token: String = authContainerHelper.superbruker1.token,
+            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+                ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
+        ) = vurderVirksomhetMedOrgnrResponse(orgnr, token, valgtÅrsak)
+
+        fun IASakDto.revurderVirksomhet(
+            token: String = authContainerHelper.superbruker1.token,
+            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+                ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
+        ) = revurderVirksomhetResponse().third.fold(
             success = { it },
             failure = { fail(it.message) },
         )
