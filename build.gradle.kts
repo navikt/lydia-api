@@ -11,9 +11,9 @@ val opentelemetryLogbackMdcVersion = "2.28.1-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.3.21"
+    kotlin("jvm") version "2.4.0"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.3.21"
+    kotlin("plugin.serialization") version "2.4.0"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
@@ -52,11 +52,11 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.16.5")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.17.0")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.11")
-    implementation("com.zaxxer:HikariCP:7.0.2")
+    implementation("com.zaxxer:HikariCP:7.1.0")
     implementation("org.flywaydb:flyway-database-postgresql:12.8.1")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
