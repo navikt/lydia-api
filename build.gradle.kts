@@ -105,7 +105,7 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:4.0.0")
+    testImplementation("no.nav.security:mock-oauth2-server:4.0.1")
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
@@ -118,7 +118,7 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.13.Final")
+                require("4.2.15.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
