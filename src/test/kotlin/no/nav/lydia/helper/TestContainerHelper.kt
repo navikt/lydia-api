@@ -65,6 +65,7 @@ class TestContainerHelper {
                     "CONSUMER_LOOP_DELAY" to "1",
                     "NAIS_CLUSTER_NAME" to "lokal",
                     "PIA_PDFGEN_URL" to "http://pia-pdfgen",
+                    "LOKAL_TEAM_LOGS" to "1",
                 )
                     .plus(authContainerHelper.envVars())
                     .plus(kafkaContainerHelper.envVars())
