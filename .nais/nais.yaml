@@ -40,6 +40,8 @@ spec:
   accessPolicy:
     outbound:
       rules:
+        - application: logging
+          namespace: nais-system
         - application: pia-pdfgen
       external:
         - host: {{journalpostHost}}

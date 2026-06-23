@@ -114,7 +114,8 @@ import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetOppdaterer
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
-import java.util.*
+import org.slf4j.LoggerFactory
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -123,6 +124,10 @@ fun main() {
 }
 
 fun startLydiaBackend() {
+    val log = LoggerFactory.getLogger("App")
+    log.info("Starter Fia backend")
+    log.tlinfo("Hei fra teamlog")
+
     val naisEnv = NaisEnvironment()
 
     val dataSource = createDataSource(database = naisEnv.database)
