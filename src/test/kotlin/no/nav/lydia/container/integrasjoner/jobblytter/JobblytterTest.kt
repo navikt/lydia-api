@@ -10,7 +10,6 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
-import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -29,13 +28,6 @@ class JobblytterTest {
     fun `skal kunne trigge engangsJobb jobb via kafka`() {
         kafkaContainerHelper.sendJobbMelding(engangsJobb, "vilkårlig parameter")
         applikasjon shouldContainLog "Jobb 'engangsJobb' ferdig".toRegex()
-    }
-
-    @Test
-    fun `skal kunne trigge ryddeIUrørteSaker jobb via kafka`() {
-        kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
-        applikasjon shouldContainLog "Ferdig med å rydde opp i urørte saker".toRegex()
-        applikasjon shouldContainLog "Jobb 'ryddeIUrørteSaker' ferdig".toRegex()
     }
 
     @Test

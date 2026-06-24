@@ -162,20 +162,6 @@ class IASakRepository(
             )
         }
 
-    fun hentUrørteSakerIVurderesUtenEier(): List<IASak> =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    SELECT * FROM ia_sak 
-                    WHERE eid_av IS NULL
-                    AND status = '${IASak.Status.VURDERES.name}'
-                    AND endret < (now() - INTERVAL '6 MONTH')
-                    """.trimIndent(),
-                ).map(this::mapRowToIASak).asList,
-            )
-        }
-
     fun hentStatusForBehovsvurderinger(samarbeidId: Int): List<Pair<String, Spørreundersøkelse.Status>> =
         using(sessionOf(dataSource)) { session ->
             session.run(

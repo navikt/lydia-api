@@ -1,9 +1,9 @@
 package no.nav.lydia.tilstandsmaskin
 
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeidsperiode.IASakService
-import no.nav.lydia.samarbeidsperiode.IASakStatusOppdaterer
 import no.nav.lydia.samarbeidsplan.PlanService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
@@ -20,6 +20,13 @@ class TilstandVirksomhetOppdaterer(
     val planService: PlanService,
     val tilstandVirksomhetRepository: TilstandVirksomhetRepository,
 ) {
+    companion object {
+        val NAV_ENHET_FOR_MASKINELT_OPPDATERING = NavEnhet(
+            enhetsnummer = "2840",
+            enhetsnavn = "IA- og sykefraværskontoret",
+        )
+    }
+
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun oppdaterTilstandVirksomhet() {
@@ -56,7 +63,7 @@ class TilstandVirksomhetOppdaterer(
                     token = "",
                     ansattesGrupper = emptySet(),
                 ),
-                navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
+                navEnhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
             )
 
             else -> throw IllegalArgumentException("Ukjent hendelse: $hendelse")

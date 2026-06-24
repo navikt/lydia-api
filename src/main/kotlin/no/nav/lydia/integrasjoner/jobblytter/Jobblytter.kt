@@ -12,8 +12,6 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
-import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
-import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSakerTørrKjør
 import ia.felles.integrasjoner.jobbsender.Jobb.spørreundersøkelseBigQueryEksport
 import ia.felles.integrasjoner.jobbsender.JobbInfo
 import kotlinx.coroutines.CoroutineScope
@@ -34,7 +32,6 @@ import no.nav.lydia.samarbeid.SamarbeidBigqueryEksporterer
 import no.nav.lydia.samarbeid.SamarbeidKafkaEksporterer
 import no.nav.lydia.samarbeidsperiode.IASakEksporterer
 import no.nav.lydia.samarbeidsperiode.IASakService
-import no.nav.lydia.samarbeidsperiode.IASakStatusOppdaterer
 import no.nav.lydia.samarbeidsplan.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.samarbeidsplan.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetOppdaterer
@@ -54,7 +51,6 @@ object Jobblytter : CoroutineScope {
     private lateinit var kafka: Kafka
 
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
-    private lateinit var iaSakStatusOppdaterer: IASakStatusOppdaterer
     private lateinit var iaSakEksporterer: IASakEksporterer
     private lateinit var næringsDownloader: NæringsDownloader
     private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
@@ -77,7 +73,6 @@ object Jobblytter : CoroutineScope {
 
     fun create(
         kafka: Kafka,
-        iaSakStatusOppdaterer: IASakStatusOppdaterer,
         iaSakEksporterer: IASakEksporterer,
         næringsDownloader: NæringsDownloader,
         statistikkViewOppdaterer: StatistikkViewOppdaterer,
@@ -99,7 +94,6 @@ object Jobblytter : CoroutineScope {
             StringDeserializer(),
             StringDeserializer(),
         )
-        this.iaSakStatusOppdaterer = iaSakStatusOppdaterer
         this.iaSakEksporterer = iaSakEksporterer
         this.næringsDownloader = næringsDownloader
         this.statistikkViewOppdaterer = statistikkViewOppdaterer
@@ -144,14 +138,6 @@ object Jobblytter : CoroutineScope {
                                                 }
                                             }
                                         }
-                                    }
-
-                                    ryddeIUrørteSaker -> {
-                                        iaSakStatusOppdaterer.ryddeIUrørteSaker()
-                                    }
-
-                                    ryddeIUrørteSakerTørrKjør -> {
-                                        iaSakStatusOppdaterer.ryddeIUrørteSaker(tørrKjør = true)
                                     }
 
                                     iaSakEksport -> {

@@ -34,45 +34,6 @@ class IASakService(
                 !it.status.regnesSomAvsluttet()
             }
 
-    fun tilbakeførSaker(tørrKjør: Boolean): Int =
-        iaSakRepository.hentUrørteSakerIVurderesUtenEier()
-            // TODO: [OPPRYDDING] Må fikses opp i
-//            .map {
-//            it.maskineltSettSakTilIkkeAktuell(tørrKjør = tørrKjør)
-//        }
-            .size
-
-//    private fun IASak.maskineltSettSakTilIkkeAktuell(tørrKjør: Boolean) {
-//        val tilbakeføringsHendelse = this.nyTilbakeføringsHendelse()
-//        val sistEndretAvHendelseId = this.endretAvHendelseId
-//        val endretTidspunkt = this.endretTidspunkt
-//        if (!tørrKjør) {
-//            tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, resulterendeStatus = IASak.Status.IKKE_AKTUELL)
-//            val oppdatertSak = tilbakeførSak(iaSak = this, hendelse = tilbakeføringsHendelse)
-//            årsakService.lagreÅrsak(sakshendelse = tilbakeføringsHendelse)
-//            oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
-//        }
-//        log.info(
-//            "${if (tørrKjør) "Skulle tilbakeføre" else "Tilbakeførte"} sak med saksnummer ${this.saksnummer}, sist oppdatert: $endretTidspunkt",
-//        )
-//    }
-
-//    private fun IASak.maskineltAvsluttProsess(iaSamarbeidDto: IASamarbeidDto) {
-//        val hendelse = nyMaskineltOppdaterSamarbeidHendelse(
-//            iaSamarbeidDto = iaSamarbeidDto,
-//            iASakshendelseType = IASakshendelseType.AVBRYT_PROSESS,
-//            resulterendeStatus = this.status,
-//        )
-//        val sistEndretAvHendelseId = this.endretAvHendelseId
-//        hendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, resulterendeStatus = this.status)
-//        samarbeidService.oppdaterSamarbeid(sakshendelse = hendelse, sak = this)
-//        val oppdatertSak = maskineltBehandleSamarbeidsHendelse(
-//            iaSak = this,
-//            hendelse = hendelse,
-//        )
-//        oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
-//    }
-
     fun hentSakerForOrgnummer(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)
 
     fun hentIASakDtoerForOrgnummer(orgnummer: String): List<IASakDto> = iaSakRepository.hentAlleSakerDtoForVirksomhet(orgnummer)
