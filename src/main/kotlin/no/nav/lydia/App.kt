@@ -95,7 +95,6 @@ import no.nav.lydia.samarbeidsperiode.IASakEksporterer
 import no.nav.lydia.samarbeidsperiode.IASakLeveranseRepository
 import no.nav.lydia.samarbeidsperiode.IASakRepository
 import no.nav.lydia.samarbeidsperiode.IASakService
-import no.nav.lydia.samarbeidsperiode.IASakStatusOppdaterer
 import no.nav.lydia.samarbeidsperiode.IASakshendelseRepository
 import no.nav.lydia.samarbeidsplan.OppdaterSistEndretPlanObserver
 import no.nav.lydia.samarbeidsplan.PlanRepository
@@ -286,7 +285,6 @@ fun startLydiaBackend() {
 
     jobblytter(
         naisEnv = naisEnv,
-        iaSakStatusOppdaterer = IASakStatusOppdaterer(iaSakService = iaSakService),
         iaSakEksporterer = IASakEksporterer(
             iaSakRepository = iaSakRepository,
             iaSakDtoProdusent = iaSakDtoProdusent,
@@ -430,7 +428,6 @@ private fun brregAlleVirksomheterConsumer(
 
 private fun jobblytter(
     naisEnv: NaisEnvironment,
-    iaSakStatusOppdaterer: IASakStatusOppdaterer,
     iaSakEksporterer: IASakEksporterer,
     næringsDownloader: NæringsDownloader,
     statistikkViewOppdaterer: StatistikkViewOppdaterer,
@@ -446,7 +443,6 @@ private fun jobblytter(
     Jobblytter.apply {
         create(
             kafka = naisEnv.kafka,
-            iaSakStatusOppdaterer = iaSakStatusOppdaterer,
             iaSakEksporterer = iaSakEksporterer,
             næringsDownloader = næringsDownloader,
             statistikkViewOppdaterer = statistikkViewOppdaterer,
@@ -467,10 +463,10 @@ private fun Application.lydiaRestApi(
     naisEnv: NaisEnvironment,
     dataSource: DataSource,
     næringsRepository: NæringsRepository,
-    sykefraværsstatistikkService: no.nav.lydia.prioritering.sykefraværsstatistikk.SykefraværsstatistikkService,
+    sykefraværsstatistikkService: SykefraværsstatistikkService,
     auditLog: AuditLog,
     azureService: AzureService,
-    sistePubliseringService: no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService,
+    sistePubliseringService: SistePubliseringService,
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     samarbeidService: IASamarbeidService,
