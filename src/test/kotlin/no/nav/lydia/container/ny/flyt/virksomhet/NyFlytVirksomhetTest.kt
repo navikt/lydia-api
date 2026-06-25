@@ -1,11 +1,45 @@
 package no.nav.lydia.container.ny.flyt.virksomhet
 
+import io.kotest.inspectors.shouldForAll
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhetResponse
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
+import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
+import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.statuskode
+import no.nav.lydia.kartlegging.Spørreundersøkelse
+import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
+import no.nav.lydia.samarbeid.IASamarbeid
+import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
@@ -106,5 +140,183 @@ class NyFlytVirksomhetTest {
         virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "VurderVirksomhet"
         virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
         virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe LocalDate.now().plusDays(20).toKotlinLocalDate()
+    }
+
+    @Test
+    fun `skal avslutte aktiv sak for virksomheter som blir slettet`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val iASakDto: IASakDto = vurderVirksomhet(virksomhet = virksomhet)
+        iASakDto.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val iASamarbeidDto: IASamarbeidDto = iASakDto.opprettSamarbeid(
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        hentVirksomhetTilstand(
+            orgnr = iASakDto.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        val behovsvurdering = iASamarbeidDto.opprettKartlegging(
+            orgnr = iASakDto.orgnr,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
+        hentVirksomhetTilstand(
+            orgnr = iASakDto.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        // TODO: Skulle noe vært logget? Skulle det i så fall vært testet på?
+
+        hentVirksomhetTilstand(
+            orgnr = iASakDto.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+
+        hentVirksomhet(
+            orgnr = iASakDto.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).status shouldBe VirksomhetStatus.SLETTET
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(iASakDto.orgnr)
+        val samarbeid: List<IASamarbeidDto> = historikk.flatMap { it.samarbeid }
+        samarbeid.shouldForAll { it.status shouldNotBe IASamarbeid.Status.AKTIV }
+
+        val sak = hentSak(orgnummer = iASakDto.orgnr, iASakDto.saksnummer)
+        sak.status.regnesSomAvsluttet() shouldBe true
+    }
+
+    @Test
+    fun `skal sette virksomhet til VirksomhetErSlettet fra VirksomhetKlarTilVurdering`() {
+        val virksomhet = lastInnNyVirksomhet()
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        hentVirksomhet(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).status shouldBe VirksomhetStatus.SLETTET
+    }
+
+    @Test
+    fun `skal sette virksomhet til VirksomhetErSlettet fra VirksomhetVurderes`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val sak = vurderVirksomhet(virksomhet = virksomhet)
+
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        hentSak(
+            orgnummer = virksomhet.orgnr,
+            saksnummer = sak.saksnummer,
+        ).status shouldBe IASak.Status.AVSLUTTET
+    }
+
+    @Test
+    fun `skal sette virksomhet til VirksomhetErSlettet fra VirksomhetErVurdert`() {
+        val virksomhet = lastInnNyVirksomhet()
+        vurderVirksomhet(virksomhet = virksomhet).avsluttVurdering()
+
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        hentVirksomhet(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).status shouldBe VirksomhetStatus.SLETTET
+    }
+
+    @Test
+    fun `skal sette virksomhet til VirksomhetErSlettet fra AlleSamarbeidIVirksomhetErAvsluttet`() {
+        val virksomhet = lastInnNyVirksomhet()
+        virksomhet.opprettOgFullførSamarbeidsperiode()
+
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+    }
+
+    @Test
+    fun `VirksomhetErSlettet er en terminal tilstand som avviser alle hendelser`() {
+        val virksomhet = lastInnNyVirksomhet()
+        sendSlettingForVirksomhet(virksomhet)
+
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+
+        vurderVirksomhetResponse(virksomhet).statuskode() shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `skal ikke røre ikke aktive saker når virksomhet blir slettet`() {
+        val virksomhet = lastInnNyVirksomhet()
+
+        val sak = aktivSamarbeidsperiode(virksomhet)
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val behovsvurdering = sak.opprettBehovsvurdering()
+        behovsvurdering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        )
+        behovsvurdering.fullfør(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        )
+        val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        plan.planleggOgFullførAlleUndertemaer(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            samarbeidId = samarbeid.id,
+        )
+        val evaluering = sak.opprettEvaluering()
+        evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        evaluering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        samarbeid.avsluttSamarbeid(
+            orgnr = sak.orgnr,
+            avslutningsType = IASamarbeid.Status.FULLFØRT,
+        )
+
+        val sakFørSletting = hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
+        ) shouldBe IASak.Status.AVSLUTTET.name
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
+        ) shouldBe sakFørSletting.endretAvHendelseId
     }
 }

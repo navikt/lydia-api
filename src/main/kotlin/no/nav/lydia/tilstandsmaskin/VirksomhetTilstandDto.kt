@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.nav.lydia.tilstandsmaskin.tilstand.AlleSamarbeidIVirksomhetErAvsluttet
 import no.nav.lydia.tilstandsmaskin.tilstand.Tilstand
+import no.nav.lydia.tilstandsmaskin.tilstand.VirksomhetErSlettet
 import no.nav.lydia.tilstandsmaskin.tilstand.VirksomhetErVurdert
 import no.nav.lydia.tilstandsmaskin.tilstand.VirksomhetHarAktiveSamarbeid
 import no.nav.lydia.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
@@ -30,6 +31,7 @@ enum class VirksomhetIATilstand {
     VirksomhetErVurdert,
     VirksomhetHarAktiveSamarbeid,
     AlleSamarbeidIVirksomhetErAvsluttet,
+    VirksomhetErSlettet,
 }
 
 fun Tilstand.tilVirksomhetIATilstand(): VirksomhetIATilstand = VirksomhetIATilstand.valueOf(navn())
@@ -41,4 +43,5 @@ fun VirksomhetIATilstand.tilTilstand(): Tilstand =
         VirksomhetIATilstand.VirksomhetErVurdert -> VirksomhetErVurdert
         VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid -> VirksomhetHarAktiveSamarbeid
         VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet -> AlleSamarbeidIVirksomhetErAvsluttet
+        VirksomhetIATilstand.VirksomhetErSlettet -> VirksomhetErSlettet
     }
