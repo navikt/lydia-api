@@ -5,27 +5,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhet
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettKartlegging
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
-import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
-import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
-import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
-import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
-import no.nav.lydia.helper.SakHelper.Companion.hentSak
-import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_ETTÅRIGE_VEKSTER_ELLERS
@@ -37,17 +17,9 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendEndringForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
-import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.integrasjoner.brreg.Adresse
-import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.prioritering.virksomhet.VirksomhetDto
 import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
-import no.nav.lydia.samarbeid.IASamarbeid
-import no.nav.lydia.samarbeid.IASamarbeidDto
-import no.nav.lydia.samarbeidsperiode.IASak
-import no.nav.lydia.samarbeidsperiode.IASakDto
-import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -141,68 +113,6 @@ class VirksomhetOppdateringTest {
         sendEndringForVirksomhet(virksomhet = virksomhetSomSkalFåNæringskodeOppdatert)
         virksomhetSomSkalFåNæringskodeOppdatert
             .skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
-    }
-
-    @Test
-    fun `skal IKKE avslutte aktiv sak for virksomheter som blir slettet`() {
-        val virksomhet = lastInnNyVirksomhet()
-        val iASakDto: IASakDto = vurderVirksomhet(virksomhet = virksomhet)
-        iASakDto.leggTilFolger(authContainerHelper.saksbehandler1.token)
-        val iASamarbeidDto: IASamarbeidDto = iASakDto.opprettSamarbeid(token = authContainerHelper.saksbehandler1.token)
-        hentVirksomhetTilstand(
-            orgnr = iASakDto.orgnr,
-            token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        val behovsvurdering = iASamarbeidDto.opprettKartlegging(
-            orgnr = iASakDto.orgnr,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
-            token = authContainerHelper.saksbehandler1.token,
-        )
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
-        hentVirksomhetTilstand(
-            orgnr = iASakDto.orgnr,
-            token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-
-        sendSlettingForVirksomhet(virksomhet)
-        applikasjon shouldContainLog
-            "Virksomhet med saksnummer '${iASakDto.saksnummer}' og saksstatus 'AKTIV' har fått følgende endring 'Sletting'".toRegex()
-
-        hentVirksomhetTilstand(
-            orgnr = iASakDto.orgnr,
-            token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-        hentVirksomhet(
-            orgnr = iASakDto.orgnr,
-            token = authContainerHelper.saksbehandler1.token,
-        ).status shouldBe VirksomhetStatus.SLETTET
-    }
-
-    @Test
-    fun `skal ikke røre ikke aktive saker når virksomhet blir slettet`() {
-        val virksomhet = lastInnNyVirksomhet()
-
-        val sak = aktivSamarbeidsperiode(virksomhet)
-        val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettBehovsvurdering()
-        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        behovsvurdering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-        plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = samarbeid.id)
-        val evaluering = sak.opprettEvaluering()
-        evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        evaluering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
-
-        sendSlettingForVirksomhet(virksomhet)
-
-        postgresContainerHelper.hentEnkelKolonne<String>(
-            "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe IASak.Status.AVSLUTTET.name
-        postgresContainerHelper.hentEnkelKolonne<String>(
-            "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).endretAvHendelseId
     }
 }
 

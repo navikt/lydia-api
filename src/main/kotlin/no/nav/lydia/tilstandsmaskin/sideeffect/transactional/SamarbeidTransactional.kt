@@ -12,6 +12,25 @@ import java.util.UUID
 class SamarbeidTransactional {
     companion object {
         context(tx: TransactionalSession)
+        fun hentAktiveSamarbeid(orgnr: String) =
+            tx.run(
+                queryOf(
+                    """
+                    SELECT 
+                        ia_prosess.*
+                    FROM ia_sak 
+                      JOIN ia_prosess using (saksnummer)
+                    WHERE orgnr = :orgnr
+                    AND ia_prosess.status = :aktivStatus
+                    """.trimIndent(),
+                    mapOf(
+                        "orgnr" to orgnr,
+                        "aktivStatus" to IASamarbeid.Status.AKTIV.name,
+                    ),
+                ).map { it.mapRowToIASamarbeid() }.asList,
+            )
+
+        context(tx: TransactionalSession)
         fun hentSamarbeid(samarbeidId: Int) =
             tx.run(
                 queryOf(

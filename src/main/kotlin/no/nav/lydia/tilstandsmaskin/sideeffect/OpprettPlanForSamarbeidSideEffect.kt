@@ -40,48 +40,46 @@ class OpprettPlanForSamarbeidSideEffect(
             samarbeidId = samarbeidId,
             mal = plan,
         ).map { planMalDto ->
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(receiver = tx) {
-                    val sakDto = hentSisteIASakDto(orgnummer = orgnummer)!!
+            Transaction(nyFlytService.dataSource).transactional {
+                val sakDto = hentSisteIASakDto(orgnummer = orgnummer)!!
 
-                    val opprettetSamarbeidsplan: Plan = opprettSamarbeidsplan(
-                        planId = nyPlanId,
-                        samarbeidId = samarbeidId,
-                        saksbehandler = saksbehandler,
-                        mal = planMalDto,
-                    ) ?: error("Kunne ikke opprette samarbeidsplan for samarbeid $samarbeidId i sak $saksnummer")
+                val opprettetSamarbeidsplan: Plan = opprettSamarbeidsplan(
+                    planId = nyPlanId,
+                    samarbeidId = samarbeidId,
+                    saksbehandler = saksbehandler,
+                    mal = planMalDto,
+                ) ?: error("Kunne ikke opprette samarbeidsplan for samarbeid $samarbeidId i sak $saksnummer")
 
-                    val planDto: PlanDto =
-                        opprettetSamarbeidsplan.tilDtoMedPubliseringStatus()
+                val planDto: PlanDto =
+                    opprettetSamarbeidsplan.tilDtoMedPubliseringStatus()
 
-                    val opprettPlanHendelse = lagreHendelse(
-                        hendelse = IASakshendelse(
-                            id = ULID.random(),
-                            opprettetTidspunkt = LocalDateTime.now(),
-                            saksnummer = saksnummer,
-                            hendelsesType = IASakshendelseType.OPPRETT_SAMARBEIDSPLAN,
-                            orgnummer = orgnummer,
-                            opprettetAv = saksbehandler.navIdent,
-                            opprettetAvRolle = saksbehandler.rolle,
-                            navEnhet = navEnhet,
-                            resulterendeStatus = null,
-                        ),
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = sakDto.status,
-                    )
-                    val oppdatertSakDto = oppdaterStatusPåSak(
+                val opprettPlanHendelse = lagreHendelse(
+                    hendelse = IASakshendelse(
+                        id = ULID.random(),
+                        opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = saksnummer,
-                        status = sakDto.status,
-                        endretAvHendelseId = opprettPlanHendelse.id,
-                        endretAv = saksbehandler.navIdent,
-                        oppdaterSistEndretPåSak = false,
-                    )
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = orgnummer,
-                        tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
-                    )
-                    Triple(opprettetSamarbeidsplan, planDto, oppdatertSakDto)
-                }
+                        hendelsesType = IASakshendelseType.OPPRETT_SAMARBEIDSPLAN,
+                        orgnummer = orgnummer,
+                        opprettetAv = saksbehandler.navIdent,
+                        opprettetAvRolle = saksbehandler.rolle,
+                        navEnhet = navEnhet,
+                        resulterendeStatus = null,
+                    ),
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = sakDto.status,
+                )
+                val oppdatertSakDto = oppdaterStatusPåSak(
+                    saksnummer = saksnummer,
+                    status = sakDto.status,
+                    endretAvHendelseId = opprettPlanHendelse.id,
+                    endretAv = saksbehandler.navIdent,
+                    oppdaterSistEndretPåSak = false,
+                )
+                lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = orgnummer,
+                    tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
+                )
+                Triple(opprettetSamarbeidsplan, planDto, oppdatertSakDto)
             }.also { planOgIASak: Triple<Plan, PlanDto, IASakDto> ->
                 nyFlytService.varsleIASakObservers(sakDto = planOgIASak.third)
                 nyFlytService.planService.varslePlanObservers(planOgIASak.first, PlanHendelseType.OPPRETT)

@@ -35,36 +35,34 @@ class EndrePlanlagtDatoForNesteTilstandSideEffect(
             saksnummer = saksnummer,
             nyPlanlagtDato = nyPlanlagtDato,
         ).map { _ ->
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(receiver = tx) {
-                    val hendelse = lagreHendelse(
-                        hendelse = IASakshendelse(
-                            id = ULID.random(),
-                            opprettetTidspunkt = LocalDateTime.now(),
-                            saksnummer = saksnummer,
-                            hendelsesType = IASakshendelseType.ENDRE_PLANLAGT_DATO,
-                            orgnummer = orgnummer,
-                            opprettetAv = saksbehandler.navIdent,
-                            opprettetAvRolle = saksbehandler.rolle,
-                            navEnhet = navEnhet,
-                            resulterendeStatus = null,
-                        ),
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = resulterendeSakStatus,
-                    )
-
-                    val iaSakDto: IASakDto = oppdaterStatusPåSak(
+            Transaction(nyFlytService.dataSource).transactional {
+                val hendelse = lagreHendelse(
+                    hendelse = IASakshendelse(
+                        id = ULID.random(),
+                        opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = saksnummer,
-                        status = resulterendeSakStatus,
-                        endretAv = saksbehandler.navIdent,
-                        endretAvHendelseId = hendelse.id,
-                    )
-                    val virksomhetTilstandAutomatiskOppdateringDto: VirksomhetTilstandAutomatiskOppdateringDto? = endrePlanlagtDatoForNesteTilstand(
-                        orgnr = orgnummer,
-                        nyPlanlagtDato = nyPlanlagtDato,
-                    )
-                    Pair(iaSakDto, virksomhetTilstandAutomatiskOppdateringDto)
-                }
+                        hendelsesType = IASakshendelseType.ENDRE_PLANLAGT_DATO,
+                        orgnummer = orgnummer,
+                        opprettetAv = saksbehandler.navIdent,
+                        opprettetAvRolle = saksbehandler.rolle,
+                        navEnhet = navEnhet,
+                        resulterendeStatus = null,
+                    ),
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = resulterendeSakStatus,
+                )
+
+                val iaSakDto: IASakDto = oppdaterStatusPåSak(
+                    saksnummer = saksnummer,
+                    status = resulterendeSakStatus,
+                    endretAv = saksbehandler.navIdent,
+                    endretAvHendelseId = hendelse.id,
+                )
+                val virksomhetTilstandAutomatiskOppdateringDto: VirksomhetTilstandAutomatiskOppdateringDto? = endrePlanlagtDatoForNesteTilstand(
+                    orgnr = orgnummer,
+                    nyPlanlagtDato = nyPlanlagtDato,
+                )
+                Pair(iaSakDto, virksomhetTilstandAutomatiskOppdateringDto)
             }.also { result: Pair<IASakDto, VirksomhetTilstandAutomatiskOppdateringDto?> ->
                 nyFlytService.varsleIASakObservers(result.first)
                 logger.info("EndrePlanlagtDatoForNesteTilstand kjørt for saksnummer='$saksnummer', nyPlanlagtDato='$nyPlanlagtDato'")

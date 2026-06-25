@@ -99,7 +99,9 @@ object BrregOppdateringConsumer : CoroutineScope {
 
                                     BrregVirksomhetEndringstype.Sletting,
                                     BrregVirksomhetEndringstype.Fjernet,
-                                    -> virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet)
+                                    -> virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet).onLeft { e ->
+                                        logger.warn("Fikk feil ved sletting/fjerning av virksomhet: {}", e)
+                                    }
                                 }
                             }
                             logger.info("Lagret $antallMeldinger meldinger for ${topic.navn}")

@@ -28,20 +28,18 @@ class OppdaterTemaIPlanForSamarbeidSideEffect(
             temaId = temaId,
             endringAvUndertema = endringer,
         ).map { planDto ->
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(receiver = tx) {
-                    val oppdatertSamarbeidsplan: Plan = oppdaterTemaISamarbeidsplan(
-                        planDto = planDto,
-                        temaId = temaId,
-                        samarbeidId = samarbeidId,
-                        endringer = endringer,
-                    ) ?: error("Kunne ikke oppdatere tema med id '$temaId' i samarbeidsplan med id '$planId' for samarbeid $samarbeidId i sak $saksnummer")
+            Transaction(nyFlytService.dataSource).transactional {
+                val oppdatertSamarbeidsplan: Plan = oppdaterTemaISamarbeidsplan(
+                    planDto = planDto,
+                    temaId = temaId,
+                    samarbeidId = samarbeidId,
+                    endringer = endringer,
+                ) ?: error("Kunne ikke oppdatere tema med id '$temaId' i samarbeidsplan med id '$planId' for samarbeid $samarbeidId i sak $saksnummer")
 
-                    val planMedPubliseringStatusDto: PlanDto =
-                        oppdatertSamarbeidsplan.tilDtoMedPubliseringStatus()
+                val planMedPubliseringStatusDto: PlanDto =
+                    oppdatertSamarbeidsplan.tilDtoMedPubliseringStatus()
 
-                    Pair(oppdatertSamarbeidsplan, planMedPubliseringStatusDto)
-                }
+                Pair(oppdatertSamarbeidsplan, planMedPubliseringStatusDto)
             }.also { planOgIASak: Pair<Plan, PlanDto> ->
                 nyFlytService.planService.varslePlanObservers(planOgIASak.first, PlanHendelseType.OPPDATER)
             }.second

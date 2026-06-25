@@ -34,42 +34,40 @@ class AngreVurderVirksomhetSideEffect(
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASakDto> =
         try {
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(tx) {
-                    val sakDto = hentSisteIASakDto(orgnummer = orgnummer)
-                        ?: throw IllegalStateException("Fant ingen sak for virksomhet $orgnummer")
+            Transaction(nyFlytService.dataSource).transactional {
+                val sakDto = hentSisteIASakDto(orgnummer = orgnummer)
+                    ?: throw IllegalStateException("Fant ingen sak for virksomhet $orgnummer")
 
-                    val alleSaker = hentAlleSakerDtoForVirksomhet(
-                        orgnummer = orgnummer,
+                val alleSaker = hentAlleSakerDtoForVirksomhet(
+                    orgnummer = orgnummer,
+                )
+                    .sortedByDescending { it.opprettetTidspunkt }
+                val nestSisteSakDto = if (alleSaker.size >= 2) alleSaker[alleSaker.size - 2] else null
+
+                if (nestSisteSakDto != null) {
+                    oppdaterVirksomhetTilstand(
+                        orgnr = orgnummer,
+                        tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
                     )
-                        .sortedByDescending { it.opprettetTidspunkt }
-                    val nestSisteSakDto = if (alleSaker.size >= 2) alleSaker[alleSaker.size - 2] else null
-
-                    if (nestSisteSakDto != null) {
-                        oppdaterVirksomhetTilstand(
-                            orgnr = orgnummer,
-                            tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),
-                        )
-                    } else {
-                        slettVirksomhetTilstand(orgnr = orgnummer)
-                    }
-
-                    val angreVurdering = lagreHendelse(
-                        hendelse = sakDto.nyHendelseBasertPåSak(
-                            hendelsestype = IASakshendelseType.SLETT_SAK,
-                            superbruker = superbruker,
-                            navEnhet = navEnhet,
-                        ),
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = IASak.Status.SLETTET,
-                    )
-
-                    settSakTilSlettet(
-                        saksnummer = sakDto.saksnummer,
-                        hendelse = angreVurdering,
-                    )
-                    sakDto.copy(status = IASak.Status.SLETTET)
+                } else {
+                    slettVirksomhetTilstand(orgnr = orgnummer)
                 }
+
+                val angreVurdering = lagreHendelse(
+                    hendelse = sakDto.nyHendelseBasertPåSak(
+                        hendelsestype = IASakshendelseType.SLETT_SAK,
+                        superbruker = superbruker,
+                        navEnhet = navEnhet,
+                    ),
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = IASak.Status.SLETTET,
+                )
+
+                settSakTilSlettet(
+                    saksnummer = sakDto.saksnummer,
+                    hendelse = angreVurdering,
+                )
+                sakDto.copy(status = IASak.Status.SLETTET)
             }.also { nyFlytService.varsleIASakObservers(it) }
                 .right()
         } catch (e: Exception) {

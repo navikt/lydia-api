@@ -37,65 +37,63 @@ class SlettSamarbeidSideEffect(
             samarbeidId = samarbeidId,
             saksbehandler = saksbehandler,
         ).map {
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(tx) {
-                    val samarbeidDto = IASamarbeidDto(
-                        id = samarbeidId,
-                        saksnummer = saksnummer,
-                        navn = "",
-                    )
+            Transaction(nyFlytService.dataSource).transactional {
+                val samarbeidDto = IASamarbeidDto(
+                    id = samarbeidId,
+                    saksnummer = saksnummer,
+                    navn = "",
+                )
 
-                    val slettetSamarbeid = slettSamarbeid(samarbeidDto)
+                val slettetSamarbeid = slettSamarbeid(samarbeidDto)
 
-                    val iASakshendelse = IASakshendelse(
-                        id = ULID.random(),
-                        opprettetTidspunkt = LocalDateTime.now(),
-                        saksnummer = saksnummer,
-                        hendelsesType = IASakshendelseType.SLETT_PROSESS,
-                        orgnummer = orgnummer,
-                        opprettetAv = saksbehandler.navIdent,
-                        opprettetAvRolle = saksbehandler.rolle,
-                        navEnhet = navEnhet,
-                        resulterendeStatus = null,
-                    )
+                val iASakshendelse = IASakshendelse(
+                    id = ULID.random(),
+                    opprettetTidspunkt = LocalDateTime.now(),
+                    saksnummer = saksnummer,
+                    hendelsesType = IASakshendelseType.SLETT_PROSESS,
+                    orgnummer = orgnummer,
+                    opprettetAv = saksbehandler.navIdent,
+                    opprettetAvRolle = saksbehandler.rolle,
+                    navEnhet = navEnhet,
+                    resulterendeStatus = null,
+                )
 
-                    val alleSamarbeid = hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
-                    val ingenAndreSamarbeid = alleSamarbeid.isEmpty()
-                    val alleAndreSamarbeidErAvsluttet = alleSamarbeid.isNotEmpty() && alleSamarbeid
-                        .all { it.status == IASamarbeid.Status.AVBRUTT || it.status == IASamarbeid.Status.FULLFØRT }
+                val alleSamarbeid = hentSamarbeidSomIkkeErSlettet(saksnummer = saksnummer)
+                val ingenAndreSamarbeid = alleSamarbeid.isEmpty()
+                val alleAndreSamarbeidErAvsluttet = alleSamarbeid.isNotEmpty() && alleSamarbeid
+                    .all { it.status == IASamarbeid.Status.AVBRUTT || it.status == IASamarbeid.Status.FULLFØRT }
 
-                    val resulterendeStatus = when {
-                        ingenAndreSamarbeid -> VURDERES
-                        alleAndreSamarbeidErAvsluttet -> AVSLUTTET
-                        else -> AKTIV
-                    }
-
-                    lagreHendelse(
-                        hendelse = iASakshendelse,
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = resulterendeStatus,
-                    )
-
-                    val oppdatertSak = oppdaterStatusPåSak(
-                        saksnummer = saksnummer,
-                        status = resulterendeStatus,
-                        endretAv = saksbehandler.navIdent,
-                        endretAvHendelseId = iASakshendelse.id,
-                    )
-
-                    val nyTilstand = when (oppdatertSak.status) {
-                        VURDERES -> VirksomhetIATilstand.VirksomhetVurderes
-                        AVSLUTTET -> VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
-                        else -> VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
-                    }
-
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = oppdatertSak.orgnr,
-                        tilstand = nyTilstand,
-                    )
-
-                    slettetSamarbeid
+                val resulterendeStatus = when {
+                    ingenAndreSamarbeid -> VURDERES
+                    alleAndreSamarbeidErAvsluttet -> AVSLUTTET
+                    else -> AKTIV
                 }
+
+                lagreHendelse(
+                    hendelse = iASakshendelse,
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = resulterendeStatus,
+                )
+
+                val oppdatertSak = oppdaterStatusPåSak(
+                    saksnummer = saksnummer,
+                    status = resulterendeStatus,
+                    endretAv = saksbehandler.navIdent,
+                    endretAvHendelseId = iASakshendelse.id,
+                )
+
+                val nyTilstand = when (oppdatertSak.status) {
+                    VURDERES -> VirksomhetIATilstand.VirksomhetVurderes
+                    AVSLUTTET -> VirksomhetIATilstand.AlleSamarbeidIVirksomhetErAvsluttet
+                    else -> VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+                }
+
+                lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = oppdatertSak.orgnr,
+                    tilstand = nyTilstand,
+                )
+
+                slettetSamarbeid
             }.also { samarbeid ->
                 nyFlytService.iaSamarbeidObservers.forEach { it.receive(samarbeid) }
                 nyFlytService.iaSakRepository.hentIASakDto(saksnummer)!!.also {

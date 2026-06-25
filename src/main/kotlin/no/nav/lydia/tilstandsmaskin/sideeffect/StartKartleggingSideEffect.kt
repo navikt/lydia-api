@@ -30,41 +30,39 @@ class StartKartleggingSideEffect(
     override fun apply(): Either<Feil, Spørreundersøkelse> =
         nyFlytService.validerStartAvKartlegging(spørreundersøkelseId)
             .map {
-                Transaction(nyFlytService.dataSource).transactional { tx ->
-                    with(tx) {
-                        val oppdatertKartlegging = startSpørreundersøkelse(spørreundersøkelseId)
-                            ?: error("Kunne ikke starte kartlegging")
+                Transaction(nyFlytService.dataSource).transactional {
+                    val oppdatertKartlegging = startSpørreundersøkelse(spørreundersøkelseId)
+                        ?: error("Kunne ikke starte kartlegging")
 
-                        val hendelse = lagreHendelse(
-                            hendelse = IASakshendelse(
-                                id = ULID.random(),
-                                opprettetTidspunkt = LocalDateTime.now(),
-                                saksnummer = saksnummer,
-                                hendelsesType = IASakshendelseType.START_KARTLEGGING,
-                                orgnummer = orgnummer,
-                                opprettetAv = saksbehandler.navIdent,
-                                opprettetAvRolle = saksbehandler.rolle,
-                                navEnhet = navEnhet,
-                                resulterendeStatus = null,
-                            ),
-                            sistEndretAvHendelseId = null,
-                            resulterendeStatus = AKTIV,
-                        )
-
-                        val oppdatertSakDto = oppdaterStatusPåSak(
+                    val hendelse = lagreHendelse(
+                        hendelse = IASakshendelse(
+                            id = ULID.random(),
+                            opprettetTidspunkt = LocalDateTime.now(),
                             saksnummer = saksnummer,
-                            status = AKTIV,
-                            endretAv = saksbehandler.navIdent,
-                            endretAvHendelseId = hendelse.id,
-                        )
+                            hendelsesType = IASakshendelseType.START_KARTLEGGING,
+                            orgnummer = orgnummer,
+                            opprettetAv = saksbehandler.navIdent,
+                            opprettetAvRolle = saksbehandler.rolle,
+                            navEnhet = navEnhet,
+                            resulterendeStatus = null,
+                        ),
+                        sistEndretAvHendelseId = null,
+                        resulterendeStatus = AKTIV,
+                    )
 
-                        lagreEllerOppdaterVirksomhetTilstand(
-                            orgnr = orgnummer,
-                            tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
-                        )
+                    val oppdatertSakDto = oppdaterStatusPåSak(
+                        saksnummer = saksnummer,
+                        status = AKTIV,
+                        endretAv = saksbehandler.navIdent,
+                        endretAvHendelseId = hendelse.id,
+                    )
 
-                        Pair(oppdatertSakDto, oppdatertKartlegging)
-                    }
+                    lagreEllerOppdaterVirksomhetTilstand(
+                        orgnr = orgnummer,
+                        tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
+                    )
+
+                    Pair(oppdatertSakDto, oppdatertKartlegging)
                 }.also { kartlegging ->
                     nyFlytService.varsleIASakObservers(kartlegging.first)
                     nyFlytService.spørreundersøkelseService.spørreundersøkelseObservers.forEach { observer ->
