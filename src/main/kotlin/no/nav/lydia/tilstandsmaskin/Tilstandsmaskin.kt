@@ -9,7 +9,6 @@ import no.nav.lydia.tilstandsmaskin.tilstand.AlleSamarbeidIVirksomhetErAvsluttet
 import no.nav.lydia.tilstandsmaskin.tilstand.Tilstand
 import no.nav.lydia.tilstandsmaskin.tilstand.VirksomhetKlarTilVurdering
 import java.time.LocalDate
-import java.util.concurrent.atomic.AtomicReference
 
 class Tilstandsmaskin(
     val tilstand: Tilstand = VirksomhetKlarTilVurdering,

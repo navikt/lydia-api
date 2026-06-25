@@ -5,7 +5,7 @@ import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeidsperiode.IASakService
 import no.nav.lydia.samarbeidsplan.PlanService
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import no.nav.lydia.tilgangskontroll.Standardbrukere
 import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.tilstandsmaskin.hendelse.VurderVirksomhet
@@ -57,12 +57,7 @@ class TilstandVirksomhetOppdaterer(
 
             "VurderVirksomhet" -> VurderVirksomhet(
                 orgnr = orgnr,
-                superbruker = NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker(
-                    navIdent = "Fia system",
-                    navn = "Fia system",
-                    token = "",
-                    ansattesGrupper = emptySet(),
-                ),
+                superbruker = Standardbrukere.fiaSystemSuperbruker,
                 navEnhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
             )
 

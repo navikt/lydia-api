@@ -229,7 +229,6 @@ fun startLydiaBackend() {
     )
 
     val spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(kafka = naisEnv.kafka)
-    val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository, iaSakService = iaSakService)
     val dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource = dataSource)
     val tilstandVirksomhetRepository = TilstandVirksomhetRepository(dataSource = dataSource)
     val spørreundersøkelseService = SpørreundersøkelseService(
@@ -266,6 +265,16 @@ fun startLydiaBackend() {
         dokumentPubliseringService = dokumentPubliseringService,
         iaSakObservers = listOf(iaSakDtoProdusent, iaSakDtoStatistikkProdusent),
         iaSamarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
+    )
+
+    val virksomhetService = VirksomhetService(
+        virksomhetRepository = virksomhetRepository,
+        iaSakService = iaSakService,
+        iASamarbeidService = samarbeidService,
+        nyFlytService = nyFlytService,
+        dokumentPubliseringService = dokumentPubliseringService,
+        planService = planService,
+        tilstandVirksomhetRepository = tilstandVirksomhetRepository,
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
