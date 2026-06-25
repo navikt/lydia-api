@@ -8,10 +8,14 @@ import no.nav.lydia.kartlegging.tilDto
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.tilstandsmaskin.Konsekvens
 import no.nav.lydia.tilstandsmaskin.TilstandsmaskinBuilder
+import no.nav.lydia.tilstandsmaskin.hendelse.AngreVurderVirksomhet
 import no.nav.lydia.tilstandsmaskin.hendelse.AvsluttSamarbeid
+import no.nav.lydia.tilstandsmaskin.hendelse.AvsluttVurdering
+import no.nav.lydia.tilstandsmaskin.hendelse.EndrePlanlagtDatoForNesteTilstand
 import no.nav.lydia.tilstandsmaskin.hendelse.EndreSamarbeidsNavn
 import no.nav.lydia.tilstandsmaskin.hendelse.EndreStatusPåUndertemaISamarbeidsplan
 import no.nav.lydia.tilstandsmaskin.hendelse.FullførKartleggingForSamarbeid
+import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import no.nav.lydia.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.tilstandsmaskin.hendelse.OppdaterPlanForSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.OppdaterTemaIPlanForSamarbeid
@@ -22,6 +26,8 @@ import no.nav.lydia.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
+import no.nav.lydia.tilstandsmaskin.hendelse.VirksomhetErSlettetIBrreg
+import no.nav.lydia.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.tilstandsmaskin.sideeffect.AvsluttSamarbeidSideEffect
 import no.nav.lydia.tilstandsmaskin.sideeffect.EndreSamarbeidsnavnSideEffect
 import no.nav.lydia.tilstandsmaskin.sideeffect.EndreStatusPåUndertemaISamarbeidsplanSideEffect
@@ -332,7 +338,15 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                 }
             }
 
-            else -> {
+            is VirksomhetErSlettetIBrreg -> {
+                with(fiaKontekst.nyFlytService) {
+                    hendelse.sideEffect.apply().map {
+                        Konsekvens(nyTilstand = VirksomhetErSlettet, verdi = it)
+                    }
+                }
+            }
+
+            is AngreVurderVirksomhet, is AvsluttVurdering, is EndrePlanlagtDatoForNesteTilstand, is GjørVirksomhetKlarTilNyVurdering, is VurderVirksomhet -> {
                 Either.Left(
                     Feil(
                         "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetHarAktiveSamarbeid.tilVirksomhetIATilstand()}'",

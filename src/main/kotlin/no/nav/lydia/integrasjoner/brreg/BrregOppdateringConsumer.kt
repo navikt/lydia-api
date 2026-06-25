@@ -82,24 +82,30 @@ object BrregOppdateringConsumer : CoroutineScope {
                                     BrregVirksomhetEndringstype.Ukjent,
                                     BrregVirksomhetEndringstype.Endring,
                                     BrregVirksomhetEndringstype.Ny,
-                                    -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
-                                        try {
-                                            val virksomhet = brregVirksomhet.tilVirksomhet(
-                                                status = oppdateringVirksomhet.endringstype.tilStatus(),
-                                                oppdateringsId = oppdateringVirksomhet.oppdateringsid,
-                                            )
-                                            virksomhetService.insertVirksomhet(virksomhet)
-                                            virksomhetService.insertNæringsundergrupper(virksomhet)
-                                        } catch (_: UgyldigAdresseException) {
-                                            antallIrrelevanteBedrifter += 1
-                                        } catch (e: Exception) {
-                                            logger.warn("Fikk feil ved oppdatering av virksomhet", e)
+                                    -> {
+                                        oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
+                                            try {
+                                                val virksomhet = brregVirksomhet.tilVirksomhet(
+                                                    status = oppdateringVirksomhet.endringstype.tilStatus(),
+                                                    oppdateringsId = oppdateringVirksomhet.oppdateringsid,
+                                                )
+                                                virksomhetService.insertVirksomhet(virksomhet)
+                                                virksomhetService.insertNæringsundergrupper(virksomhet)
+                                            } catch (_: UgyldigAdresseException) {
+                                                antallIrrelevanteBedrifter += 1
+                                            } catch (e: Exception) {
+                                                logger.warn("Fikk feil ved oppdatering av virksomhet", e)
+                                            }
                                         }
                                     }
 
                                     BrregVirksomhetEndringstype.Sletting,
                                     BrregVirksomhetEndringstype.Fjernet,
-                                    -> virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet)
+                                    -> {
+                                        virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet).onLeft { e ->
+                                            logger.warn("Fikk feil ved sletting/fjerning av virksomhet: {}", e)
+                                        }
+                                    }
                                 }
                             }
                             logger.info("Lagret $antallMeldinger meldinger for ${topic.navn}")
