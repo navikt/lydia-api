@@ -33,40 +33,38 @@ class EndreSamarbeidsnavnSideEffect(
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
         ).map {
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(tx) {
-                    val samarbeidDto = IASamarbeidDto(
-                        id = samarbeidId,
-                        saksnummer = saksnummer,
-                        navn = nyttNavn,
-                    )
+            Transaction(nyFlytService.dataSource).transactional {
+                val samarbeidDto = IASamarbeidDto(
+                    id = samarbeidId,
+                    saksnummer = saksnummer,
+                    navn = nyttNavn,
+                )
 
-                    oppdaterNavnPåSamarbeid(samarbeidDto)
+                oppdaterNavnPåSamarbeid(samarbeidDto)
 
-                    val iASakshendelse = IASakshendelse(
-                        id = ULID.random(),
-                        opprettetTidspunkt = LocalDateTime.now(),
-                        saksnummer = saksnummer,
-                        hendelsesType = IASakshendelseType.ENDRE_PROSESS,
-                        orgnummer = orgnummer,
-                        opprettetAv = saksbehandler.navIdent,
-                        opprettetAvRolle = saksbehandler.rolle,
-                        navEnhet = navEnhet,
-                        resulterendeStatus = null,
-                    )
-                    lagreHendelse(
-                        hendelse = iASakshendelse,
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = IASak.Status.AKTIV,
-                    )
-                    oppdaterStatusPåSak(
-                        saksnummer = saksnummer,
-                        status = IASak.Status.AKTIV,
-                        endretAv = saksbehandler.navIdent,
-                        endretAvHendelseId = iASakshendelse.id,
-                    )
-                    hentSamarbeid(samarbeidId = samarbeidId)!!
-                }
+                val iASakshendelse = IASakshendelse(
+                    id = ULID.random(),
+                    opprettetTidspunkt = LocalDateTime.now(),
+                    saksnummer = saksnummer,
+                    hendelsesType = IASakshendelseType.ENDRE_PROSESS,
+                    orgnummer = orgnummer,
+                    opprettetAv = saksbehandler.navIdent,
+                    opprettetAvRolle = saksbehandler.rolle,
+                    navEnhet = navEnhet,
+                    resulterendeStatus = null,
+                )
+                lagreHendelse(
+                    hendelse = iASakshendelse,
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = IASak.Status.AKTIV,
+                )
+                oppdaterStatusPåSak(
+                    saksnummer = saksnummer,
+                    status = IASak.Status.AKTIV,
+                    endretAv = saksbehandler.navIdent,
+                    endretAvHendelseId = iASakshendelse.id,
+                )
+                hentSamarbeid(samarbeidId = samarbeidId)!!
             }.also { samarbeid ->
                 nyFlytService.iaSamarbeidObservers.forEach { it.receive(samarbeid) }
                 nyFlytService.iaSakRepository.hentIASakDto(saksnummer)!!.also {

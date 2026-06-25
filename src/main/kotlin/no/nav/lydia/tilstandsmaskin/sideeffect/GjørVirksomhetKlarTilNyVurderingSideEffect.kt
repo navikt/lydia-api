@@ -17,13 +17,11 @@ class GjørVirksomhetKlarTilNyVurderingSideEffect(
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, VirksomhetTilstandDto?> =
         try {
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(tx) {
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = orgnummer,
-                        tilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
-                    )
-                }
+            Transaction(nyFlytService.dataSource).transactional {
+                lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = orgnummer,
+                    tilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+                )
             }.right()
         } catch (e: Exception) {
             Feil(

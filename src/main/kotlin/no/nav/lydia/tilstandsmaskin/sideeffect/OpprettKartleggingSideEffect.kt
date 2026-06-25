@@ -39,56 +39,54 @@ class OpprettKartleggingSideEffect(
             samarbeidId = samarbeidId,
             type = type,
         ).map { temaer ->
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(tx) {
-                    opprettKartlegging(
-                        kartleggingId = kartleggingId,
-                        orgnummer = orgnummer,
-                        prosessId = samarbeidId,
-                        opprettetAv = saksbehandler.navIdent,
-                        type = type,
-                    )
+            Transaction(nyFlytService.dataSource).transactional {
+                opprettKartlegging(
+                    kartleggingId = kartleggingId,
+                    orgnummer = orgnummer,
+                    prosessId = samarbeidId,
+                    opprettetAv = saksbehandler.navIdent,
+                    type = type,
+                )
 
-                    temaer.sortedBy { tema -> tema.rekkefølge }.forEach { tema ->
-                        leggTilTemaTilKartlegging(kartleggingId, tema.id)
-                        tema.undertemaer.sortedBy { undertema -> undertema.rekkefølge }.forEach { undertema ->
-                            leggTilUndertemaTilKartlegging(kartleggingId, tema.id, undertema.id)
-                        }
+                temaer.sortedBy { tema -> tema.rekkefølge }.forEach { tema ->
+                    leggTilTemaTilKartlegging(kartleggingId, tema.id)
+                    tema.undertemaer.sortedBy { undertema -> undertema.rekkefølge }.forEach { undertema ->
+                        leggTilUndertemaTilKartlegging(kartleggingId, tema.id, undertema.id)
                     }
-
-                    val hendelse = lagreHendelse(
-                        hendelse = IASakshendelse(
-                            id = ULID.random(),
-                            opprettetTidspunkt = LocalDateTime.now(),
-                            saksnummer = saksnummer,
-                            hendelsesType = IASakshendelseType.OPPRETT_KARTLEGGING,
-                            orgnummer = orgnummer,
-                            opprettetAv = saksbehandler.navIdent,
-                            opprettetAvRolle = saksbehandler.rolle,
-                            navEnhet = navEnhet,
-                            resulterendeStatus = null,
-                        ),
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = AKTIV,
-                    )
-
-                    val oppdatertSakDto = oppdaterStatusPåSak(
-                        saksnummer = saksnummer,
-                        status = AKTIV,
-                        endretAv = saksbehandler.navIdent,
-                        endretAvHendelseId = hendelse.id,
-                    )
-
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = orgnummer,
-                        tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
-                    )
-
-                    val opprettetKartlegging = hentSpørreundersøkelse(kartleggingId)
-                        ?: error("Kunne ikke hente opprettet kartlegging")
-
-                    Pair(oppdatertSakDto, opprettetKartlegging)
                 }
+
+                val hendelse = lagreHendelse(
+                    hendelse = IASakshendelse(
+                        id = ULID.random(),
+                        opprettetTidspunkt = LocalDateTime.now(),
+                        saksnummer = saksnummer,
+                        hendelsesType = IASakshendelseType.OPPRETT_KARTLEGGING,
+                        orgnummer = orgnummer,
+                        opprettetAv = saksbehandler.navIdent,
+                        opprettetAvRolle = saksbehandler.rolle,
+                        navEnhet = navEnhet,
+                        resulterendeStatus = null,
+                    ),
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = AKTIV,
+                )
+
+                val oppdatertSakDto = oppdaterStatusPåSak(
+                    saksnummer = saksnummer,
+                    status = AKTIV,
+                    endretAv = saksbehandler.navIdent,
+                    endretAvHendelseId = hendelse.id,
+                )
+
+                lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = orgnummer,
+                    tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
+                )
+
+                val opprettetKartlegging = hentSpørreundersøkelse(kartleggingId)
+                    ?: error("Kunne ikke hente opprettet kartlegging")
+
+                Pair(oppdatertSakDto, opprettetKartlegging)
             }.also { kartlegging ->
                 nyFlytService.varsleIASakObservers(kartlegging.first)
                 nyFlytService.spørreundersøkelseService.spørreundersøkelseObservers.forEach { observer ->

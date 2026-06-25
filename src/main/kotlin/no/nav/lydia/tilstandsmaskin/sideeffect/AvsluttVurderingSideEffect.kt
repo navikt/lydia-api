@@ -38,71 +38,70 @@ class AvsluttVurderingSideEffect(
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASakDto> =
         try {
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(tx) {
-                    val iaSakDto = hentSisteIASakDto(orgnummer = orgnummer) ?: throw IllegalStateException("Fant ingen sak for virksomhet $orgnummer")
+            Transaction(nyFlytService.dataSource).transactional {
+                val iaSakDto =
+                    hentSisteIASakDto(orgnummer = orgnummer) ?: throw IllegalStateException("Fant ingen sak for virksomhet $orgnummer")
 
-                    // #1 legg til en ny hendelse + årsak + oppdater sak status VURDERT
-                    val iaSakshendelseVurderes = lagreHendelse(
-                        hendelse = IASakshendelse(
-                            id = ULID.random(),
-                            opprettetTidspunkt = LocalDateTime.now(),
-                            saksnummer = iaSakDto.saksnummer,
-                            hendelsesType = IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID,
-                            orgnummer = orgnummer,
-                            opprettetAv = navAnsatt.navIdent,
-                            opprettetAvRolle = navAnsatt.rolle,
-                            navEnhet = navEnhet,
-                            resulterendeStatus = null,
-                        ),
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = IASak.Status.VURDERT,
-                    )
-                    lagreÅrsakForHendelse(
-                        hendelseId = iaSakshendelseVurderes.id,
-                        valgtÅrsak = årsak,
-                    )
-                    val oppdatertIaSakDto = oppdaterStatusPåSak(
+                // #1 legg til en ny hendelse + årsak + oppdater sak status VURDERT
+                val iaSakshendelseVurderes = lagreHendelse(
+                    hendelse = IASakshendelse(
+                        id = ULID.random(),
+                        opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = iaSakDto.saksnummer,
-                        status = IASak.Status.VURDERT,
-                        endretAv = navAnsatt.navIdent,
-                        endretAvHendelseId = iaSakshendelseVurderes.id,
-                    )
+                        hendelsesType = IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID,
+                        orgnummer = orgnummer,
+                        opprettetAv = navAnsatt.navIdent,
+                        opprettetAvRolle = navAnsatt.rolle,
+                        navEnhet = navEnhet,
+                        resulterendeStatus = null,
+                    ),
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = IASak.Status.VURDERT,
+                )
+                lagreÅrsakForHendelse(
+                    hendelseId = iaSakshendelseVurderes.id,
+                    valgtÅrsak = årsak,
+                )
+                val oppdatertIaSakDto = oppdaterStatusPåSak(
+                    saksnummer = iaSakDto.saksnummer,
+                    status = IASak.Status.VURDERT,
+                    endretAv = navAnsatt.navIdent,
+                    endretAvHendelseId = iaSakshendelseVurderes.id,
+                )
 
-                    // #2 oppdater tilstand til VirksomhetVurdert
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = orgnummer,
-                        tilstand = VirksomhetIATilstand.VirksomhetErVurdert,
-                    )
+                // #2 oppdater tilstand til VirksomhetVurdert
+                lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = orgnummer,
+                    tilstand = VirksomhetIATilstand.VirksomhetErVurdert,
+                )
 
-                    // #3 opprett automatisk oppdatering til VirksomhetVurderes eller VirksomhetKlarTilVurdering
-                    val nyTilstand = when (årsak.type) {
-                        ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
-                        -> VirksomhetIATilstand.VirksomhetVurderes
+                // #3 opprett automatisk oppdatering til VirksomhetVurderes eller VirksomhetKlarTilVurdering
+                val nyTilstand = when (årsak.type) {
+                    ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                    -> VirksomhetIATilstand.VirksomhetVurderes
 
-                        else -> VirksomhetIATilstand.VirksomhetKlarTilVurdering
-                    }
-
-                    val planlagtHendelse = when (årsak.type) {
-                        ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
-                        -> VurderVirksomhet::class.simpleName!!
-
-                        else -> GjørVirksomhetKlarTilNyVurdering::class.simpleName!!
-                    }
-
-                    opprettAutomatiskOppdatering(
-                        orgnr = iaSakDto.orgnr,
-                        startTilstand = VirksomhetIATilstand.VirksomhetErVurdert,
-                        planlagtHendelse = planlagtHendelse,
-                        nyTilstand = nyTilstand,
-                        planlagtDato = if (årsak.dato == null) {
-                            LocalDate.now().plusDays(90)
-                        } else {
-                            årsak.dato.toJavaLocalDate()
-                        },
-                    )
-                    oppdatertIaSakDto
+                    else -> VirksomhetIATilstand.VirksomhetKlarTilVurdering
                 }
+
+                val planlagtHendelse = when (årsak.type) {
+                    ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                    -> VurderVirksomhet::class.simpleName!!
+
+                    else -> GjørVirksomhetKlarTilNyVurdering::class.simpleName!!
+                }
+
+                opprettAutomatiskOppdatering(
+                    orgnr = iaSakDto.orgnr,
+                    startTilstand = VirksomhetIATilstand.VirksomhetErVurdert,
+                    planlagtHendelse = planlagtHendelse,
+                    nyTilstand = nyTilstand,
+                    planlagtDato = if (årsak.dato == null) {
+                        LocalDate.now().plusDays(90)
+                    } else {
+                        årsak.dato.toJavaLocalDate()
+                    },
+                )
+                oppdatertIaSakDto
             }.also { nyFlytService.varsleIASakObservers(it) }.right()
         } catch (e: Exception) {
             Feil(

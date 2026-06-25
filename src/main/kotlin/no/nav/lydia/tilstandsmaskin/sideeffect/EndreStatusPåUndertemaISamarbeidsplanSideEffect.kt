@@ -30,20 +30,18 @@ class EndreStatusPåUndertemaISamarbeidsplanSideEffect(
             undertemaId = undertemaId,
             nyStatus = nyStatus,
         ).map { _ ->
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(receiver = tx) {
-                    val oppdatertPlan: Plan = endreStatusPåUndertemaISamarbeidsplan(
-                        samarbeidId = samarbeidId,
-                        temaId = temaId,
-                        undertemaId = undertemaId,
-                        nyStatus = nyStatus,
-                    ) ?: error("Kunne ikke oppdatere status på undertema '$undertemaId' i plan '$planId' for samarbeid $samarbeidId i sak $saksnummer")
+            Transaction(nyFlytService.dataSource).transactional {
+                val oppdatertPlan: Plan = endreStatusPåUndertemaISamarbeidsplan(
+                    samarbeidId = samarbeidId,
+                    temaId = temaId,
+                    undertemaId = undertemaId,
+                    nyStatus = nyStatus,
+                ) ?: error("Kunne ikke oppdatere status på undertema '$undertemaId' i plan '$planId' for samarbeid $samarbeidId i sak $saksnummer")
 
-                    val planDto: PlanDto =
-                        oppdatertPlan.tilDtoMedPubliseringStatus()
+                val planDto: PlanDto =
+                    oppdatertPlan.tilDtoMedPubliseringStatus()
 
-                    Pair(oppdatertPlan, planDto)
-                }
+                Pair(oppdatertPlan, planDto)
             }.also { planOgDto: Pair<Plan, PlanDto> ->
                 nyFlytService.planService.varslePlanObservers(planOgDto.first, PlanHendelseType.ENDRE_STATUS)
             }.second

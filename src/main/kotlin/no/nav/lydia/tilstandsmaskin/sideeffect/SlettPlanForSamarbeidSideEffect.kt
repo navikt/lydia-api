@@ -31,40 +31,38 @@ class SlettPlanForSamarbeidSideEffect(
         nyFlytService.validerSlettingAvSamarbeidsplan(
             samarbeidId = samarbeidId,
         ).map { plan ->
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(receiver = tx) {
-                    val slettetPlan = settPlanTilSlettet(planId = plan.id)
+            Transaction(nyFlytService.dataSource).transactional {
+                val slettetPlan = settPlanTilSlettet(planId = plan.id)
 
-                    val slettPlanHendelse = lagreHendelse(
-                        hendelse = IASakshendelse(
-                            id = ULID.random(),
-                            opprettetTidspunkt = LocalDateTime.now(),
-                            saksnummer = saksnummer,
-                            hendelsesType = IASakshendelseType.SLETT_SAMARBEIDSPLAN,
-                            orgnummer = orgnummer,
-                            opprettetAv = saksbehandler.navIdent,
-                            opprettetAvRolle = saksbehandler.rolle,
-                            navEnhet = navEnhet,
-                            resulterendeStatus = null,
-                        ),
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = AKTIV,
-                    )
-
-                    val iaSakDto = oppdaterStatusPåSak(
+                val slettPlanHendelse = lagreHendelse(
+                    hendelse = IASakshendelse(
+                        id = ULID.random(),
+                        opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = saksnummer,
-                        status = AKTIV,
-                        endretAvHendelseId = slettPlanHendelse.id,
-                        endretAv = saksbehandler.navIdent,
-                    )
+                        hendelsesType = IASakshendelseType.SLETT_SAMARBEIDSPLAN,
+                        orgnummer = orgnummer,
+                        opprettetAv = saksbehandler.navIdent,
+                        opprettetAvRolle = saksbehandler.rolle,
+                        navEnhet = navEnhet,
+                        resulterendeStatus = null,
+                    ),
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = AKTIV,
+                )
 
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = orgnummer,
-                        tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
-                    )
+                val iaSakDto = oppdaterStatusPåSak(
+                    saksnummer = saksnummer,
+                    status = AKTIV,
+                    endretAvHendelseId = slettPlanHendelse.id,
+                    endretAv = saksbehandler.navIdent,
+                )
 
-                    Pair(slettetPlan, iaSakDto)
-                }
+                lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = orgnummer,
+                    tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
+                )
+
+                Pair(slettetPlan, iaSakDto)
             }.also { (slettetPlan, iaSakDto) ->
                 nyFlytService.varsleIASakObservers(iaSakDto)
                 nyFlytService.planService.varslePlanObservers(slettetPlan, PlanHendelseType.ENDRE_STATUS)
