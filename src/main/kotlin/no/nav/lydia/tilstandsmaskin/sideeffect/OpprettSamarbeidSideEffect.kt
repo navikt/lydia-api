@@ -34,44 +34,42 @@ class OpprettSamarbeidSideEffect(
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
         ).map {
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(tx) {
-                    val iASakshendelse = IASakshendelse(
-                        id = ULID.random(),
-                        opprettetTidspunkt = LocalDateTime.now(),
-                        saksnummer = saksnummer,
-                        hendelsesType = IASakshendelseType.NY_PROSESS,
-                        orgnummer = orgnummer,
-                        opprettetAv = saksbehandler.navIdent,
-                        opprettetAvRolle = saksbehandler.rolle,
-                        navEnhet = navEnhet,
-                        resulterendeStatus = null,
-                    )
-                    lagreHendelse(
-                        hendelse = iASakshendelse,
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = AKTIV,
-                    )
+            Transaction(nyFlytService.dataSource).transactional {
+                val iASakshendelse = IASakshendelse(
+                    id = ULID.random(),
+                    opprettetTidspunkt = LocalDateTime.now(),
+                    saksnummer = saksnummer,
+                    hendelsesType = IASakshendelseType.NY_PROSESS,
+                    orgnummer = orgnummer,
+                    opprettetAv = saksbehandler.navIdent,
+                    opprettetAvRolle = saksbehandler.rolle,
+                    navEnhet = navEnhet,
+                    resulterendeStatus = null,
+                )
+                lagreHendelse(
+                    hendelse = iASakshendelse,
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = AKTIV,
+                )
 
-                    val opprettetSamarbeid = opprettNyttSamarbeid(
-                        saksnummer = saksnummer,
-                        navn = samarbeidsNavn,
-                    )
+                val opprettetSamarbeid = opprettNyttSamarbeid(
+                    saksnummer = saksnummer,
+                    navn = samarbeidsNavn,
+                )
 
-                    oppdaterStatusPåSak(
-                        saksnummer = saksnummer,
-                        status = AKTIV,
-                        endretAvHendelseId = iASakshendelse.id,
-                        endretAv = saksbehandler.navIdent,
-                    )
+                oppdaterStatusPåSak(
+                    saksnummer = saksnummer,
+                    status = AKTIV,
+                    endretAvHendelseId = iASakshendelse.id,
+                    endretAv = saksbehandler.navIdent,
+                )
 
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = orgnummer,
-                        tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
-                    )
+                lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = orgnummer,
+                    tilstand = VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid,
+                )
 
-                    opprettetSamarbeid
-                }
+                opprettetSamarbeid
             }.also { samarbeid ->
                 nyFlytService.iaSamarbeidObservers.forEach { it.receive(samarbeid) }
                 nyFlytService.iaSakRepository.hentIASakDto(saksnummer)!!.also {

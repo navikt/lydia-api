@@ -8,7 +8,7 @@ import javax.sql.DataSource
 class Transaction(
     val dataSource: DataSource,
 ) {
-    fun <T> transactional(block: (TransactionalSession) -> T): T =
+    fun <T> transactional(block: context(TransactionalSession) () -> T): T =
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 block(tx)

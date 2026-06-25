@@ -34,56 +34,54 @@ class VurderVirksomhetSideEffect(
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASakDto> =
         try {
-            Transaction(nyFlytService.dataSource).transactional { tx ->
-                with(tx) {
-                    // Steg #1 lagre i DB en ny hendelse OPPRETT_SAK_FOR_VIRKSOMHET, og en ny SakDto med status NY
-                    val iaSakHendelseOpprettSak = IASakshendelse.nyFørsteHendelse(
-                        orgnummer = orgnummer,
+            Transaction(nyFlytService.dataSource).transactional {
+                // Steg #1 lagre i DB en ny hendelse OPPRETT_SAK_FOR_VIRKSOMHET, og en ny SakDto med status NY
+                val iaSakHendelseOpprettSak = IASakshendelse.nyFørsteHendelse(
+                    orgnummer = orgnummer,
+                    superbruker = superbruker,
+                    navEnhet = navEnhet,
+                )
+                lagreHendelse(
+                    hendelse = iaSakHendelseOpprettSak,
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = NY,
+                )
+                val iaSakDto: IASakDto = opprettSak(
+                    iaSakDto = iaSakHendelseOpprettSak.tilIASakDto(),
+                )
+
+                // Steg #2 lagre i DB en ny hendelse VIRKSOMHET_VURDERES, og oppdatere SakDto til status VURDERES
+                val iaSakshendelseVurderes = lagreHendelse(
+                    hendelse = iaSakDto.nyHendelseBasertPåSak(
+                        hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
                         superbruker = superbruker,
                         navEnhet = navEnhet,
+                    ),
+                    sistEndretAvHendelseId = null,
+                    resulterendeStatus = VURDERES,
+                )
+                valgtÅrsak?.let {
+                    lagreÅrsakForHendelse(
+                        hendelseId = iaSakshendelseVurderes.id,
+                        valgtÅrsak = it,
                     )
-                    lagreHendelse(
-                        hendelse = iaSakHendelseOpprettSak,
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = NY,
-                    )
-                    val iaSakDto: IASakDto = opprettSak(
-                        iaSakDto = iaSakHendelseOpprettSak.tilIASakDto(),
-                    )
-
-                    // Steg #2 lagre i DB en ny hendelse VIRKSOMHET_VURDERES, og oppdatere SakDto til status VURDERES
-                    val iaSakshendelseVurderes = lagreHendelse(
-                        hendelse = iaSakDto.nyHendelseBasertPåSak(
-                            hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
-                            superbruker = superbruker,
-                            navEnhet = navEnhet,
-                        ),
-                        sistEndretAvHendelseId = null,
-                        resulterendeStatus = VURDERES,
-                    )
-                    valgtÅrsak?.let {
-                        lagreÅrsakForHendelse(
-                            hendelseId = iaSakshendelseVurderes.id,
-                            valgtÅrsak = it,
-                        )
-                    }
-                    val oppdatertIaSakDto = oppdaterStatusPåSak(
-                        saksnummer = iaSakDto.saksnummer,
-                        status = VURDERES,
-                        endretAv = superbruker.navIdent,
-                        endretAvHendelseId = iaSakshendelseVurderes.id,
-                    )
-                    lagreEllerOppdaterVirksomhetTilstand(
-                        orgnr = orgnummer,
-                        tilstand = VirksomhetIATilstand.VirksomhetVurderes,
-                    )
-
-                    slettVirksomhetTilstandAutomatiskOppdatering(
-                        orgnr = orgnummer,
-                    )
-
-                    oppdatertIaSakDto
                 }
+                val oppdatertIaSakDto = oppdaterStatusPåSak(
+                    saksnummer = iaSakDto.saksnummer,
+                    status = VURDERES,
+                    endretAv = superbruker.navIdent,
+                    endretAvHendelseId = iaSakshendelseVurderes.id,
+                )
+                lagreEllerOppdaterVirksomhetTilstand(
+                    orgnr = orgnummer,
+                    tilstand = VirksomhetIATilstand.VirksomhetVurderes,
+                )
+
+                slettVirksomhetTilstandAutomatiskOppdatering(
+                    orgnr = orgnummer,
+                )
+
+                oppdatertIaSakDto
             }.also { nyFlytService.varsleIASakObservers(it) }
                 .right()
         } catch (e: Exception) {
