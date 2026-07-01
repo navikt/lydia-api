@@ -9,13 +9,13 @@ import no.nav.lydia.tilstandsmaskin.Konsekvens
 import no.nav.lydia.tilstandsmaskin.hendelse.Hendelse
 import no.nav.lydia.tilstandsmaskin.tilVirksomhetIATilstand
 
-object VirksomhetErSlettet : Tilstand() {
+object VirksomhetErAvregistrertIBrreg : Tilstand() {
     override fun utførTransisjon(
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
     ): Either<Feil, Konsekvens> =
         Feil(
-            feilmelding = "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetErSlettet.tilVirksomhetIATilstand()}'",
+            feilmelding = "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetErAvregistrertIBrreg.tilVirksomhetIATilstand()}'",
             httpStatusCode = HttpStatusCode.BadRequest,
         ).left()
 }

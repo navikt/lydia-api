@@ -90,34 +90,6 @@ class VirksomhetRepository(
         }
     }
 
-    fun oppdaterStatus(
-        orgnr: String,
-        status: VirksomhetStatus,
-        oppdatertAvBrregOppdateringsId: Long?,
-    ) {
-        sessionOf(dataSource).use { session ->
-            val sql =
-                """
-                UPDATE virksomhet SET
-                status = :status,
-                oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId,
-                sistEndretTidspunkt = now()
-                WHERE orgnr = :orgnr
-                """.trimIndent()
-            val params = mapOf(
-                "orgnr" to orgnr,
-                "status" to status.name,
-                "oppdatertAvBrregOppdateringsId" to oppdatertAvBrregOppdateringsId,
-            )
-            session.run(
-                queryOf(
-                    statement = sql,
-                    paramMap = params,
-                ).asUpdate,
-            )
-        }
-    }
-
     fun hentVirksomhet(orgnr: String): Virksomhet? {
         val sql =
             """

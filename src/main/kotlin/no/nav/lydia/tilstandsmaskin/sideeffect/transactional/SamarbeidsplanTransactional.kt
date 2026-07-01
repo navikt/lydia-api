@@ -317,6 +317,36 @@ class SamarbeidsplanTransactional {
         context(tx: TransactionalSession)
         fun hentPlan(samarbeidId: Int) = hentPlan(samarbeidId, tx)
 
+        context(tx: TransactionalSession, _: VirksomhetTransactional.AlleSakerErSlettetPåVirksomhet)
+        fun slettPlaner(orgnummer: String) {
+            tx.run(
+                queryOf(
+                    """
+                    DELETE FROM ia_sak_plan_undertema pu
+                    USING ia_sak_plan pl, ia_prosess p, ia_sak_alle s
+                    WHERE pu.plan_id = pl.plan_id
+                      AND pl.ia_prosess = p.id
+                      AND p.saksnummer = s.saksnummer
+                      AND s.orgnr = :orgnr;
+                    
+                    DELETE FROM ia_sak_plan_tema pt
+                    USING ia_sak_plan pl, ia_prosess p, ia_sak_alle s
+                    WHERE pt.plan_id = pl.plan_id
+                      AND pl.ia_prosess = p.id
+                      AND p.saksnummer = s.saksnummer
+                      AND s.orgnr = :orgnr;
+                    
+                    DELETE FROM ia_sak_plan pl
+                    USING ia_prosess p, ia_sak_alle s
+                    WHERE pl.ia_prosess = p.id
+                      AND p.saksnummer = s.saksnummer
+                      AND s.orgnr = :orgnr;
+                    """.trimIndent(),
+                    mapOf("orgnr" to orgnummer),
+                ).asUpdate,
+            )
+        }
+
         private fun hentPlanById(
             planId: UUID,
             tx: TransactionalSession,

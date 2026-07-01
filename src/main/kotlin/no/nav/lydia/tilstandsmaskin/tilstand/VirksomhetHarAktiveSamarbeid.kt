@@ -26,7 +26,7 @@ import no.nav.lydia.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.SlettSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
-import no.nav.lydia.tilstandsmaskin.hendelse.VirksomhetErSlettetIBrreg
+import no.nav.lydia.tilstandsmaskin.hendelse.VirksomhetErAvregistrertIBrreg
 import no.nav.lydia.tilstandsmaskin.hendelse.VurderVirksomhet
 import no.nav.lydia.tilstandsmaskin.sideeffect.AvsluttSamarbeidSideEffect
 import no.nav.lydia.tilstandsmaskin.sideeffect.EndreSamarbeidsnavnSideEffect
@@ -338,10 +338,10 @@ object VirksomhetHarAktiveSamarbeid : Tilstand() { // AKTIV
                 }
             }
 
-            is VirksomhetErSlettetIBrreg -> {
+            is VirksomhetErAvregistrertIBrreg -> {
                 with(fiaKontekst.nyFlytService) {
                     hendelse.sideEffect.apply().map {
-                        Konsekvens(nyTilstand = VirksomhetErSlettet, verdi = it)
+                        Konsekvens(nyTilstand = VirksomhetErAvregistrertIBrreg, verdi = it)
                     }
                 }
             }

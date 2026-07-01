@@ -10,7 +10,6 @@ import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhet
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Sletting
 import no.nav.lydia.prioritering.virksomhet.domene.Virksomhet
 import no.nav.lydia.samarbeid.IASamarbeidService
-import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakService
 import no.nav.lydia.samarbeidsplan.PlanService
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
@@ -18,7 +17,8 @@ import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetOppdaterer.Companion.NAV_ENHET_FOR_MASKINELT_OPPDATERING
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
 import no.nav.lydia.tilstandsmaskin.TilstandsmaskinBuilder
-import no.nav.lydia.tilstandsmaskin.hendelse.VirksomhetErSlettetIBrreg
+import no.nav.lydia.tilstandsmaskin.hendelse.Avregistrering
+import no.nav.lydia.tilstandsmaskin.hendelse.VirksomhetErAvregistrertIBrreg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -50,26 +50,8 @@ class VirksomhetService(
 
     fun oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet: BrregOppdateringConsumer.OppdateringVirksomhet): Either<Feil, Unit> =
         either {
-            when (oppdateringVirksomhet.endringstype) {
-                Fjernet -> {
-                    val avsluttedeStatuser = setOf(IASak.Status.FULLFØRT, IASak.Status.SLETTET, IASak.Status.IKKE_AKTUELL, IASak.Status.AVSLUTTET)
-
-                    iaSakService.hentIASakDtoerForOrgnummer(orgnummer = oppdateringVirksomhet.orgnummer)
-                        .filterNot { it.status in avsluttedeStatuser }
-                        .forEach {
-                            logger.warn(
-                                "Virksomhet med saksnummer '${it.saksnummer}' og saksstatus '${it.status}' har fått følgende endring '${oppdateringVirksomhet.endringstype}'",
-                            )
-                        }
-                    // TODO: bruk tilstandsmaskin og sett virksomhet til ny tilstand: VirksomhetIkkeTilgjengeligIBrreg
-                    virksomhetRepository.oppdaterStatus(
-                        orgnr = oppdateringVirksomhet.orgnummer,
-                        status = oppdateringVirksomhet.endringstype.tilStatus(),
-                        oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsid,
-                    )
-                }
-
-                Sletting -> {
+            when (val avregistrering = hentAvregistreringstype(oppdateringVirksomhet.endringstype)) {
+                Avregistrering.FJERNET, Avregistrering.SLETTET -> {
                     val tilstandsmaskin = TilstandsmaskinBuilder.medKontekst(
                         fiaKontekst = FiaKontekst(
                             iASamarbeidService = iASamarbeidService,
@@ -82,15 +64,23 @@ class VirksomhetService(
                         ),
                     ).build(orgnr = oppdateringVirksomhet.orgnummer)
 
-                    val hendelse = VirksomhetErSlettetIBrreg(
+                    val hendelse = VirksomhetErAvregistrertIBrreg(
                         orgnr = oppdateringVirksomhet.orgnummer,
                         navEnhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
                         oppdateringsid = oppdateringVirksomhet.oppdateringsid,
+                        avregistrering = avregistrering,
                     )
                     tilstandsmaskin.prosesserHendelse(hendelse).bind()
                 }
 
-                else -> {}
+                null -> {}
             }
+        }
+
+    private fun hentAvregistreringstype(oppdatering: BrregOppdateringConsumer.BrregVirksomhetEndringstype) =
+        when (oppdatering) {
+            Sletting -> Avregistrering.SLETTET
+            Fjernet -> Avregistrering.FJERNET
+            else -> null
         }
 }
