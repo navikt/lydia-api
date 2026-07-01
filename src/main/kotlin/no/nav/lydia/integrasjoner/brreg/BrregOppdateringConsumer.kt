@@ -32,6 +32,7 @@ object BrregOppdateringConsumer : CoroutineScope {
     private lateinit var virksomhetService: VirksomhetService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
     private val topic = Topic.BRREG_OPPDATERING_TOPIC
+    private var dryRun: Boolean = false
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -43,17 +44,19 @@ object BrregOppdateringConsumer : CoroutineScope {
     fun create(
         kafka: Kafka,
         virksomhetService: VirksomhetService,
+        dryRun: Boolean = false,
     ) {
         logger.info("Creating kafka consumer job for ${topic.navn}")
         job = Job()
         BrregOppdateringConsumer.kafka = kafka
         BrregOppdateringConsumer.virksomhetService = virksomhetService
+        BrregOppdateringConsumer.dryRun = dryRun
         kafkaConsumer = KafkaConsumer(
             BrregOppdateringConsumer.kafka.consumerProperties(consumerGroupId = topic.konsumentGruppe),
             StringDeserializer(),
             StringDeserializer(),
         )
-        logger.info("Created kafka consumer job for ${topic.navn}")
+        logger.info("Created kafka consumer job for ${topic.navn}${if (dryRun) " (dryRun – ingen endringer vil gjøres i databasen)" else ""}")
     }
 
     fun run() {
@@ -88,8 +91,12 @@ object BrregOppdateringConsumer : CoroutineScope {
                                                 status = oppdateringVirksomhet.endringstype.tilStatus(),
                                                 oppdateringsId = oppdateringVirksomhet.oppdateringsid,
                                             )
-                                            virksomhetService.insertVirksomhet(virksomhet)
-                                            virksomhetService.insertNæringsundergrupper(virksomhet)
+                                            if (dryRun) {
+                                                logger.info("DryRun: ville insertert/oppdatert en virksomhet")
+                                            } else {
+                                                virksomhetService.insertVirksomhet(virksomhet)
+                                                virksomhetService.insertNæringsundergrupper(virksomhet)
+                                            }
                                         } catch (_: UgyldigAdresseException) {
                                             antallIrrelevanteBedrifter += 1
                                         } catch (e: Exception) {
@@ -99,10 +106,20 @@ object BrregOppdateringConsumer : CoroutineScope {
 
                                     BrregVirksomhetEndringstype.Sletting,
                                     BrregVirksomhetEndringstype.Fjernet,
-                                    -> virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet)
+                                    -> if (dryRun) {
+                                        logger.info("DryRun: ville slettet/fjernet en virksomhet")
+                                    } else {
+                                        virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet)
+                                    }
                                 }
                             }
-                            logger.info("Lagret $antallMeldinger meldinger for ${topic.navn}")
+                            logger.info(
+                                if (dryRun) {
+                                    "Ville lagret $antallMeldinger meldinger for ${topic.navn} (dryRun – ingen endringer i databasen)"
+                                } else {
+                                    "Lagret $antallMeldinger meldinger for ${topic.navn}"
+                                },
+                            )
                             if (antallIrrelevanteBedrifter > 0) {
                                 logger.info("Fant $antallIrrelevanteBedrifter irrelevante bedrifter.")
                             }
