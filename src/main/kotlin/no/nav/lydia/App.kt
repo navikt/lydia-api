@@ -408,7 +408,6 @@ private fun brregConsumer(
         create(
             kafka = naisEnv.kafka,
             virksomhetService = virksomhetService,
-            dryRun = naisEnv.miljø != NaisEnvironment.Companion.Environment.`PROD-GCP` && naisEnv.miljø != NaisEnvironment.Companion.Environment.LOKAL,
         )
         run()
     }
