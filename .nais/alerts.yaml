@@ -36,3 +36,12 @@ spec:
           labels:
             namespace: "pia"
             severity: warning
+        - alert: "Feil ved avregistrering av virksomhet fra Brreg"
+          expr: increase(pia_brreg_avregistrering_feil_total{app="lydia-api", namespace="pia"}[10m]) > 0
+          for: 1m
+          annotations:
+            consequence: "*lydia-api* klarte ikke å oppdatere status for en slettet/fjernet virksomhet fra Brreg."
+            action: "Sjekk loggene til app `lydia-api` for feil ved sletting/fjerning av virksomhet."
+          labels:
+            namespace: "pia"
+            severity: warning
