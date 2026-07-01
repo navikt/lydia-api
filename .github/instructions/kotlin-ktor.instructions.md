@@ -1,8 +1,10 @@
 ---
+name: Kotlin Ktor Patterns
+description: "Ktor- og Rapids & Rivers-mønstre for Nav-backends: ApplicationBuilder, sealed config, Kotliquery, Koin og feilhåndtering."
 applyTo: "**/*.kt"
 ---
 
-Ktor- og Rapids & Rivers-mønstre for Nav-backends: ApplicationBuilder, sealed config, Kotliquery, Koin og feilhåndtering.
+Ktor and Rapids & Rivers patterns for Nav backends: ApplicationBuilder, sealed config, Kotliquery, Koin, and error handling.
 
 > Ktor/Rapids & Rivers patterns for Nav backends. Apply when the file uses Ktor (`RapidApplication`, `routing`, `River`) — for Spring Boot apps, see `kotlin-spring.instructions.md` instead.
 
@@ -341,7 +343,7 @@ Use the Rapids & Rivers pattern for event-driven architecture:
 class MyEventRiver(rapidsConnection: RapidsConnection) : River.PacketListener {
     init {
         River(rapidsConnection).apply {
-            validate { it.demandValue("@event_name", "my_event") }
+            precondition { it.requireValue("@event_name", "my_event") }
             validate { it.requireKey("required_field") }
             validate { it.interestedIn("optional_field") }
         }.register(this)

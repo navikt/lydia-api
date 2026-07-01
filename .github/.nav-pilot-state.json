@@ -1,33 +1,33 @@
 {
   "collection": "kotlin-backend",
-  "version": "2026.05.13-095031-5b8fd31",
+  "version": "2026.06.30-102505-1099e76",
   "scope": "repo",
-  "source_sha": "c64a433",
+  "source_sha": "1099e76",
   "installed_at": "2026-05-13T11:16:21Z",
   "files": [
     {
       "path": ".github/agents/auth.agent.md",
-      "hash": "93f6ccd0feb67964"
+      "hash": "275b0d834d2a75f3"
     },
     {
       "path": ".github/agents/kafka.agent.md",
-      "hash": "fdf4869940190473"
+      "hash": "a0f5501d6e8843c7"
     },
     {
       "path": ".github/agents/nais.agent.md",
-      "hash": "5cdca085bd4edc56"
+      "hash": "c5a977cd971007ef"
     },
     {
       "path": ".github/agents/observability.agent.md",
-      "hash": "29814d262472524e"
+      "hash": "790f7e03f52e44d8"
     },
     {
       "path": ".github/agents/security-champion.agent.md",
-      "hash": "a42ca95f2a459fbb"
+      "hash": "5ccba48b66938fd0"
     },
     {
       "path": ".github/agents/nav-pilot.agent.md",
-      "hash": "6ce36d8afc80f70f"
+      "hash": "09c7351bf3ceb03b"
     },
     {
       "path": ".github/skills/api-design/",
@@ -67,7 +67,7 @@
     },
     {
       "path": ".github/skills/nav-plan/",
-      "hash": "0849265460ea23e2"
+      "hash": "0a160744cf2b4e82"
     },
     {
       "path": ".github/skills/nav-deep-interview/",
@@ -79,23 +79,23 @@
     },
     {
       "path": ".github/skills/nav-troubleshoot/",
-      "hash": "ce043cf29ce427b1"
+      "hash": "e9900d58d91ee0ee"
     },
     {
       "path": ".github/instructions/kotlin-ktor.instructions.md",
-      "hash": "5d85d53d8f375ec2"
+      "hash": "f180c7d9ebb3ddee"
     },
     {
       "path": ".github/instructions/security-owasp.instructions.md",
-      "hash": "6d2de01195174566"
+      "hash": "3388700634dd315d"
     },
     {
       "path": ".github/instructions/testing.instructions.md",
-      "hash": "4a6a7547a3701ce1"
+      "hash": "ca2a23744bef3a2c"
     },
     {
       "path": ".github/instructions/testing-kotlin.instructions.md",
-      "hash": "13a5a10d86577f84"
+      "hash": "183e7a28acecdbb5"
     },
     {
       "path": ".github/instructions/github-actions.instructions.md",
@@ -107,7 +107,7 @@
     },
     {
       "path": ".github/instructions/database.instructions.md",
-      "hash": "5b4639fd54c7b4f3"
+      "hash": "9fb524bf4111f25f"
     },
     {
       "path": ".github/prompts/ktor-endpoint.prompt.md",
@@ -115,7 +115,7 @@
     },
     {
       "path": ".github/prompts/kafka-topic.prompt.md",
-      "hash": "4e3cb2fe36ecb2f4"
+      "hash": "d485c12c7b6d44d6"
     },
     {
       "path": ".github/prompts/nais-manifest.prompt.md",
