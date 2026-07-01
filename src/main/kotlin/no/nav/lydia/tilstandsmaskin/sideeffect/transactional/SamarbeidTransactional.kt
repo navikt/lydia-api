@@ -6,6 +6,7 @@ import no.nav.lydia.samarbeid.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.mapRowToIASamarbeid
+import no.nav.lydia.samarbeidsperiode.IASak
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -159,6 +160,21 @@ class SamarbeidTransactional {
                     ),
                 ).map { it.mapRowToIASamarbeid() }.asSingle,
             )!!
+
+        context(tx: TransactionalSession, _: VirksomhetTransactional.AlleSakerErSlettetPåVirksomhet)
+        fun slettAlleSamarbeidForOrg(orgnr: String) {
+            tx.run(
+                queryOf(
+                    """
+                    DELETE FROM ia_prosess p
+                    USING ia_sak_alle s
+                    WHERE p.saksnummer = s.saksnummer
+                    AND s.orgnr = :orgnr
+                    """.trimIndent(),
+                    mapOf("orgnr" to orgnr),
+                ).asUpdate,
+            )
+        }
 
         private fun String?.nullIfEmpty(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
     }

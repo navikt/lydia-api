@@ -359,5 +359,33 @@ class KartleggingTransactional {
                     )
                 }.asList,
             )
+
+        context(tx: TransactionalSession, _: VirksomhetTransactional.AlleSakerErSlettetPåVirksomhet)
+        fun slettKartlegginger(orgnr: String) {
+            tx.run(
+                queryOf(
+                    """
+                    DELETE FROM ia_sak_kartlegging_svar ks
+                    USING ia_sak_kartlegging k
+                    WHERE ks.kartlegging_id = k.kartlegging_id
+                      AND k.orgnr = :orgnr;
+                    
+                    DELETE FROM ia_sak_kartlegging_kartlegging_til_tema ktt
+                    USING ia_sak_kartlegging k
+                    WHERE ktt.kartlegging_id = k.kartlegging_id
+                      AND k.orgnr = :orgnr;
+                    
+                    DELETE FROM ia_sak_kartlegging_kartlegging_til_undertema ktu
+                    USING ia_sak_kartlegging k
+                    WHERE ktu.kartlegging_id = k.kartlegging_id
+                      AND k.orgnr = :orgnr;
+                      
+                    DELETE FROM ia_sak_kartlegging
+                    WHERE orgnr = :orgnr;
+                    """.trimIndent(),
+                    mapOf("orgnr" to orgnr),
+                ).asUpdate,
+            )
+        }
     }
 }

@@ -173,7 +173,7 @@ class NyFlytVirksomhetTest {
         hentVirksomhetTilstand(
             orgnr = iASakDto.orgnr,
             token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
 
         hentVirksomhet(
             orgnr = iASakDto.orgnr,
@@ -197,7 +197,7 @@ class NyFlytVirksomhetTest {
         hentVirksomhetTilstand(
             orgnr = virksomhet.orgnr,
             token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
         hentVirksomhet(
             orgnr = virksomhet.orgnr,
             token = authContainerHelper.saksbehandler1.token,
@@ -219,7 +219,7 @@ class NyFlytVirksomhetTest {
         hentVirksomhetTilstand(
             orgnr = virksomhet.orgnr,
             token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
         hentSak(
             orgnummer = virksomhet.orgnr,
             saksnummer = sak.saksnummer,
@@ -241,7 +241,7 @@ class NyFlytVirksomhetTest {
         hentVirksomhetTilstand(
             orgnr = virksomhet.orgnr,
             token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
         hentVirksomhet(
             orgnr = virksomhet.orgnr,
             token = authContainerHelper.saksbehandler1.token,
@@ -263,7 +263,7 @@ class NyFlytVirksomhetTest {
         hentVirksomhetTilstand(
             orgnr = virksomhet.orgnr,
             token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
     }
 
     @Test
@@ -274,7 +274,7 @@ class NyFlytVirksomhetTest {
         hentVirksomhetTilstand(
             orgnr = virksomhet.orgnr,
             token = authContainerHelper.saksbehandler1.token,
-        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErSlettet
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
 
         vurderVirksomhetResponse(virksomhet).statuskode() shouldBe HttpStatusCode.BadRequest.value
     }
