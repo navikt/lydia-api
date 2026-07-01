@@ -24,6 +24,7 @@ jobs:
       - name: Setup Gradle to generate and submit dependency graphs
         uses: gradle/actions/setup-gradle@v6.2.0
         with:
+          cache-provider: basic
           dependency-graph: generate-and-submit
       - name: Compile, run tests and build
         run: ./gradlew test installDist
