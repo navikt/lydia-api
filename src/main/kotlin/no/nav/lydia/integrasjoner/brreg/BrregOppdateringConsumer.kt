@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.prioritering.virksomhet.VirksomhetService
 import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -104,6 +105,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                                     -> {
                                         virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet).onLeft { e ->
                                             logger.warn("Fikk feil ved sletting/fjerning av virksomhet: {}", e)
+                                            Metrics.loggBrregAvregistreringFeil()
                                         }
                                     }
                                 }

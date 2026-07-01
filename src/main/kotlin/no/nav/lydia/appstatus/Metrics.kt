@@ -80,6 +80,11 @@ class Metrics {
             .help("Antall samarbeidsplan opprettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
+        private val brregAvregistreringFeil: Counter = Counter.builder()
+            .name("${NAMESPACE}_brreg_avregistrering_feil")
+            .help("Antall feil ved oppdatering av avregistrert virksomhet fra Brreg")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
+
         fun loggBehovsvurdering(status: Spørreundersøkelse.Status) {
             when (status) {
                 Spørreundersøkelse.Status.OPPRETTET -> behovsvurderingerOpprettet.inc()
@@ -110,6 +115,10 @@ class Metrics {
             if (plan.temaer.isNotEmpty()) {
                 samarbeidsplanOpprettet.inc()
             }
+        }
+
+        fun loggBrregAvregistreringFeil() {
+            brregAvregistreringFeil.inc()
         }
 
         fun loggAntallDokumenterIPubliseringsKø(antall: Int) {
