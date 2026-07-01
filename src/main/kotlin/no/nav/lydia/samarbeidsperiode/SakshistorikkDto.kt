@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import no.nav.lydia.samarbeid.IASamarbeidDto
 
 @Serializable
-class SakshistorikkDto(
+data class SakshistorikkDto(
     val saksnummer: String,
     val opprettet: LocalDateTime,
     val sistEndret: LocalDateTime,
@@ -15,7 +15,7 @@ class SakshistorikkDto(
 )
 
 @Serializable
-class SakSnapshotDto(
+data class SakSnapshotDto(
     val status: IASak.Status,
     val hendelsestype: IASakshendelseType,
     val tidspunktForSnapshot: LocalDateTime,

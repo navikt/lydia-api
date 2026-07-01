@@ -1,35 +1,44 @@
 package no.nav.lydia.container.ny.flyt.virksomhet
 
+import ia.felles.integrasjoner.jobbsender.Jobb
 import io.kotest.inspectors.shouldForAll
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.angreVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetRespons
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidsplan
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhetResponse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
+import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
@@ -67,7 +76,7 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `skal kunne avslutte vurdering som ikke medfører et samarbeid`() {
-        val sak = NyFlytTestUtils.vurderVirksomhet()
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         val oppdatertSakDto = sak.avsluttVurdering(
@@ -97,7 +106,7 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `avslutt vurdering med gyldig årsak gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetKlarTilVurdering`() {
-        val sak = NyFlytTestUtils.vurderVirksomhet()
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -111,7 +120,7 @@ class NyFlytVirksomhetTest {
             ),
         )
 
-        val virksomhetsTilstand = NyFlytTestUtils.hentVirksomhetTilstand(orgnr = sak.orgnr)
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "GjørVirksomhetKlarTilNyVurdering"
@@ -121,7 +130,7 @@ class NyFlytVirksomhetTest {
 
     @Test
     fun `avslutt vurdering med årsak 'skal vurderes senere' gir tilstand VirksomhetErVurdert og nesteTilstand VirksomhetVurderes`() {
-        val sak = NyFlytTestUtils.vurderVirksomhet()
+        val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
@@ -134,7 +143,7 @@ class NyFlytVirksomhetTest {
             ),
         )
 
-        val virksomhetsTilstand = NyFlytTestUtils.hentVirksomhetTilstand(orgnr = sak.orgnr)
+        val virksomhetsTilstand = hentVirksomhetTilstand(orgnr = sak.orgnr)
         virksomhetsTilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand!!.startTilstand shouldBe VirksomhetIATilstand.VirksomhetErVurdert
         virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "VurderVirksomhet"
@@ -168,8 +177,6 @@ class NyFlytVirksomhetTest {
 
         sendSlettingForVirksomhet(virksomhet)
 
-        // TODO: Skulle noe vært logget? Skulle det i så fall vært testet på?
-
         hentVirksomhetTilstand(
             orgnr = iASakDto.orgnr,
             token = authContainerHelper.saksbehandler1.token,
@@ -182,18 +189,33 @@ class NyFlytVirksomhetTest {
 
         val historikk = hentSamarbeidshistorikkNyFlyt(iASakDto.orgnr)
         val samarbeid: List<IASamarbeidDto> = historikk.flatMap { it.samarbeid }
-        samarbeid.shouldForAll { it.status shouldNotBe IASamarbeid.Status.AKTIV }
+        samarbeid.shouldForAll { it.status shouldBe IASamarbeid.Status.AVBRUTT }
 
         val sak = hentSak(orgnummer = iASakDto.orgnr, iASakDto.saksnummer)
         sak.status.regnesSomAvsluttet() shouldBe true
     }
 
     @Test
-    fun `skal sette virksomhet til VirksomhetErSlettet fra VirksomhetKlarTilVurdering`() {
+    fun `skal sette virksomhet til VirksomhetErAvregistrertIBrreg fra VirksomhetKlarTilVurdering`() {
+        // For at virksomheten ikke skal slettes fullstendig, må den ha hatt en sak. Kjører den derfor gjennom tilstander tilbake til KlarTilVurdering.
         val virksomhet = lastInnNyVirksomhet()
+        virksomhet.opprettOgFullførSamarbeidsperiode()
+
+        // Oppdater planlagt_dato til i dag slik at batch jobben vil prosessere hendelsen
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE tilstand_automatisk_oppdatering
+            SET planlagt_dato = CURRENT_DATE
+            WHERE orgnr = '${virksomhet.orgnr}'
+            """.trimIndent(),
+        )
+        // send jobbmelding
+        kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
 
         sendSlettingForVirksomhet(virksomhet)
-
         hentVirksomhetTilstand(
             orgnr = virksomhet.orgnr,
             token = authContainerHelper.saksbehandler1.token,
@@ -205,7 +227,7 @@ class NyFlytVirksomhetTest {
     }
 
     @Test
-    fun `skal sette virksomhet til VirksomhetErSlettet fra VirksomhetVurderes`() {
+    fun `skal sette virksomhet til VirksomhetErAvregistrertIBrreg fra VirksomhetVurderes`() {
         val virksomhet = lastInnNyVirksomhet()
         val sak = vurderVirksomhet(virksomhet = virksomhet)
 
@@ -227,7 +249,7 @@ class NyFlytVirksomhetTest {
     }
 
     @Test
-    fun `skal sette virksomhet til VirksomhetErSlettet fra VirksomhetErVurdert`() {
+    fun `skal sette virksomhet til VirksomhetErAvregistrertIBrreg fra VirksomhetErVurdert`() {
         val virksomhet = lastInnNyVirksomhet()
         vurderVirksomhet(virksomhet = virksomhet).avsluttVurdering()
 
@@ -249,7 +271,7 @@ class NyFlytVirksomhetTest {
     }
 
     @Test
-    fun `skal sette virksomhet til VirksomhetErSlettet fra AlleSamarbeidIVirksomhetErAvsluttet`() {
+    fun `skal sette virksomhet til VirksomhetErAvregistrertIBrreg fra AlleSamarbeidIVirksomhetErAvsluttet`() {
         val virksomhet = lastInnNyVirksomhet()
         virksomhet.opprettOgFullførSamarbeidsperiode()
 
@@ -267,8 +289,10 @@ class NyFlytVirksomhetTest {
     }
 
     @Test
-    fun `VirksomhetErSlettet er en terminal tilstand som avviser alle hendelser`() {
+    fun `VirksomhetErAvregistrertIBrreg er en terminal tilstand som avviser alle hendelser`() {
         val virksomhet = lastInnNyVirksomhet()
+        vurderVirksomhet(virksomhet)
+
         sendSlettingForVirksomhet(virksomhet)
 
         hentVirksomhetTilstand(
@@ -277,6 +301,27 @@ class NyFlytVirksomhetTest {
         ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
 
         vurderVirksomhetResponse(virksomhet).statuskode() shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `Sletting av en virksomhet med saker som er slettet fører til ekte sletting`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val sak = vurderVirksomhet(virksomhet)
+
+        sak.angreVurdering()
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        hentVirksomhetRespons(virksomhet.orgnr).statuskode() shouldBe HttpStatusCode.NotFound.value
+    }
+
+    @Test
+    fun `Sletting av en virksomhet uten saker fører til ekte sletting`() {
+        val virksomhet = lastInnNyVirksomhet()
+        sendSlettingForVirksomhet(virksomhet)
+
+        val respons = hentVirksomhetRespons(virksomhet.orgnr)
+        respons.statuskode() shouldBe HttpStatusCode.NotFound.value
     }
 
     @Test
@@ -309,6 +354,7 @@ class NyFlytVirksomhetTest {
         )
 
         val sakFørSletting = hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val historikkFørSletting = hentSamarbeidshistorikkNyFlyt(orgnummer = virksomhet.orgnr)
 
         sendSlettingForVirksomhet(virksomhet)
 
@@ -318,5 +364,107 @@ class NyFlytVirksomhetTest {
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
         ) shouldBe sakFørSletting.endretAvHendelseId
+        val historikkEtterSletting = hentSamarbeidshistorikkNyFlyt(orgnummer = virksomhet.orgnr)
+        historikkFørSletting shouldBe historikkEtterSletting
+    }
+
+    @Test
+    fun `skal slette virksomheter som har hatt aktivitet, men hvor alt er slettet`() {
+        val eierToken = authContainerHelper.superbruker1.token
+        val virksomhet = lastInnNyVirksomhet()
+
+        val sak = vurderVirksomhet(virksomhet = virksomhet, token = eierToken)
+        sak.bliEier(token = eierToken)
+
+        val samarbeid = sak.opprettSamarbeid(token = eierToken)
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, token = eierToken)
+        val behovsvurdering = samarbeid.opprettKartlegging(
+            orgnr = virksomhet.orgnr,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+            token = eierToken,
+        )
+        val evaluering = samarbeid.opprettKartlegging(
+            orgnr = virksomhet.orgnr,
+            type = Spørreundersøkelse.Type.Evaluering,
+            token = eierToken,
+        )
+
+        // Slett alt
+        evaluering.slett(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            token = eierToken,
+        )
+        behovsvurdering.slett(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            token = eierToken,
+        )
+        samarbeid.slettSamarbeidsplan(
+            orgnr = sak.orgnr,
+            planId = plan.id,
+            token = eierToken,
+        )
+
+        hentVirksomhetTilstand(
+            orgnr = sak.orgnr,
+            token = eierToken,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        samarbeid.slettSamarbeid(
+            orgnr = sak.orgnr,
+            token = eierToken,
+        )
+
+        hentVirksomhetTilstand(
+            orgnr = sak.orgnr,
+            token = eierToken,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+
+        // angre vurder virksomhet
+        sak.angreVurdering(token = eierToken)
+
+        hentVirksomhetTilstand(
+            orgnr = sak.orgnr,
+            token = eierToken,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
+
+        // fjern virksomhet
+        sendFjerningForVirksomhet(
+            virksomhet = virksomhet,
+        )
+
+        hentVirksomhetRespons(orgnr = virksomhet.orgnr).statuskode() shouldBe HttpStatusCode.NotFound.value
+
+        // ingen plan
+        postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT EXISTS(SELECT 1 FROM ia_sak_plan isp WHERE isp.plan_id = '${plan.id}')
+            """.trimIndent(),
+        ) shouldBe false
+        // ingen kartlegginger
+        postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT EXISTS(SELECT 1 FROM ia_sak_kartlegging WHERE orgnr = '${virksomhet.orgnr}')
+            """.trimIndent(),
+        ) shouldBe false
+        // ingen samarbeid
+        postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT EXISTS(SELECT 1 FROM ia_prosess WHERE saksnummer = '${sak.saksnummer}')
+            """.trimIndent(),
+        ) shouldBe false
+        // ingen sak
+        postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT EXISTS(SELECT 1 FROM ia_sak_alle WHERE saksnummer = '${sak.saksnummer}')
+            """.trimIndent(),
+        ) shouldBe false
+        // ingen virksomhet
+        postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT EXISTS(SELECT 1 FROM virksomhet WHERE orgnr = '${virksomhet.orgnr}')
+            """.trimIndent(),
+        ) shouldBe false
     }
 }
