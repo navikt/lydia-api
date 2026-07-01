@@ -112,10 +112,15 @@ class NyFlytTestUtils {
         fun hentVirksomhet(
             orgnr: String,
             token: String = authContainerHelper.superbruker1.token,
-        ): VirksomhetDto {
+        ): VirksomhetDto = hentVirksomhetRespons(orgnr, token).third.get()
+
+        fun hentVirksomhetRespons(
+            orgnr: String,
+            token: String = authContainerHelper.superbruker1.token,
+        ): TestResponseTriple<VirksomhetDto> {
             val url = "$NY_FLYT_API_PATH/virksomhet/$orgnr"
             return applikasjon.performGet(url)
-                .authentication().bearer(token).tilSingelRespons<VirksomhetDto>().third.get()
+                .authentication().bearer(token).tilSingelRespons<VirksomhetDto>()
         }
 
         fun hentVirksomhetTilstand(

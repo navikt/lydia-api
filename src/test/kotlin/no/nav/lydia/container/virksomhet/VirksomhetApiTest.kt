@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
@@ -169,26 +170,6 @@ class VirksomhetApiTest {
                 it.orgnr shouldBe virksomhet.orgnr
             }
         }
-    }
-
-    @Test
-    fun `skal kunne hente ut oppdatert virksomhetsstatus`() {
-        val virksomhet = nyVirksomhet(navn = "Hei og hå")
-        VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
-
-        hentVirksomhetsinformasjon(
-            orgnummer = virksomhet.orgnr,
-        ).status shouldBe VirksomhetStatus.AKTIV
-
-        VirksomhetHelper.sendSlettingForVirksomhet(virksomhet)
-        hentVirksomhetsinformasjon(
-            orgnummer = virksomhet.orgnr,
-        ).status shouldBe VirksomhetStatus.SLETTET
-
-        VirksomhetHelper.sendFjerningForVirksomhet(virksomhet)
-        hentVirksomhetsinformasjon(
-            orgnummer = virksomhet.orgnr,
-        ).status shouldBe VirksomhetStatus.FJERNET
     }
 
     @Test

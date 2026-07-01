@@ -5,6 +5,9 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.helper.PostgresContainerHelper
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
@@ -17,6 +20,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendEndringForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
 import no.nav.lydia.integrasjoner.brreg.Adresse
 import no.nav.lydia.prioritering.virksomhet.VirksomhetDto
 import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
@@ -71,17 +75,33 @@ class VirksomhetOppdateringTest {
     }
 
     @Test
-    fun `kan oppdatere fjernede virksomheter`() {
+    fun `skal slette fjernede virksomheter uten aktivitet`() {
         val virksomhet = lastInnNyVirksomhet(nyVirksomhet())
         sendFjerningForVirksomhet(virksomhet)
-        virksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.FJERNET)
+
+        val harVirksomhet = TestContainerHelper.postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT EXISTS(SELECT 1 FROM virksomhet
+            WHERE orgnr = '${virksomhet.orgnr}')
+            """.trimIndent(),
+        )
+
+        harVirksomhet shouldBe false
     }
 
     @Test
-    fun `kan oppdatere slettede virksomheter`() {
+    fun `skal slette slettede virksomheter uten aktivitet`() {
         val virksomhet = lastInnNyVirksomhet(nyVirksomhet())
-        sendFjerningForVirksomhet(virksomhet)
-        virksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.FJERNET)
+        sendSlettingForVirksomhet(virksomhet)
+
+        val harVirksomhet = TestContainerHelper.postgresContainerHelper.hentEnkelKolonne<Boolean>(
+            """
+            SELECT EXISTS(SELECT 1 FROM virksomhet
+            WHERE orgnr = '${virksomhet.orgnr}')
+            """.trimIndent(),
+        )
+
+        harVirksomhet shouldBe false
     }
 
     @Test
