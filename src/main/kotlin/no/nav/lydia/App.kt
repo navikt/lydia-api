@@ -609,7 +609,6 @@ private fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 spørreundersøkelseService = spørreundersøkelseService,
                 dokumentPubliseringService = dokumentPubliseringService,
-                iaTeamService = iaTeamService,
                 pdfgenService = pdfgenService,
                 journalpostService = JournalpostService(naisEnv, pdfgenService, OboTokenUtveksler(naisEnv)),
                 azureService = azureService,

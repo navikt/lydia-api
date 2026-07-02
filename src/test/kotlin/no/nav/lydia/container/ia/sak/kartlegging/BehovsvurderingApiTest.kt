@@ -8,7 +8,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
@@ -23,7 +22,6 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.flytt
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentSpørreundersøkelseResultat
@@ -42,7 +40,6 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.kartlegging.FullførtBehovsvurderingProdusent.FullførtBehovsvurdering
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.kartlegging.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
 import no.nav.lydia.kartlegging.SpørreundersøkelseDto
@@ -102,35 +99,6 @@ class BehovsvurderingApiTest {
         postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             "select status from ia_sak_kartlegging where kartlegging_id = '${påbegyntBehovsvurdering.id}'",
         ).forAll { it shouldBe "SLETTET" }
-    }
-
-    @Test
-    fun `kun saksbehandlere som er eier eller følger skal kunne flytte avsluttet behovsvurdering`() {
-        val sak = aktivSamarbeidsperiode(token = authContainerHelper.saksbehandler1.token, samarbeidsnavn = "samarbeid 1")
-        sak.opprettSamarbeid(samarbeidsnavn = "Samarbeid 2")
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        val samarbeid1 = alleSamarbeid.first()
-        val samarbeid2 = alleSamarbeid.last()
-        val ikkeEierEllerFølger = authContainerHelper.saksbehandler2
-
-        val behovsvurdering = sak.opprettBehovsvurdering(token = authContainerHelper.saksbehandler1.token, samarbeidId = samarbeid1.id)
-        behovsvurdering.start(token = authContainerHelper.saksbehandler1.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        behovsvurdering.fullfør(token = authContainerHelper.saksbehandler1.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        shouldFail {
-            behovsvurdering.flytt(token = ikkeEierEllerFølger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = samarbeid2.id)
-        }
-
-        val følger = authContainerHelper.saksbehandler2
-        sak.leggTilFolger(token = følger.token)
-
-        val flyttetBehovsvurdering = behovsvurdering.flytt(
-            token = følger.token,
-            orgnummer = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            samarbeidId = samarbeid2.id,
-        )
-        flyttetBehovsvurdering.samarbeidId shouldBe samarbeid2.id
     }
 
     @Test
@@ -738,181 +706,6 @@ class BehovsvurderingApiTest {
                 type = Spørreundersøkelse.Type.Behovsvurdering,
             ) shouldHaveSize 1
         }
-    }
-
-    @Test
-    fun `skal kunne flytte en spørreundersøkelse fra et samarbeid til et annet`() {
-        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        sak.opprettSamarbeid(samarbeidsnavn = "Først")
-        sak.opprettSamarbeid(samarbeidsnavn = "Sist")
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 2
-        val førsteSamarbeid = alleSamarbeid.first()
-        val sisteSamarbeid = alleSamarbeid.last()
-
-        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = førsteSamarbeid.id)
-        val type = Spørreundersøkelse.Type.Behovsvurdering
-        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id, type = type)
-            .map { it.id } shouldBe listOf(behovsvurdering.id)
-        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        behovsvurdering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        val oppdatertBehovsvurdering = behovsvurdering.flytt(
-            orgnummer = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            samarbeidId = sisteSamarbeid.id,
-        )
-        oppdatertBehovsvurdering.endretTidspunkt shouldNotBe oppdatertBehovsvurdering.fullførtTidspunkt
-
-        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id, type = type)
-            .map { it.id } shouldBe emptyList()
-        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = sisteSamarbeid.id, type = type)
-            .map { it.id } shouldBe listOf(behovsvurdering.id)
-    }
-
-    @Test
-    fun `skal sende på nytt til SF en Kafka melding om at en fullført behhovsvurdering er flyttet`() {
-        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        sak.opprettSamarbeid(samarbeidsnavn = "Først")
-        sak.opprettSamarbeid(samarbeidsnavn = "Sist")
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        val førsteSamarbeid = alleSamarbeid.first()
-        val sisteSamarbeid = alleSamarbeid.last()
-
-        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = førsteSamarbeid.id)
-        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        behovsvurdering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        runBlocking {
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = behovsvurdering.id,
-                konsument = fullførtBehovsvurderingKonsument,
-            ) {
-                it.forExactlyOne { melding ->
-                    val behovsvurderingIKafkaMelding = Json.decodeFromString<FullførtBehovsvurdering>(melding)
-                    behovsvurderingIKafkaMelding.behovsvurderingId shouldBe behovsvurdering.id
-                    behovsvurderingIKafkaMelding.prosessId shouldBe førsteSamarbeid.id.toString()
-                }
-            }
-        }
-
-        behovsvurdering.flytt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = sisteSamarbeid.id)
-
-        runBlocking {
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = behovsvurdering.id,
-                konsument = fullførtBehovsvurderingKonsument,
-            ) {
-                it.forExactlyOne { melding ->
-                    val behovsvurderingIKafkaMelding = Json.decodeFromString<FullførtBehovsvurdering>(melding)
-                    behovsvurderingIKafkaMelding.behovsvurderingId shouldBe behovsvurdering.id
-                    behovsvurderingIKafkaMelding.prosessId shouldBe sisteSamarbeid.id.toString()
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `skal IKKE kunne flytte spørreundersøkelse en ugyldig prosess eller som lesebruker`() {
-        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        val samarbeid = sak.opprettSamarbeid()
-        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = samarbeid.id)
-
-        // -- skal ikke kunne flytte til ikke eksisterende prosess
-        shouldFail {
-            behovsvurdering.flytt(
-                orgnummer = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                samarbeidId = 100000,
-            )
-        }
-
-        // -- Lesebruker skal ikke kunne flytte behovsuvurdering
-        shouldFail {
-            behovsvurdering.flytt(
-                token = authContainerHelper.lesebruker.token,
-                orgnummer = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                samarbeidId = sak.hentAlleSamarbeid().first().id,
-            )
-        }
-
-        // -- skal ikke kunne flytte til prosess i en annen sak
-        val nysak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        nysak.opprettSamarbeid()
-        shouldFail {
-            behovsvurdering.flytt(
-                orgnummer = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                samarbeidId = nysak.hentAlleSamarbeid().first().id,
-            )
-        }
-    }
-
-    @Test
-    fun `skal IKKE kunne flytte en behovsvurdering som ikke er avsluttet (fullført)`() {
-        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        sak.opprettSamarbeid(samarbeidsnavn = "Først")
-        sak.opprettSamarbeid(samarbeidsnavn = "Sist")
-
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 2
-
-        val førsteSamarbeid = alleSamarbeid.first()
-        val andreSamarbeid = alleSamarbeid.last()
-
-        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = førsteSamarbeid.id)
-        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        shouldFail { behovsvurdering.flytt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = andreSamarbeid.id) }.message shouldContain
-            "kan ikke bytte samarbeid"
-
-        val type = Spørreundersøkelse.Type.Behovsvurdering
-        hentSpørreundersøkelse(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = førsteSamarbeid.id,
-            type = type,
-        ).forExactlyOne {
-            it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-            it.samarbeidId shouldBe førsteSamarbeid.id
-        }
-
-        hentSpørreundersøkelse(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = andreSamarbeid.id,
-            type = type,
-        ) shouldHaveSize 0
-    }
-
-    @Test
-    fun `Skal IKKE kunne flytte en avsluttet (fullført) behovsvurdering som er publisert`() {
-        val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
-        sak.opprettSamarbeid(samarbeidsnavn = "Først")
-        sak.opprettSamarbeid(samarbeidsnavn = "Sist")
-
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 2
-
-        val førsteSamarbeid = alleSamarbeid.first()
-        val andreSamarbeid = alleSamarbeid.last()
-
-        val type = Spørreundersøkelse.Type.Behovsvurdering
-        val avsluttetBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(type = type, samarbeidId = førsteSamarbeid.id)
-        avsluttetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-
-        val response = publiserDokument(
-            dokumentReferanseId = avsluttetBehovsvurdering.id,
-            token = authContainerHelper.saksbehandler1.token,
-        )
-
-        response.statuskode() shouldBe HttpStatusCode.Created.value
-        val dokumentPubliseringDto = response.third.get()
-        dokumentPubliseringDto.referanseId shouldBe avsluttetBehovsvurdering.id
-
-        shouldFail {
-            avsluttetBehovsvurdering.flytt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = andreSamarbeid.id)
-        }.message shouldContain "er publisert, kan ikke bytte samarbeid"
     }
 
     @Test

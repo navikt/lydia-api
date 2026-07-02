@@ -1,16 +1,13 @@
 package no.nav.lydia.api
 
 import arrow.core.flatMap
-import arrow.core.left
 import io.ktor.http.ContentDisposition
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import io.ktor.server.routing.put
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toJavaLocalDateTime
 import no.nav.lydia.ADGrupper
@@ -22,7 +19,6 @@ import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
-import no.nav.lydia.kartlegging.OppdaterBehovsvurderingDto
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.kartlegging.SpørreundersøkelseService
 import no.nav.lydia.kartlegging.tilDto
@@ -31,10 +27,8 @@ import no.nav.lydia.kartlegging.tilUtenInnholdDto
 import no.nav.lydia.samarbeid.IASamarbeidFeil
 import no.nav.lydia.samarbeidsperiode.IASakError
 import no.nav.lydia.samarbeidsperiode.IASakService
-import no.nav.lydia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
-import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import java.time.format.DateTimeFormatter
 
 const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
@@ -43,7 +37,6 @@ fun Route.iaSakSpørreundersøkelse(
     iaSakService: IASakService,
     spørreundersøkelseService: SpørreundersøkelseService,
     dokumentPubliseringService: DokumentPubliseringService,
-    iaTeamService: IATeamService,
     pdfgenService: PiaPdfgenService,
     journalpostService: JournalpostService,
     azureService: AzureService,
@@ -164,42 +157,6 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
-    put("$SPØRREUNDERSØKELSE_BASE_ROUTE/{sporreundersokelseId}") {
-        val id = call.spørreundersøkelseId ?: return@put call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
-        val input = call.receive<OppdaterBehovsvurderingDto>()
-
-        call.somSaksbehandler(adGrupper) { saksbehandler ->
-            val iaSak = iaSakService.hentIASakDto(saksnummer = input.saksnummer).getOrNull()
-                ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-
-            if (!iaTeamService.erEierEllerFølgerAvSak(
-                    saksnummer = iaSak.saksnummer,
-                    eierAvSak = iaSak.eidAv,
-                    saksbehandler = saksbehandler,
-                )
-            ) {
-                return@somSaksbehandler IASakError.`er ikke følger eller eier av sak`.left()
-            }
-            spørreundersøkelseService.oppdaterSamarbeidIdISpørreundersøkelse(
-                spørreundersøkelseId = id,
-                oppdaterSpørreundersøkelseDto = input,
-            )
-        }.also { spørreundersøkelseEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelseEither,
-                orgnummer = input.orgnummer,
-                auditType = AuditType.update,
-                saksnummer = input.saksnummer,
-            )
-        }.map {
-            val publiseringStatus = dokumentPubliseringService.hentPubliseringStatus(it.id, it.type.name.tilDokumentTilPubliseringType())
-            call.respond(HttpStatusCode.OK, it.tilDto(publiseringStatus))
-        }.mapLeft {
-            call.sendFeil(it)
-        }
-    }
-
     get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/pdf") {
         val spørreundersøkelseId = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
@@ -286,14 +243,6 @@ object IASakSpørreundersøkelseError {
     val `ikke avsluttet` = Feil(
         "Spørreundersøkelse er ikke i forventet status: '${Spørreundersøkelse.Status.AVSLUTTET.name}'",
         HttpStatusCode.Forbidden,
-    )
-    val `ikke avsluttet, kan ikke bytte samarbeid` = Feil(
-        "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke bytte samarbeid",
-        HttpStatusCode.BadRequest,
-    )
-    val `publisert, kan ikke bytte samarbeid` = Feil(
-        "Spørreundersøkelse er publisert, kan ikke bytte samarbeid",
-        HttpStatusCode.BadRequest,
     )
     val `generell feil under uthenting` = Feil(
         "Generell feil under uthenting av en spørreundersøkelse",

@@ -1,7 +1,6 @@
 package no.nav.lydia.kartlegging
 
 import arrow.core.Either
-import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
@@ -196,45 +195,6 @@ class SpørreundersøkelseService(
             spørreundersøkelseId = spørreundersøkelseId,
             temaId = hendelse.temaId,
         )
-    }
-
-    fun oppdaterSamarbeidIdISpørreundersøkelse(
-        spørreundersøkelseId: UUID,
-        oppdaterSpørreundersøkelseDto: OppdaterBehovsvurderingDto,
-    ): Either<Feil, Spørreundersøkelse> {
-        val behovsvurdering = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { return it.left() }
-        if (behovsvurdering.type == Evaluering) {
-            return IASakSpørreundersøkelseError.`ugyldig type`.left()
-        }
-        if (behovsvurdering.orgnummer != oppdaterSpørreundersøkelseDto.orgnummer) {
-            return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
-        }
-        if (behovsvurdering.saksnummer != oppdaterSpørreundersøkelseDto.saksnummer) {
-            return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
-        }
-        if (behovsvurdering.status != Spørreundersøkelse.Status.AVSLUTTET) {
-            return IASakSpørreundersøkelseError.`ikke avsluttet, kan ikke bytte samarbeid`.left()
-        }
-        if (erPublisertEllerUnderPublisering(spørreundersøkelse = behovsvurdering)) {
-            return IASakSpørreundersøkelseError.`publisert, kan ikke bytte samarbeid`.left()
-        }
-
-        val oppdatertBehovsvurdering = iaSakService.hentIASakDto(saksnummer = behovsvurdering.saksnummer).flatMap {
-            samarbeidService.hentSamarbeidSomIkkeErSlettet(saksnummer = it.saksnummer)
-        }.map { prosess ->
-            prosess.map { it.id }
-        }.flatMap { prosesserISak ->
-            if (prosesserISak.contains(oppdaterSpørreundersøkelseDto.prosessId)) {
-                spørreundersøkelseRepository.oppdaterBehovsvurdering(spørreundersøkelseId, oppdaterSpørreundersøkelseDto)
-            } else {
-                IASakSpørreundersøkelseError.`feil under oppdatering`.left()
-            }
-        }
-
-        oppdatertBehovsvurdering.getOrNull()?.let { oppdatertSpørreundersøkelse ->
-            spørreundersøkelseObservers.forEach { it.receive(oppdatertSpørreundersøkelse) }
-        }
-        return oppdatertBehovsvurdering
     }
 
     private fun sendResultaterForTemaPåKafka(

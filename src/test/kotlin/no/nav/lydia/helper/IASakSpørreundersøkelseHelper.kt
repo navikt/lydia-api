@@ -1,7 +1,6 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.core.extensions.jsonBody
 import io.kotest.matchers.collections.shouldHaveSize
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
@@ -11,10 +10,8 @@ import no.nav.lydia.container.ia.sak.kartlegging.BehovsvurderingApiTest
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.integrasjoner.kartlegging.HendelsType
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel
-import no.nav.lydia.kartlegging.OppdaterBehovsvurderingDto
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.kartlegging.SpørreundersøkelseDto
 import no.nav.lydia.kartlegging.SpørreundersøkelseResultatDto
@@ -244,26 +241,6 @@ class IASakSpørreundersøkelseHelper {
         )
             .authentication().bearer(token)
             .tilSingelRespons<SpørreundersøkelseDto>()
-
-        fun SpørreundersøkelseDto.flytt(
-            token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
-            orgnummer: String,
-            saksnummer: String,
-            samarbeidId: Int,
-        ) = TestContainerHelper.applikasjon.performPut("${SPØRREUNDERSØKELSE_BASE_ROUTE}/$id")
-            .authentication().bearer(token)
-            .jsonBody(
-                Json.encodeToString(
-                    OppdaterBehovsvurderingDto(
-                        orgnummer = orgnummer,
-                        saksnummer = saksnummer,
-                        prosessId = samarbeidId,
-                    ),
-                ),
-            ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                success = { it },
-                failure = { fail("${it.message}: ${it.response.body().asString("text/plain")}") },
-            )
 
         fun SpørreundersøkelseDto.svarAlternativerTilEtFlervalgSpørsmål(): List<String> =
             this.svarAlternativerTilEtSpørsmål(BehovsvurderingApiTest.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER).map { it.svarId }

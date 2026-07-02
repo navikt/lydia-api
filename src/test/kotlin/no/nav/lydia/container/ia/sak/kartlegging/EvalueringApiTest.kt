@@ -8,7 +8,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
@@ -16,11 +15,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
-import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.flytt
-import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentForhåndsvisning
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
@@ -255,45 +251,6 @@ class EvalueringApiTest {
         val sak = aktivSamarbeidsperiode()
         sak.opprettEnPlan(plan = hentPlanMal())
         shouldFail { sak.opprettEvaluering() }.message shouldBe "HTTP Exception 400 Bad Request"
-    }
-
-    @Test
-    fun `skal ikke flytte evaluering mellom samarbeid`() {
-        val sak = aktivSamarbeidsperiode(samarbeidsnavn = "Samarbeid 1")
-        sak.opprettSamarbeid(samarbeidsnavn = "Samarbeid 2")
-        val samarbeid1 = sak.hentAlleSamarbeid().first()
-        val samarbeid2 = sak.hentAlleSamarbeid().last()
-        samarbeid1.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanMalDto().inkluderAlt())
-        val evaluering = sak.opprettEvaluering(prosessId = samarbeid1.id)
-        evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        evaluering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        hentSpørreundersøkelse(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = samarbeid1.id,
-            type = Spørreundersøkelse.Type.Evaluering,
-        ).forExactlyOne {
-            it.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-            it.id shouldBe evaluering.id
-        }
-
-        shouldFail {
-            evaluering.flytt(
-                orgnummer = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                samarbeidId = samarbeid2.id,
-            )
-        }.message shouldContain "Bad Request"
-
-        hentSpørreundersøkelse(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = samarbeid1.id,
-            type = Spørreundersøkelse.Type.Evaluering,
-        ).forExactlyOne {
-            it.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-            it.id shouldBe evaluering.id
-        }
     }
 
     @Test

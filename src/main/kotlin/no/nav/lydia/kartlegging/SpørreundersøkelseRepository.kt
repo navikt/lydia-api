@@ -1,8 +1,5 @@
 package no.nav.lydia.kartlegging
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import kotliquery.Row
@@ -10,8 +7,6 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.api.IASakSpørreundersøkelseError
-import no.nav.lydia.felles.Feil
 import no.nav.lydia.felles.tilUUID
 import no.nav.lydia.samarbeid.IASamarbeid
 import java.time.LocalDateTime
@@ -352,30 +347,6 @@ class SpørreundersøkelseRepository(
             navn = row.string("navn"),
             rekkefølge = row.int("rekkefolge"),
         )
-
-    fun oppdaterBehovsvurdering(
-        behovsvurderingId: UUID,
-        oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto,
-    ): Either<Feil, Spørreundersøkelse> {
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE ia_sak_kartlegging SET 
-                    ia_prosess = :prosessId,
-                    endret = now()
-                    WHERE kartlegging_id = :behovsvurderingId
-                    """.trimIndent(),
-                    mapOf(
-                        "prosessId" to oppdaterBehovsvurderingDto.prosessId,
-                        "behovsvurderingId" to behovsvurderingId.toString(),
-                    ),
-                ).asUpdate,
-            )
-        }
-        return hentSpørreundersøkelse(behovsvurderingId)?.right()
-            ?: IASakSpørreundersøkelseError.`feil under oppdatering`.left()
-    }
 
     fun hentAlleSpørreundersøkelser(): List<Spørreundersøkelse> =
         using(sessionOf(dataSource)) { session ->
