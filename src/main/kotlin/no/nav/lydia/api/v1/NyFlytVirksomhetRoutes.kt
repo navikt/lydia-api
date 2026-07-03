@@ -93,9 +93,10 @@ fun Route.nyFlytVirksomhet(
         val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
+                .groupBy { it.saksnummer }
             iaSakService.hentIASakDtoerForOrgnummer(orgnummer = orgnummer)
                 .map { sak ->
-                    sak.addHendelser(hendelser = hendelser.filter { hendelse -> hendelse.saksnummer == sak.saksnummer })
+                    sak.addHendelser(hendelser = hendelser[sak.saksnummer] ?: emptyList())
                 }
                 .sortedByDescending { it.opprettetTidspunkt }
                 .map { iASakDto ->
