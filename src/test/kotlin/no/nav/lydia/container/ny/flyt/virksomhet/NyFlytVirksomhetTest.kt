@@ -193,6 +193,9 @@ class NyFlytVirksomhetTest {
 
         val sak = hentSak(orgnummer = iASakDto.orgnr, iASakDto.saksnummer)
         sak.status.regnesSomAvsluttet() shouldBe true
+
+        historikk.maxByOrNull { it.sistEndret }?.sakshendelser?.maxByOrNull { it.tidspunktForSnapshot }
+            ?.hendelsestype shouldBe IASakshendelseType.VIRKSOMHET_AVREGISTRERT
     }
 
     @Test

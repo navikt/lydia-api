@@ -63,7 +63,7 @@ class VirksomhetErAvregistrertIBrregSideEffect(
                             id = ULID.random(),
                             opprettetTidspunkt = LocalDateTime.now(),
                             saksnummer = saksnummer,
-                            hendelsesType = IASakshendelseType.AVBRYT_PROSESS,
+                            hendelsesType = IASakshendelseType.VIRKSOMHET_AVREGISTRERT,
                             orgnummer = orgnr,
                             opprettetAv = Standardbrukere.fiaSystemSuperbruker.navIdent,
                             opprettetAvRolle = Standardbrukere.fiaSystemSuperbruker.rolle,
