@@ -1,6 +1,5 @@
 package no.nav.lydia.container.ny.flyt.kartlegging
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.api.NY_FLYT_API_PATH

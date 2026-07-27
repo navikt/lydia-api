@@ -1,7 +1,5 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.core.extensions.jsonBody
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.api.NY_FLYT_API_PATH
@@ -233,6 +231,7 @@ class PlanHelper {
             )
 
         // TODO: [OPPRYDDING] Bør gå bort ifra denne måten å opprette planer
+        @Deprecated("Bruk IASamarbeidDto.opprettSamarbeidsplan i stedet")
         fun IASakDto.opprettEnPlan(
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
             plan: PlanMalDto = hentPlanMal().inkluderAlt(),

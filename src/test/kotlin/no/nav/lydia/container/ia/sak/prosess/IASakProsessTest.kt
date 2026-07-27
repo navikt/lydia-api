@@ -124,7 +124,7 @@ class IASakProsessTest {
         val samarbeid = sak.opprettSamarbeid()
         sak.opprettBehovsvurdering()
 
-        shouldFailWithMessage("HTTP Exception 400 Bad Request") {
+        shouldFailWithMessage("HTTP 400 Bad Request: kan ikke avbryte samarbeid") {
             samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
         }
     }
@@ -553,8 +553,8 @@ class IASakProsessTest {
     fun `skal kun kunne opprette samarbeid med unikt navn`() {
         val sak = vurderVirksomhet().leggTilFolger(authContainerHelper.saksbehandler1.token)
         sak.opprettSamarbeid(samarbeidsnavn = "Navn")
-        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict"
-        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict"
+        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP 409 Conflict: Samarbeidsnavn finnes allerede"
+        shouldFail { sak.opprettSamarbeid(samarbeidsnavn = "Navn") }.message shouldBe "HTTP 409 Conflict: Samarbeidsnavn finnes allerede"
 
         sak.hentAlleSamarbeid().count { it.navn == "Navn" } shouldBeExactly 1
     }

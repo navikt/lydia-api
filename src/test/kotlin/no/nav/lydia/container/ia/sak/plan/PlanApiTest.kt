@@ -7,6 +7,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldStartWith
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
@@ -70,7 +71,7 @@ class PlanApiTest {
         val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, plan.id)
         slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
 
-        shouldFailWithMessage("HTTP Exception 404 Not Found") {
+        shouldFailWithMessage("HTTP 404 Not Found: Fant ikke plan") {
             sak.hentPlan(prosessId = samarbeid.id)
         }
     }
@@ -102,7 +103,7 @@ class PlanApiTest {
             }
         }
 
-        shouldFailWithMessage("HTTP Exception 404 Not Found") {
+        shouldFailWithMessage("HTTP 404 Not Found: Fant ikke plan") {
             sak.hentPlan(prosessId = samarbeid.id)
         }
     }
@@ -132,7 +133,7 @@ class PlanApiTest {
             melding = Json.encodeToString(salesforceAktivitet),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        shouldFailWithMessage("HTTP Exception 409 Conflict") {
+        shouldFailWithMessage("HTTP 409 Conflict: Det finnes aktiviteter registrert på dette undertemaet i Salesforce.") {
             sak.endreEttTemaIPlan(
                 planId = plan.id,
                 temaId = førsteTema.id,
@@ -214,14 +215,14 @@ class PlanApiTest {
                 planId = planDto.id,
                 endring = datoUtenInkludert.tilRequest(),
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         shouldFail {
             sak.endreFlereTemaerIPlan(
                 planId = planDto.id,
                 endring = inkludertUtenDato.tilRequest(),
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         val uendretPlan = sak.hentPlan()
         uendretPlan.antallTemaInkludert() shouldBe 0
@@ -242,7 +243,7 @@ class PlanApiTest {
                 endring = datoUtenInkludert.temaer.first().undertemaer.tilRequest(),
                 temaId = planDto.temaer.first().id,
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         shouldFail {
             sak.endreEttTemaIPlan(
@@ -250,7 +251,7 @@ class PlanApiTest {
                 endring = inkludertUtenDato.temaer.first().undertemaer.tilRequest(),
                 temaId = planDto.temaer.first().id,
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         val sammePlan = sak.hentPlan()
         sammePlan.antallTemaInkludert() shouldBe 1
@@ -417,7 +418,7 @@ class PlanApiTest {
                 innholdId = plan.temaer.first().undertemaer.first().id,
                 status = PlanUndertema.Status.FULLFØRT,
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 0
@@ -463,7 +464,7 @@ class PlanApiTest {
                 temaId = førsteTema.id,
                 endring = endring,
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 0
@@ -490,7 +491,7 @@ class PlanApiTest {
                 temaId = endring.temaer.first().id,
                 endring = endring.tilRequest().first().undertemaer,
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 0
@@ -696,7 +697,7 @@ class PlanApiTest {
                 innholdId = førsteUndertema.id,
                 status = PlanUndertema.Status.AVBRUTT,
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
     }
 
     @Test
@@ -719,7 +720,7 @@ class PlanApiTest {
                 innholdId = opprettetPlan.temaer.first().undertemaer.first().id,
                 status = nyStatus,
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         sak.endreStatusPåInnholdIPlan(
             planId = opprettetPlan.id,
@@ -760,7 +761,7 @@ class PlanApiTest {
         val gyldigPlan = enTomPlan.inkluderEttTemaOgAltInnhold(temanummer = 3)
 
         shouldFail { sak.opprettEnPlan(plan = ugyldigPlan) }
-            .message shouldBe "HTTP Exception 400 Bad Request"
+            .message shouldBe "HTTP 400 Bad Request: Feil inndata i forespørsel"
 
         val opprettetPlan = sak.opprettEnPlan(plan = gyldigPlan)
         val sisteTema = opprettetPlan.temaer.last()
@@ -790,7 +791,7 @@ class PlanApiTest {
                 planId = opprettetPlan.id,
                 endring = ugyldigEndring.tilRequest(),
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         val uendretPlan = sak.hentPlan()
 
@@ -832,7 +833,7 @@ class PlanApiTest {
                 endring = nyUgyldigEndring.tilRequest().last().undertemaer,
                 temaId = nyUgyldigEndring.temaer.last().id,
             )
-        }.message shouldBe "HTTP Exception 400 Bad Request"
+        }.message shouldStartWith "HTTP 400 Bad Request"
 
         sak.endreEttTemaIPlan(
             planId = endretPlan.id,
@@ -855,7 +856,7 @@ class PlanApiTest {
     @Test
     fun `skal få feil når man henter plan uten å ha opprettet en plan`() {
         val sak = aktivSamarbeidsperiode()
-        shouldFail { sak.hentPlan() }.message shouldBe "HTTP Exception 404 Not Found"
+        shouldFail { sak.hentPlan() }.message shouldStartWith "HTTP 404 Not Found: Fant ikke plan"
     }
 
     @Test
@@ -898,7 +899,7 @@ class PlanApiTest {
         val slettetPlan = samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, planId = plan.id)
         slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
 
-        shouldFailWithMessage("HTTP Exception 404 Not Found") {
+        shouldFailWithMessage("HTTP 404 Not Found: Fant ikke plan") {
             sak.hentPlan(token = følgerAvSak.token, prosessId = samarbeid.id)
         }
     }

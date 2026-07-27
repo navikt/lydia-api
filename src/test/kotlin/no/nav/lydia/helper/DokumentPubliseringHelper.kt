@@ -1,6 +1,5 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json

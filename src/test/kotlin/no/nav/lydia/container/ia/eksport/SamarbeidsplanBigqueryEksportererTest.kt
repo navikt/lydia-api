@@ -13,9 +13,10 @@ import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnholdIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
-import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.samarbeidsplan.PlanMalDto
 import no.nav.lydia.samarbeidsplan.PlanUndertema
 import no.nav.lydia.samarbeidsplan.SamarbeidsplanBigqueryProdusent.InnholdIPlanMelding
@@ -48,8 +49,11 @@ class SamarbeidsplanBigqueryEksportererTest {
     @Test
     fun `oppretting av plan skal trigge kafka-eksport til BigQuery`() {
         val sak = aktivSamarbeidsperiode()
-        val planMalDto: PlanMalDto = hentPlanMal()
-        val plan = sak.opprettEnPlan(plan = planMalDto.inkluderAlt())
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val plan = samarbeid.opprettSamarbeidsplan(
+            orgnr = sak.orgnr,
+            planMal = PlanMalDto().inkluderAlt(),
+        )
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -69,8 +73,12 @@ class SamarbeidsplanBigqueryEksportererTest {
     @Test
     fun `endring av hele planen skal trigge kafka-eksport til BigQuery`() {
         val sak = aktivSamarbeidsperiode()
+        val samarbeid = sak.hentAlleSamarbeid().first()
         val enTomPlan: PlanMalDto = hentPlanMal()
-        val plan = sak.opprettEnPlan(plan = enTomPlan)
+        val plan = samarbeid.opprettSamarbeidsplan(
+            orgnr = sak.orgnr,
+            planMal = enTomPlan,
+        )
         val planMedAlt = plan.inkluderAlt()
 
         sak.endreFlereTemaerIPlan(
@@ -96,9 +104,11 @@ class SamarbeidsplanBigqueryEksportererTest {
     @Test
     fun `endring av tema skal trigge kafka-eksport til BigQuery`() {
         val sak = aktivSamarbeidsperiode()
+        val samarbeid = sak.hentAlleSamarbeid().first()
         val enTomPlan: PlanMalDto = hentPlanMal()
-        val plan = sak.opprettEnPlan(
-            plan = enTomPlan.inkluderEttTemaOgEttInnhold(
+        val plan = samarbeid.opprettSamarbeidsplan(
+            orgnr = sak.orgnr,
+            planMal = enTomPlan.inkluderEttTemaOgEttInnhold(
                 temanummer = 3,
                 innholdnummer = 1,
             ),
@@ -128,8 +138,12 @@ class SamarbeidsplanBigqueryEksportererTest {
     @Test
     fun `endret status på innhold skal trigge kafka-eksport til BigQuery`() {
         val sak = aktivSamarbeidsperiode()
+        val samarbeid = sak.hentAlleSamarbeid().first()
         val enPlanMedAltMed: PlanMalDto = hentPlanMal().inkluderAlt()
-        val plan = sak.opprettEnPlan(plan = enPlanMedAltMed)
+        val plan = samarbeid.opprettSamarbeidsplan(
+            orgnr = sak.orgnr,
+            planMal = enPlanMedAltMed,
+        )
 
         val sisteTema = plan.temaer.last()
         val sisteInnhold = sisteTema.undertemaer.last()

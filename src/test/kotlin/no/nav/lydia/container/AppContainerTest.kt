@@ -1,11 +1,11 @@
 package no.nav.lydia.container
 
-import com.github.kittinunf.fuel.core.isSuccessful
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
+import no.nav.lydia.helper.responseString
 import kotlin.test.Test
 import kotlin.test.fail
 

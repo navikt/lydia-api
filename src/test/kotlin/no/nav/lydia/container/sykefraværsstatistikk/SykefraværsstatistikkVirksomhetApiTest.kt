@@ -1,6 +1,5 @@
 package no.nav.lydia.container.sykefraværsstatistikk
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransje.TRANSPORT
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Topic

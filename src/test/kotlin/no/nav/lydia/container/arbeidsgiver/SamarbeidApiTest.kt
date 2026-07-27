@@ -1,6 +1,5 @@
 package no.nav.lydia.container.arbeidsgiver
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeExactly
@@ -21,6 +20,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.responseString
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.kartlegging.Spørreundersøkelse
@@ -32,7 +32,7 @@ import kotlin.test.fail
 class SamarbeidApiTest {
     @Test
     fun `skal få feilmelding 401 dersom man ikke er innlogget`() {
-        val respons = TestContainerHelper.applikasjon.performGet("$ARBEIDSGIVER_SAMARBEID_PATH/987654321").response()
+        val respons = TestContainerHelper.applikasjon.performGet("$ARBEIDSGIVER_SAMARBEID_PATH/987654321").responseString()
         respons.second.statusCode shouldBeExactly 401
     }
 

@@ -1,6 +1,5 @@
 package no.nav.lydia.container.audit
 
-import com.github.kittinunf.fuel.core.Request
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
@@ -14,6 +13,7 @@ import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestHttpClientRequestInfo
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
@@ -266,7 +266,7 @@ class AuditLogTest {
     }
 
     private fun auditLog(
-        request: Request,
+        request: TestHttpClientRequestInfo,
         navIdent: String,
         orgnummer: String? = null,
         auditType: AuditType,

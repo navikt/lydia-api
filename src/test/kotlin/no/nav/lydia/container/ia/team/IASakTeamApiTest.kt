@@ -1,6 +1,5 @@
 package no.nav.lydia.container.ia.team
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.collections.shouldBeUnique
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize

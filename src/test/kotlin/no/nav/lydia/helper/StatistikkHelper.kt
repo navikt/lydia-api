@@ -1,6 +1,5 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import no.nav.lydia.api.ANTALL_TREFF
 import no.nav.lydia.api.FILTERVERDIER_PATH
 import no.nav.lydia.api.HISTORISK_STATISTIKK

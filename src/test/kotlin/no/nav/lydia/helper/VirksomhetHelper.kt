@@ -1,6 +1,5 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import no.nav.lydia.Topic
 import no.nav.lydia.api.SALESFORCE_INFO_PATH
 import no.nav.lydia.api.VIRKSOMHET_PATH

@@ -1,6 +1,5 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import no.nav.lydia.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere

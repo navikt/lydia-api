@@ -526,7 +526,7 @@ class BehovsvurderingApiTest {
         val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
-        shouldFailWithMessage("HTTP Exception 403 Forbidden") {
+        shouldFailWithMessage("HTTP 403 Forbidden: Spørreundersøkelse er ikke i status 'PÅBEGYNT', kan ikke avslutte") {
             behovsvurdering.fullfør(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         }
     }
