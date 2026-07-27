@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val ktorVersion = "3.5.1"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
-val kotestVerstion = "6.2.1"
+val kotestVerstion = "6.2.3"
 val testcontainersVersion = "2.0.5"
-val logbackVersion = "1.5.37"
+val logbackVersion = "1.5.38"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.29.0-alpha"
 
@@ -55,9 +55,9 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.17.0")
 
     // Database
-    implementation("org.postgresql:postgresql:42.7.12")
+    implementation("org.postgresql:postgresql:42.7.13")
     implementation("com.zaxxer:HikariCP:7.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:12.10.0")
+    implementation("org.flywaydb:flyway-database-postgresql:12.11.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -65,7 +65,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.14.0")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.11.0")
+    implementation("at.yawk.lz4:lz4-java:1.11.1")
     implementation("org.apache.kafka:kafka-clients:4.3.1") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
@@ -109,16 +109,16 @@ dependencies {
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
-            version { require("2.22.0") }
+            version { require("2.22.1") }
             because("versjoner < 2.21.1 har sårbarhet. inkludert i ktor-server-auth:3.4.0")
         }
         implementation("tools.jackson.core:jackson-core") {
-            version { require("3.2.0") }
+            version { require("3.2.1") }
             because("versjoner <= 3.1.0 har sårbarhet. inkludert i logstash-logback-encoder:9.0")
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.15.Final")
+                require("4.2.16.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
@@ -126,7 +126,7 @@ dependencies {
         }
         implementation("joda-time:joda-time") {
             version {
-                require("2.14.2")
+                require("2.14.3")
             }
             because("kotliquery har sårbar versjon på v2.11.0")
         }
@@ -138,7 +138,7 @@ dependencies {
         }
         testImplementation("org.bouncycastle:bcprov-jdk18on") {
             version {
-                require("1.84")
+                require("1.85")
             }
             because(
                 "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.3",
@@ -146,7 +146,7 @@ dependencies {
         }
         testImplementation("org.bouncycastle:bcpkix-jdk18on") {
             version {
-                require("1.84")
+                require("1.85")
             }
             because(
                 "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.3",
