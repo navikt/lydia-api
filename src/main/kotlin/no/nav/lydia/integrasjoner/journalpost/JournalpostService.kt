@@ -4,10 +4,17 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.core.extensions.jsonBody
-import com.github.kittinunf.fuel.httpPost
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
@@ -32,6 +39,7 @@ class JournalpostService(
     private val json = Json {
         ignoreUnknownKeys = true
     }
+    private val httpClient = HttpClient(CIO)
 
     fun journalfør(
         spørreundersøkelse: Spørreundersøkelse,
@@ -90,23 +98,26 @@ class JournalpostService(
 
     private fun ByteArray.tilBase64() = String(Base64.getEncoder().encode(this))
 
-    private fun journalfør(
+    private suspend fun journalfør(
         journalpostDto: JournalpostDto,
         accessToken: String,
-    ) = url.httpPost(listOf("forsoekFerdigstill" to true))
-        .jsonBody(Json.encodeToString<JournalpostDto>(journalpostDto))
-        .authentication().bearer(accessToken)
-        .response().third.fold(
-            success = {
-                val resultat = json.decodeFromString<JournalpostResultatDto>(it.toString(charset = Charsets.UTF_8))
-                log.info("Journalførte $resultat")
-                resultat.right()
-            },
-            failure = {
-                log.error("Klarte ikke å journalføre", it)
-                JournalpostFeil.FeillendeJournalpost.left()
-            },
-        )
+    ): Either<Feil, JournalpostResultatDto> {
+        val response = httpClient.post(url) {
+            parameter("forsoekFerdigstill", true)
+            contentType(ContentType.Application.Json)
+            bearerAuth(accessToken)
+            setBody(Json.encodeToString<JournalpostDto>(journalpostDto))
+        }
+        val body = response.bodyAsText()
+        return if (response.status.isSuccess()) {
+            val resultat = json.decodeFromString<JournalpostResultatDto>(body)
+            log.info("Journalførte $resultat")
+            resultat.right()
+        } else {
+            log.error("Klarte ikke å journalføre: ${response.status} $body")
+            JournalpostFeil.FeillendeJournalpost.left()
+        }
+    }
 
     object JournalpostFeil {
         val FeillendeJournalpost = Feil(

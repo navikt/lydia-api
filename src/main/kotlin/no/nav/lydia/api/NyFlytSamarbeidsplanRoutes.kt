@@ -1,7 +1,6 @@
 package no.nav.lydia.api
 
 import arrow.core.Either
-import arrow.core.flatMap
 import arrow.core.left
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -32,8 +31,7 @@ import no.nav.lydia.samarbeidsplan.PlanUndertema
 import no.nav.lydia.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
-import no.nav.lydia.tilgangskontroll.fia.objectId
-import no.nav.lydia.tilgangskontroll.somSaksbehandler
+import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
@@ -59,16 +57,16 @@ fun Route.nyFlytSamarbeidsplan(
     auditLog: AuditLog,
     azureService: AzureService,
 ) {
-    fun <T> ApplicationCall.somEierEllerFølgerAvSakMedNavenhet(
+    suspend fun <T> ApplicationCall.somEierEllerFølgerAvSakMedNavenhet(
         iaSakService: IASakService,
         iaTeamService: IATeamService,
         adGrupper: ADGrupper,
         block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, NavEnhet, String, String) -> Either<Feil, T>,
-    ) = somSaksbehandler(adGrupper) { saksbehandler ->
-        val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
-        val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+    ): Either<Feil, T> = somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
+        val orgnummer = orgnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig orgnummer`.left()
+        val saksnummer = saksnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
         val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).getOrNull()
-            ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+            ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
 
         if (iaSak.orgnr != orgnummer) {
             IASakError.`ugyldig orgnummer`.left()
@@ -80,9 +78,7 @@ fun Route.nyFlytSamarbeidsplan(
         ) {
             IASakError.`er ikke følger eller eier av sak`.left()
         } else {
-            azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
-                block(saksbehandler, navEnhet, orgnummer, saksnummer)
-            }
+            block(saksbehandler, navEnhet, orgnummer, saksnummer)
         }
     }
 

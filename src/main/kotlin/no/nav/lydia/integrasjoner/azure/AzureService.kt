@@ -3,10 +3,14 @@ package no.nav.lydia.integrasjoner.azure
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.httpGet
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -62,8 +66,9 @@ class AzureService(
     private val log = LoggerFactory.getLogger(this::class.java)
     private val azureAdProps = "id,givenName,surname,onPremisesSamAccountName,streetAddress,department,city"
     private val deserializer = Json { ignoreUnknownKeys = true }
+    private val httpClient = HttpClient(CIO)
 
-    fun hentNavenhet(objectId: String?): Either<Feil, NavEnhet> {
+    suspend fun hentNavenhet(objectId: String?): Either<Feil, NavEnhet> {
         val accessToken = tokenFetcher.clientCredentialsToken()
         val url = "${security.azureConfig.graphDatabaseUrl}/users/$objectId?\$select=$azureAdProps"
         return hentFraAzure(url, accessToken, AzureType.NAVENHET_FRA_INNLOGGET_BRUKER)
@@ -104,7 +109,7 @@ class AzureService(
             }.mapLeft { Feil(it.message ?: "Ukjent feil under henting av veiledere", HttpStatusCode.InternalServerError) }
         }
 
-    private fun hentBrukereForGruppe(
+    private suspend fun hentBrukereForGruppe(
         azureConfig: AzureConfig,
         gruppeId: String,
         accessToken: String,
@@ -137,30 +142,25 @@ class AzureService(
         BRUKERE_I_GRUPPE,
     }
 
-    private fun hentFraAzure(
+    private suspend fun hentFraAzure(
         url: String,
         accessToken: String,
         typeSpørring: AzureType,
-    ) = url.httpGet()
-        .authentication()
-        .bearer(token = accessToken)
-        .header(
-            HttpHeaders.Accept to "application/json",
-            HttpHeaders.ContentType to "application/json",
-            "ConsistencyLevel" to "eventual",
-        )
-        .response()
-        .third
-        .fold(success = {
-            it.toString(Charsets.UTF_8).right()
-        }, failure = {
+    ): Either<Feil, String> {
+        val response = httpClient.get(url) {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header(HttpHeaders.Accept, "application/json")
+            header(HttpHeaders.ContentType, "application/json")
+            header("ConsistencyLevel", "eventual")
+        }
+        val body = response.bodyAsText()
+        return if (response.status.isSuccess()) {
+            body.right()
+        } else {
             Feil(
-                feilmelding = "Feilet under henting fra Azure (${typeSpørring.name}): ${it.message} ${
-                    it.errorData.toString(
-                        Charsets.UTF_8,
-                    )
-                }",
+                feilmelding = "Feilet under henting fra Azure (${typeSpørring.name}): ${response.status} $body",
                 httpStatusCode = HttpStatusCode.InternalServerError,
             ).left()
-        })
+        }
+    }
 }

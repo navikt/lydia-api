@@ -3,7 +3,12 @@ package no.nav.lydia.tilgangskontroll.obo
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.github.kittinunf.fuel.httpPost
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
+import io.ktor.http.parameters
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.felles.Feil
@@ -24,9 +29,11 @@ class OboTokenUtveksler(
         ignoreUnknownKeys = true
     }
 
+    private val httpClient = HttpClient(CIO)
+
     private val cache = mutableMapOf<String, TokenResponse>()
 
-    fun hentOboTokenForScope(
+    suspend fun hentOboTokenForScope(
         accessToken: String,
         scope: String,
     ): Either<Feil, TokenResponse> {
@@ -41,27 +48,27 @@ class OboTokenUtveksler(
         }
     }
 
-    private fun veksleTokenTil(
+    private suspend fun veksleTokenTil(
         accessToken: String,
         scope: String,
-    ) = azureTokenEndpoint.httpPost(
-        listOf(
-            "grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            "client_id" to azureAppClientId,
-            "client_secret" to azureAppClientSecret,
-            "assertion" to accessToken,
-            "scope" to scope,
-            "requested_token_use" to "on_behalf_of",
-        ),
-    ).response().third.fold(
-        success = {
-            json.decodeFromString<TokenResponse>(
-                it.toString(charset = Charsets.UTF_8),
-            ).right()
-        },
-        failure = {
-            log.error("Feil ved veksling av token til $scope: ${it.message}")
+    ): Either<Feil, TokenResponse> {
+        val response = httpClient.submitForm(
+            url = azureTokenEndpoint,
+            formParameters = parameters {
+                append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
+                append("client_id", azureAppClientId)
+                append("client_secret", azureAppClientSecret)
+                append("assertion", accessToken)
+                append("scope", scope)
+                append("requested_token_use", "on_behalf_of")
+            },
+        )
+        val body = response.bodyAsText()
+        return if (response.status.isSuccess()) {
+            json.decodeFromString<TokenResponse>(body).right()
+        } else {
+            log.error("Feil ved veksling av token til $scope: ${response.status}")
             TilgangskontrollFeil.KunneIkkeVeksleToken.left()
-        },
-    )
+        }
+    }
 }
