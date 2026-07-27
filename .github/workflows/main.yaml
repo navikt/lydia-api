@@ -70,7 +70,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/teamlogs'
+    if: github.ref == 'refs/heads/erstatte-fuel-med-ktor-http-client'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
