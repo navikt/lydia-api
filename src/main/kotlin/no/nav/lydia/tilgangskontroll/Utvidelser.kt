@@ -3,8 +3,8 @@ package no.nav.lydia.tilgangskontroll
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
-import arrow.core.right
 import arrow.core.raise.either
+import arrow.core.right
 import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.felles.Feil
@@ -38,11 +38,6 @@ fun ApplicationCall.superbruker(adGrupper: ADGrupper) =
         }
     }
 
-fun <T> ApplicationCall.somSuperbruker(
-    adGrupper: ADGrupper,
-    block: (Superbruker) -> Either<Feil, T>,
-) = superbruker(adGrupper).flatMap { block(it) }
-
 fun <T> ApplicationCall.somHøyestTilgang(
     adGrupper: ADGrupper,
     block: (NavAnsatt) -> Either<Feil, T>,
@@ -61,18 +56,20 @@ suspend fun <T> ApplicationCall.somSaksbehandlerMedNavenhet(
     adGrupper: ADGrupper,
     azureService: AzureService,
     block: (NavAnsattMedSaksbehandlerRolle, NavEnhet) -> Either<Feil, T>,
-): Either<Feil, T> = either {
-    val saksbehandler = navAnsattMedSaksbehandlerRolle(adGrupper).bind()
-    val navEnhet = azureService.hentNavenhet(objectId()).bind()
-    block(saksbehandler, navEnhet).bind()
-}
+): Either<Feil, T> =
+    either {
+        val saksbehandler = navAnsattMedSaksbehandlerRolle(adGrupper).bind()
+        val navEnhet = azureService.hentNavenhet(objectId()).bind()
+        block(saksbehandler, navEnhet).bind()
+    }
 
 suspend fun <T> ApplicationCall.somSuperbrukerMedNavenhet(
     adGrupper: ADGrupper,
     azureService: AzureService,
     block: (Superbruker, NavEnhet) -> Either<Feil, T>,
-): Either<Feil, T> = either {
-    val superbruker = superbruker(adGrupper).bind()
-    val navEnhet = azureService.hentNavenhet(objectId()).bind()
-    block(superbruker, navEnhet).bind()
-}
+): Either<Feil, T> =
+    either {
+        val superbruker = superbruker(adGrupper).bind()
+        val navEnhet = azureService.hentNavenhet(objectId()).bind()
+        block(superbruker, navEnhet).bind()
+    }
