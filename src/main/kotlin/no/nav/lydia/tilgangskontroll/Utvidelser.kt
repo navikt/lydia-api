@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import arrow.core.raise.either
 import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.felles.Feil
@@ -56,24 +57,22 @@ fun <T> ApplicationCall.somHøyestTilgang(
     }
 }
 
-fun <T> ApplicationCall.somSaksbehandlerMedNavenhet(
+suspend fun <T> ApplicationCall.somSaksbehandlerMedNavenhet(
     adGrupper: ADGrupper,
     azureService: AzureService,
     block: (NavAnsattMedSaksbehandlerRolle, NavEnhet) -> Either<Feil, T>,
-): Either<Feil, T> =
-    somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-        azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
-            block(saksbehandler, navEnhet)
-        }
-    }
+): Either<Feil, T> = either {
+    val saksbehandler = navAnsattMedSaksbehandlerRolle(adGrupper).bind()
+    val navEnhet = azureService.hentNavenhet(objectId()).bind()
+    block(saksbehandler, navEnhet).bind()
+}
 
-fun <T> ApplicationCall.somSuperbrukerMedNavenhet(
+suspend fun <T> ApplicationCall.somSuperbrukerMedNavenhet(
     adGrupper: ADGrupper,
     azureService: AzureService,
     block: (Superbruker, NavEnhet) -> Either<Feil, T>,
-): Either<Feil, T> =
-    somSuperbruker(adGrupper = adGrupper) { superbruker ->
-        azureService.hentNavenhet(objectId()).flatMap { navEnhet ->
-            block(superbruker, navEnhet)
-        }
-    }
+): Either<Feil, T> = either {
+    val superbruker = superbruker(adGrupper).bind()
+    val navEnhet = azureService.hentNavenhet(objectId()).bind()
+    block(superbruker, navEnhet).bind()
+}

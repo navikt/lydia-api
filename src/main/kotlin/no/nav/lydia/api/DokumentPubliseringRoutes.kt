@@ -1,6 +1,5 @@
 package no.nav.lydia.api
 
-import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.log
 import io.ktor.server.response.respond
@@ -10,9 +9,7 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.tilgangskontroll.fia.objectId
-import no.nav.lydia.tilgangskontroll.somSaksbehandler
+import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 
 const val DOKUMENT_PUBLISERING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/dokument"
 
@@ -25,15 +22,13 @@ fun Route.dokumentPublisering(
         val dokumentType = call.dokumentType ?: return@post call.sendFeil(DokumentPubliseringError.`ugyldig type`)
         val dokumentReferanseId = call.dokumentReferanseId ?: return@post call.sendFeil(DokumentPubliseringError.`ugyldig id`)
 
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            azureService.hentNavenhet(objectId = call.objectId()).flatMap { navEnhet: NavEnhet ->
-                dokumentPubliseringService.publiserDokument(
-                    dokumentType = dokumentType,
-                    dokumentReferanseId = dokumentReferanseId,
-                    opprettetAv = saksbehandler,
-                    navEnhet = navEnhet,
-                )
-            }
+        call.somSaksbehandlerMedNavenhet(adGrupper = adGrupper, azureService = azureService) { saksbehandler, navEnhet ->
+            dokumentPubliseringService.publiserDokument(
+                dokumentType = dokumentType,
+                dokumentReferanseId = dokumentReferanseId,
+                opprettetAv = saksbehandler,
+                navEnhet = navEnhet,
+            )
         }.onRight {
             call.respond(status = HttpStatusCode.Created, message = it)
         }.onLeft {
