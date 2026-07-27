@@ -1,7 +1,5 @@
 package no.nav.lydia.container.ny.flyt
 
-import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.core.extensions.jsonBody
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
 import ia.felles.integrasjoner.jobbsender.Jobb
@@ -1059,7 +1057,7 @@ class NyFlytTest {
 
         shouldFail {
             samarbeid.slettSamarbeid(orgnr = sak.orgnr, token = authContainerHelper.saksbehandler1.token)
-        }.message shouldMatch ("HTTP Exception 400 Bad Request")
+        }.message shouldMatch ("HTTP 400 Bad Request: kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan")
 
         hentVirksomhetTilstand(sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
     }

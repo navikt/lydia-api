@@ -1,8 +1,5 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.ResponseResultOf
-import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
@@ -100,7 +97,7 @@ class SakHelper {
         fun hentSamarbeidshistorikkNyFlytRespons(
             orgnummer: String,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
-        ): ResponseResultOf<List<SakshistorikkDto>> {
+        ): TestResponseTriple<List<SakshistorikkDto>> {
             val url = "${NY_FLYT_PATH}/virksomhet/$orgnummer/historikk"
             return TestContainerHelper.applikasjon.performGet(url)
                 .authentication().bearer(token = token)

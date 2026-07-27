@@ -170,7 +170,7 @@ class NyFlytSamarbeidsplanTest {
             nySluttDato = null,
         ).tilRequest()
 
-        shouldFailWithMessage("HTTP Exception 409 Conflict") {
+        shouldFailWithMessage("HTTP 409 Conflict: Det finnes aktiviteter registrert på dette undertemaet i Salesforce.") {
             val plan = samarbeid.oppdaterSamarbeidsplan(
                 orgnr = sak.orgnr,
                 planId = opprinneligPlan.id,
@@ -276,7 +276,7 @@ class NyFlytSamarbeidsplanTest {
         val førsteTema = plan.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
 
-        shouldFailWithMessage("HTTP Exception 400 Bad Request") {
+        shouldFailWithMessage("HTTP 400 Bad Request: Kan ikke endre status på innhold som ikke er inkludert") {
             samarbeid.endreStatusPåUndertemaISamarbeidsplan(
                 orgnr = sak.orgnr,
                 planId = plan.id,
@@ -323,7 +323,7 @@ class NyFlytSamarbeidsplanTest {
         førsteUndertema.status shouldBe PlanUndertema.Status.PLANLAGT
         førsteUndertema.startDato shouldBe iMorgen
 
-        shouldFailWithMessage("HTTP Exception 400 Bad Request") {
+        shouldFailWithMessage("HTTP 400 Bad Request: Kan ikke endre status til 'AVBRUTT' om innholdet ikke har startet enda") {
             samarbeid.endreStatusPåUndertemaISamarbeidsplan(
                 orgnr = sak.orgnr,
                 planId = plan.id,

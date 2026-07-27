@@ -1,7 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 val ktorVersion = "3.5.1"
-val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.6"
 val kotestVerstion = "6.2.3"
 val testcontainersVersion = "2.0.5"
@@ -60,8 +59,7 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql:12.11.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
-    // Enklere httpklient
-    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
+    // Serialization med Gson
     implementation("com.google.code.gson:gson:2.14.0")
 
     // Kafka
@@ -101,7 +99,6 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-kafka:$testcontainersVersion")
 
     // Http-mocking
-    testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering

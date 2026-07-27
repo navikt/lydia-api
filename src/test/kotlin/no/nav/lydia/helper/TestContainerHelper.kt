@@ -1,18 +1,9 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.Request
-import com.github.kittinunf.fuel.httpDelete
-import com.github.kittinunf.fuel.httpGet
-import com.github.kittinunf.fuel.httpPost
-import com.github.kittinunf.fuel.httpPut
-import com.github.kittinunf.fuel.serialization.responseObject
 import ia.felles.definisjoner.bransjer.Bransje
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
+import io.ktor.http.HttpMethod
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
@@ -169,22 +160,16 @@ class TestContainerHelper {
 
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
 
-        fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
+        fun GenericContainer<*>.performGet(url: String) = TestRequest(HttpMethod.Get, buildUrl(url))
 
-        fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
+        fun GenericContainer<*>.performPost(url: String) = TestRequest(HttpMethod.Post, buildUrl(url))
 
-        fun GenericContainer<*>.performDelete(url: String) = buildUrl(url = url).httpDelete()
+        fun GenericContainer<*>.performDelete(url: String) = TestRequest(HttpMethod.Delete, buildUrl(url))
 
-        fun GenericContainer<*>.performPut(url: String) = buildUrl(url = url).httpPut()
+        fun GenericContainer<*>.performPut(url: String) = TestRequest(HttpMethod.Put, buildUrl(url))
 
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
 
         infix fun GenericContainer<*>.shouldNotContainLog(regex: Regex) = logs shouldNotContain regex
     }
 }
-
-@OptIn(InternalSerializationApi::class)
-inline fun <reified T : Any> Request.tilListeRespons() = this.responseObject(loader = ListSerializer(T::class.serializer()), json = Json)
-
-@OptIn(InternalSerializationApi::class)
-inline fun <reified T : Any> Request.tilSingelRespons() = this.responseObject(loader = T::class.serializer(), json = Json)

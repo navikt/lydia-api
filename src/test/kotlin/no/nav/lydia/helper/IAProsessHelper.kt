@@ -1,6 +1,5 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper

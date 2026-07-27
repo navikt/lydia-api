@@ -1,6 +1,5 @@
 package no.nav.lydia.container.sykefraværsstatistikk
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransje
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -72,6 +71,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.responseString
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.prioritering.sykefraværsstatistikk.LANDKODE_NO
@@ -247,7 +247,7 @@ class SykefraværsstatistikkApiTest {
 
         val results = hentSykefravær(
             snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
-            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," },
+            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString(separator = ","),
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
@@ -300,7 +300,7 @@ class SykefraværsstatistikkApiTest {
 
         val results = hentSykefravær(
             snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," },
+            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString(separator = ","),
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2

@@ -133,7 +133,7 @@ private fun Spørreundersøkelse.Type.tilPdftype() =
         Spørreundersøkelse.Type.Behovsvurdering -> PdfType.BEHOVSVURDERING
     }
 
-val lokalTestPdf = Base64.decode(
+val lokalTestPdf: ByteArray = Base64.decode(
     """
     JVBERi0xLjQKMSAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PgplbmRvYmoKMiAw
     IG9iago8PC9UeXBlL1BhZ2VzL0tpZHMgWzMgMCBSXS9Db3VudCAxPj4KZW5kb2JqCjMgMCBvYmoK

@@ -1,7 +1,7 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.collections.shouldHaveSize
+import kotlinx.serialization.builtins.ByteArraySerializer
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.api.NY_FLYT_API_PATH
@@ -50,12 +50,13 @@ class IASakSpørreundersøkelseHelper {
             orgnr: String,
             saksnummer: String,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
-        ) = TestContainerHelper.applikasjon.performGet("${SPØRREUNDERSØKELSE_BASE_ROUTE}/$orgnr/$saksnummer/$id/pdf")
-            .authentication().bearer(token)
-            .response().third.fold(
-                success = { it },
-                failure = { fail(it.message) },
-            )
+        ): ByteArray =
+            TestContainerHelper.applikasjon.performGet("${SPØRREUNDERSØKELSE_BASE_ROUTE}/$orgnr/$saksnummer/$id/pdf")
+                .authentication().bearer(token)
+                .responseByteArray().third.fold(
+                    success = { it },
+                    failure = { fail(it.message) },
+                )
 
         fun hentSpørreundersøkelse(
             orgnr: String,
