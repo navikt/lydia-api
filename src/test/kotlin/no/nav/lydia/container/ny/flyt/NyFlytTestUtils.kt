@@ -291,7 +291,7 @@ class NyFlytTestUtils {
                 ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
                 listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
-        ) = revurderVirksomhetResponse().third.fold(
+        ) = revurderVirksomhetResponse(token = token, valgtÅrsak = valgtÅrsak).third.fold(
             success = { it },
             failure = { fail(it.message) },
         )
