@@ -246,11 +246,11 @@ class NyFlytTestUtils {
             }
         }
 
-        private fun vurderVirksomhetMedOrgnrResponse(
+        fun vurderVirksomhetMedOrgnrResponse(
             orgnr: String,
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN)),
-        ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/vurder")
+        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/vurder")
             .authentication().bearer(token)
             .jsonBody(Json.encodeToString(valgtÅrsak))
             .tilSingelRespons<IASakDto>()

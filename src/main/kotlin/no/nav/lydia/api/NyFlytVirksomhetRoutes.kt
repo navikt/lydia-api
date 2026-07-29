@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveNullable
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -28,9 +29,11 @@ import no.nav.lydia.samarbeidsperiode.SakshistorikkDto
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.samarbeidsperiode.tilSakshistorikk
 import no.nav.lydia.samarbeidsperiode.validerBegrunnelserForVurdering
+import no.nav.lydia.samarbeidsperiode.validerBegrunnelserForVurderingAvVirksomhet
 import no.nav.lydia.samarbeidsplan.PlanService
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
+import no.nav.lydia.tilgangskontroll.somSuperbrukerMedNavenhet
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
@@ -38,6 +41,7 @@ import no.nav.lydia.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandDto
 import no.nav.lydia.tilstandsmaskin.hendelse.AvsluttVurdering
+import no.nav.lydia.tilstandsmaskin.hendelse.VurderVirksomhet
 import java.time.LocalDate
 import kotlin.collections.List
 import kotlin.collections.forEach
@@ -123,7 +127,7 @@ fun Route.nyFlytVirksomhet(
         }
     }
 
-    get("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/tilstand") {
+    get("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/tilstand") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
 
         call.somLesebruker(adGrupper) {
@@ -161,7 +165,52 @@ fun Route.nyFlytVirksomhet(
     }
 
     // POST
-    post("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/avslutt-vurdering") {
+    post("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/vurder") {
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val valgtÅrsak = runCatching { call.receiveNullable<ValgtÅrsak>() }.getOrNull()
+
+        if (valgtÅrsak == null) {
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Mangler årsak og begrunnelse for vurdering av virksomhet",
+            )
+        }
+
+        if (!valgtÅrsak.validerBegrunnelserForVurderingAvVirksomhet()) {
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Ugyldig årsak eller begrunnelse for vurdering av virksomhet",
+            )
+        }
+
+        call.somSuperbrukerMedNavenhet(adGrupper, azureService) { superbruker, navEnhet ->
+            val hendelse = VurderVirksomhet(
+                orgnr = orgnr,
+                superbruker = superbruker,
+                navEnhet = navEnhet,
+                valgtÅrsak = valgtÅrsak,
+            )
+            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
+                hendelse = hendelse,
+            )
+
+            konsekvens.map { it.verdi as IASakDto }
+        }.also { iaSakEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSakEither,
+                orgnummer = orgnr,
+                auditType = AuditType.create,
+                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    post("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/avslutt-vurdering") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val årsak = call.receive<ValgtÅrsak>()
 

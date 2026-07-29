@@ -225,6 +225,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med POST $NY_FLYT_API_PATH/virksomhet/{orgnummer}/vurder
     post("$NY_FLYT_PATH/{orgnummer}/vurder") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val valgtÅrsak = runCatching { call.receiveNullable<ValgtÅrsak>() }.getOrNull()
