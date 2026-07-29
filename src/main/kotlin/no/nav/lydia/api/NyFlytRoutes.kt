@@ -88,6 +88,7 @@ fun Route.nyFlyt(
             ),
         ).build(orgnr)
 
+    // TODO: delete me etter frontend er oppdatert med $NY_FLYT_API_PATH/virksomhet/{orgnummer}/$orgnr/tilstand
     get("$NY_FLYT_PATH/{orgnummer}/tilstand") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
 

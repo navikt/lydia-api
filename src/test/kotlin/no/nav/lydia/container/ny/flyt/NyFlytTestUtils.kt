@@ -33,6 +33,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
+import no.nav.lydia.helper.TestResponseTriple
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
@@ -119,9 +120,18 @@ class NyFlytTestUtils {
             orgnr: String,
             token: String = authContainerHelper.superbruker1.token,
         ): VirksomhetTilstandDto {
-            val url = "$NY_FLYT_PATH/$orgnr/tilstand"
+            val url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/tilstand"
             return applikasjon.performGet(url)
                 .authentication().bearer(token).tilSingelRespons<VirksomhetTilstandDto>().third.get()
+        }
+
+        fun hentVirksomhetTilstandResponse(
+            orgnr: String,
+            token: String = authContainerHelper.superbruker1.token,
+        ): TestResponseTriple<VirksomhetTilstandDto> {
+            val url = "$NY_FLYT_API_PATH/virksomhet/$orgnr/tilstand"
+            return applikasjon.performGet(url)
+                .authentication().bearer(token).tilSingelRespons<VirksomhetTilstandDto>()
         }
 
         fun verifiserKafkaPlanObserversErVarslet(
@@ -432,7 +442,7 @@ class NyFlytTestUtils {
                 Json.encodeToString(endringer),
             ).tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
-                failure = { fail("${it.message}") },
+                failure = { fail(it.message) },
             )
 
         fun IASamarbeidDto.oppdaterTemaISamarbeidsplan(
@@ -449,7 +459,7 @@ class NyFlytTestUtils {
                 Json.encodeToString(endringer),
             ).tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
-                failure = { fail("${it.message}") },
+                failure = { fail(it.message) },
             )
 
         fun IASamarbeidDto.slettSamarbeidRespons(
@@ -499,7 +509,7 @@ class NyFlytTestUtils {
                 Json.encodeToString(nyStatus),
             ).tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
-                failure = { fail("${it.message}") },
+                failure = { fail(it.message) },
             )
 
         fun PlanDto.endreTema(

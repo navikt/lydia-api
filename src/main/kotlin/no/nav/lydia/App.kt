@@ -561,6 +561,7 @@ private fun Application.lydiaRestApi(
                 nyFlytService = nyFlytService,
                 dokumentPubliseringService = dokumentPubliseringService,
                 planService = planService,
+                virksomhetService = virksomhetService,
                 tilstandVirksomhetRepository = tilstandVirksomhetRepository,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,

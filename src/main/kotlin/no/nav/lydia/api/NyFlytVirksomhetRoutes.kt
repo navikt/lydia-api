@@ -1,9 +1,11 @@
 package no.nav.lydia.api
 
+import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ADGrupper
@@ -11,6 +13,7 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.prioritering.virksomhet.VirksomhetService
 import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakError
@@ -18,11 +21,14 @@ import no.nav.lydia.samarbeidsperiode.IASakService
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.samarbeidsperiode.validerBegrunnelserForVurdering
 import no.nav.lydia.samarbeidsplan.PlanService
+import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
 import no.nav.lydia.tilstandsmaskin.TilstandsmaskinBuilder
+import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
+import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandDto
 import no.nav.lydia.tilstandsmaskin.hendelse.AvsluttVurdering
 import java.time.LocalDate
 
@@ -32,6 +38,7 @@ fun Route.nyFlytVirksomhet(
     nyFlytService: NyFlytService,
     dokumentPubliseringService: DokumentPubliseringService,
     planService: PlanService,
+    virksomhetService: VirksomhetService,
     tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
@@ -50,6 +57,45 @@ fun Route.nyFlytVirksomhet(
             ),
         ).build(orgnr)
 
+    // GET
+    get("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/tilstand") {
+        val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+
+        call.somLesebruker(adGrupper) {
+            tilstandsmaskin(orgnr).hentTilstandForVirksomhet(orgnr = orgnr).right()
+        }.also { tilstandEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = tilstandEither,
+                orgnummer = orgnr,
+                auditType = AuditType.access,
+            )
+        }.map { virksomhetTilstandDto: VirksomhetTilstandDto? ->
+            if (virksomhetTilstandDto == null) {
+                val virksomhetFinnes = virksomhetService.hentVirksomhet(orgnr) != null
+                if (!virksomhetFinnes) {
+                    call.respond(
+                        status = HttpStatusCode.NotFound,
+                        message = "Virksomheten finnes ikke for orgnr $orgnr",
+                    )
+                } else {
+                    call.respond(
+                        status = HttpStatusCode.OK,
+                        message = VirksomhetTilstandDto(
+                            orgnr = orgnr,
+                            tilstand = VirksomhetIATilstand.VirksomhetKlarTilVurdering,
+                        ),
+                    )
+                }
+            } else {
+                call.respond(status = HttpStatusCode.OK, message = virksomhetTilstandDto)
+            }
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // POST
     post("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/avslutt-vurdering") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val årsak = call.receive<ValgtÅrsak>()

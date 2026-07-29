@@ -19,6 +19,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurderingResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstandResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.revurderVirksomhet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.revurderVirksomhetResponse
@@ -39,7 +40,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
-import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -62,7 +62,6 @@ import no.nav.lydia.samarbeidsplan.SamarbeidDto
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
-import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandDto
 import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -93,9 +92,7 @@ class NyFlytTest {
         )
         lastInnNyVirksomhet(virksomhet)
 
-        val response = applikasjon.performGet("$NY_FLYT_PATH/${virksomhet.orgnr}/tilstand")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<VirksomhetTilstandDto>()
+        val response = hentVirksomhetTilstandResponse(orgnr = virksomhet.orgnr, token = authContainerHelper.saksbehandler1.token)
 
         response.statuskode() shouldBe HttpStatusCode.OK.value
         val virksomhetTilstandDto = response.third.get()
@@ -108,9 +105,7 @@ class NyFlytTest {
     fun `hent tilstand for virksomhet som ikke finnes returnerer 404`() {
         val orgnrSomIkkeFinnes = "999888777"
 
-        val response = applikasjon.performGet("$NY_FLYT_PATH/$orgnrSomIkkeFinnes/tilstand")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<VirksomhetTilstandDto>()
+        val response = hentVirksomhetTilstandResponse(orgnr = orgnrSomIkkeFinnes, token = authContainerHelper.saksbehandler1.token)
 
         response.statuskode() shouldBe HttpStatusCode.NotFound.value
     }
