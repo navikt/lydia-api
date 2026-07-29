@@ -184,6 +184,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med $NY_FLYT_API_PATH/virksomhet/{orgnummer}/historikk
     get("$NY_FLYT_PATH/virksomhet/{orgnummer}/historikk") {
         val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
