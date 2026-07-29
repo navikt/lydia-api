@@ -142,6 +142,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode
     get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper) {
@@ -162,6 +163,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode
     get("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
