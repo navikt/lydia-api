@@ -297,7 +297,7 @@ class NyFlytTestUtils {
         )
 
         fun IASakDto.angreVurdering(token: String = authContainerHelper.superbruker1.token) =
-            applikasjon.performPost("$NY_FLYT_PATH/$orgnr/angre-vurdering")
+            applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/angre-vurdering")
                 .authentication().bearer(token)
                 .tilSingelRespons<IASakDto>().third.fold(
                     success = { it },

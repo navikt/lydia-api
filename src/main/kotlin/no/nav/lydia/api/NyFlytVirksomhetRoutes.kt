@@ -40,6 +40,7 @@ import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
 import no.nav.lydia.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandDto
+import no.nav.lydia.tilstandsmaskin.hendelse.AngreVurderVirksomhet
 import no.nav.lydia.tilstandsmaskin.hendelse.AvsluttVurdering
 import no.nav.lydia.tilstandsmaskin.hendelse.VurderVirksomhet
 import java.time.LocalDate
@@ -205,6 +206,33 @@ fun Route.nyFlytVirksomhet(
             )
         }.map {
             call.respond(status = HttpStatusCode.Created, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    post("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/angre-vurdering") {
+        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+
+        call.somSuperbrukerMedNavenhet(adGrupper, azureService) { superbruker, enhet ->
+            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
+                hendelse = AngreVurderVirksomhet(
+                    orgnr = orgnr,
+                    superbruker = superbruker,
+                    navEnhet = enhet,
+                ),
+            )
+            konsekvens.map { it.verdi as IASakDto }
+        }.also { iaSakEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSakEither,
+                orgnummer = orgnr,
+                auditType = AuditType.delete,
+                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
