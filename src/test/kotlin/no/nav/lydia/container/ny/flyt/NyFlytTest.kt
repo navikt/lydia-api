@@ -28,6 +28,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidRe
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserIASakObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.verifiserSamarbeidObserversErVarslet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhetMedOrgnrResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhetResponse
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
@@ -772,16 +773,24 @@ class NyFlytTest {
     @Test
     fun `skal ikke kunne vurdere samarbeid med en virksomhet uten å være superbruker`() {
         val orgnummer = VirksomhetHelper.nyttOrgnummer()
-        val res1 = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
-            .authentication().bearer(authContainerHelper.lesebruker.token)
-            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
-            .tilSingelRespons<IASakDto>()
+        val res1 = vurderVirksomhetMedOrgnrResponse(
+            orgnr = orgnummer,
+            token = authContainerHelper.lesebruker.token,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
+        )
         res1.second.statusCode shouldBe HttpStatusCode.Forbidden.value
 
-        val res2 = applikasjon.performPost("$NY_FLYT_PATH/$orgnummer/vurder")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .jsonBody(Json.encodeToString(ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN))))
-            .tilSingelRespons<IASakDto>()
+        val res2 = vurderVirksomhetMedOrgnrResponse(
+            orgnr = orgnummer,
+            token = authContainerHelper.saksbehandler1.token,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
+        )
         res2.second.statusCode shouldBe HttpStatusCode.Forbidden.value
     }
 
