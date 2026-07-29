@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.api.IA_SAK_TEAM_PATH
+import no.nav.lydia.api.NY_FLYT_API_PATH
 import no.nav.lydia.api.NY_FLYT_PATH
 import no.nav.lydia.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -70,7 +71,7 @@ class SakHelper {
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
         ): IASakDto {
             val triple = TestContainerHelper.applikasjon.performGet(
-                "${NY_FLYT_PATH}/virksomhet/$orgnummer/samarbeidsperiode${saksnummer?.let {
+                "${NY_FLYT_API_PATH}/virksomhet/$orgnummer/samarbeidsperiode${saksnummer?.let {
                     "/$it"
                 } ?: ""}",
             )
