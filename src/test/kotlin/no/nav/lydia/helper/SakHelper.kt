@@ -99,7 +99,7 @@ class SakHelper {
             orgnummer: String,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
         ): TestResponseTriple<List<SakshistorikkDto>> {
-            val url = "${NY_FLYT_PATH}/virksomhet/$orgnummer/historikk"
+            val url = "${NY_FLYT_API_PATH}/virksomhet/$orgnummer/historikk"
             return TestContainerHelper.applikasjon.performGet(url)
                 .authentication().bearer(token = token)
                 .tilListeRespons<SakshistorikkDto>()
