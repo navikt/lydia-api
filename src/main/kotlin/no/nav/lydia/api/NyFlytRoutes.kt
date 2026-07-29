@@ -88,7 +88,7 @@ fun Route.nyFlyt(
             ),
         ).build(orgnr)
 
-    // TODO: delete me etter frontend er oppdatert med $NY_FLYT_API_PATH/virksomhet/{orgnummer}/$orgnr/tilstand
+    // TODO: delete me etter frontend er oppdatert med $NY_FLYT_API_PATH/virksomhet/{orgnummer}/tilstand
     get("$NY_FLYT_PATH/{orgnummer}/tilstand") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
 
@@ -126,6 +126,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med $NY_FLYT_API_PATH/virksomhet/{orgnummer}
     get("$NY_FLYT_PATH/virksomhet/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) {

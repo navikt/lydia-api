@@ -1,5 +1,6 @@
 package no.nav.lydia.api
 
+import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
@@ -14,6 +15,7 @@ import no.nav.lydia.AuditType
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.virksomhet.VirksomhetService
+import no.nav.lydia.prioritering.virksomhet.toDto
 import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakError
@@ -58,6 +60,21 @@ fun Route.nyFlytVirksomhet(
         ).build(orgnr)
 
     // GET
+    get("$NY_FLYT_API_PATH/virksomhet/{orgnummer}") {
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+        call.somLesebruker(adGrupper = adGrupper) {
+            val aktivSakDto = nyFlytService.hentSisteIASakDto(orgnummer)
+            virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto(saksnummer = aktivSakDto?.saksnummer)
+                ?.right() ?: VirksomhetFeil.`fant ikke virksomhet`.left()
+        }.also {
+            auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
+        }.map {
+            call.respond(HttpStatusCode.OK, it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
     get("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/tilstand") {
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
 

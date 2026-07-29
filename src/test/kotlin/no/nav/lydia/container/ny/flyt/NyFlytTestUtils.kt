@@ -111,7 +111,7 @@ class NyFlytTestUtils {
             orgnr: String,
             token: String = authContainerHelper.superbruker1.token,
         ): VirksomhetDto {
-            val url = "$NY_FLYT_PATH/virksomhet/$orgnr"
+            val url = "$NY_FLYT_API_PATH/virksomhet/$orgnr"
             return applikasjon.performGet(url)
                 .authentication().bearer(token).tilSingelRespons<VirksomhetDto>().third.get()
         }
