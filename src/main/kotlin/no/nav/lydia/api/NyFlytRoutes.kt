@@ -453,6 +453,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med DELETE $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}
     delete("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/slett-samarbeid") {
         val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
         val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)

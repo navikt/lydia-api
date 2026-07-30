@@ -41,7 +41,6 @@ import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
@@ -68,6 +67,7 @@ import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.test.Ignore
 import kotlin.test.Test
 
@@ -1277,7 +1277,7 @@ class NyFlytTest {
         val response = samarbeidSomSkalSlettes.slettSamarbeidRespons(
             orgnr = sak.orgnr,
             token = authContainerHelper.superbruker1.token,
-            dato = LocalDate.now(),
+            dato = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
         )
         response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
     }
@@ -1291,9 +1291,11 @@ class NyFlytTest {
         samarbeidSomSkalFullføres.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = PlanHelper.hentPlanMal())
         samarbeidSomSkalFullføres.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
 
-        val response = applikasjon.performDelete("$NY_FLYT_PATH/${sak.orgnr}/${samarbeidSomSkalSlettes.id}/slett-samarbeid?dato=tulletekst")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .tilSingelRespons<IASamarbeidDto>()
+        val response = samarbeidSomSkalSlettes.slettSamarbeidRespons(
+            orgnr = sak.orgnr,
+            token = authContainerHelper.superbruker1.token,
+            dato = "tulletekst",
+        )
         response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
     }
 

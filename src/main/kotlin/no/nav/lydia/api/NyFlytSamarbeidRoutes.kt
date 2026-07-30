@@ -4,13 +4,16 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeid.IASamarbeidFeil
 import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeidsperiode.IASakError
 import no.nav.lydia.samarbeidsperiode.IASakService
@@ -21,6 +24,8 @@ import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
 import no.nav.lydia.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.tilstandsmaskin.hendelse.OpprettNyttSamarbeid
+import no.nav.lydia.tilstandsmaskin.hendelse.SlettSamarbeid
+import java.time.LocalDate
 
 fun Route.nyFlytSamarbeid(
     iaSakService: IASakService,
@@ -76,6 +81,47 @@ fun Route.nyFlytSamarbeid(
             )
         }.map {
             call.respond(status = HttpStatusCode.Created, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // DELETE
+    delete("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}") {
+        val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val samarbeidId = call.samarbeidId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        val datoParam = call.request.queryParameters["dato"]
+        val dato = datoParam?.let {
+            runCatching { LocalDate.parse(it) }.getOrElse {
+                return@delete call.sendFeil(Feil(feilmelding = "Ugyldig datoformat", httpStatusCode = HttpStatusCode.BadRequest))
+            }
+        }
+        if (dato != null && dato.isBefore(LocalDate.now().plusDays(1))) {
+            return@delete call.sendFeil(Feil(feilmelding = "Dato må være minst én dag frem i tid", httpStatusCode = HttpStatusCode.BadRequest))
+        }
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = SlettSamarbeid(
+                    orgnr = orgnr,
+                    samarbeidId = samarbeidId,
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                    dato = dato,
+                ),
+            )
+            konsekvens.map { it.verdi as IASamarbeidDto }
+        }.also { iaSamarbeidDtoEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSamarbeidDtoEither,
+                orgnummer = orgnr,
+                auditType = AuditType.delete,
+                saksnummer = tilstandsmaskin.saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
