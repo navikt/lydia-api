@@ -168,6 +168,8 @@ class TestContainerHelper {
 
         fun GenericContainer<*>.performPut(url: String) = TestRequest(HttpMethod.Put, buildUrl(url))
 
+        fun GenericContainer<*>.performPatch(url: String) = TestRequest(HttpMethod.Patch, buildUrl(url))
+
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
 
         infix fun GenericContainer<*>.shouldNotContainLog(regex: Regex) = logs shouldNotContain regex

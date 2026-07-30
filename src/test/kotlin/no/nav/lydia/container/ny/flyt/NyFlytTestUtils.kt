@@ -16,7 +16,6 @@ import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.api.NY_FLYT_API_PATH
-import no.nav.lydia.api.NY_FLYT_PATH
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkludertInnhold
@@ -31,6 +30,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPatch
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestResponseTriple
@@ -41,6 +41,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.prioritering.virksomhet.VirksomhetDto
+import no.nav.lydia.samarbeid.EndringISamarbeidDto
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.SamarbeidBigqueryProdusent.SamarbeidValue
@@ -366,12 +367,15 @@ class NyFlytTestUtils {
             { fail("${it.message}: ${it.response.body().asString("text/plain; charset=utf-8")}") },
         )
 
-        fun IASamarbeidDto.avsluttSamarbeid(
+        fun IASamarbeidDto.avsluttSamarbeidResponsMedDatoString(
             orgnr: String,
             avslutningsType: IASamarbeid.Status,
             token: String = authContainerHelper.saksbehandler1.token,
-            dato: java.time.LocalDate? = null,
-        ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/${this.id}/avslutt-samarbeid" + (dato?.let { "?dato=$it" } ?: ""))
+            datoString: String,
+        ) = applikasjon.performPost(
+            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/${this.id}" +
+                medDatoParameterHvisNotNull(datoString),
+        )
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(
@@ -381,10 +385,42 @@ class NyFlytTestUtils {
                     ),
                 ),
             )
-            .tilSingelRespons<IASamarbeidDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
+            .tilSingelRespons<IASamarbeidDto>()
+
+        fun IASamarbeidDto.avsluttSamarbeidRespons(
+            orgnr: String,
+            avslutningsType: IASamarbeid.Status,
+            token: String = authContainerHelper.saksbehandler1.token,
+            dato: java.time.LocalDate? = null,
+        ) = applikasjon.performPost(
+            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/${this.id}" +
+                medDatoParameterHvisNotNull(dato?.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)),
+        )
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(
+                    SamarbeidDto(
+                        id = this.id,
+                        status = avslutningsType,
+                    ),
+                ),
             )
+            .tilSingelRespons<IASamarbeidDto>()
+
+        fun IASamarbeidDto.avsluttSamarbeid(
+            orgnr: String,
+            avslutningsType: IASamarbeid.Status,
+            token: String = authContainerHelper.saksbehandler1.token,
+            dato: java.time.LocalDate? = null,
+        ) = this.avsluttSamarbeidRespons(
+            orgnr = orgnr,
+            avslutningsType = avslutningsType,
+            token = token,
+            dato = dato,
+        ).third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
 
         fun IASakDto.opprettSamarbeidResponse(
             token: String = authContainerHelper.saksbehandler1.token,
@@ -414,14 +450,13 @@ class NyFlytTestUtils {
             orgnr: String,
             nyttNavn: String,
             token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performPut("$NY_FLYT_PATH/virksomhet/$orgnr/samarbeid/$id/oppdater")
+        ) = applikasjon.performPatch("${NY_FLYT_API_PATH}/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid/$id")
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(
-                    IASamarbeidDto(
-                        id = id,
-                        saksnummer = saksnummer,
-                        navn = nyttNavn,
+                    EndringISamarbeidDto(
+                        typeEndring = "navn",
+                        verdi = nyttNavn,
                     ),
                 ),
             ).tilSingelRespons<IASamarbeidDto>().third.fold(
@@ -467,12 +502,8 @@ class NyFlytTestUtils {
             token: String = authContainerHelper.saksbehandler1.token,
             dato: String? = null,
         ) = applikasjon.performDelete(
-            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}" + (
-                dato?.let {
-                    "?dato=$it"
-                }
-                    ?: ""
-            ),
+            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}" +
+                medDatoParameterHvisNotNull(dato),
         )
             .authentication().bearer(token)
             .tilSingelRespons<IASamarbeidDto>()
@@ -543,6 +574,14 @@ class NyFlytTestUtils {
                         tema
                     }
                 },
+            )
+
+        private fun medDatoParameterHvisNotNull(dato: String?): String =
+            (
+                dato?.let {
+                    "?dato=$it"
+                }
+                    ?: ""
             )
     }
 }
