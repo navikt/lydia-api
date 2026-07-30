@@ -20,7 +20,6 @@ import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.virksomhet.VirksomhetService
 import no.nav.lydia.prioritering.virksomhet.toDto
-import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeid.tilDto
 import no.nav.lydia.samarbeidsperiode.IASakDto
@@ -43,11 +42,8 @@ import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandDto
 import no.nav.lydia.tilstandsmaskin.hendelse.AngreVurderVirksomhet
 import no.nav.lydia.tilstandsmaskin.hendelse.AvsluttVurdering
-import no.nav.lydia.tilstandsmaskin.hendelse.OpprettNyttSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.VurderVirksomhet
 import java.time.LocalDate
-import kotlin.collections.List
-import kotlin.collections.forEach
 
 fun Route.nyFlytVirksomhet(
     iaSakService: IASakService,
@@ -278,35 +274,6 @@ fun Route.nyFlytVirksomhet(
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    post("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/opprett-samarbeid") {
-        val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        val iaSamarbeidDto = call.receive<IASamarbeidDto>()
-
-        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
-            val konsekvens = tilstandsmaskin(orgnr).prosesserHendelse(
-                hendelse = OpprettNyttSamarbeid(
-                    orgnr = orgnr,
-                    samarbeidsnavn = iaSamarbeidDto.navn,
-                    saksbehandler = saksbehandler,
-                    navEnhet = navEnhet,
-                ),
-            )
-            konsekvens.map { it.verdi as IASamarbeidDto }
-        }.also { iaSamarbeidDtoEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = iaSamarbeidDtoEither,
-                orgnummer = orgnr,
-                auditType = AuditType.create,
-                saksnummer = iaSamarbeidDtoEither.map { iaSamarbeid -> iaSamarbeid.saksnummer }.getOrNull(),
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.Created, message = it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

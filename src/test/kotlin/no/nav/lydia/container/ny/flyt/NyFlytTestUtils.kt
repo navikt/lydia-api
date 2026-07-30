@@ -389,7 +389,7 @@ class NyFlytTestUtils {
         fun IASakDto.opprettSamarbeidResponse(
             token: String = authContainerHelper.saksbehandler1.token,
             samarbeidsnavn: String = "Samarbeid med $orgnr",
-        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/opprett-samarbeid")
+        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/samarbeid")
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(
