@@ -494,6 +494,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med POST $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}
     post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/avslutt-samarbeid") {
         val orgnr = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val samarbeidId = call.samarbeidId ?: return@post call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
@@ -540,6 +541,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med PATCH $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}
     put("$NY_FLYT_PATH/virksomhet/{orgnummer}/samarbeid/{samarbeidId}/oppdater") {
         val orgnr = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val samarbeidId = call.samarbeidId ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)

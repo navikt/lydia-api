@@ -15,6 +15,8 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.api.NY_FLYT_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.angreVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeidRespons
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeidResponsMedDatoString
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurderingResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
@@ -52,14 +54,12 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.samarbeid.IASamarbeid
-import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
-import no.nav.lydia.samarbeidsplan.SamarbeidDto
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
@@ -1249,19 +1249,12 @@ class NyFlytTest {
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
-        val response = applikasjon.performPost(
-            "$NY_FLYT_PATH/${sak.orgnr}/${samarbeid.id}/avslutt-samarbeid?dato=${LocalDate.now()}",
+        val response = samarbeid.avsluttSamarbeidRespons(
+            orgnr = sak.orgnr,
+            avslutningsType = IASamarbeid.Status.FULLFØRT,
+            token = authContainerHelper.saksbehandler1.token,
+            dato = LocalDate.now(),
         )
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .jsonBody(
-                Json.encodeToString(
-                    SamarbeidDto(
-                        id = samarbeid.id,
-                        status = IASamarbeid.Status.FULLFØRT,
-                    ),
-                ),
-            )
-            .tilSingelRespons<IASamarbeidDto>()
         response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
     }
 
@@ -1306,17 +1299,13 @@ class NyFlytTest {
         val samarbeid = sak.opprettSamarbeid()
         samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
 
-        val response = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/${samarbeid.id}/avslutt-samarbeid?dato=tulletekst")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .jsonBody(
-                Json.encodeToString(
-                    SamarbeidDto(
-                        id = samarbeid.id,
-                        status = IASamarbeid.Status.FULLFØRT,
-                    ),
-                ),
-            )
-            .tilSingelRespons<IASamarbeidDto>()
+        val response = samarbeid.avsluttSamarbeidResponsMedDatoString(
+            orgnr = sak.orgnr,
+            avslutningsType = IASamarbeid.Status.FULLFØRT,
+            token = authContainerHelper.saksbehandler1.token,
+            datoString = "tulletekst",
+        )
+
         response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
     }
 
