@@ -465,8 +465,15 @@ class NyFlytTestUtils {
         fun IASamarbeidDto.slettSamarbeidRespons(
             orgnr: String,
             token: String = authContainerHelper.saksbehandler1.token,
-            dato: java.time.LocalDate? = null,
-        ) = applikasjon.performDelete("$NY_FLYT_PATH/$orgnr/${this.id}/slett-samarbeid" + (dato?.let { "?dato=$it" } ?: ""))
+            dato: String? = null,
+        ) = applikasjon.performDelete(
+            "$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}" + (
+                dato?.let {
+                    "?dato=$it"
+                }
+                    ?: ""
+            ),
+        )
             .authentication().bearer(token)
             .tilSingelRespons<IASamarbeidDto>()
 
@@ -477,7 +484,7 @@ class NyFlytTestUtils {
         ) = this.slettSamarbeidRespons(
             orgnr = orgnr,
             token = token,
-            dato = dato,
+            dato = dato?.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE),
         ).third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
