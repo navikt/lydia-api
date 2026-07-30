@@ -21,6 +21,7 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsN
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstandResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeidResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.revurderVirksomhet
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.revurderVirksomhetResponse
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeid
@@ -1002,17 +1003,10 @@ class NyFlytTest {
 
         val oppdatertSak = sak.leggTilFolger(token = følgerAvSak.token)
         val samarbeidsnavn = "Samarbeid med avdeling A"
-        val samarbeidRespons = applikasjon.performPost("$NY_FLYT_PATH/${sak.orgnr}/opprett-samarbeid")
-            .authentication().bearer(følgerAvSak.token)
-            .jsonBody(
-                Json.encodeToString(
-                    IASamarbeidDto(
-                        id = 0,
-                        saksnummer = oppdatertSak.saksnummer,
-                        navn = samarbeidsnavn,
-                    ),
-                ),
-            ).tilSingelRespons<IASamarbeidDto>()
+        val samarbeidRespons = oppdatertSak.opprettSamarbeidResponse(
+            samarbeidsnavn = samarbeidsnavn,
+            token = følgerAvSak.token,
+        )
 
         samarbeidRespons.second.statusCode shouldBe HttpStatusCode.Created.value
         val samarbeid = samarbeidRespons.third.get()
