@@ -32,6 +32,7 @@ import no.nav.lydia.api.iaSakTeam
 import no.nav.lydia.api.iaSamarbeid
 import no.nav.lydia.api.nyFlyt
 import no.nav.lydia.api.nyFlytKartlegging
+import no.nav.lydia.api.nyFlytSamarbeid
 import no.nav.lydia.api.nyFlytSamarbeidsperiode
 import no.nav.lydia.api.nyFlytSamarbeidsplan
 import no.nav.lydia.api.nyFlytVirksomhet
@@ -573,6 +574,17 @@ private fun Application.lydiaRestApi(
                 nyFlytService = nyFlytService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
+            )
+            nyFlytSamarbeid(
+                iaSakService = iaSakService,
+                iASamarbeidService = samarbeidService,
+                nyFlytService = nyFlytService,
+                dokumentPubliseringService = dokumentPubliseringService,
+                planService = planService,
+                tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+                adGrupper = naisEnv.security.adGrupper,
+                auditLog = auditLog,
+                azureService = azureService,
             )
             nyFlytSamarbeidsplan(
                 iaSakService = iaSakService,
