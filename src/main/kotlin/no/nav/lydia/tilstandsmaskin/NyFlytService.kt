@@ -71,11 +71,16 @@ class NyFlytService(
     fun bliEier(
         orgnr: String,
         navAnsatt: NavAnsattMedSaksbehandlerRolle,
+        saksnummer: String? = null, // TODO: fjern nullable etter NyFlytRoutes er slettet
     ): Either<Feil, IASakDto> {
         val aktivSak = hentSisteIASakDto(orgnummer = orgnr)
         if (aktivSak == null || aktivSak.status.regnesSomAvsluttet()) {
             return IASakError.`kan ikke ta eierskap da det ikke finnes noen aktiv sak`.left()
         }
+        if (saksnummer != null && aktivSak.saksnummer != saksnummer) {
+            return Feil(feilmelding = "Saksnummer samsvarer ikke med aktiv sak", httpStatusCode = HttpStatusCode.BadRequest).left()
+        }
+
         if (aktivSak.eidAv == navAnsatt.navIdent) {
             return aktivSak.right()
         }

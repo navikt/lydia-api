@@ -5,7 +5,6 @@ import no.nav.lydia.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.api.IA_SAK_TEAM_PATH
 import no.nav.lydia.api.NY_FLYT_API_PATH
-import no.nav.lydia.api.NY_FLYT_PATH
 import no.nav.lydia.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
@@ -32,7 +31,7 @@ class SakHelper {
             .also { it.saksnummer shouldBe saksnummer }
 
         fun IASakDto.bliEierResponse(token: String) =
-            TestContainerHelper.applikasjon.performPost("${NY_FLYT_PATH}/$orgnr/bli-eier")
+            TestContainerHelper.applikasjon.performPost("${NY_FLYT_API_PATH}/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/bli-eier")
                 .authentication().bearer(token = token)
                 .tilSingelRespons<IASakDto>()
 

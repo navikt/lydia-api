@@ -11,6 +11,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
@@ -39,9 +40,11 @@ import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
 import no.nav.lydia.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
+import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandDto
 import no.nav.lydia.tilstandsmaskin.hendelse.AngreVurderVirksomhet
 import no.nav.lydia.tilstandsmaskin.hendelse.AvsluttVurdering
+import no.nav.lydia.tilstandsmaskin.hendelse.EndrePlanlagtDatoForNesteTilstand
 import no.nav.lydia.tilstandsmaskin.hendelse.VurderVirksomhet
 import java.time.LocalDate
 
@@ -271,6 +274,37 @@ fun Route.nyFlytVirksomhet(
                 orgnummer = orgnr,
                 auditType = AuditType.update,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // PUT
+    put("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/endre-planlagt-dato") {
+        val orgnr = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val virksomhetTilstandAutomatiskOppdateringDto = call.receive<VirksomhetTilstandAutomatiskOppdateringDto>()
+        val tilstandsmaskin = tilstandsmaskin(orgnr)
+
+        call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
+            val konsekvens = tilstandsmaskin.prosesserHendelse(
+                hendelse = EndrePlanlagtDatoForNesteTilstand(
+                    orgnr = orgnr,
+                    nyPlanlagtDato = virksomhetTilstandAutomatiskOppdateringDto.planlagtDato.toJavaLocalDate(),
+                    saksbehandler = saksbehandler,
+                    navEnhet = navEnhet,
+                ),
+            )
+            konsekvens.map { it.verdi as VirksomhetTilstandAutomatiskOppdateringDto }
+        }.also { either ->
+            auditLog.auditloggEither(
+                call = call,
+                either = either,
+                orgnummer = orgnr,
+                auditType = AuditType.update,
+                saksnummer = tilstandsmaskin.saksnummer,
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)

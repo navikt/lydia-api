@@ -11,14 +11,14 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
-import kotlinx.serialization.json.Json
-import no.nav.lydia.api.NY_FLYT_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.angreVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeidRespons
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeidResponsMedDatoString
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttVurderingResponse
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.bliEier
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endrePlanlagtDato
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.endreSamarbeidsNavn
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstandResponse
@@ -40,29 +40,23 @@ import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.bliEierResponse
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
-import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
-import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -1365,11 +1359,20 @@ class NyFlytTest {
         val superbruker = authContainerHelper.superbruker1
         val virksomhetUtenSak = VirksomhetHelper.nyttOrgnummer()
 
-        val responseUtenSak = bliEier(orgnr = virksomhetUtenSak, token = superbruker.token)
+        val responseUtenSak = bliEier(
+            orgnr = virksomhetUtenSak,
+            saksnummer = "finnes_ikke",
+            token = superbruker.token,
+        )
         responseUtenSak.statuskode() shouldBe HttpStatusCode.BadRequest.value
 
-        val virksomhetMedAvsluttetSak = vurderVirksomhet().avsluttVurdering().orgnr
-        val responseMedAvsluttetSak = bliEier(orgnr = virksomhetMedAvsluttetSak, superbruker.token)
+        val avsluttetSak = vurderVirksomhet().avsluttVurdering()
+        val virksomhetMedAvsluttetSak = avsluttetSak.orgnr
+        val responseMedAvsluttetSak = bliEier(
+            orgnr = virksomhetMedAvsluttetSak,
+            saksnummer = avsluttetSak.saksnummer,
+            token = superbruker.token,
+        )
         responseMedAvsluttetSak.statuskode() shouldBe HttpStatusCode.BadRequest.value
     }
 
@@ -1381,29 +1384,4 @@ class NyFlytTest {
         val responseLesebruker = sak.bliEierResponse(token = lesebruker.token)
         responseLesebruker.statuskode() shouldBe HttpStatusCode.Forbidden.value
     }
-
-    private fun bliEier(
-        orgnr: String,
-        token: String,
-    ) = applikasjon.performPost("$NY_FLYT_PATH/$orgnr/bli-eier")
-        .authentication().bearer(token = token)
-        .tilSingelRespons<IASakDto>()
-
-    private fun endrePlanlagtDato(
-        orgnr: String,
-        nesteTilstand: VirksomhetTilstandAutomatiskOppdateringDto,
-        nyPlanlagtDato: kotlinx.datetime.LocalDate,
-        token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performPut("$NY_FLYT_PATH/virksomhet/$orgnr/endre-planlagt-dato")
-        .authentication().bearer(token)
-        .jsonBody(
-            Json.encodeToString(
-                VirksomhetTilstandAutomatiskOppdateringDto(
-                    startTilstand = nesteTilstand.startTilstand,
-                    planlagtHendelse = nesteTilstand.planlagtHendelse,
-                    nyTilstand = nesteTilstand.nyTilstand,
-                    planlagtDato = nyPlanlagtDato,
-                ),
-            ),
-        ).tilSingelRespons<VirksomhetTilstandAutomatiskOppdateringDto>()
 }

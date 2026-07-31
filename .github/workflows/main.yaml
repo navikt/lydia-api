@@ -70,7 +70,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/erstatte-fuel-med-ktor-http-client'
+    if: github.ref == 'refs/heads/dupliser-virksomhet-endepunkter-til-ny-api-path'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
