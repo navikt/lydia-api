@@ -61,6 +61,7 @@ import no.nav.lydia.samarbeidsplan.SamarbeidDto
 import no.nav.lydia.samarbeidsplan.SamarbeidsplanBigqueryProdusent.InnholdIPlanMelding
 import no.nav.lydia.samarbeidsplan.SamarbeidsplanKafkaMelding
 import no.nav.lydia.tilgangskontroll.fia.Rolle
+import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandAutomatiskOppdateringDto
 import no.nav.lydia.tilstandsmaskin.VirksomhetTilstandDto
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import kotlin.test.fail
@@ -366,6 +367,32 @@ class NyFlytTestUtils {
             { it },
             { fail("${it.message}: ${it.response.body().asString("text/plain; charset=utf-8")}") },
         )
+
+        fun bliEier(
+            orgnr: String,
+            saksnummer: String,
+            token: String,
+        ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/$saksnummer/bli-eier")
+            .authentication().bearer(token = token)
+            .tilSingelRespons<IASakDto>()
+
+        fun endrePlanlagtDato(
+            orgnr: String,
+            nesteTilstand: VirksomhetTilstandAutomatiskOppdateringDto,
+            nyPlanlagtDato: LocalDate,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performPut("$NY_FLYT_API_PATH/virksomhet/$orgnr/endre-planlagt-dato")
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(
+                    VirksomhetTilstandAutomatiskOppdateringDto(
+                        startTilstand = nesteTilstand.startTilstand,
+                        planlagtHendelse = nesteTilstand.planlagtHendelse,
+                        nyTilstand = nesteTilstand.nyTilstand,
+                        planlagtDato = nyPlanlagtDato,
+                    ),
+                ),
+            ).tilSingelRespons<VirksomhetTilstandAutomatiskOppdateringDto>()
 
         fun IASamarbeidDto.avsluttSamarbeidResponsMedDatoString(
             orgnr: String,

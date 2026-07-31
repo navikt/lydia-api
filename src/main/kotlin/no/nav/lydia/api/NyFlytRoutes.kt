@@ -329,6 +329,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med POST $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging/{type}
     post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/opprett-kartlegging/{type}") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val samarbeidId = call.samarbeidId ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
@@ -363,6 +364,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med POST $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging/{samarbeidId}/start
     post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/start-kartlegging/{sporreundersokelseId}") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val tilstandsmaskin = tilstandsmaskin(orgnr)
@@ -393,6 +395,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med POST $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging/{samarbeidId}/fullfor
     post("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/fullfor-kartlegging/{sporreundersokelseId}") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val tilstandsmaskin = tilstandsmaskin(orgnr)
@@ -423,6 +426,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med DELETE $NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging/{samarbeidId}
     delete("$NY_FLYT_PATH/{orgnummer}/{samarbeidId}/slett-kartlegging/{sporreundersokelseId}") {
         val orgnr = call.orgnummer ?: return@delete call.respond(IASakError.`ugyldig orgnummer`)
         val tilstandsmaskin = tilstandsmaskin(orgnr)
@@ -574,6 +578,7 @@ fun Route.nyFlyt(
         }
     }
 
+    // TODO: delete me etter frontend er oppdatert med PUT $NY_FLYT_API_PATH/virksomhet/{orgnummer}/endre-planlagt-dato
     put("$NY_FLYT_PATH/virksomhet/{orgnummer}/endre-planlagt-dato") {
         val orgnr = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val virksomhetTilstandAutomatiskOppdateringDto = call.receive<VirksomhetTilstandAutomatiskOppdateringDto>()
@@ -606,6 +611,7 @@ fun Route.nyFlyt(
 
     // -- Dette er tenkt å være en midlertidig løsning frem til vi har utviklet kontaktperson funksjonalitet i samarbeid med Salesforce.
     // -- Dette etterlater ingen hendelser, men skriver kun over eierskap i den akktive saken
+    // TODO: delete me etter frontend er oppdatert med PUT $NY_FLYT_API_PATH/virksomhet/{orgnummer}/bli-eier
     post("$NY_FLYT_PATH/{orgnummer}/bli-eier") {
         val orgnr = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         call.somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, _ ->
