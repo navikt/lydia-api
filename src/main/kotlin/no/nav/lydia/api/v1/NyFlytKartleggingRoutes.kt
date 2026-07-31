@@ -33,8 +33,6 @@ import no.nav.lydia.tilstandsmaskin.hendelse.OpprettKartleggingForSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.SlettKartleggingForSamarbeid
 import no.nav.lydia.tilstandsmaskin.hendelse.StartKartleggingForSamarbeid
 
-const val NY_FLYT_API_KARTLEGGING_BASE_PATH = "${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging"
-
 fun Route.nyFlytKartlegging(
     iaSakService: IASakService,
     iASamarbeidService: IASamarbeidService,
@@ -49,25 +47,26 @@ fun Route.nyFlytKartlegging(
 ) {
     suspend fun <T> ApplicationCall.somEierEllerFølgerAvSakMedNavenhet(
         block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, NavEnhet, String, String) -> Either<Feil, T>,
-    ): Either<Feil, T> = somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
-        val orgnummer = orgnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig orgnummer`.left()
-        val saksnummer = saksnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
-        val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).getOrNull()
-            ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
+    ): Either<Feil, T> =
+        somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
+            val orgnummer = orgnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig orgnummer`.left()
+            val saksnummer = saksnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
+            val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).getOrNull()
+                ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
 
-        if (iaSak.orgnr != orgnummer) {
-            IASakError.`ugyldig orgnummer`.left()
-        } else if (!iaTeamService.erEierEllerFølgerAvSak(
-                saksnummer = iaSak.saksnummer,
-                eierAvSak = iaSak.eidAv,
-                saksbehandler = saksbehandler,
-            )
-        ) {
-            IASakError.`er ikke følger eller eier av sak`.left()
-        } else {
-            block(saksbehandler, navEnhet, orgnummer, saksnummer)
+            if (iaSak.orgnr != orgnummer) {
+                IASakError.`ugyldig orgnummer`.left()
+            } else if (!iaTeamService.erEierEllerFølgerAvSak(
+                    saksnummer = iaSak.saksnummer,
+                    eierAvSak = iaSak.eidAv,
+                    saksbehandler = saksbehandler,
+                )
+            ) {
+                IASakError.`er ikke følger eller eier av sak`.left()
+            } else {
+                block(saksbehandler, navEnhet, orgnummer, saksnummer)
+            }
         }
-    }
 
     fun tilstandsmaskin(orgnr: String) =
         TilstandsmaskinBuilder.medKontekst(
@@ -82,7 +81,7 @@ fun Route.nyFlytKartlegging(
             ),
         ).build(orgnr)
 
-    post("$NY_FLYT_API_KARTLEGGING_BASE_PATH/{type}") {
+    post("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging/{type}") {
         val samarbeidId = call.samarbeidId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
         val type = call.parameters["type"]?.let { param ->
             Spørreundersøkelse.Type.entries.firstOrNull { it.name.equals(param, ignoreCase = true) }
@@ -114,7 +113,7 @@ fun Route.nyFlytKartlegging(
         }
     }
 
-    post("$NY_FLYT_API_KARTLEGGING_BASE_PATH/{kartleggingId}/start") {
+    post("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging/{kartleggingId}/start") {
         val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somEierEllerFølgerAvSakMedNavenhet { saksbehandler, navEnhet, orgnr, _ ->
@@ -142,7 +141,7 @@ fun Route.nyFlytKartlegging(
         }
     }
 
-    post("$NY_FLYT_API_KARTLEGGING_BASE_PATH/{kartleggingId}/fullfor") {
+    post("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging/{kartleggingId}/fullfor") {
         val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somEierEllerFølgerAvSakMedNavenhet { saksbehandler, navEnhet, orgnr, _ ->
@@ -170,7 +169,7 @@ fun Route.nyFlytKartlegging(
         }
     }
 
-    delete("$NY_FLYT_API_KARTLEGGING_BASE_PATH/{kartleggingId}") {
+    delete("${NY_FLYT_API_PATH}/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/kartlegging/{kartleggingId}") {
         val kartleggingId = call.kartleggingId ?: return@delete call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somEierEllerFølgerAvSakMedNavenhet { saksbehandler, navEnhet, orgnr, _ ->
