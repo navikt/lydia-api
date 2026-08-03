@@ -77,6 +77,16 @@ class DbDumpTest {
         slettetVirksomhetMedAktivitet.opprettOgFullførSamarbeidsperiode()
 
         VirksomhetHelper.sendSlettingForVirksomhet(slettetVirksomhetMedAktivitet)
+
+        val slettetVirksomhetMedAktivSak = lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "SLETTET VIRKSOMHET MED AKTIV SAK AS"),
+        )
+
+        aktivSamarbeidsperiode(virksomhet = slettetVirksomhetMedAktivSak)
+            .leggTilFolger(authContainerHelper.saksbehandler3.token)
+            .oppdaterHendelsesTidspunkter(30)
+
+        VirksomhetHelper.sendSlettingForVirksomhet(slettetVirksomhetMedAktivSak)
     }
 
     private fun opprettVirksomhetMedFlereSaker() {
