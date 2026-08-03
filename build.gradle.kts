@@ -4,15 +4,15 @@ val ktorVersion = "3.5.1"
 val iaFellesVersion = "2.0.6"
 val kotestVerstion = "6.2.3"
 val testcontainersVersion = "2.0.5"
-val logbackVersion = "1.5.38"
+val logbackVersion = "1.6.0"
 val logstashLogbackEncoderVersion = "9.0"
-val opentelemetryLogbackMdcVersion = "2.29.0-alpha"
+val opentelemetryLogbackMdcVersion = "2.30.0-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.4.0"
+    kotlin("jvm") version "2.4.10"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.4.0"
+    kotlin("plugin.serialization") version "2.4.10"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
@@ -56,7 +56,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.13")
     implementation("com.zaxxer:HikariCP:7.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:12.11.0")
+    implementation("org.flywaydb:flyway-database-postgresql:13.0.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Serialization med Gson
