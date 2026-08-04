@@ -17,7 +17,6 @@ import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
-import no.nav.fia.dokument.publisering.pdfgen.PdfType
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`DEV-GCP`
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`PROD-GCP`

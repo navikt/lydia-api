@@ -4,8 +4,8 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.api.IA_SAK_TEAM_PATH
-import no.nav.lydia.api.NY_FLYT_API_PATH
 import no.nav.lydia.api.SAMARBEIDSHISTORIKK_PATH
+import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.samarbeid.IASamarbeidDto

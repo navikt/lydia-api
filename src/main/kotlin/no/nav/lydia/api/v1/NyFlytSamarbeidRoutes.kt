@@ -1,4 +1,4 @@
-package no.nav.lydia.api
+package no.nav.lydia.api.v1
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
@@ -10,6 +10,10 @@ import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.api.orgnummer
+import no.nav.lydia.api.saksnummer
+import no.nav.lydia.api.samarbeidId
+import no.nav.lydia.api.sendFeil
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService

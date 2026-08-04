@@ -1,4 +1,4 @@
-package no.nav.lydia.api
+package no.nav.lydia.api.v1
 
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -16,6 +16,10 @@ import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.api.SykefraværsstatistikkError
+import no.nav.lydia.api.VirksomhetFeil
+import no.nav.lydia.api.orgnummer
+import no.nav.lydia.api.sendFeil
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
