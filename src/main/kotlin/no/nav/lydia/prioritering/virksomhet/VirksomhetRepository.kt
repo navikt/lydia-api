@@ -14,7 +14,6 @@ import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
 import no.nav.lydia.prioritering.virksomhet.domene.tilSektor
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import javax.sql.DataSource
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class VirksomhetRepository(
@@ -274,26 +273,19 @@ class VirksomhetRepository(
             )
         }
 
-    fun tempFinnSlettedeVirksomheterMedFeilStatus(): List<BrregOppdateringConsumer.OppdateringVirksomhet> =
+    fun tempFinnSlettedeVirksomheterMedFeilStatus(): List<Pair<String, BrregOppdateringConsumer.BrregVirksomhetEndringstype>> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                    SELECT orgnr, v.status, v.oppdatertavbrregoppdateringsid FROM tilstand_virksomhet tv
+                    SELECT orgnr, v.status FROM tilstand_virksomhet tv
                     INNER JOIN virksomhet v USING (orgnr)
                     WHERE v.status IN ('SLETTET', 'FJERNET')
                     AND tv.tilstand <> :slettetTilstand;
                     """.trimIndent(),
                     mapOf("slettetTilstand" to VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg.name),
-                ).map {
-                    BrregOppdateringConsumer.OppdateringVirksomhet(
-                        orgnummer = it.string("orgnr"),
-                        oppdateringsid = it.long("oppdatertavbrregoppdateringsid"),
-                        endringstype = tempHentEndringstype(it.string("status"))!!,
-                        metadata = null,
-                        endringstidspunkt = Clock.System.now(),
-                    )
-                }.asList,
+                ).map { it.string("orgnr") to tempHentEndringstype(it.string("status"))!! }
+                    .asList,
             )
         }
 

@@ -21,6 +21,7 @@ import no.nav.lydia.tilstandsmaskin.hendelse.Avregistrering
 import no.nav.lydia.tilstandsmaskin.hendelse.VirksomhetErAvregistrertIBrreg
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.time.Clock
 
 class VirksomhetService(
     val virksomhetRepository: VirksomhetRepository,
@@ -80,8 +81,16 @@ class VirksomhetService(
     fun tempBehandleSlettedeVirksomheter(): Either<Feil, String> =
         either {
             val virksomheter = virksomhetRepository.tempFinnSlettedeVirksomheterMedFeilStatus()
-            virksomheter.forEach { oppdatering ->
-                oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdatering).bind()
+            virksomheter.forEach { (orgnr, endringstype) ->
+                oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(
+                    BrregOppdateringConsumer.OppdateringVirksomhet(
+                        orgnummer = orgnr,
+                        oppdateringsid = 0L,
+                        endringstype = endringstype,
+                        metadata = null,
+                        endringstidspunkt = Clock.System.now(),
+                    ),
+                ).bind()
             }
             "Vellykket oppdatering av ${virksomheter.size} slettede/fjernede virksomheter."
         }
