@@ -127,7 +127,17 @@ object Jobblytter : CoroutineScope {
                                 logger.info("Starter jobb $jobInfo")
                                 when (jobInfo.jobb) {
                                     engangsJobb -> {
-                                        virksomhetService.tempBehandleSlettedeVirksomheter()
+                                        if (jobInfo.parameter.isNullOrEmpty()) {
+                                            logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
+                                        } else {
+                                            val tørrKjør = jobInfo.parameter != "GO!"
+                                            virksomhetService.finnSlettedeVirksomheterMedAktivSak().forEach { virksomhet ->
+                                                logger.info("Virksomhet $virksomhet")
+                                                if (!tørrKjør) {
+                                                    iaSakService.avsluttSakForSlettetVirksomhet(virksomhet)
+                                                }
+                                            }
+                                        }
                                     }
 
                                     iaSakEksport -> {
