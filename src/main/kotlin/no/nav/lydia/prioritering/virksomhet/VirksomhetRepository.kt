@@ -7,14 +7,11 @@ import kotlinx.serialization.Serializable
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.prioritering.virksomhet.domene.Virksomhet
 import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
 import no.nav.lydia.prioritering.virksomhet.domene.tilSektor
-import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import javax.sql.DataSource
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class VirksomhetRepository(
@@ -274,37 +271,7 @@ class VirksomhetRepository(
             )
         }
 
-    fun tempFinnSlettedeVirksomheterMedFeilStatus(): List<BrregOppdateringConsumer.OppdateringVirksomhet> =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    SELECT orgnr, v.status, v.oppdatertavbrregoppdateringsid FROM tilstand_virksomhet tv
-                    INNER JOIN virksomhet v USING (orgnr)
-                    WHERE v.status IN ('SLETTET', 'FJERNET')
-                    AND tv.tilstand <> :slettetTilstand;
-                    """.trimIndent(),
-                    mapOf("slettetTilstand" to VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg.name),
-                ).map {
-                    BrregOppdateringConsumer.OppdateringVirksomhet(
-                        orgnummer = it.string("orgnr"),
-                        oppdateringsid = it.longOrNull("oppdatertavbrregoppdateringsid") ?: 0L,
-                        endringstype = tempHentEndringstype(it.string("status"))!!,
-                        metadata = null,
-                        endringstidspunkt = Clock.System.now(),
-                    )
-                }.asList,
-            )
-        }
-
-    private fun tempHentEndringstype(status: String) =
-        when (status) {
-            "SLETTET" -> BrregOppdateringConsumer.BrregVirksomhetEndringstype.Sletting
-            "FJERNET" -> BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
-            else -> null
-        }
-
-    fun java.time.Instant.toKxInstant(): Instant = Instant.fromEpochMilliseconds(toEpochMilli())
+    private fun java.time.Instant.toKxInstant(): Instant = Instant.fromEpochMilliseconds(toEpochMilli())
 }
 
 @Serializable

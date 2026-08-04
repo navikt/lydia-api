@@ -5,13 +5,10 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.api.VIRKSOMHET_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
+import no.nav.lydia.helper.PostgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER_SOM_NÆRINGSGRUPPE
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_ETTÅRIGE_VEKSTER_ELLERS
@@ -24,13 +21,9 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendEndringForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
-import no.nav.lydia.helper.responseString
-import no.nav.lydia.helper.statuskode
 import no.nav.lydia.integrasjoner.brreg.Adresse
 import no.nav.lydia.prioritering.virksomhet.VirksomhetDto
 import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
-import no.nav.lydia.samarbeidsperiode.IASakDto
-import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -141,74 +134,6 @@ class VirksomhetOppdateringTest {
         virksomhetSomSkalFåNæringskodeOppdatert
             .skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
     }
-
-    @Test
-    fun `behandle slettede virksomheter - ingen å fikse`() {
-        val respons = tempBehandleSlettedeVirksomheterHelper()
-
-        respons.statuskode() shouldBe HttpStatusCode.OK.value
-        respons.third.get() shouldBe "Vellykket oppdatering av 0 slettede/fjernede virksomheter."
-    }
-
-    @Test
-    fun `behandle slettede virksomheter - fikser virksomhet med SLETTET status og feil tilstand`() {
-        val sak = vurderVirksomhet()
-        postgresContainerHelper.performUpdate(
-            "UPDATE virksomhet SET status = 'SLETTET' WHERE orgnr = '${sak.orgnr}'",
-        )
-
-        val respons = tempBehandleSlettedeVirksomheterHelper()
-
-        respons.statuskode() shouldBe HttpStatusCode.OK.value
-        respons.third.get() shouldBe "Vellykket oppdatering av 1 slettede/fjernede virksomheter."
-        postgresContainerHelper.hentEnkelKolonne<String>(
-            "SELECT tilstand FROM tilstand_virksomhet WHERE orgnr = '${sak.orgnr}'",
-        ) shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg.name
-    }
-
-    @Test
-    fun `behandle slettede virksomheter - fikser virksomhet med FJERNET status og feil tilstand`() {
-        val sak = vurderVirksomhet()
-        postgresContainerHelper.performUpdate(
-            "UPDATE virksomhet SET status = 'FJERNET' WHERE orgnr = '${sak.orgnr}'",
-        )
-
-        val respons = tempBehandleSlettedeVirksomheterHelper()
-
-        respons.statuskode() shouldBe HttpStatusCode.OK.value
-        respons.third.get() shouldBe "Vellykket oppdatering av 1 slettede/fjernede virksomheter."
-        postgresContainerHelper.hentEnkelKolonne<String>(
-            "SELECT tilstand FROM tilstand_virksomhet WHERE orgnr = '${sak.orgnr}'",
-        ) shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg.name
-    }
-
-    @Test
-    fun `behandle slettede virksomheter - fikser flere virksomheter med blanding av SLETTET og FJERNET`() {
-        val sak1 = vurderVirksomhet()
-        val sak2 = vurderVirksomhet()
-        val sak3 = vurderVirksomhet()
-        postgresContainerHelper.performUpdate(
-            "UPDATE virksomhet SET status = 'SLETTET' WHERE orgnr IN ('${sak1.orgnr}', '${sak2.orgnr}')",
-        )
-        postgresContainerHelper.performUpdate(
-            "UPDATE virksomhet SET status = 'FJERNET' WHERE orgnr = '${sak3.orgnr}'",
-        )
-
-        val respons = tempBehandleSlettedeVirksomheterHelper()
-
-        respons.statuskode() shouldBe HttpStatusCode.OK.value
-        respons.third.get() shouldBe "Vellykket oppdatering av 3 slettede/fjernede virksomheter."
-        listOf(sak1, sak2, sak3).forEach { sak ->
-            postgresContainerHelper.hentEnkelKolonne<String>(
-                "SELECT tilstand FROM tilstand_virksomhet WHERE orgnr = '${sak.orgnr}'",
-            ) shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg.name
-        }
-    }
-
-    private fun tempBehandleSlettedeVirksomheterHelper() =
-        applikasjon.performPost("$VIRKSOMHET_PATH/temp/behandle_slettede_virksomheter")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .responseString()
 }
 
 private fun genererOppdateringsid(testVirksomhet: TestVirksomhet): Long = testVirksomhet.orgnr.toLong() + 1L

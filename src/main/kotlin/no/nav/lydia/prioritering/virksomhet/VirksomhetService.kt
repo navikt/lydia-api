@@ -77,15 +77,6 @@ class VirksomhetService(
             }
         }
 
-    fun tempBehandleSlettedeVirksomheter(): Either<Feil, String> =
-        either {
-            val virksomheter = virksomhetRepository.tempFinnSlettedeVirksomheterMedFeilStatus()
-            virksomheter.forEach { oppdatering ->
-                oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdatering).bind()
-            }
-            "Vellykket oppdatering av ${virksomheter.size} slettede/fjernede virksomheter."
-        }
-
     private fun hentAvregistreringstype(oppdatering: BrregOppdateringConsumer.BrregVirksomhetEndringstype) =
         when (oppdatering) {
             Sletting -> Avregistrering.SLETTET
