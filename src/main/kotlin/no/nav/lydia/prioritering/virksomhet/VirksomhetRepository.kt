@@ -288,7 +288,7 @@ class VirksomhetRepository(
                 ).map {
                     BrregOppdateringConsumer.OppdateringVirksomhet(
                         orgnummer = it.string("orgnr"),
-                        oppdateringsid = it.longOrNull("oppdatertavbrregoppdateringsid") ?: 0L,
+                        oppdateringsid = it.long("oppdatertavbrregoppdateringsid"),
                         endringstype = tempHentEndringstype(it.string("status"))!!,
                         metadata = null,
                         endringstidspunkt = Clock.System.now(),
