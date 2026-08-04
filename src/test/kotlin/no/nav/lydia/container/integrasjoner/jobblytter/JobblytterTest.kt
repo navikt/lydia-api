@@ -18,6 +18,13 @@ import org.junit.Test
 
 class JobblytterTest {
     @Test
+    fun `engangsjobb logger warn dersom ingen parameter er sendt`() {
+        kafkaContainerHelper.sendJobbMeldingUtenParam(engangsJobb)
+
+        applikasjon shouldContainLog "Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter".toRegex()
+    }
+
+    @Test
     fun `skal kunne trigge engangsJobb jobb via kafka`() {
         kafkaContainerHelper.sendJobbMelding(engangsJobb, "vilkårlig parameter")
         applikasjon shouldContainLog "Jobb 'engangsJobb' ferdig".toRegex()
