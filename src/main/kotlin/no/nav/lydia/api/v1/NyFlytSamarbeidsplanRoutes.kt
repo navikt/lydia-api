@@ -1,4 +1,4 @@
-package no.nav.lydia.api
+package no.nav.lydia.api.v1
 
 import arrow.core.Either
 import arrow.core.left
@@ -13,6 +13,12 @@ import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.api.orgnummer
+import no.nav.lydia.api.planId
+import no.nav.lydia.api.saksnummer
+import no.nav.lydia.api.samarbeidId
+import no.nav.lydia.api.sendFeil
+import no.nav.lydia.api.temaId
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService

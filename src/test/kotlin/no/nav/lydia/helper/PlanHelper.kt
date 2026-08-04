@@ -2,8 +2,8 @@ package no.nav.lydia.helper
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
-import no.nav.lydia.api.NY_FLYT_API_PATH
 import no.nav.lydia.api.PLAN_BASE_ROUTE
+import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut

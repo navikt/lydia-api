@@ -15,7 +15,7 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.api.NY_FLYT_API_PATH
+import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraKvartal
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkludertInnhold

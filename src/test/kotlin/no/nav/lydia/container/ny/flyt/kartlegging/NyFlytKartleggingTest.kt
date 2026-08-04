@@ -2,7 +2,7 @@ package no.nav.lydia.container.ny.flyt.kartlegging
 
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.api.NY_FLYT_API_PATH
+import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.hentVirksomhetTilstand
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid

@@ -1,11 +1,10 @@
 package no.nav.lydia.helper
 
 import io.kotest.matchers.collections.shouldHaveSize
-import kotlinx.serialization.builtins.ByteArraySerializer
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.api.NY_FLYT_API_PATH
 import no.nav.lydia.api.SPØRREUNDERSØKELSE_BASE_ROUTE
+import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.container.ia.sak.kartlegging.BehovsvurderingApiTest
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet

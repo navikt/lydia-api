@@ -1,4 +1,4 @@
-package no.nav.fia.dokument.publisering.pdfgen
+package no.nav.lydia.integrasjoner.pdfgen
 
 enum class PdfType(
     val pathIPiaPdfgen: String,
