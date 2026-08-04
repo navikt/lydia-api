@@ -7,10 +7,12 @@ import kotlinx.serialization.Serializable
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.prioritering.virksomhet.domene.Virksomhet
 import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
 import no.nav.lydia.prioritering.virksomhet.domene.tilSektor
+import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import javax.sql.DataSource
 import kotlin.time.Instant
 
@@ -271,7 +273,30 @@ class VirksomhetRepository(
             )
         }
 
-    private fun java.time.Instant.toKxInstant(): Instant = Instant.fromEpochMilliseconds(toEpochMilli())
+    fun tempFinnSlettedeVirksomheterMedFeilStatus(): List<Pair<String, BrregOppdateringConsumer.BrregVirksomhetEndringstype>> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT orgnr, v.status FROM tilstand_virksomhet tv
+                    INNER JOIN virksomhet v USING (orgnr)
+                    WHERE v.status IN ('SLETTET', 'FJERNET')
+                    AND tv.tilstand <> :slettetTilstand;
+                    """.trimIndent(),
+                    mapOf("slettetTilstand" to VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg.name),
+                ).map { it.string("orgnr") to tempHentEndringstype(it.string("status"))!! }
+                    .asList,
+            )
+        }
+
+    private fun tempHentEndringstype(status: String) =
+        when (status) {
+            "SLETTET" -> BrregOppdateringConsumer.BrregVirksomhetEndringstype.Sletting
+            "FJERNET" -> BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
+            else -> null
+        }
+
+    fun java.time.Instant.toKxInstant(): Instant = Instant.fromEpochMilliseconds(toEpochMilli())
 }
 
 @Serializable

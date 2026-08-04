@@ -62,25 +62,26 @@ fun Route.nyFlytSamarbeidsplan(
         iaTeamService: IATeamService,
         adGrupper: ADGrupper,
         block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, NavEnhet, String, String) -> Either<Feil, T>,
-    ): Either<Feil, T> = somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
-        val orgnummer = orgnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig orgnummer`.left()
-        val saksnummer = saksnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
-        val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).getOrNull()
-            ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
+    ): Either<Feil, T> =
+        somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
+            val orgnummer = orgnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig orgnummer`.left()
+            val saksnummer = saksnummer ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
+            val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).getOrNull()
+                ?: return@somSaksbehandlerMedNavenhet IASakError.`ugyldig saksnummer`.left()
 
-        if (iaSak.orgnr != orgnummer) {
-            IASakError.`ugyldig orgnummer`.left()
-        } else if (!iaTeamService.erEierEllerFølgerAvSak(
-                saksnummer = iaSak.saksnummer,
-                eierAvSak = iaSak.eidAv,
-                saksbehandler = saksbehandler,
-            )
-        ) {
-            IASakError.`er ikke følger eller eier av sak`.left()
-        } else {
-            block(saksbehandler, navEnhet, orgnummer, saksnummer)
+            if (iaSak.orgnr != orgnummer) {
+                IASakError.`ugyldig orgnummer`.left()
+            } else if (!iaTeamService.erEierEllerFølgerAvSak(
+                    saksnummer = iaSak.saksnummer,
+                    eierAvSak = iaSak.eidAv,
+                    saksbehandler = saksbehandler,
+                )
+            ) {
+                IASakError.`er ikke følger eller eier av sak`.left()
+            } else {
+                block(saksbehandler, navEnhet, orgnummer, saksnummer)
+            }
         }
-    }
 
     fun tilstandsmaskin(orgnr: String) =
         TilstandsmaskinBuilder.medKontekst(
