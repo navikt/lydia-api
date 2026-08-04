@@ -7,6 +7,7 @@ import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -80,6 +81,18 @@ fun Route.virksomhet(
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
+    }
+
+    post("$VIRKSOMHET_PATH/temp/behandle_slettede_virksomheter") {
+        virksomhetService.tempBehandleSlettedeVirksomheter()
+            .fold(
+                ifRight = {
+                    call.respond(HttpStatusCode.OK, message = it)
+                },
+                ifLeft = { e ->
+                    call.respond(HttpStatusCode.InternalServerError, message = e.feilmelding)
+                },
+            )
     }
 }
 
