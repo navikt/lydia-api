@@ -275,7 +275,7 @@ fun Route.nyFlytVirksomhet(
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,
-                either = iaSakEither,
+                either = iaSakEither.map { it }.mapLeft { it },
                 orgnummer = orgnr,
                 auditType = AuditType.update,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
