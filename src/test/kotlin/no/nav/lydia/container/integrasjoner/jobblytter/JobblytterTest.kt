@@ -98,7 +98,7 @@ class JobblytterTest {
 
     @Test
     fun `skal overleve og fortsette å prosessere etter poison pill med ukjent jobb`() {
-        kafkaContainerHelper.sendJobbMeldingMedUkjentJobb("sjekkPubliseringsdatoOgImporter")
+        kafkaContainerHelper.sendJobbMeldingMedUkjentJobb("navnPaaEnJobbSomIkkeFinnesIIAFelles")
         applikasjon shouldContainLog "Hopper over melding".toRegex()
 
         kafkaContainerHelper.sendJobbMelding(næringsImport)

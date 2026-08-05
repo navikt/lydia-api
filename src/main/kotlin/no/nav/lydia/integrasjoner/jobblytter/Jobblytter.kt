@@ -47,7 +47,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 object Jobblytter : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private val lenientJson = Json { ignoreUnknownKeys = true }
+    private val jsonIgnoreUnknownKeys = Json { ignoreUnknownKeys = true }
     private lateinit var job: Job
     private lateinit var kafka: Kafka
 
@@ -120,15 +120,18 @@ object Jobblytter : CoroutineScope {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         records.forEach { record ->
                             try {
-                                val header = lenientJson.decodeFromString<JobbMeldingHeader>(record.value())
+                                val header = jsonIgnoreUnknownKeys.decodeFromString<JobbMeldingHeader>(record.value())
                                 if (header.applikasjon != "lydia-api") {
-                                    logger.info("Ignorerer melding adressert til '${header.applikasjon}' (offset ${record.offset()})")
+                                    logger.info(
+                                        "Ignorerer melding adressert til '${header.applikasjon}', forventet 'lydia-api' (offset ${record.offset()}). " +
+                                            "Committer offset.",
+                                    )
                                     return@forEach
                                 }
-                                val jobInfo = Json.decodeFromString<SerializableJobbInfo>(record.value())
+                                val jobInfo = jsonIgnoreUnknownKeys.decodeFromString<SerializableJobbInfo>(record.value())
                                 if (jobInfo.jobb.name != record.key()) {
                                     logger.warn(
-                                        "Received record with key ${record.key()} and value ${record.value()} from topic ${record.topic()} but jobInfo.job is ${jobInfo.jobb}",
+                                        "Mottok melding med nøkkel ${record.key()} og verdi ${record.value()} fra topic ${record.topic()}, men jobInfo.job er ${jobInfo.jobb}",
                                     )
                                 } else {
                                     logger.info("Starter jobb $jobInfo")
