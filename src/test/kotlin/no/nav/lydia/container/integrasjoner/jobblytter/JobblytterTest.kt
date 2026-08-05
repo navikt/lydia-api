@@ -89,4 +89,19 @@ class JobblytterTest {
         kafkaContainerHelper.sendJobbMelding(prosesserPlanlagteHendelser, "")
         applikasjon shouldContainLog "Ferdig med å oppdatere alle tilstand virksomheter.".toRegex()
     }
+
+    @Test
+    fun `skal ignorere melding adressert til annen applikasjon uten å krasje`() {
+        kafkaContainerHelper.sendJobbMeldingTilAnnenApp(alleKategorierSykefraværsstatistikkDvhImport)
+        applikasjon shouldContainLog "Ignorerer melding adressert til 'pia-dvh-import'".toRegex()
+    }
+
+    @Test
+    fun `skal overleve og fortsette å prosessere etter poison pill med ukjent jobb`() {
+        kafkaContainerHelper.sendJobbMeldingMedUkjentJobb("sjekkPubliseringsdatoOgImporter")
+        applikasjon shouldContainLog "Hopper over melding".toRegex()
+
+        kafkaContainerHelper.sendJobbMelding(næringsImport)
+        applikasjon shouldContainLog "Jobb 'næringsImport' ferdig".toRegex()
+    }
 }

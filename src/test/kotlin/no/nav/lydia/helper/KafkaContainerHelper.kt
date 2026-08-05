@@ -259,6 +259,41 @@ class KafkaContainerHelper(
         )
     }
 
+    fun sendJobbMeldingTilAnnenApp(
+        jobb: Jobb,
+        applikasjon: String = "pia-dvh-import",
+    ) {
+        sendOgVentTilKonsumert(
+            nøkkel = jobb.name,
+            melding =
+                """
+                {
+                    "jobb": "${jobb.name}",
+                    "tidspunkt": "2023-01-01T00:00:00.000Z",
+                    "parameter": "",
+                    "applikasjon": "$applikasjon"
+                }
+                """.trimIndent(),
+            topic = Topic.JOBBLYTTER_TOPIC,
+        )
+    }
+
+    fun sendJobbMeldingMedUkjentJobb(ukjentJobb: String) {
+        sendOgVentTilKonsumert(
+            nøkkel = ukjentJobb,
+            melding =
+                """
+                {
+                    "jobb": "$ukjentJobb",
+                    "tidspunkt": "2023-01-01T00:00:00.000Z",
+                    "parameter": "",
+                    "applikasjon": "lydia-api"
+                }
+                """.trimIndent(),
+            topic = Topic.JOBBLYTTER_TOPIC,
+        )
+    }
+
     private fun OppdateringVirksomhet.tilProducerRecord() =
         ProducerRecord(
             Topic.BRREG_OPPDATERING_TOPIC.navn,

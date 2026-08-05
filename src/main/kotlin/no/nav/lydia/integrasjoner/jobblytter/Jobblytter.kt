@@ -47,6 +47,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 object Jobblytter : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    private val lenientJson = Json { ignoreUnknownKeys = true }
     private lateinit var job: Job
     private lateinit var kafka: Kafka
 
@@ -117,86 +118,97 @@ object Jobblytter : CoroutineScope {
                     logger.info("Kafka consumer subscribed to ${topic.navn}")
                     while (job.isActive) {
                         val records = consumer.poll(Duration.ofSeconds(1))
-                        records.forEach {
-                            val jobInfo = Json.decodeFromString<SerializableJobbInfo>(it.value())
-                            if (jobInfo.jobb.name != it.key()) {
-                                logger.warn(
-                                    "Received record with key ${it.key()} and value ${it.value()} from topic ${it.topic()} but jobInfo.job is ${jobInfo.jobb}",
-                                )
-                            } else {
-                                logger.info("Starter jobb $jobInfo")
-                                when (jobInfo.jobb) {
-                                    engangsJobb -> {
-                                        if (jobInfo.parameter.isNullOrEmpty()) {
-                                            logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
-                                        } else {
-                                            val tørrKjør = jobInfo.parameter != "GO!"
-                                            virksomhetService.finnSlettedeVirksomheterMedAktivSak().forEach { virksomhet ->
-                                                logger.info("Virksomhet $virksomhet")
-                                                if (!tørrKjør) {
-                                                    iaSakService.avsluttSakForSlettetVirksomhet(virksomhet)
+                        records.forEach { record ->
+                            try {
+                                val header = lenientJson.decodeFromString<JobbMeldingHeader>(record.value())
+                                if (header.applikasjon != "lydia-api") {
+                                    logger.info("Ignorerer melding adressert til '${header.applikasjon}' (offset ${record.offset()})")
+                                    return@forEach
+                                }
+                                val jobInfo = Json.decodeFromString<SerializableJobbInfo>(record.value())
+                                if (jobInfo.jobb.name != record.key()) {
+                                    logger.warn(
+                                        "Received record with key ${record.key()} and value ${record.value()} from topic ${record.topic()} but jobInfo.job is ${jobInfo.jobb}",
+                                    )
+                                } else {
+                                    logger.info("Starter jobb $jobInfo")
+                                    when (jobInfo.jobb) {
+                                        engangsJobb -> {
+                                            if (jobInfo.parameter.isNullOrEmpty()) {
+                                                logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
+                                            } else {
+                                                val tørrKjør = jobInfo.parameter != "GO!"
+                                                virksomhetService.finnSlettedeVirksomheterMedAktivSak().forEach { virksomhet ->
+                                                    logger.info("Virksomhet $virksomhet")
+                                                    if (!tørrKjør) {
+                                                        iaSakService.avsluttSakForSlettetVirksomhet(virksomhet)
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
 
-                                    iaSakEksport -> {
-                                        iaSakEksporterer.eksporter()
-                                    }
+                                        iaSakEksport -> {
+                                            iaSakEksporterer.eksporter()
+                                        }
 
-                                    iaSakStatistikkEksport -> {
-                                        logger.warn("Jobben 'iaSakStatistikkEksport' skal ikke brukes lenger. Vil ikke gjennomføre.")
-                                    }
+                                        iaSakStatistikkEksport -> {
+                                            logger.warn("Jobben 'iaSakStatistikkEksport' skal ikke brukes lenger. Vil ikke gjennomføre.")
+                                        }
 
-                                    næringsImport -> {
-                                        næringsDownloader.lastNedNæringer()
-                                    }
+                                        næringsImport -> {
+                                            næringsDownloader.lastNedNæringer()
+                                        }
 
-                                    materializedViewOppdatering -> {
-                                        statistikkViewOppdaterer.oppdaterStatistikkView()
-                                    }
+                                        materializedViewOppdatering -> {
+                                            statistikkViewOppdaterer.oppdaterStatistikkView()
+                                        }
 
-                                    iaSakSamarbeidsplanEksport -> {
-                                        samarbeidsplanKafkaEksporterer.eksporter()
-                                    }
+                                        iaSakSamarbeidsplanEksport -> {
+                                            samarbeidsplanKafkaEksporterer.eksporter()
+                                        }
 
-                                    iaSakSamarbeidEksport -> {
-                                        samarbeidKafkaEksporterer.eksporterAlleSamarbeid()
-                                    }
+                                        iaSakSamarbeidEksport -> {
+                                            samarbeidKafkaEksporterer.eksporterAlleSamarbeid()
+                                        }
 
-                                    iaSakSamarbeidEksportEttSamarbeid -> {
-                                        if (jobInfo.parameter.isNullOrEmpty()) {
-                                            logger.warn(
-                                                "Forsøkte å starte jobb 'iaSakSamarbeidEksportEttSamarbeid' med null/empty parameter. " +
-                                                    "Forventer et samarbeidId. Avslutter",
-                                            )
-                                        } else {
-                                            val samarbeidId = jobInfo.parameter
-                                            samarbeidKafkaEksporterer.eksporterEnkeltSamarbeid(samarbeidIdAsString = samarbeidId)
+                                        iaSakSamarbeidEksportEttSamarbeid -> {
+                                            if (jobInfo.parameter.isNullOrEmpty()) {
+                                                logger.warn(
+                                                    "Forsøkte å starte jobb 'iaSakSamarbeidEksportEttSamarbeid' med null/empty parameter. " +
+                                                        "Forventer et samarbeidId. Avslutter",
+                                                )
+                                            } else {
+                                                val samarbeidId = jobInfo.parameter
+                                                samarbeidKafkaEksporterer.eksporterEnkeltSamarbeid(samarbeidIdAsString = samarbeidId)
+                                            }
+                                        }
+
+                                        iaSakSamarbeidBigQueryEksport -> {
+                                            samarbeidBigqueryEksporterer.eksporter()
+                                        }
+
+                                        iaSakSamarbeidsplanBigqueryEksport -> {
+                                            samarbeidsplanBigqueryEksporterer.eksporter()
+                                        }
+
+                                        spørreundersøkelseBigQueryEksport -> {
+                                            spørreundersøkelseBigqueryEksporterer.eksporter()
+                                        }
+
+                                        prosesserPlanlagteHendelser -> {
+                                            tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet()
+                                        }
+
+                                        else -> {
+                                            logger.info("Jobb '${jobInfo.jobb}' ignorert")
                                         }
                                     }
-
-                                    iaSakSamarbeidBigQueryEksport -> {
-                                        samarbeidBigqueryEksporterer.eksporter()
-                                    }
-
-                                    iaSakSamarbeidsplanBigqueryEksport -> {
-                                        samarbeidsplanBigqueryEksporterer.eksporter()
-                                    }
-
-                                    spørreundersøkelseBigQueryEksport -> {
-                                        spørreundersøkelseBigqueryEksporterer.eksporter()
-                                    }
-
-                                    prosesserPlanlagteHendelser -> {
-                                        tilstandVirksomhetOppdaterer.oppdaterTilstandVirksomhet()
-                                    }
-
-                                    else -> {
-                                        logger.info("Jobb '${jobInfo.jobb}' ignorert")
-                                    }
+                                    logger.info("Jobb '${jobInfo.jobb}' ferdig")
                                 }
-                                logger.info("Jobb '${jobInfo.jobb}' ferdig")
+                            } catch (e: Exception) {
+                                logger.warn(
+                                    "Hopper over melding på offset ${record.offset()} fra topic ${record.topic()} pga feil: ${e.message}",
+                                )
                             }
                         }
                         consumer.commitSync()
@@ -222,6 +234,12 @@ object Jobblytter : CoroutineScope {
         override val parameter: String? = "",
         override val applikasjon: String,
     ) : JobbInfo
+
+    @Serializable
+    private data class JobbMeldingHeader(
+        val jobb: String,
+        val applikasjon: String,
+    )
 
     private fun cancel() =
         runBlocking {
