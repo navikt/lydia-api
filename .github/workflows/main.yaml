@@ -70,7 +70,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/brreg-sletting-tilstandsmaskin'
+    if: github.ref == 'refs/heads/fiks-duplikatkjoring-av-jobb-startet-i-jobblytter'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
