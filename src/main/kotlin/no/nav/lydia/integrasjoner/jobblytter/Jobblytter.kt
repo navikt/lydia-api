@@ -36,6 +36,8 @@ import no.nav.lydia.samarbeidsplan.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.samarbeidsplan.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetOppdaterer
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.consumer.OffsetAndMetadata
+import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.errors.WakeupException
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -119,9 +121,14 @@ object Jobblytter : CoroutineScope {
                     while (job.isActive) {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         records.forEach { record ->
+                            val perRecordOffset: Map<TopicPartition, OffsetAndMetadata> = mapOf(
+                                TopicPartition(record.topic(), record.partition()) to
+                                    OffsetAndMetadata(record.offset() + 1),
+                            )
                             try {
                                 val header = jsonIgnoreUnknownKeys.decodeFromString<JobbMeldingHeader>(record.value())
                                 if (header.applikasjon != "lydia-api") {
+                                    consumer.commitSync(perRecordOffset)
                                     logger.info(
                                         "Ignorerer melding adressert til '${header.applikasjon}', forventet 'lydia-api' (offset ${record.offset()}). " +
                                             "Committer offset.",
@@ -134,6 +141,7 @@ object Jobblytter : CoroutineScope {
                                         "Mottok melding med nøkkel ${record.key()} og verdi ${record.value()} fra topic ${record.topic()}, men jobInfo.job er ${jobInfo.jobb}",
                                     )
                                 } else {
+                                    consumer.commitSync(perRecordOffset)
                                     logger.info("Starter jobb $jobInfo")
                                     when (jobInfo.jobb) {
                                         engangsJobb -> {
@@ -212,9 +220,9 @@ object Jobblytter : CoroutineScope {
                                 logger.warn(
                                     "Hopper over melding på offset ${record.offset()} fra topic ${record.topic()} pga feil: ${e.message}",
                                 )
+                                consumer.commitSync(perRecordOffset)
                             }
                         }
-                        consumer.commitSync()
                     }
                 } catch (e: RetriableException) {
                     logger.error("Kafka consumer got retriable exception", e)

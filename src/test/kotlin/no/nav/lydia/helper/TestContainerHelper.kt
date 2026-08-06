@@ -1,9 +1,11 @@
 package no.nav.lydia.helper
 
 import ia.felles.definisjoner.bransjer.Bransje
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.ktor.http.HttpMethod
+import kotlinx.coroutines.runBlocking
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
@@ -19,6 +21,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
 import kotlin.io.path.Path
+import kotlin.time.Duration.Companion.seconds
 
 class TestContainerHelper {
     companion object {
@@ -170,7 +173,12 @@ class TestContainerHelper {
 
         fun GenericContainer<*>.performPatch(url: String) = TestRequest(HttpMethod.Patch, buildUrl(url))
 
-        infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
+        infix fun GenericContainer<*>.shouldContainLog(regex: Regex) =
+            runBlocking {
+                eventually(5.seconds) {
+                    logs shouldContain regex
+                }
+            }
 
         infix fun GenericContainer<*>.shouldNotContainLog(regex: Regex) = logs shouldNotContain regex
     }
