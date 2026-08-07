@@ -40,6 +40,9 @@ class IASakService(
 
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> = iaSakshendelseRepository.hentHendelserForOrgnummer(orgnr = orgnr)
 
+    fun hentSamarbeidshendelserForOrgnummer(orgnr: String): List<SamarbeidshendelseDto> =
+        iaSakshendelseRepository.hentSamarbeidshendelserForOrgnummer(orgnr = orgnr)
+
     fun hentIASakLeveranser(saksnummer: String): Either<Feil, List<IASakLeveranse>> =
         try {
             iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = saksnummer).right()

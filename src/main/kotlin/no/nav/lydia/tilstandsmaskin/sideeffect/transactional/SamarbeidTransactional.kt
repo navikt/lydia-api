@@ -6,7 +6,6 @@ import no.nav.lydia.samarbeid.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.mapRowToIASamarbeid
-import no.nav.lydia.samarbeidsperiode.IASak
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -166,6 +165,10 @@ class SamarbeidTransactional {
             tx.run(
                 queryOf(
                     """
+                    DELETE FROM hendelser_til_samarbeid hs
+                    USING ia_sak_hendelse ish
+                      WHERE hs.hendelse_id = ish.id AND ish.orgnr = :orgnr;
+                    
                     DELETE FROM ia_prosess p
                     USING ia_sak_alle s
                     WHERE p.saksnummer = s.saksnummer
