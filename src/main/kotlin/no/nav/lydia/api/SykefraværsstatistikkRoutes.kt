@@ -5,9 +5,11 @@ import arrow.core.getOrElse
 import arrow.core.right
 import ia.felles.definisjoner.bransjer.Bransje
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
@@ -31,6 +33,7 @@ import no.nav.lydia.tilgangskontroll.superbruker
 
 const val SYKEFRAVÆRSSTATISTIKK_PATH = "sykefravarsstatistikk"
 const val FILTERVERDIER_PATH = "filterverdier"
+const val EIERE_PATH = "eiere"
 const val ANTALL_TREFF = "antallTreff"
 const val SISTE_4_KVARTALER = "siste4kvartaler"
 const val PUBLISERINGSINFO = "publiseringsinfo"
@@ -177,11 +180,31 @@ fun Route.sykefraværsstatistikk(
             ),
         )
     }
+
+    post("$SYKEFRAVÆRSSTATISTIKK_PATH/$EIERE_PATH") {
+        val navIdenter = call.receive<Set<String>>()
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            navIdenter.right()
+        }.map { identer ->
+            call.respond(hentEiere(azureService, identer))
+        }.mapLeft { feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
 }
 
 suspend fun hentEiere(azureService: AzureService) =
     azureService.hentVeiledere()
         .fold(ifLeft = { emptyList() }, ifRight = { veiledere -> veiledere.map { it.tilEierDTO() }.toList() })
+
+suspend fun hentEiere(
+    azureService: AzureService,
+    navIdenter: Set<String>,
+) = azureService.hentVeiledere()
+    .fold(
+        ifLeft = { emptyList() },
+        ifRight = { veiledere -> veiledere.filter { it.navIdent in navIdenter }.map { it.tilEierDTO() } },
+    )
 
 object SykefraværsstatistikkError {
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)

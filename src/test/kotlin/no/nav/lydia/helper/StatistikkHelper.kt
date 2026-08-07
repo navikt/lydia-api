@@ -1,6 +1,8 @@
 package no.nav.lydia.helper
 
+import kotlinx.serialization.json.Json
 import no.nav.lydia.api.ANTALL_TREFF
+import no.nav.lydia.api.EIERE_PATH
 import no.nav.lydia.api.FILTERVERDIER_PATH
 import no.nav.lydia.api.HISTORISK_STATISTIKK
 import no.nav.lydia.api.PUBLISERINGSINFO
@@ -8,7 +10,9 @@ import no.nav.lydia.api.SISTE_4_KVARTALER
 import no.nav.lydia.api.SISTE_TILGJENGELIGE_KVARTAL
 import no.nav.lydia.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.prioritering.sykefraværsstatistikk.Publiseringsinfo
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.FilterverdierDto
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.Søkeparametere
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.VirksomhetsoversiktDto
@@ -287,5 +291,15 @@ class StatistikkHelper {
                 .tilSingelRespons<FilterverdierDto>()
                 .third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
+
+        fun hentEiere(
+            navIdenter: Set<String>,
+            token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
+        ) = TestContainerHelper.applikasjon.performPost("${SYKEFRAVÆRSSTATISTIKK_PATH}/${EIERE_PATH}")
+            .authentication().bearer(token)
+            .jsonBody(Json.encodeToString(navIdenter))
+            .tilListeRespons<EierDTO>()
+            .third
+            .fold(success = { response -> response }, failure = { fail(it.message) })
     }
 }

@@ -35,6 +35,7 @@ import no.nav.lydia.container.sykefraværsstatistikk.importering.Sykefraværssta
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentEiere
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentStatistikkHistorikk
@@ -515,6 +516,28 @@ class SykefraværsstatistikkApiTest {
         val (_, response, _) = request.responseString()
 
         response.statusCode shouldBe 401
+    }
+
+    @Test
+    fun `saksbehandler skal kunne hente navn for et gitt sett av navIdenter`() {
+        val saksbehandler = authContainerHelper.saksbehandler1
+
+        val eiere = hentEiere(navIdenter = setOf("M12345", "R12345"), token = saksbehandler.token)
+
+        eiere.map { it.navIdent } shouldContainAll listOf("M12345", "R12345")
+        eiere shouldContain EierDTO(navIdent = "M12345", navn = "Mikke Mus Mus")
+    }
+
+    @Test
+    fun `eiere-endepunktet skal kun returnere navn for de navIdentene det spørres om`() {
+        val saksbehandler = authContainerHelper.saksbehandler1
+
+        val eiere = hentEiere(
+            navIdenter = setOf("M12345", "finnesikke"),
+            token = saksbehandler.token,
+        )
+
+        eiere.map { it.navIdent } shouldBe listOf("M12345")
     }
 
     @Test
