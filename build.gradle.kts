@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val ktorVersion = "3.5.2"
 val iaFellesVersion = "2.0.6"
 val kotestVerstion = "6.2.3"
@@ -171,8 +169,4 @@ tasks {
 
 kotlin {
     jvmToolchain(21)
-}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.compilerOptions {
-    freeCompilerArgs.set(listOf("-Xcontext-parameters"))
 }
