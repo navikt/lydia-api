@@ -18,6 +18,7 @@ import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.hentSisteIASakDto
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelseTilSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.opprettSamarbeidsplan
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
@@ -67,6 +68,10 @@ class OpprettPlanForSamarbeidSideEffect(
                     ),
                     sistEndretAvHendelseId = null,
                     resulterendeStatus = sakDto.status,
+                )
+                lagreHendelseTilSamarbeid(
+                    samarbeidId = samarbeidId,
+                    hendelseId = opprettPlanHendelse.id,
                 )
                 val oppdatertSakDto = oppdaterStatusPåSak(
                     saksnummer = saksnummer,
