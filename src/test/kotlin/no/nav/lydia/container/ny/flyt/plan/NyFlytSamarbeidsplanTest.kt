@@ -2,6 +2,7 @@ package no.nav.lydia.container.ny.flyt.plan
 
 import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
+import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.DateTimeUnit
@@ -26,12 +27,14 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
+import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.samarbeidsplan.InnholdMalDto
 import no.nav.lydia.samarbeidsplan.PlanDto
 import no.nav.lydia.samarbeidsplan.PlanMalDto
@@ -346,5 +349,22 @@ class NyFlytSamarbeidsplanTest {
 
         samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, planId = plan.id)
         hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+    }
+
+    @Test
+    fun `Skal opprette OPPRETT_SAMARBEIDSPLAN-hendelse og koble til samarbeid`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(
+            orgnr = sak.orgnr,
+        )
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(sak.orgnr)
+
+        historikk.flatMap { it.samarbeidshendelser } shouldForAny {
+            it.hendelsestype shouldBe IASakshendelseType.OPPRETT_SAMARBEIDSPLAN
+            it.samarbeidId shouldBe samarbeid.id
+        }
     }
 }
