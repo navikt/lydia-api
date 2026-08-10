@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val ktorVersion = "3.5.1"
+val ktorVersion = "3.5.2"
 val iaFellesVersion = "2.0.6"
 val kotestVerstion = "6.2.3"
 val testcontainersVersion = "2.0.5"
-val logbackVersion = "1.6.0"
+val logbackVersion = "1.6.1"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.30.0-alpha"
 
@@ -56,7 +56,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.13")
     implementation("com.zaxxer:HikariCP:7.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:13.0.0")
+    implementation("org.flywaydb:flyway-database-postgresql:13.1.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Serialization med Gson
