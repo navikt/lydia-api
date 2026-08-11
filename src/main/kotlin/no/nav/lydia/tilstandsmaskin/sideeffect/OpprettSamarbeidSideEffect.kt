@@ -15,6 +15,7 @@ import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.opprettNyttSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelseTilSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
 import java.time.LocalDateTime
@@ -55,6 +56,11 @@ class OpprettSamarbeidSideEffect(
                 val opprettetSamarbeid = opprettNyttSamarbeid(
                     saksnummer = saksnummer,
                     navn = samarbeidsNavn,
+                )
+
+                lagreHendelseTilSamarbeid(
+                    samarbeidId = opprettetSamarbeid.id,
+                    hendelseId = iASakshendelse.id,
                 )
 
                 oppdaterStatusPåSak(

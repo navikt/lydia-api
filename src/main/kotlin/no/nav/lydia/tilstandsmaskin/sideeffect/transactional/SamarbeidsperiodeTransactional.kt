@@ -2,6 +2,7 @@ package no.nav.lydia.tilstandsmaskin.sideeffect.transactional
 
 import com.github.guepardoapps.kulid.ULID
 import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -12,12 +13,69 @@ import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
 import no.nav.lydia.samarbeidsperiode.IASakshendelse
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.samarbeidsperiode.SamarbeidshendelseDto
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
 
 class SamarbeidsperiodeTransactional {
     companion object {
+        context(tx: TransactionalSession)
+        fun lagreHendelseTilSamarbeid(
+            samarbeidId: Int,
+            hendelseId: String,
+        ): SamarbeidshendelseDto? {
+            tx.run(
+                action = queryOf(
+                    statement =
+                        """
+                        INSERT INTO hendelser_til_samarbeid (
+                            samarbeid_id, 
+                            hendelse_id
+                        )
+                        VALUES (
+                            :samarbeid_id, 
+                            :hendelse_id
+                        )
+                        ON CONFLICT (hendelse_id) DO NOTHING
+                        """.trimIndent(),
+                    paramMap = mapOf(
+                        "samarbeid_id" to samarbeidId,
+                        "hendelse_id" to hendelseId,
+                    ),
+                ).asUpdate,
+            )
+
+            return samarbeidshendelseDto(hendelseId)
+        }
+
+        context(tx: TransactionalSession)
+        private fun samarbeidshendelseDto(hendelseId: String): SamarbeidshendelseDto? =
+            tx.run(
+                queryOf(
+                    """
+                     SELECT 
+                        hendelser_til_samarbeid.samarbeid_id,
+                        ia_sak_hendelse.saksnummer,
+                        ia_sak_hendelse.type, 
+                        ia_sak_hendelse.opprettet, 
+                        ia_sak_hendelse.opprettet_av
+                    FROM hendelser_til_samarbeid
+                    JOIN ia_sak_hendelse ON (ia_sak_hendelse.id = hendelser_til_samarbeid.hendelse_id)
+                    WHERE ia_sak_hendelse.id = :hendelse_id
+                    """.trimIndent(),
+                    mapOf("hendelse_id" to hendelseId),
+                ).map { row ->
+                    SamarbeidshendelseDto(
+                        samarbeidId = row.int("samarbeid_id"),
+                        saksnummer = row.string("saksnummer"),
+                        hendelsestype = IASakshendelseType.valueOf(row.string("type")),
+                        tidspunkt = row.localDateTime("opprettet").toKotlinLocalDateTime(),
+                        opprettetAv = row.string("opprettet_av"),
+                    )
+                }.asSingle,
+            )
+
         context(tx: TransactionalSession)
         fun lagreHendelse(
             hendelse: IASakshendelse,

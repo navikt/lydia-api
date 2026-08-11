@@ -98,6 +98,8 @@ fun Route.nyFlytVirksomhet(
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
                 .groupBy { it.saksnummer }
+            val samarbeidshendelser = iaSakService.hentSamarbeidshendelserForOrgnummer(orgnr = orgnummer)
+                .groupBy { it.saksnummer }
             iaSakService.hentIASakDtoerForOrgnummer(orgnummer = orgnummer)
                 .map { sak ->
                     sak.addHendelser(hendelser = hendelser[sak.saksnummer] ?: emptyList())
@@ -105,7 +107,10 @@ fun Route.nyFlytVirksomhet(
                 .sortedByDescending { it.opprettetTidspunkt }
                 .map { iASakDto ->
                     val samarbeid = nyFlytService.hentSamarbeidSomIkkeErSlettet(iASakDto.saksnummer).getOrElse { emptyList() }
-                    iASakDto.tilSakshistorikk(samarbeid = samarbeid.tilDto())
+                    iASakDto.tilSakshistorikk(
+                        samarbeid = samarbeid.tilDto(),
+                        samarbeidshendelser = samarbeidshendelser[iASakDto.saksnummer] ?: emptyList(),
+                    )
                 }.right()
         }.also { either: Either<Feil, List<SakshistorikkDto>> ->
             if (either.isLeft()) {

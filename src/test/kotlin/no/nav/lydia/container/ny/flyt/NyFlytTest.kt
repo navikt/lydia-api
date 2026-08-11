@@ -719,7 +719,7 @@ class NyFlytTest {
                  WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
         )
-        begrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
+        begrunnelser.toSet() shouldBe setOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
     }
 
     @Test
@@ -1383,5 +1383,54 @@ class NyFlytTest {
 
         val responseLesebruker = sak.bliEierResponse(token = lesebruker.token)
         responseLesebruker.statuskode() shouldBe HttpStatusCode.Forbidden.value
+    }
+
+    @Test
+    fun `skal lagre NY_PROSESS-hendelse knyttet til samarbeid i ny tabell og dukke opp i historikk`() {
+        val sak = vurderVirksomhet()
+        sak.status shouldBe IASak.Status.VURDERES
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+
+        val samarbeid = sak.opprettSamarbeid()
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+        val samarbeidshendelser = historikk.flatMap { it.samarbeidshendelser }
+
+        val opprettetHendelser = samarbeidshendelser.filter {
+            it.hendelsestype == IASakshendelseType.NY_PROSESS
+        }
+        opprettetHendelser shouldHaveSize 1
+        opprettetHendelser.first().samarbeidId shouldBe samarbeid.id
+        opprettetHendelser.first().saksnummer shouldBe sak.saksnummer
+    }
+
+    @Test
+    fun `hvert opprettet samarbeid får sin egen NY_PROSESS-samarbeidshendelse`() {
+        val sak = vurderVirksomhet()
+        sak.status shouldBe IASak.Status.VURDERES
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+
+        val førsteSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Første")
+        val andreSamarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Andre")
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+        val samarbeidIder = historikk
+            .flatMap { it.samarbeidshendelser }
+            .filter { it.hendelsestype == IASakshendelseType.NY_PROSESS }
+            .map { it.samarbeidId }
+
+        samarbeidIder shouldHaveSize 2
+        samarbeidIder.toSet() shouldBe setOf(førsteSamarbeid.id, andreSamarbeid.id)
+    }
+
+    @Test
+    fun `virksomhet i vurderes uten samarbeid har tom samarbeidshendelseliste`() {
+        val sak = vurderVirksomhet()
+        sak.status shouldBe IASak.Status.VURDERES
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+
+        historikk.flatMap { it.samarbeidshendelser } shouldHaveSize 0
     }
 }

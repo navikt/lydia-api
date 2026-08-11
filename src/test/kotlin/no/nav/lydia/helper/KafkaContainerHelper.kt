@@ -11,6 +11,8 @@ import kotlinx.coroutines.time.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
 import no.nav.lydia.prioritering.sykefraværsstatistikk.import.GradertSykemeldingImportDto
 import no.nav.lydia.prioritering.sykefraværsstatistikk.import.KeySykefraværsstatistikkMetadataVirksomhet
@@ -38,6 +40,7 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.util.TimeZone
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
 
 class KafkaContainerHelper(
     network: Network,
@@ -257,6 +260,7 @@ class KafkaContainerHelper(
                 """.trimIndent(),
             topic = Topic.JOBBLYTTER_TOPIC,
         )
+        applikasjon shouldContainLog "Jobb '${jobb.name}' ferdig".toRegex()
     }
 
     fun sendJobbMeldingTilAnnenApp(
@@ -336,7 +340,7 @@ class KafkaContainerHelper(
     ) {
         withTimeout(Duration.ofSeconds(5)) {
             launch {
-                delay(20) // -- vent noen millisec fordi vi vet at det er forventet at noe skal ligge i kafka
+                delay(20.milliseconds) // -- vent noen millisec fordi vi vet at det er forventet at noe skal ligge i kafka
                 val funnetNoenMeldinger = AtomicBoolean()
                 val harPrøvdFlereGanger = AtomicBoolean()
                 val alleMeldinger = mutableListOf<String>()
@@ -368,7 +372,7 @@ class KafkaContainerHelper(
         withTimeout(Duration.ofSeconds(5)) {
             val nøklerProssesert = mutableMapOf<String, String>()
             launch {
-                delay(20) // -- vent noen millisec fordi vi vet at det er forventet at noe skal ligge i kafka
+                delay(20.milliseconds) // -- vent noen millisec fordi vi vet at det er forventet at noe skal ligge i kafka
                 while (this.isActive && !nøklerProssesert.keys.containsAll(keys)) {
                     val records = konsument.poll(Duration.ofMillis(50))
                     records

@@ -1,5 +1,6 @@
 package no.nav.lydia.samarbeidsperiode
 
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -14,6 +15,38 @@ import javax.sql.DataSource
 class IASakshendelseRepository(
     val dataSource: DataSource,
 ) {
+    fun hentSamarbeidshendelserForOrgnummer(orgnr: String): List<SamarbeidshendelseDto> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    statement =
+                        """
+                        SELECT 
+                            hendelser_til_samarbeid.samarbeid_id,
+                            ia_sak_hendelse.saksnummer,
+                            ia_sak_hendelse.type, 
+                            ia_sak_hendelse.opprettet, 
+                            ia_sak_hendelse.opprettet_av
+                        FROM hendelser_til_samarbeid
+                        JOIN ia_sak_hendelse ON (ia_sak_hendelse.id = hendelser_til_samarbeid.hendelse_id)
+                        WHERE ia_sak_hendelse.orgnr = :orgnr
+                        ORDER BY ia_sak_hendelse.opprettet ASC 
+                        """.trimIndent(),
+                    paramMap = mapOf(
+                        "orgnr" to orgnr,
+                    ),
+                ).map { row ->
+                    SamarbeidshendelseDto(
+                        samarbeidId = row.int("samarbeid_id"),
+                        saksnummer = row.string("saksnummer"),
+                        hendelsestype = IASakshendelseType.valueOf(row.string("type")),
+                        tidspunkt = row.localDateTime("opprettet").toKotlinLocalDateTime(),
+                        opprettetAv = row.string("opprettet_av"),
+                    )
+                }.asList,
+            )
+        }
+
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> {
         val orgnrKolonneNavn = "orgnr"
         return using(sessionOf(dataSource)) { session ->

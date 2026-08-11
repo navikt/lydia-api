@@ -12,6 +12,7 @@ data class SakshistorikkDto(
     val sistEndret: LocalDateTime,
     val sakshendelser: List<SakSnapshotDto>,
     val samarbeid: List<IASamarbeidDto>,
+    val samarbeidshendelser: List<SamarbeidshendelseDto> = emptyList(),
 )
 
 @Serializable
@@ -37,25 +38,38 @@ data class SakSnapshotDto(
     }
 }
 
-fun IASak.tilSakshistorikk(samarbeid: List<IASamarbeidDto>): SakshistorikkDto =
+fun IASak.tilSakshistorikk(
+    samarbeid: List<IASamarbeidDto>,
+    samarbeidshendelser: List<SamarbeidshendelseDto> = emptyList(),
+): SakshistorikkDto =
     SakshistorikkDto(
         saksnummer = this.saksnummer,
         opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
         sistEndret = this.endretTidspunkt?.toKotlinLocalDateTime()
             ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-        sakshendelser = hendelser.mapIndexed { _, hendelse: IASakshendelse ->
-            SakSnapshotDto.from(hendelse)
-        }.toList(),
+        sakshendelser = hendelser.map { SakSnapshotDto.from(iaSakshendelse = it) },
         samarbeid = samarbeid,
+        samarbeidshendelser = samarbeidshendelser,
     )
 
-fun IASakDto.tilSakshistorikk(samarbeid: List<IASamarbeidDto>): SakshistorikkDto =
+fun IASakDto.tilSakshistorikk(
+    samarbeid: List<IASamarbeidDto>,
+    samarbeidshendelser: List<SamarbeidshendelseDto> = emptyList(),
+): SakshistorikkDto =
     SakshistorikkDto(
         saksnummer = this.saksnummer,
         opprettet = this.opprettetTidspunkt,
         sistEndret = this.endretTidspunkt ?: this.opprettetTidspunkt,
-        sakshendelser = hendelser.mapIndexed { _, hendelse: IASakshendelse ->
-            SakSnapshotDto.from(hendelse)
-        }.toList(),
+        sakshendelser = hendelser.map { SakSnapshotDto.from(iaSakshendelse = it) },
         samarbeid = samarbeid,
+        samarbeidshendelser = samarbeidshendelser,
     )
+
+@Serializable
+data class SamarbeidshendelseDto(
+    val samarbeidId: Int,
+    val saksnummer: String,
+    val hendelsestype: IASakshendelseType,
+    val tidspunkt: LocalDateTime,
+    val opprettetAv: String,
+)
