@@ -14,6 +14,8 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -22,6 +24,8 @@ import no.nav.lydia.Security
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
 import org.slf4j.LoggerFactory
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeSource
 
 @Serializable
 private data class AzureResponse(
@@ -68,6 +72,10 @@ class AzureService(
     private val deserializer = Json { ignoreUnknownKeys = true }
     private val httpClient = HttpClient(CIO)
 
+    private val veiledereCacheTid = 10.minutes
+    private val veiledereCacheLås = Mutex()
+    private var veiledereCache: Pair<TimeSource.Monotonic.ValueTimeMark, Set<VeilederDTO>>? = null
+
     suspend fun hentNavenhet(objectId: String?): Either<Feil, NavEnhet> {
         val accessToken = tokenFetcher.clientCredentialsToken()
         val url = "${security.azureConfig.graphDatabaseUrl}/users/$objectId?\$select=$azureAdProps"
@@ -81,7 +89,20 @@ class AzureService(
             }
     }
 
+    // Låsen hindrer at samtidige kall henter hele rosteren hver for seg ved cache-miss
     suspend fun hentVeiledere(): Either<Feil, Set<VeilederDTO>> =
+        veiledereCacheLås.withLock {
+            veiledereCache?.let { (hentetTidspunkt, veiledere) ->
+                if (hentetTidspunkt.elapsedNow() < veiledereCacheTid) {
+                    return@withLock veiledere.right()
+                }
+            }
+            hentVeiledereFraAzure().onRight { veiledere ->
+                veiledereCache = TimeSource.Monotonic.markNow() to veiledere
+            }
+        }
+
+    private suspend fun hentVeiledereFraAzure(): Either<Feil, Set<VeilederDTO>> =
         coroutineScope {
             Either.catch {
                 val accessToken = tokenFetcher.clientCredentialsToken()
