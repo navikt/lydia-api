@@ -31,6 +31,7 @@ import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeidsperiode.IASak
@@ -367,4 +368,46 @@ class NyFlytSamarbeidsplanTest {
             it.samarbeidId shouldBe samarbeid.id
         }
     }
+
+    @Test
+    fun `Skal koble OPPRETT_SAMARBEIDSPLAN-hendelse til samarbeidsplan`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        hendelsestyperKobletTilSamarbeidsplan(planId = plan.id) shouldBe
+            listOf(IASakshendelseType.OPPRETT_SAMARBEIDSPLAN.name)
+    }
+
+    @Test
+    fun `Skal koble SLETT_SAMARBEIDSPLAN-hendelse til både samarbeid og samarbeidsplan`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        samarbeid.slettSamarbeidsplan(orgnr = sak.orgnr, planId = plan.id)
+
+        hendelsestyperKobletTilSamarbeidsplan(planId = plan.id) shouldBe listOf(
+            IASakshendelseType.OPPRETT_SAMARBEIDSPLAN.name,
+            IASakshendelseType.SLETT_SAMARBEIDSPLAN.name,
+        )
+
+        hentSamarbeidshistorikkNyFlyt(sak.orgnr).flatMap { it.samarbeidshendelser } shouldForAny {
+            it.hendelsestype shouldBe IASakshendelseType.SLETT_SAMARBEIDSPLAN
+            it.samarbeidId shouldBe samarbeid.id
+        }
+    }
+
+    private fun hendelsestyperKobletTilSamarbeidsplan(planId: String): List<String> =
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne(
+            """
+            SELECT ia_sak_hendelse.type
+            FROM hendelser_til_samarbeidsplan
+            JOIN ia_sak_hendelse ON (ia_sak_hendelse.id = hendelser_til_samarbeidsplan.hendelse_id)
+            WHERE hendelser_til_samarbeidsplan.samarbeidsplan_id = '$planId'
+            ORDER BY ia_sak_hendelse.opprettet ASC
+            """.trimIndent(),
+        )
 }
