@@ -14,7 +14,9 @@ import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelseTilSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.lagreHendelseTilSamarbeidsplan
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.settPlanTilSlettet
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
 import java.time.LocalDateTime
@@ -48,6 +50,16 @@ class SlettPlanForSamarbeidSideEffect(
                     ),
                     sistEndretAvHendelseId = null,
                     resulterendeStatus = AKTIV,
+                )
+
+                lagreHendelseTilSamarbeid(
+                    samarbeidId = samarbeidId,
+                    hendelseId = slettPlanHendelse.id,
+                )
+
+                lagreHendelseTilSamarbeidsplan(
+                    samarbeidsplanId = plan.id,
+                    hendelseId = slettPlanHendelse.id,
                 )
 
                 val iaSakDto = oppdaterStatusPåSak(

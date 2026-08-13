@@ -25,6 +25,33 @@ import kotlin.collections.forEach
 class SamarbeidsplanTransactional {
     companion object {
         context(tx: TransactionalSession)
+        fun lagreHendelseTilSamarbeidsplan(
+            samarbeidsplanId: UUID,
+            hendelseId: String,
+        ) {
+            tx.run(
+                queryOf(
+                    statement =
+                        """
+                        INSERT INTO hendelser_til_samarbeidsplan (
+                            samarbeidsplan_id,
+                            hendelse_id
+                        )
+                        VALUES (
+                            :samarbeidsplan_id,
+                            :hendelse_id
+                        )
+                        ON CONFLICT (hendelse_id) DO NOTHING
+                        """.trimIndent(),
+                    paramMap = mapOf(
+                        "samarbeidsplan_id" to samarbeidsplanId.toString(),
+                        "hendelse_id" to hendelseId,
+                    ),
+                ).asUpdate,
+            )
+        }
+
+        context(tx: TransactionalSession)
         fun opprettSamarbeidsplan(
             planId: UUID,
             samarbeidId: Int,
@@ -322,6 +349,13 @@ class SamarbeidsplanTransactional {
             tx.run(
                 queryOf(
                     """
+                    DELETE FROM hendelser_til_samarbeidsplan hp
+                    USING ia_sak_plan pl, ia_prosess p, ia_sak_alle s
+                    WHERE hp.samarbeidsplan_id = pl.plan_id
+                      AND pl.ia_prosess = p.id
+                      AND p.saksnummer = s.saksnummer
+                      AND s.orgnr = :orgnr;
+
                     DELETE FROM ia_sak_plan_undertema pu
                     USING ia_sak_plan pl, ia_prosess p, ia_sak_alle s
                     WHERE pu.plan_id = pl.plan_id

@@ -20,6 +20,7 @@ import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTr
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelseTilSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.lagreHendelseTilSamarbeidsplan
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.opprettSamarbeidsplan
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
 import java.time.LocalDateTime
@@ -71,6 +72,10 @@ class OpprettPlanForSamarbeidSideEffect(
                 )
                 lagreHendelseTilSamarbeid(
                     samarbeidId = samarbeidId,
+                    hendelseId = opprettPlanHendelse.id,
+                )
+                lagreHendelseTilSamarbeidsplan(
+                    samarbeidsplanId = opprettetSamarbeidsplan.id,
                     hendelseId = opprettPlanHendelse.id,
                 )
                 val oppdatertSakDto = oppdaterStatusPåSak(
