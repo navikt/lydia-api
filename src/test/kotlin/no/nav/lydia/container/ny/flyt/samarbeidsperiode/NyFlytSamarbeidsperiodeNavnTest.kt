@@ -4,12 +4,10 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.api.v1.HendelseAktorDto
 import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
-import no.nav.lydia.helper.SamarbeidsperiodeNavnHelper.Companion.hentAktorer
 import no.nav.lydia.helper.SamarbeidsperiodeNavnHelper.Companion.hentEiere
 import no.nav.lydia.helper.SamarbeidsperiodeNavnHelper.Companion.hentRadgivere
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -51,32 +49,8 @@ class NyFlytSamarbeidsperiodeNavnTest {
     }
 
     @Test
-    fun `skal hente aktør for en hendelse`() {
-        val sak = vurderVirksomhet(token = superbruker.token)
-
-        hentAktorer(
-            saksnummer = sak.saksnummer,
-            hendelseIder = setOf(sak.endretAvHendelseId),
-        ) shouldContain HendelseAktorDto(hendelseId = sak.endretAvHendelseId, aktor = superbrukerNavn)
-    }
-
-    @Test
-    fun `skal ikke returnere aktør for hendelse som tilhører en annen sak`() {
-        val sak = vurderVirksomhet(token = superbruker.token)
-        val annenSak = vurderVirksomhet(token = superbruker.token)
-
-        hentAktorer(
-            saksnummer = annenSak.saksnummer,
-            hendelseIder = setOf(sak.endretAvHendelseId),
-        ).shouldBeEmpty()
-    }
-
-    @Test
     fun `skal returnere tom liste når det ikke spørres om noe`() {
-        val sak = vurderVirksomhet(token = superbruker.token)
-
         hentEiere(saksnumre = emptySet()).shouldBeEmpty()
-        hentAktorer(saksnummer = sak.saksnummer, hendelseIder = emptySet()).shouldBeEmpty()
     }
 
     @Test

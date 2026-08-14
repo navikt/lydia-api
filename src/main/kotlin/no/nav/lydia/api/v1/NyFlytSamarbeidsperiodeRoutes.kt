@@ -8,7 +8,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import kotlinx.serialization.Serializable
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -24,12 +23,6 @@ import no.nav.lydia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilstandsmaskin.NyFlytService
-
-@Serializable
-data class HendelseAktorDto(
-    val hendelseId: String,
-    val aktor: EierDTO,
-)
 
 fun Route.nyFlytSamarbeidsperiode(
     iaSakService: IASakService,
@@ -122,27 +115,6 @@ fun Route.nyFlytSamarbeidsperiode(
         }.map { numre ->
             val radgivere = iaSakService.hentEiereForSaksnumre(numre) + iaTeamService.hentFølgereForSaksnumre(numre)
             call.respond(hentNavn(azureService, radgivere.toSet()))
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    // TODO: For at dette endepunktet skal kunne tas i bruk må hendelseId legges til i SakSnapshotDto og SamarbeidshendelseDto osv.
-    post("$NY_FLYT_API_PATH/samarbeidsperiode/{saksnummer}/aktorer") {
-        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val hendelseIder = call.receive<Set<String>>()
-        call.somLesebruker(adGrupper = adGrupper) { _ ->
-            hendelseIder.right()
-        }.map { ider ->
-            val aktørPerHendelse = iaSakService.hentAktørerForHendelser(saksnummer = saksnummer, hendelseIder = ider)
-            val navnPerNavIdent = hentNavn(azureService, aktørPerHendelse.map { it.second }.toSet())
-                .associateBy { it.navIdent }
-
-            call.respond(
-                aktørPerHendelse.mapNotNull { (hendelseId, navIdent) ->
-                    navnPerNavIdent[navIdent]?.let { HendelseAktorDto(hendelseId = hendelseId, aktor = it) }
-                },
-            )
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

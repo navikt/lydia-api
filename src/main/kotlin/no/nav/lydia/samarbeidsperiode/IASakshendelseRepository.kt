@@ -47,31 +47,6 @@ class IASakshendelseRepository(
             )
         }
 
-    fun hentAktørerForHendelser(
-        saksnummer: String,
-        hendelseIder: Set<String>,
-    ): List<Pair<String, String>> =
-        if (hendelseIder.isEmpty()) {
-            emptyList()
-        } else {
-            using(sessionOf(dataSource)) { session ->
-                session.run(
-                    queryOf(
-                        """
-                        SELECT id, opprettet_av
-                        FROM ia_sak_hendelse
-                        WHERE saksnummer = :saksnummer
-                          AND id in (select unnest(:hendelseIder))
-                        """.trimIndent(),
-                        mapOf(
-                            "saksnummer" to saksnummer,
-                            "hendelseIder" to session.createArrayOf("text", hendelseIder),
-                        ),
-                    ).map { row -> row.string("id") to row.string("opprettet_av") }.asList,
-                )
-            }
-        }
-
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> {
         val orgnrKolonneNavn = "orgnr"
         return using(sessionOf(dataSource)) { session ->
