@@ -23,6 +23,7 @@ import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactio
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.hentSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidTransactional.Companion.hentSamarbeidSomIkkeErSlettet
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelseTilSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.hentPlan
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsplanTransactional.Companion.settPlanTilFullført
@@ -83,6 +84,11 @@ class AvsluttSamarbeidSideEffect(
                     hendelse = iASakshendelse,
                     sistEndretAvHendelseId = null, // forvirrende
                     resulterendeStatus = resulterendeStatus,
+                )
+
+                lagreHendelseTilSamarbeid(
+                    samarbeidId = samarbeidId,
+                    hendelseId = iASakshendelse.id,
                 )
 
                 val oppdatertSak = oppdaterStatusPåSak(
