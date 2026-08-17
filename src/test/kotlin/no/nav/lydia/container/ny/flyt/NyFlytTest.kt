@@ -1433,4 +1433,38 @@ class NyFlytTest {
 
         historikk.flatMap { it.samarbeidshendelser } shouldHaveSize 0
     }
+
+    @Test
+    fun `avslutning(AVBRYT) av samarbeid skal knytte AVBRYT_PROSESS-hendelsen til samarbeidet`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.AVBRUTT)
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+
+        historikk
+            .flatMap { it.samarbeidshendelser }
+            .filter { it.hendelsestype == IASakshendelseType.AVBRYT_PROSESS }
+            .map { it.samarbeidId } shouldBe listOf(samarbeid.id)
+    }
+
+    @Test
+    fun `avslutning(FULLFØR) av samarbeid skal knytte FULLFØR_PROSESS-hendelsen til samarbeidet`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+
+        samarbeid.avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+
+        historikk
+            .flatMap { it.samarbeidshendelser }
+            .filter { it.hendelsestype == IASakshendelseType.FULLFØR_PROSESS }
+            .map { it.samarbeidId } shouldBe listOf(samarbeid.id)
+    }
 }
