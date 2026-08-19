@@ -16,6 +16,33 @@ import java.util.UUID
 class KartleggingTransactional {
     companion object {
         context(tx: TransactionalSession)
+        fun lagreHendelseTilKartlegging(
+            kartleggingId: UUID,
+            hendelseId: String,
+        ) {
+            tx.run(
+                queryOf(
+                    statement =
+                        """
+                        INSERT INTO hendelser_til_kartlegging(
+                            kartlegging_id,
+                            hendelse_id
+                        )
+                        VALUES (
+                            :kartlegging_id,
+                            :hendelse_id
+                        )
+                        ON CONFLICT (hendelse_id) DO NOTHING
+                        """.trimIndent(),
+                    paramMap = mapOf(
+                        "kartlegging_id" to kartleggingId.toString(),
+                        "hendelse_id" to hendelseId,
+                    ),
+                ).asUpdate,
+            )
+        }
+
+        context(tx: TransactionalSession)
         fun opprettKartlegging(
             kartleggingId: UUID,
             orgnummer: String,
@@ -365,6 +392,11 @@ class KartleggingTransactional {
             tx.run(
                 queryOf(
                     """
+                    DELETE FROM hendelser_til_kartlegging htk
+                    USING ia_sak_kartlegging k
+                    WHERE htk.kartlegging_id = k.kartlegging_id
+                        AND k.orgnr = :orgnr;
+                        
                     DELETE FROM ia_sak_kartlegging_svar ks
                     USING ia_sak_kartlegging k
                     WHERE ks.kartlegging_id = k.kartlegging_id

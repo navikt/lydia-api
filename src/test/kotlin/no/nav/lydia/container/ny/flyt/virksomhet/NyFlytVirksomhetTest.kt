@@ -27,7 +27,6 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.slett
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
-import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
@@ -342,7 +341,7 @@ class NyFlytVirksomhetTest {
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
         )
-        val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr, planMal = hentPlanMal().inkluderAlt())
         plan.planleggOgFullførAlleUndertemaer(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
@@ -384,6 +383,16 @@ class NyFlytVirksomhetTest {
         val behovsvurdering = samarbeid.opprettKartlegging(
             orgnr = virksomhet.orgnr,
             type = Spørreundersøkelse.Type.Behovsvurdering,
+            token = eierToken,
+        )
+        behovsvurdering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            token = eierToken,
+        )
+        behovsvurdering.fullfør(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
             token = eierToken,
         )
         val evaluering = samarbeid.opprettKartlegging(

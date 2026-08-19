@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ny.flyt.kartlegging
 
+import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.api.v1.NY_FLYT_API_PATH
@@ -18,10 +19,12 @@ import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.kartlegging.SpørreundersøkelseDto
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -298,4 +301,47 @@ class NyFlytKartleggingTest {
             it.status shouldBe sakFørKartleggingErSlettet.status
         }
     }
+
+    @Test
+    fun `skal koble FULLFØR_KARTLEGGING-hendelse til samarbeid og kartlegging`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.saksbehandler1.token)
+        val samarbeid = sak.opprettSamarbeid()
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        val opprettetBehovsvurdering = samarbeid.opprettKartlegging(
+            orgnr = sak.orgnr,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+        )
+        opprettetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
+
+        val startetBehovsvurdering = opprettetBehovsvurdering.start(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        )
+        startetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetHarAktiveSamarbeid
+
+        val fullførtBehovsvurdering = startetBehovsvurdering.fullfør(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        )
+
+        fullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
+
+        hendelsestyperKobletTilKartlegging(opprettetBehovsvurdering.id) shouldForAtLeastOne {
+            it shouldBe IASakshendelseType.FULLFØR_KARTLEGGING.name
+        }
+    }
+
+    private fun hendelsestyperKobletTilKartlegging(kartleggingId: String): List<String> =
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne(
+            """
+            SELECT ia_sak_hendelse.type
+            FROM hendelser_til_kartlegging
+            JOIN ia_sak_hendelse ON (ia_sak_hendelse.id = hendelser_til_kartlegging.hendelse_id)
+            WHERE hendelser_til_kartlegging.kartlegging_id = '$kartleggingId'
+            ORDER BY ia_sak_hendelse.opprettet ASC
+            """.trimIndent(),
+        )
 }

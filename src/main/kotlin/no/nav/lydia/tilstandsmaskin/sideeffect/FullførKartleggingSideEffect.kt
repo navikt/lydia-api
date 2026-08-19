@@ -12,8 +12,10 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.KartleggingTransactional.Companion.lagreHendelseTilKartlegging
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.KartleggingTransactional.Companion.oppdaterStatusTilSpørreundersøkelse
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelse
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.lagreHendelseTilSamarbeid
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional.Companion.oppdaterStatusPåSak
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetTransactional.Companion.lagreEllerOppdaterVirksomhetTilstand
 import java.time.LocalDateTime
@@ -35,7 +37,7 @@ class FullførKartleggingSideEffect(
                         oppdaterStatusTilSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId, status = Spørreundersøkelse.Status.AVSLUTTET)
                             ?: error("Kunne ikke fullføre kartlegging")
 
-                    val hendelse = lagreHendelse(
+                    val fullførKartleggingHendelse = lagreHendelse(
                         hendelse = IASakshendelse(
                             id = ULID.random(),
                             opprettetTidspunkt = LocalDateTime.now(),
@@ -51,11 +53,21 @@ class FullførKartleggingSideEffect(
                         resulterendeStatus = AKTIV,
                     )
 
+                    lagreHendelseTilSamarbeid(
+                        samarbeidId = oppdatertKartlegging.samarbeidId,
+                        hendelseId = fullførKartleggingHendelse.id,
+                    )
+
+                    lagreHendelseTilKartlegging(
+                        kartleggingId = oppdatertKartlegging.id,
+                        hendelseId = fullførKartleggingHendelse.id,
+                    )
+
                     val oppdatertSakDto = oppdaterStatusPåSak(
                         saksnummer = saksnummer,
                         status = AKTIV,
                         endretAv = saksbehandler.navIdent,
-                        endretAvHendelseId = hendelse.id,
+                        endretAvHendelseId = fullførKartleggingHendelse.id,
                     )
 
                     lagreEllerOppdaterVirksomhetTilstand(
