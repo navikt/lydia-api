@@ -46,6 +46,8 @@ class IATeamService(
             Feil("Feil ved henting av brukere i team", httpStatusCode = HttpStatusCode.InternalServerError).left()
         }
 
+    fun hentFølgereForSaksnumre(saksnumre: Set<String>): List<String> = iaTeamRepository.hentFølgereForSaksnumre(saksnumre = saksnumre)
+
     fun knyttBrukerTilSak(
         iaSakDto: IASakDto,
         navAnsatt: NavAnsatt,

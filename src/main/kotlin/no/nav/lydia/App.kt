@@ -567,6 +567,7 @@ private fun Application.lydiaRestApi(
             )
             nyFlytSamarbeidsperiode( // aka ia-sak
                 iaSakService = iaSakService,
+                iaTeamService = iaTeamService,
                 nyFlytService = nyFlytService,
                 adGrupper = naisEnv.security.adGrupper,
                 azureService = azureService,

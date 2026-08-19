@@ -145,6 +145,27 @@ class IASakRepository(
             )
         }
 
+    fun hentEiereForSaksnumre(saksnumre: Set<String>): List<String> =
+        if (saksnumre.isEmpty()) {
+            emptyList()
+        } else {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf(
+                        """
+                        SELECT DISTINCT eid_av
+                        FROM ia_sak
+                        WHERE saksnummer in (select unnest(:saksnumre))
+                          AND eid_av IS NOT NULL
+                        """.trimIndent(),
+                        mapOf(
+                            "saksnumre" to session.createArrayOf("text", saksnumre),
+                        ),
+                    ).map { row -> row.string("eid_av") }.asList,
+                )
+            }
+        }
+
     fun hentStatusForBehovsvurderinger(samarbeidId: Int): List<Pair<String, Spørreundersøkelse.Status>> =
         using(sessionOf(dataSource)) { session ->
             session.run(

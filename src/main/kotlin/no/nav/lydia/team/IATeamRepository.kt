@@ -31,6 +31,26 @@ class IATeamRepository(
             )
         }
 
+    fun hentFølgereForSaksnumre(saksnumre: Set<String>): List<String> =
+        if (saksnumre.isEmpty()) {
+            emptyList()
+        } else {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf(
+                        """
+                        SELECT DISTINCT ident
+                        FROM ia_sak_team
+                        WHERE saksnummer in (select unnest(:saksnumre))
+                        """.trimIndent(),
+                        mapOf(
+                            "saksnumre" to session.createArrayOf("text", saksnumre),
+                        ),
+                    ).map { row -> row.string("ident") }.asList,
+                )
+            }
+        }
+
     fun leggBrukerTilTeam(
         saksnummer: String,
         navAnsatt: NavAnsatt,

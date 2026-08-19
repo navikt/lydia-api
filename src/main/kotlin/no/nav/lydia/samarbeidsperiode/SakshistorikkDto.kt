@@ -21,7 +21,6 @@ data class SakSnapshotDto(
     val hendelsestype: IASakshendelseType,
     val tidspunktForSnapshot: LocalDateTime,
     val begrunnelser: List<String>,
-    val eier: String?,
     val hendelseOpprettetAv: String,
 ) {
     companion object {
@@ -30,7 +29,6 @@ data class SakSnapshotDto(
                 status = iaSakshendelse.resulterendeStatus ?: IASak.Status.IKKE_AKTIV,
                 hendelsestype = iaSakshendelse.hendelsesType,
                 tidspunktForSnapshot = iaSakshendelse.opprettetTidspunkt.toKotlinLocalDateTime(),
-                eier = iaSakshendelse.opprettetAv,
                 begrunnelser = when (iaSakshendelse) {
                     is VirksomhetIkkeAktuellHendelse -> iaSakshendelse.valgtÅrsak.begrunnelser.map { it.navn }
                     else -> emptyList()
