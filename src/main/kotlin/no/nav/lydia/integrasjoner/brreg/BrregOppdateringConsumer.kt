@@ -14,6 +14,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.prioritering.virksomhet.VirksomhetService
 import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
+import no.nav.lydia.tlinfo
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.errors.WakeupException
@@ -104,7 +105,10 @@ object BrregOppdateringConsumer : CoroutineScope {
                                     BrregVirksomhetEndringstype.Fjernet,
                                     -> {
                                         virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet).onLeft { e ->
-                                            logger.warn("Fikk feil ved sletting/fjerning av virksomhet: {}", e)
+                                            logger.warn("Fikk feil ved sletting/fjerning av virksomhet", e)
+                                            logger.tlinfo(
+                                                "[Team logs] [Fikk feil ved sletting/fjerning av virksomhet]: Kunne ikke oppdatere status for følgende orgnr: '${oppdateringVirksomhet.orgnummer}'",
+                                            )
                                             Metrics.loggBrregAvregistreringFeil()
                                         }
                                     }
