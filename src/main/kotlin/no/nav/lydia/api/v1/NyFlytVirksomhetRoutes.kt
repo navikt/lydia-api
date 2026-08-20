@@ -1,7 +1,5 @@
 package no.nav.lydia.api.v1
 
-import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
@@ -21,18 +19,14 @@ import no.nav.lydia.api.VirksomhetFeil
 import no.nav.lydia.api.orgnummer
 import no.nav.lydia.api.sendFeil
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
-import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.virksomhet.VirksomhetService
 import no.nav.lydia.prioritering.virksomhet.toDto
 import no.nav.lydia.samarbeid.IASamarbeidService
-import no.nav.lydia.samarbeid.tilDto
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakError
 import no.nav.lydia.samarbeidsperiode.IASakService
-import no.nav.lydia.samarbeidsperiode.SakshistorikkDto
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
-import no.nav.lydia.samarbeidsperiode.tilSakshistorikk
 import no.nav.lydia.samarbeidsperiode.validerBegrunnelserForVurdering
 import no.nav.lydia.samarbeidsperiode.validerBegrunnelserForVurderingAvVirksomhet
 import no.nav.lydia.samarbeidsplan.PlanService
@@ -90,52 +84,6 @@ fun Route.nyFlytVirksomhet(
             call.respond(HttpStatusCode.OK, it)
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
-
-    get("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/historikk") {
-        val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        call.somLesebruker(adGrupper = adGrupper) { _ ->
-            val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
-                .groupBy { it.saksnummer }
-            val samarbeidshendelser = iaSakService.hentSamarbeidshendelserForOrgnummer(orgnr = orgnummer)
-                .groupBy { it.saksnummer }
-            iaSakService.hentIASakDtoerForOrgnummer(orgnummer = orgnummer)
-                .map { sak ->
-                    sak.addHendelser(hendelser = hendelser[sak.saksnummer] ?: emptyList())
-                }
-                .sortedByDescending { it.opprettetTidspunkt }
-                .map { iASakDto ->
-                    val samarbeid = nyFlytService.hentSamarbeidSomIkkeErSlettet(iASakDto.saksnummer).getOrElse { emptyList() }
-                    iASakDto.tilSakshistorikk(
-                        samarbeid = samarbeid.tilDto(),
-                        samarbeidshendelser = samarbeidshendelser[iASakDto.saksnummer] ?: emptyList(),
-                    )
-                }.right()
-        }.also { either: Either<Feil, List<SakshistorikkDto>> ->
-            if (either.isLeft()) {
-                auditLog.auditloggEither(
-                    call = call,
-                    either = either,
-                    orgnummer = orgnummer,
-                    auditType = AuditType.access,
-                )
-            } else {
-                val sakshistorikkDtoListe: List<SakshistorikkDto> = either.getOrElse { listOf() }
-                sakshistorikkDtoListe.forEach { sakshistorikkDto ->
-                    auditLog.auditloggEither(
-                        call = call,
-                        either = either,
-                        orgnummer = orgnummer,
-                        auditType = AuditType.access,
-                        saksnummer = sakshistorikkDto.saksnummer,
-                    )
-                }
-            }
-        }.map { historikk ->
-            call.respond(historikk).right()
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
 

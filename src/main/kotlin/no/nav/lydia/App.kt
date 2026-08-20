@@ -33,6 +33,7 @@ import no.nav.lydia.api.iaSamarbeid
 import no.nav.lydia.api.samarbeid
 import no.nav.lydia.api.statusoversikt
 import no.nav.lydia.api.sykefraværsstatistikk
+import no.nav.lydia.api.v1.historikkRoutes
 import no.nav.lydia.api.v1.nyFlytKartlegging
 import no.nav.lydia.api.v1.nyFlytSamarbeid
 import no.nav.lydia.api.v1.nyFlytSamarbeidsperiode
@@ -550,6 +551,12 @@ private fun Application.lydiaRestApi(
             iaSakRådgiver(
                 iaSakService = iaSakService,
                 samarbeidService = samarbeidService,
+                adGrupper = naisEnv.security.adGrupper,
+                auditLog = auditLog,
+            )
+            historikkRoutes(
+                iaSakService = iaSakService,
+                nyFlytService = nyFlytService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
             )

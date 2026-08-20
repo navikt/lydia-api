@@ -5,6 +5,7 @@ import no.nav.lydia.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.api.IA_SAK_TEAM_PATH
 import no.nav.lydia.api.SAMARBEIDSHISTORIKK_PATH
+import no.nav.lydia.api.v1.GAMMEL_NY_FLYT_PATH
 import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
@@ -94,11 +95,13 @@ class SakHelper {
             failure = { fail(it.stackTraceToString()) },
         )
 
+        // TODO: midlertidig funksjon for å hente historikk på gammel sti 'GAMMEL_NY_FLYT_PATH', frem til vi er ferdige med ny historikk. Da kan du bruke igjen NY_FLYT_API_PATH
         fun hentSamarbeidshistorikkNyFlytRespons(
             orgnummer: String,
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
         ): TestResponseTriple<List<SakshistorikkDto>> {
-            val url = "${NY_FLYT_API_PATH}/virksomhet/$orgnummer/historikk"
+            // val url = "${NY_FLYT_API_PATH}/virksomhet/$orgnummer/historikk"
+            val url = "${GAMMEL_NY_FLYT_PATH}/virksomhet/$orgnummer/historikk"
             return TestContainerHelper.applikasjon.performGet(url)
                 .authentication().bearer(token = token)
                 .tilListeRespons<SakshistorikkDto>()
