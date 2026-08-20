@@ -106,7 +106,7 @@ class VirksomhetErAvregistrertIBrregSideEffect(
             }
         }.mapLeft { error ->
             logger.tlwarn("Sletting av virksomhet '$orgnr' feilet: ${error.message}", error)
-            Feil("Sletting av virksomhet feilet", HttpStatusCode.InternalServerError)
+            Feil("Sletting av virksomhet '$orgnr' feilet: ${error.message}", HttpStatusCode.InternalServerError)
         }
 
     companion object {
