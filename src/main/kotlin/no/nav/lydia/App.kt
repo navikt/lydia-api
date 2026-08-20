@@ -98,6 +98,8 @@ import no.nav.lydia.samarbeidsperiode.IASakLeveranseRepository
 import no.nav.lydia.samarbeidsperiode.IASakRepository
 import no.nav.lydia.samarbeidsperiode.IASakService
 import no.nav.lydia.samarbeidsperiode.IASakshendelseRepository
+import no.nav.lydia.samarbeidsperiode.SamarbeidshistorikkRepository
+import no.nav.lydia.samarbeidsperiode.SamarbeidshistorikkService
 import no.nav.lydia.samarbeidsplan.OppdaterSistEndretPlanObserver
 import no.nav.lydia.samarbeidsplan.PlanRepository
 import no.nav.lydia.samarbeidsplan.PlanService
@@ -270,6 +272,13 @@ fun startLydiaBackend() {
         iaSamarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
     )
 
+    val samarbeidshistorikkService = SamarbeidshistorikkService(
+        samarbeidshistorikkRepository = SamarbeidshistorikkRepository(dataSource = dataSource),
+        samarbeidService = samarbeidService,
+        iaSakService = iaSakService,
+        azureService = azureService,
+    )
+
     val virksomhetService = VirksomhetService(
         virksomhetRepository = virksomhetRepository,
         iaSakService = iaSakService,
@@ -402,6 +411,7 @@ fun startLydiaBackend() {
             planService = planService,
             dokumentPubliseringService = dokumentPubliseringService,
             nyFlytService = nyFlytService,
+            samarbeidshistorikkService = samarbeidshistorikkService,
             tilstandVirksomhetRepository = tilstandVirksomhetRepository,
         )
     }.also {
@@ -487,6 +497,7 @@ private fun Application.lydiaRestApi(
     planService: PlanService,
     dokumentPubliseringService: DokumentPubliseringService,
     nyFlytService: NyFlytService,
+    samarbeidshistorikkService: SamarbeidshistorikkService,
     tilstandVirksomhetRepository: TilstandVirksomhetRepository,
 ) {
     install(ContentNegotiation) {
@@ -558,6 +569,7 @@ private fun Application.lydiaRestApi(
             historikkRoutes(
                 iaSakService = iaSakService,
                 nyFlytService = nyFlytService,
+                samarbeidshistorikkService = samarbeidshistorikkService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
             )
