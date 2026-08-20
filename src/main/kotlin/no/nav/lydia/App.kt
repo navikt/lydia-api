@@ -127,6 +127,7 @@ fun main() {
 fun startLydiaBackend() {
     val log = LoggerFactory.getLogger("App")
     log.info("Starter Lydia backend")
+    log.tlinfo("Starter Lydia backend")
 
     val naisEnv = NaisEnvironment()
 
