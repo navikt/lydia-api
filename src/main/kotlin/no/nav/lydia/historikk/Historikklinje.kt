@@ -15,11 +15,14 @@ data class Historikklinje(
 
 @Serializable
 data class HistorikkHendelse(
-    @SerialName("hendelse_id") val hendelseId: String, // ULID
+    @SerialName("hendelse_id")
+    val hendelseId: String, // ULID
     val hendelsetype: IASakshendelseType,
-    @SerialName("resulterende_status") val resulterendeStatus: IASak.Status,
+    @SerialName("resulterende_status")
+    val resulterendeStatus: IASak.Status,
     val tidspunkt: Instant,
-    @SerialName("hendelse_opprettet_av") val hendelseOpprettetAv: String, // NavIdent
+    @SerialName("hendelse_opprettet_av")
+    val hendelseOpprettetAv: String, // NavIdent
     val årsak: Årsak?,
     val versjon: HistorikkVersjon = HistorikkVersjon.fraTidspunkt(tidspunkt),
 )

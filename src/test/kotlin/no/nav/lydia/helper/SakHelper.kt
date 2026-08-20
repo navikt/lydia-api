@@ -9,6 +9,7 @@ import no.nav.lydia.api.v1.GAMMEL_NY_FLYT_PATH
 import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.historikk.SamarbeidsperiodeHistorikkDto
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.KanGjennomføreStatusendring
 import no.nav.lydia.samarbeidsperiode.IASakDto
@@ -128,6 +129,23 @@ class SakHelper {
         ) = TestContainerHelper.applikasjon.performGet("${IA_SAK_RADGIVER_PATH}/${SAMARBEIDSHISTORIKK_PATH}/$orgnr")
             .authentication().bearer(token = token)
             .tilListeRespons<SakshistorikkDto>()
+
+        fun hentHistorikkForSamarbeidsperiodeRespons(
+            orgnummer: String,
+            saksnummer: String,
+            token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
+        ) = TestContainerHelper.applikasjon.performGet("${NY_FLYT_API_PATH}/virksomhet/$orgnummer/samarbeidsperiode/$saksnummer/historikk")
+            .authentication().bearer(token = token)
+            .tilListeRespons<SamarbeidsperiodeHistorikkDto>()
+
+        fun hentHistorikkForSamarbeidsperiode(
+            orgnummer: String,
+            saksnummer: String,
+            token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
+        ) = hentHistorikkForSamarbeidsperiodeRespons(orgnummer, saksnummer, token).third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.stackTraceToString()) },
+        )
 
         fun IASakDto.kanGjennomføreStatusendring(
             samarbeidDto: IASamarbeidDto,
