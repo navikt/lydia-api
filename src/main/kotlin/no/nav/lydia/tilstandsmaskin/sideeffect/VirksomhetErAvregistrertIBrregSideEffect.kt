@@ -28,6 +28,9 @@ import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.TilstandVirksomhetT
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.VirksomhetTransactional
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.VirksomhetTransactional.AlleSakerErSlettetPåVirksomhet.Companion.alleSakerErSlettetEllerKast
 import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.VirksomhetTransactional.slettVirksomhet
+import no.nav.lydia.tlwarn
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class VirksomhetErAvregistrertIBrregSideEffect(
@@ -101,5 +104,12 @@ class VirksomhetErAvregistrertIBrregSideEffect(
                 }
                 return@let
             }
-        }.mapLeft { Feil("Sletting av virksomhet '$orgnr' feilet: ${it.message}", HttpStatusCode.InternalServerError) }
+        }.mapLeft { error ->
+            logger.tlwarn("Sletting av virksomhet '$orgnr' feilet: ${error.message}", error)
+            Feil("Sletting av virksomhet '$orgnr' feilet: ${error.message}", HttpStatusCode.InternalServerError)
+        }
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    }
 }

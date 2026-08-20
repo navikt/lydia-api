@@ -14,7 +14,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.prioritering.virksomhet.VirksomhetService
 import no.nav.lydia.prioritering.virksomhet.domene.VirksomhetStatus
-import no.nav.lydia.tlinfo
+import no.nav.lydia.tlwarn
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.errors.WakeupException
@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
 object BrregOppdateringConsumer : CoroutineScope {
@@ -68,7 +69,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                         logger.warn("Kommer IKKE til å konsumere meldinger fra topic ${topic.navn}")
                     }
                     while (job.isActive) {
-                        delay(kafka.consumerLoopDelay)
+                        delay(duration = kafka.consumerLoopDelay.milliseconds)
                         if (kafka.ikkeKonsumerMeldinger) {
                             continue
                         }
@@ -105,8 +106,8 @@ object BrregOppdateringConsumer : CoroutineScope {
                                     BrregVirksomhetEndringstype.Fjernet,
                                     -> {
                                         virksomhetService.oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet).onLeft { e ->
-                                            logger.warn("Fikk feil ved sletting/fjerning av virksomhet", e)
-                                            logger.tlinfo(
+                                            logger.warn("Fikk feil ved sletting/fjerning av virksomhet: {}", e)
+                                            logger.tlwarn(
                                                 "[Team logs] [Fikk feil ved sletting/fjerning av virksomhet]: Kunne ikke oppdatere status for følgende orgnr: '${oppdateringVirksomhet.orgnummer}'",
                                             )
                                             Metrics.loggBrregAvregistreringFeil()
