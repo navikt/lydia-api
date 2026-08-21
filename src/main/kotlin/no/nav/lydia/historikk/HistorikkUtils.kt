@@ -6,7 +6,7 @@ object HistorikkUtils {
     fun IASakshendelseType.tilBeskrivelse(): String =
         when (this) {
             IASakshendelseType.VIRKSOMHET_AVREGISTRERT -> {
-                "Virksomheten er avregistrert i Brønnøysundregistrene"
+                "Virksomheten er slettet i Brønnøysundregistrene"
             }
 
             IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET, IASakshendelseType.VIRKSOMHET_VURDERES, IASakshendelseType.TA_EIERSKAP_I_SAK,

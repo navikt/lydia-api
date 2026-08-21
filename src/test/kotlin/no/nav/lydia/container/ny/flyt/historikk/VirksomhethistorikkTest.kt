@@ -139,7 +139,7 @@ class VirksomhethistorikkTest {
         historikk.historikkVirksomhet.hendelser.run {
             size shouldBe 1
             this.shouldForAll { linje ->
-                linje.beskrivelse shouldBe "Virksomheten er avregistrert i Brønnøysundregistrene"
+                linje.beskrivelse shouldBe "Virksomheten er slettet i Brønnøysundregistrene"
                 linje.tidspunkt shouldNotBe null
                 linje.relatertHendelse shouldNotBe null
                 linje.relatertHendelse!!.run {
