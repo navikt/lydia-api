@@ -2,20 +2,50 @@ package no.nav.lydia.historikk
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.either
+import arrow.core.raise.ensure
 import arrow.core.right
-import io.ktor.http.HttpStatusCode
 import no.nav.lydia.felles.Feil
+import no.nav.lydia.historikk.HistorikkUtils.tilBeskrivelse
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
+import no.nav.lydia.prioritering.virksomhet.VirksomhetRepository
 import no.nav.lydia.samarbeid.IASamarbeidService
+import no.nav.lydia.samarbeidsperiode.IASakRepository
 import no.nav.lydia.samarbeidsperiode.IASakService
 
-class SamarbeidshistorikkService(
+class HistorikkService(
     private val samarbeidshistorikkRepository: SamarbeidshistorikkRepository,
-    private val samarbeidService: IASamarbeidService,
+    private val historikkRepository: HistorikkRepository,
+    private val iaSakRepository: IASakRepository,
     private val iaSakService: IASakService,
     private val azureService: AzureService,
+    private val samarbeidService: IASamarbeidService,
+    private val virksomhetRepository: VirksomhetRepository,
 ) {
+    fun hentHistorikkForVirksomhet(orgnr: String): Either<Feil, HistorikkVirksomhet> =
+        either {
+            val virksomhet = virksomhetRepository.hentVirksomhet(orgnr)
+            ensure(virksomhet != null) { Historikkfeil.`ugyldig orgnummer` }
+            val hendelser = historikkRepository.hentVirksomhetHendelser(orgnr)
+            val samarbeidsperioder = iaSakRepository.hentAlleSakerForVirksomhet(orgnr)
+                .map {
+                    Samarbeidsperiode(
+                        saksnummer = it.saksnummer,
+                        fraDato = it.opprettetTidspunkt,
+                        status = it.status,
+                        eier = it.eidAv,
+                    )
+                }
+                .sortedByDescending { it.fraDato }
+            HistorikkVirksomhet(
+                hendelser = hendelser.map {
+                    Historikklinje(beskrivelse = it.hendelsetype.tilBeskrivelse(), tidspunkt = it.tidspunkt, relatertHendelse = it)
+                },
+                samarbeidsperioder = samarbeidsperioder,
+            )
+        }
+
     suspend fun hentHistorikkForSamarbeid(
         orgnr: String,
         saksnummer: String,
@@ -23,10 +53,10 @@ class SamarbeidshistorikkService(
     ): Either<Feil, List<SamarbeidshistorikkRadDto>> {
         val sak = iaSakService.hentIASakDto(saksnummer).getOrNull()
         if (sak == null || sak.orgnr != orgnr) {
-            return `fant ikke samarbeid`.left()
+            return Historikkfeil.`fant ikke samarbeid`.left()
         }
         samarbeidService.hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).getOrNull()
-            ?: return `fant ikke samarbeid`.left()
+            ?: return Historikkfeil.`fant ikke samarbeid`.left()
 
         val kandidater = slåSammen(
             ekteHendelser = samarbeidshistorikkRepository.hentEkteHendelser(samarbeidId = samarbeidId),
@@ -61,11 +91,6 @@ class SamarbeidshistorikkService(
         }
 
     companion object {
-        val `fant ikke samarbeid` = Feil(
-            feilmelding = "Fant ikke samarbeid",
-            httpStatusCode = HttpStatusCode.NotFound,
-        )
-
         /**
          * Ekte hendelser vinner over rekonstruerte. Innenfor hver hendelsestype beholdes kun den nyeste.
          * Rader uten tidspunkt regnes som eldst, og sorteres nederst.
