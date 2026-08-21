@@ -35,3 +35,6 @@ build
 
 /scripts/tenor/output/
 /scripts/tenor/.venv/
+
+# Ignore kotlin compiler generated directory
+.kotlin
