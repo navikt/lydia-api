@@ -48,8 +48,9 @@ import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
-import no.nav.lydia.historikk.SamarbeidshistorikkRepository
-import no.nav.lydia.historikk.SamarbeidshistorikkService
+import no.nav.lydia.historikk.HistorikkService
+import no.nav.lydia.historikk.repository.HistorikkVirksomhetRepository
+import no.nav.lydia.historikk.repository.SamarbeidshistorikkRepository
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
@@ -272,13 +273,6 @@ fun startLydiaBackend() {
         iaSamarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
     )
 
-    val samarbeidshistorikkService = SamarbeidshistorikkService(
-        samarbeidshistorikkRepository = SamarbeidshistorikkRepository(dataSource = dataSource),
-        samarbeidService = samarbeidService,
-        iaSakService = iaSakService,
-        azureService = azureService,
-    )
-
     val virksomhetService = VirksomhetService(
         virksomhetRepository = virksomhetRepository,
         iaSakService = iaSakService,
@@ -287,6 +281,18 @@ fun startLydiaBackend() {
         dokumentPubliseringService = dokumentPubliseringService,
         planService = planService,
         tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+    )
+
+    val historikkVirksomhetRepository = HistorikkVirksomhetRepository(dataSource)
+
+    val historikkService = HistorikkService(
+        historikkVirksomhetRepository = historikkVirksomhetRepository,
+        iaSakRepository = iaSakRepository,
+        samarbeidshistorikkRepository = SamarbeidshistorikkRepository(dataSource),
+        iaSakService = iaSakService,
+        azureService = azureService,
+        samarbeidService = samarbeidService,
+        virksomhetRepository = virksomhetRepository,
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
@@ -411,8 +417,8 @@ fun startLydiaBackend() {
             planService = planService,
             dokumentPubliseringService = dokumentPubliseringService,
             nyFlytService = nyFlytService,
-            samarbeidshistorikkService = samarbeidshistorikkService,
             tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+            historikkService = historikkService,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -497,8 +503,8 @@ private fun Application.lydiaRestApi(
     planService: PlanService,
     dokumentPubliseringService: DokumentPubliseringService,
     nyFlytService: NyFlytService,
-    samarbeidshistorikkService: SamarbeidshistorikkService,
     tilstandVirksomhetRepository: TilstandVirksomhetRepository,
+    historikkService: HistorikkService,
 ) {
     install(ContentNegotiation) {
         json()
@@ -569,9 +575,9 @@ private fun Application.lydiaRestApi(
             historikkRoutes(
                 iaSakService = iaSakService,
                 nyFlytService = nyFlytService,
-                samarbeidshistorikkService = samarbeidshistorikkService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
+                historikkService = historikkService,
             )
             nyFlytVirksomhet(
                 iaSakService = iaSakService,

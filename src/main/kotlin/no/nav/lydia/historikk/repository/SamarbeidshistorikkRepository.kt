@@ -1,10 +1,12 @@
-package no.nav.lydia.historikk
+package no.nav.lydia.historikk.repository
 
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.historikk.model.SamarbeidshistorikkKandidat
+import no.nav.lydia.historikk.model.SamarbeidshistorikkType
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType

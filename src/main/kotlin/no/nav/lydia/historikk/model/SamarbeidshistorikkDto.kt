@@ -1,4 +1,4 @@
-package no.nav.lydia.historikk
+package no.nav.lydia.historikk.model
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable

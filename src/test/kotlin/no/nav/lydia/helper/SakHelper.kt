@@ -9,7 +9,7 @@ import no.nav.lydia.api.v1.GAMMEL_NY_FLYT_PATH
 import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.historikk.SamarbeidsperiodeHistorikkDto
+import no.nav.lydia.historikk.model.SamarbeidsperiodeHistorikkDto
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.KanGjennomføreStatusendring
 import no.nav.lydia.samarbeidsperiode.IASakDto

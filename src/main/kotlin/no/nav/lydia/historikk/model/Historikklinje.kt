@@ -1,16 +1,16 @@
-package no.nav.lydia.historikk
+package no.nav.lydia.historikk.model
 
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
-import kotlin.time.Instant
 
 @Serializable
 data class Historikklinje(
-    val beskrivelse: String?,
-    val tidspunkt: Instant?,
-    @SerialName("relatert_hendelse") val relatertHendelse: HistorikkHendelse,
+    val beskrivelse: String,
+    val tidspunkt: LocalDateTime?,
+    @SerialName("relatert_hendelse") val relatertHendelse: HistorikkHendelse?,
 )
 
 @Serializable
@@ -20,7 +20,7 @@ data class HistorikkHendelse(
     val hendelsetype: IASakshendelseType,
     @SerialName("resulterende_status")
     val resulterendeStatus: IASak.Status,
-    val tidspunkt: Instant,
+    val tidspunkt: LocalDateTime,
     @SerialName("hendelse_opprettet_av")
     val hendelseOpprettetAv: String, // NavIdent
     val årsak: Årsak?,
@@ -33,9 +33,9 @@ enum class HistorikkVersjon {
     ;
 
     companion object {
-        val datoForEndring = Instant.parse("2026-04-28T00:00:00+02:00")
+        val datoForEndring = LocalDateTime.parse("2026-04-28T00:00:00")
 
-        fun fraTidspunkt(tidspunkt: Instant) = if (tidspunkt < datoForEndring) LEGACY else NY_FLYT
+        fun fraTidspunkt(tidspunkt: LocalDateTime) = if (tidspunkt < datoForEndring) LEGACY else NY_FLYT
     }
 }
 
