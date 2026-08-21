@@ -49,7 +49,7 @@ import no.nav.lydia.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.historikk.HistorikkService
-import no.nav.lydia.historikk.repository.HistorikkRepository
+import no.nav.lydia.historikk.repository.HistorikkVirksomhetRepository
 import no.nav.lydia.historikk.repository.SamarbeidshistorikkRepository
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
@@ -283,10 +283,10 @@ fun startLydiaBackend() {
         tilstandVirksomhetRepository = tilstandVirksomhetRepository,
     )
 
-    val historikkRepository = HistorikkRepository(dataSource)
+    val historikkVirksomhetRepository = HistorikkVirksomhetRepository(dataSource)
 
     val historikkService = HistorikkService(
-        historikkRepository = historikkRepository,
+        historikkVirksomhetRepository = historikkVirksomhetRepository,
         iaSakRepository = iaSakRepository,
         samarbeidshistorikkRepository = SamarbeidshistorikkRepository(dataSource),
         iaSakService = iaSakService,
