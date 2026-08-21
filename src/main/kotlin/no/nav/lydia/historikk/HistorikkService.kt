@@ -35,7 +35,7 @@ class HistorikkService(
     fun hentHistorikkForVirksomhet(orgnr: String): Either<Feil, HistorikkVirksomhet> =
         either {
             val virksomhet = virksomhetRepository.hentVirksomhet(orgnr)
-            ensure(virksomhet != null) { Historikkfeil.`ugyldig orgnummer` }
+            ensure(virksomhet != null) { Historikkfeil.`fant ikke virksomhet` }
             val hendelser = historikkRepository.hentVirksomhetHendelser(orgnr)
             val samarbeidsperioder = iaSakRepository.hentAlleSakerForVirksomhet(orgnr)
                 .map {

@@ -126,8 +126,8 @@ class VirksomhethistorikkTest {
         val orgnr = "detteErEtFakeOrgnr123"
         val respons = hentHistorikkForVirksomhetRespons(orgnr = orgnr)
 
-        respons.second.statusCode shouldBe HttpStatusCode.BadRequest.value
-        respons.second.body().asString("text/plain") shouldBe "Ugyldig orgnummer"
+        respons.second.statusCode shouldBe HttpStatusCode.NotFound.value
+        respons.second.body().asString("text/plain") shouldBe "Fant ikke virksomhet"
     }
 
     @Test
