@@ -1,4 +1,4 @@
-package no.nav.lydia.historikk
+package no.nav.lydia.historikk.model
 
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.felles.Feil

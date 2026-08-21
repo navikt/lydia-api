@@ -1,11 +1,10 @@
-package no.nav.lydia.historikk
+package no.nav.lydia.historikk.model
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
-import kotlin.time.Instant
 
 @Serializable
 data class Historikklinje(

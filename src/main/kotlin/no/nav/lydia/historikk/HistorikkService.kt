@@ -7,6 +7,15 @@ import arrow.core.raise.ensure
 import arrow.core.right
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.historikk.HistorikkUtils.tilBeskrivelse
+import no.nav.lydia.historikk.model.HistorikkVirksomhet
+import no.nav.lydia.historikk.model.Historikkfeil
+import no.nav.lydia.historikk.model.Historikklinje
+import no.nav.lydia.historikk.model.SamarbeidshistorikkKandidat
+import no.nav.lydia.historikk.model.SamarbeidshistorikkRadDto
+import no.nav.lydia.historikk.model.SamarbeidshistorikkType
+import no.nav.lydia.historikk.model.Samarbeidsperiode
+import no.nav.lydia.historikk.repository.HistorikkRepository
+import no.nav.lydia.historikk.repository.SamarbeidshistorikkRepository
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.prioritering.virksomhet.VirksomhetRepository

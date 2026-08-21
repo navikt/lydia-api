@@ -19,12 +19,12 @@ import no.nav.lydia.api.saksnummer
 import no.nav.lydia.api.samarbeidId
 import no.nav.lydia.api.sendFeil
 import no.nav.lydia.felles.Feil
-import no.nav.lydia.historikk.HistorikkHendelse
 import no.nav.lydia.historikk.HistorikkService
-import no.nav.lydia.historikk.HistorikkVirksomhetDto
-import no.nav.lydia.historikk.Historikkfeil
-import no.nav.lydia.historikk.SamarbeidsperiodeHistorikkDto
-import no.nav.lydia.historikk.Årsak
+import no.nav.lydia.historikk.model.HistorikkHendelse
+import no.nav.lydia.historikk.model.HistorikkVirksomhetDto
+import no.nav.lydia.historikk.model.Historikkfeil
+import no.nav.lydia.historikk.model.SamarbeidsperiodeHistorikkDto
+import no.nav.lydia.historikk.model.Årsak
 import no.nav.lydia.samarbeid.IASamarbeidFeil
 import no.nav.lydia.samarbeid.tilDto
 import no.nav.lydia.samarbeidsperiode.IASak

@@ -23,9 +23,9 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.historikk.HistorikkVersjon
-import no.nav.lydia.historikk.HistorikkVirksomhet
-import no.nav.lydia.historikk.HistorikkVirksomhetDto
+import no.nav.lydia.historikk.model.HistorikkVersjon
+import no.nav.lydia.historikk.model.HistorikkVirksomhet
+import no.nav.lydia.historikk.model.HistorikkVirksomhetDto
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeidsperiode.BegrunnelseType

@@ -1,13 +1,14 @@
-package no.nav.lydia.historikk
+package no.nav.lydia.historikk.repository
 
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.historikk.model.HistorikkHendelse
+import no.nav.lydia.historikk.model.Årsak
 import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class HistorikkRepository(
