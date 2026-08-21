@@ -14,7 +14,7 @@ import no.nav.lydia.historikk.model.SamarbeidshistorikkKandidat
 import no.nav.lydia.historikk.model.SamarbeidshistorikkRadDto
 import no.nav.lydia.historikk.model.SamarbeidshistorikkType
 import no.nav.lydia.historikk.model.Samarbeidsperiode
-import no.nav.lydia.historikk.repository.HistorikkRepository
+import no.nav.lydia.historikk.repository.HistorikkVirksomhetRepository
 import no.nav.lydia.historikk.repository.SamarbeidshistorikkRepository
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
@@ -25,7 +25,7 @@ import no.nav.lydia.samarbeidsperiode.IASakService
 
 class HistorikkService(
     private val samarbeidshistorikkRepository: SamarbeidshistorikkRepository,
-    private val historikkRepository: HistorikkRepository,
+    private val historikkVirksomhetRepository: HistorikkVirksomhetRepository,
     private val iaSakRepository: IASakRepository,
     private val iaSakService: IASakService,
     private val azureService: AzureService,
@@ -36,7 +36,7 @@ class HistorikkService(
         either {
             val virksomhet = virksomhetRepository.hentVirksomhet(orgnr)
             ensure(virksomhet != null) { Historikkfeil.`fant ikke virksomhet` }
-            val hendelser = historikkRepository.hentVirksomhetHendelser(orgnr)
+            val hendelser = historikkVirksomhetRepository.hentVirksomhetHendelser(orgnr)
             val samarbeidsperioder = iaSakRepository.hentAlleSakerForVirksomhet(orgnr)
                 .map {
                     Samarbeidsperiode(
