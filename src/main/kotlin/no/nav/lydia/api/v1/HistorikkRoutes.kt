@@ -20,6 +20,7 @@ import no.nav.lydia.api.samarbeidId
 import no.nav.lydia.api.sendFeil
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.historikk.HistorikkHendelse
+import no.nav.lydia.historikk.SamarbeidshistorikkService
 import no.nav.lydia.historikk.SamarbeidsperiodeHistorikkDto
 import no.nav.lydia.historikk.Årsak
 import no.nav.lydia.samarbeid.IASamarbeidFeil
@@ -28,7 +29,6 @@ import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakError
 import no.nav.lydia.samarbeidsperiode.IASakService
 import no.nav.lydia.samarbeidsperiode.SakshistorikkDto
-import no.nav.lydia.samarbeidsperiode.SamarbeidshistorikkService
 import no.nav.lydia.samarbeidsperiode.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.samarbeidsperiode.tilSakshistorikk
 import no.nav.lydia.tilgangskontroll.somLesebruker

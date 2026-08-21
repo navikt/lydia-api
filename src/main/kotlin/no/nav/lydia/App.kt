@@ -48,6 +48,8 @@ import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.historikk.SamarbeidshistorikkRepository
+import no.nav.lydia.historikk.SamarbeidshistorikkService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
@@ -98,8 +100,6 @@ import no.nav.lydia.samarbeidsperiode.IASakLeveranseRepository
 import no.nav.lydia.samarbeidsperiode.IASakRepository
 import no.nav.lydia.samarbeidsperiode.IASakService
 import no.nav.lydia.samarbeidsperiode.IASakshendelseRepository
-import no.nav.lydia.samarbeidsperiode.SamarbeidshistorikkRepository
-import no.nav.lydia.samarbeidsperiode.SamarbeidshistorikkService
 import no.nav.lydia.samarbeidsplan.OppdaterSistEndretPlanObserver
 import no.nav.lydia.samarbeidsplan.PlanRepository
 import no.nav.lydia.samarbeidsplan.PlanService

@@ -1,4 +1,4 @@
-package no.nav.lydia.samarbeidsperiode
+package no.nav.lydia.historikk
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable

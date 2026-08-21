@@ -1,10 +1,13 @@
-package no.nav.lydia.samarbeidsperiode
+package no.nav.lydia.historikk
 
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.kartlegging.Spørreundersøkelse
+import no.nav.lydia.samarbeid.IASamarbeid
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import javax.sql.DataSource
 
 class SamarbeidshistorikkRepository(
@@ -91,7 +94,7 @@ class SamarbeidshistorikkRepository(
                         """.trimIndent(),
                     paramMap = mapOf(
                         "samarbeidId" to samarbeidId,
-                        "statusAvsluttet" to STATUS_AVSLUTTET,
+                        "statusAvsluttet" to Spørreundersøkelse.Status.AVSLUTTET.name,
                     ),
                 ).map { row ->
                     row.string("type").tilFullførtKartleggingType()?.let { hendelsestype ->
@@ -118,7 +121,7 @@ class SamarbeidshistorikkRepository(
                         """.trimIndent(),
                     paramMap = mapOf("samarbeidId" to samarbeidId),
                 ).map { row ->
-                    val slettet = row.string("status") == STATUS_SLETTET
+                    val slettet = row.string("status") == IASamarbeid.Status.SLETTET.name
                     listOfNotNull(
                         SamarbeidshistorikkKandidat(
                             hendelsestype = SamarbeidshistorikkType.SAMARBEIDSPLAN_OPPRETTET,
@@ -144,16 +147,11 @@ class SamarbeidshistorikkRepository(
         }.flatten()
 
     companion object {
-        private const val STATUS_AVSLUTTET = "AVSLUTTET"
-        private const val STATUS_SLETTET = "SLETTET"
-        private const val TYPE_BEHOVSVURDERING = "Behovsvurdering"
-        private const val TYPE_EVALUERING = "Evaluering"
-
         private fun String.tilFullførtKartleggingType(): SamarbeidshistorikkType? =
-            when {
-                equals(TYPE_BEHOVSVURDERING, ignoreCase = true) -> SamarbeidshistorikkType.BEHOVSVURDERING_FULLFØRT
-                equals(TYPE_EVALUERING, ignoreCase = true) -> SamarbeidshistorikkType.EVALUERING_FULLFØRT
-                else -> null
+            when (Spørreundersøkelse.Type.entries.firstOrNull { it.name == this }) {
+                Spørreundersøkelse.Type.Behovsvurdering -> SamarbeidshistorikkType.BEHOVSVURDERING_FULLFØRT
+                Spørreundersøkelse.Type.Evaluering -> SamarbeidshistorikkType.EVALUERING_FULLFØRT
+                null -> null
             }
 
         private fun Row.tilEkteHendelseKandidat(): SamarbeidshistorikkKandidat? {

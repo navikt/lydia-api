@@ -1,4 +1,4 @@
-package no.nav.lydia.samarbeidsperiode
+package no.nav.lydia.historikk
 
 import arrow.core.Either
 import arrow.core.left
@@ -8,6 +8,7 @@ import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.samarbeid.IASamarbeidService
+import no.nav.lydia.samarbeidsperiode.IASakService
 
 class SamarbeidshistorikkService(
     private val samarbeidshistorikkRepository: SamarbeidshistorikkRepository,
@@ -81,7 +82,6 @@ class SamarbeidshistorikkService(
                 .sortedWith(compareByDescending(nullsFirst()) { it.tidspunkt })
         }
 
-        private fun List<SamarbeidshistorikkKandidat>.nyeste(): SamarbeidshistorikkKandidat? =
-            filter { it.tidspunkt != null }.maxByOrNull { it.tidspunkt!! } ?: firstOrNull()
+        private fun List<SamarbeidshistorikkKandidat>.nyeste(): SamarbeidshistorikkKandidat? = maxWithOrNull(compareBy(nullsFirst()) { it.tidspunkt })
     }
 }
