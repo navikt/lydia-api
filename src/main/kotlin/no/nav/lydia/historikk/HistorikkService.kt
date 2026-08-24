@@ -7,15 +7,15 @@ import arrow.core.raise.ensure
 import arrow.core.right
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.historikk.HistorikkUtils.tilBeskrivelse
-import no.nav.lydia.historikk.model.HistorikkVirksomhet
 import no.nav.lydia.historikk.model.Historikkfeil
 import no.nav.lydia.historikk.model.Historikklinje
 import no.nav.lydia.historikk.model.SamarbeidshistorikkKandidat
 import no.nav.lydia.historikk.model.SamarbeidshistorikkRadDto
 import no.nav.lydia.historikk.model.SamarbeidshistorikkType
 import no.nav.lydia.historikk.model.Samarbeidsperiode
-import no.nav.lydia.historikk.repository.HistorikkVirksomhetRepository
+import no.nav.lydia.historikk.model.Virksomhetshistorikk
 import no.nav.lydia.historikk.repository.SamarbeidshistorikkRepository
+import no.nav.lydia.historikk.repository.VirksomhetshistorikkRepository
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.prioritering.virksomhet.VirksomhetRepository
@@ -25,18 +25,18 @@ import no.nav.lydia.samarbeidsperiode.IASakService
 
 class HistorikkService(
     private val samarbeidshistorikkRepository: SamarbeidshistorikkRepository,
-    private val historikkVirksomhetRepository: HistorikkVirksomhetRepository,
+    private val virksomhetshistorikkRepository: VirksomhetshistorikkRepository,
     private val iaSakRepository: IASakRepository,
     private val iaSakService: IASakService,
     private val azureService: AzureService,
     private val samarbeidService: IASamarbeidService,
     private val virksomhetRepository: VirksomhetRepository,
 ) {
-    fun hentHistorikkForVirksomhet(orgnr: String): Either<Feil, HistorikkVirksomhet> =
+    fun hentHistorikkForVirksomhet(orgnr: String): Either<Feil, Virksomhetshistorikk> =
         either {
             val virksomhet = virksomhetRepository.hentVirksomhet(orgnr)
             ensure(virksomhet != null) { Historikkfeil.`fant ikke virksomhet` }
-            val hendelser = historikkVirksomhetRepository.hentVirksomhetHendelser(orgnr)
+            val hendelser = virksomhetshistorikkRepository.hentVirksomhetHendelser(orgnr)
             val samarbeidsperioder = iaSakRepository.hentAlleSakerForVirksomhet(orgnr)
                 .map {
                     Samarbeidsperiode(
@@ -47,7 +47,7 @@ class HistorikkService(
                     )
                 }
                 .sortedBy { it.fraDato }
-            HistorikkVirksomhet(
+            Virksomhetshistorikk(
                 hendelser = hendelser.map {
                     Historikklinje(beskrivelse = it.hendelsetype.tilBeskrivelse(), tidspunkt = it.tidspunkt, relatertHendelse = it)
                 },

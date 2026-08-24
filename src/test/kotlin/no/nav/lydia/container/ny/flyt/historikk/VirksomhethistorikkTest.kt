@@ -24,8 +24,8 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.historikk.model.HistorikkVersjon
-import no.nav.lydia.historikk.model.HistorikkVirksomhet
-import no.nav.lydia.historikk.model.HistorikkVirksomhetDto
+import no.nav.lydia.historikk.model.Virksomhetshistorikk
+import no.nav.lydia.historikk.model.VirksomhetshistorikkDto
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeidsperiode.BegrunnelseType
@@ -56,17 +56,17 @@ class VirksomhethistorikkTest {
         private fun hentHistorikkForVirksomhetRespons(
             orgnr: String,
             token: String = authContainerHelper.saksbehandler1.token,
-        ): TestResponseTriple<HistorikkVirksomhetDto> =
+        ): TestResponseTriple<VirksomhetshistorikkDto> =
             applikasjon.performGet(
                 "$NY_FLYT_API_PATH/virksomhet/$orgnr/historikk",
             )
                 .authentication().bearer(token)
-                .tilSingelRespons<HistorikkVirksomhetDto>()
+                .tilSingelRespons<VirksomhetshistorikkDto>()
 
         private fun hentHistorikkForVirksomhet(
             orgnr: String,
             token: String = authContainerHelper.saksbehandler1.token,
-        ): HistorikkVirksomhetDto =
+        ): VirksomhetshistorikkDto =
             hentHistorikkForVirksomhetRespons(
                 orgnr = orgnr,
                 token = token,
@@ -113,7 +113,7 @@ class VirksomhethistorikkTest {
         val virksomhet = lastInnNyVirksomhet()
         val respons = virksomhet.hentHistorikk()
 
-        respons shouldBe HistorikkVirksomhet(
+        respons shouldBe Virksomhetshistorikk(
             hendelser = emptyList(),
             samarbeidsperioder = emptyList(),
         )

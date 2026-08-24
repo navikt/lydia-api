@@ -5,11 +5,11 @@ import kotlinx.serialization.Serializable
 import no.nav.lydia.samarbeidsperiode.IASak
 
 @Serializable
-data class HistorikkVirksomhet(
+data class Virksomhetshistorikk(
     val hendelser: List<Historikklinje>,
     val samarbeidsperioder: List<Samarbeidsperiode>,
 ) {
-    fun tilDto(): HistorikkVirksomhetDto = this
+    fun tilDto(): VirksomhetshistorikkDto = this
 }
 
 @Serializable
@@ -21,4 +21,4 @@ data class Samarbeidsperiode(
 )
 
 // For å skille på det vi har i API og intern modell (like enn så lenge)
-typealias HistorikkVirksomhetDto = HistorikkVirksomhet
+typealias VirksomhetshistorikkDto = Virksomhetshistorikk

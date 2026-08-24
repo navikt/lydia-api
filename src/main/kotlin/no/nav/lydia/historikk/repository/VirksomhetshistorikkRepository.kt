@@ -11,7 +11,7 @@ import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import javax.sql.DataSource
 
-class HistorikkVirksomhetRepository(
+class VirksomhetshistorikkRepository(
     private val dataSource: DataSource,
 ) {
     fun hentVirksomhetHendelser(orgnr: String): List<HistorikkHendelse> =

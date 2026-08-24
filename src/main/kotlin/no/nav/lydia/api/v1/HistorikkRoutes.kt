@@ -96,8 +96,8 @@ fun Route.historikkRoutes(
         either {
             val orgnummer = call.orgnummer ?: Historikkfeil.`ugyldig orgnummer`.left().bind()
             call.somLesebruker(adGrupper = adGrupper) { _ -> Unit.right() }.bind()
-            val historikkVirksomhet = historikkService.hentHistorikkForVirksomhet(orgnummer).bind()
-            historikkVirksomhet.tilDto()
+            val virksomhetshistorikk = historikkService.hentHistorikkForVirksomhet(orgnummer).bind()
+            virksomhetshistorikk.tilDto()
         }.also {
             auditLog.auditloggEither(
                 call = call,
