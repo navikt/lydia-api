@@ -99,17 +99,30 @@ fun Route.historikkRoutes(
             call.somLesebruker(adGrupper = adGrupper) { _ -> Unit.right() }.bind()
             val historikkVirksomhet = historikkService.hentHistorikkForVirksomhet(orgnummer).bind()
             HistorikkVirksomhetDto(historikkVirksomhet)
-        }.fold(
-            ifLeft = { feil ->
-                call.respond(
-                    status = feil.httpStatusCode,
-                    message = feil.feilmelding,
-                )
-            },
-            ifRight = {
-                call.respond(it)
-            },
-        )
+        }.also {
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = call.orgnummer,
+                melding = "Henter virksomhetshistorikk",
+                auditType = AuditType.access,
+                severity = when (it.leftOrNull()?.httpStatusCode) {
+                    null, HttpStatusCode.BadRequest -> "INFO"
+                    else -> "WARN"
+                },
+            )
+        }
+            .fold(
+                ifLeft = { feil ->
+                    call.respond(
+                        status = feil.httpStatusCode,
+                        message = feil.feilmelding,
+                    )
+                },
+                ifRight = {
+                    call.respond(it)
+                },
+            )
     }
 
     samarbeidsperiodehistorikkRoute(
