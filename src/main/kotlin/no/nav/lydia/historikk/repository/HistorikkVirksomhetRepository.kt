@@ -24,7 +24,7 @@ class HistorikkVirksomhetRepository(
                     FROM ia_sak_hendelse iah 
                     LEFT JOIN hendelse_begrunnelse hb ON iah.id = hb.hendelse_id
                     WHERE iah.orgnr = :orgnr AND iah.type = ANY(:typer)
-                    GROUP BY iah.id, iah.opprettet, hb.aarsak, iah.type, iah.opprettet, iah.saksnummer, iah.resulterende_status,
+                    GROUP BY iah.id, iah.opprettet, hb.aarsak, iah.type, iah.saksnummer, iah.resulterende_status,
                     iah.opprettet_av, hb.aarsak_enum
                     ORDER BY opprettet
                     """.trimIndent(),
