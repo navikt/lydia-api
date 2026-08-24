@@ -8,7 +8,9 @@ import no.nav.lydia.samarbeidsperiode.IASak
 data class HistorikkVirksomhet(
     val hendelser: List<Historikklinje>,
     val samarbeidsperioder: List<Samarbeidsperiode>,
-)
+) {
+    fun tilDto(): HistorikkVirksomhetDto = this
+}
 
 @Serializable
 data class Samarbeidsperiode(
@@ -17,3 +19,6 @@ data class Samarbeidsperiode(
     val status: IASak.Status,
     val eier: String?,
 )
+
+// For å skille på det vi har i API og intern modell (like enn så lenge)
+typealias HistorikkVirksomhetDto = HistorikkVirksomhet

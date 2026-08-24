@@ -113,11 +113,9 @@ class VirksomhethistorikkTest {
         val virksomhet = lastInnNyVirksomhet()
         val respons = virksomhet.hentHistorikk()
 
-        respons shouldBe HistorikkVirksomhetDto(
-            historikkVirksomhet = HistorikkVirksomhet(
-                hendelser = emptyList(),
-                samarbeidsperioder = emptyList(),
-            ),
+        respons shouldBe HistorikkVirksomhet(
+            hendelser = emptyList(),
+            samarbeidsperioder = emptyList(),
         )
     }
 
@@ -136,7 +134,7 @@ class VirksomhethistorikkTest {
 
         val historikk = virksomhet.hentHistorikk()
 
-        historikk.historikkVirksomhet.hendelser.run {
+        historikk.hendelser.run {
             size shouldBe 1
             this.shouldForAll { linje ->
                 linje.beskrivelse shouldBe "Virksomheten er slettet i Brønnøysundregistrene"
@@ -157,7 +155,7 @@ class VirksomhethistorikkTest {
     fun `kan hente årsak med flere begrunnelser for en virksomhet`() {
         val virksomhet = settOppSlettetVirksomhetMedAktivitet()
 
-        val hendelseId = virksomhet.hentHistorikk().historikkVirksomhet.hendelser[0].relatertHendelse!!.hendelseId
+        val hendelseId = virksomhet.hentHistorikk().hendelser[0].relatertHendelse!!.hendelseId
 
         // Finnes ikke en realistisk måte å få en årsak på i dag, så lager fake data
         postgresContainerHelper.performUpdate(
@@ -169,7 +167,7 @@ class VirksomhethistorikkTest {
         )
 
         val historikk = virksomhet.hentHistorikk()
-        historikk.historikkVirksomhet.hendelser[0].relatertHendelse!!.årsak.run {
+        historikk.hendelser[0].relatertHendelse!!.årsak.run {
             this shouldNotBe null
             this!!.beskrivelse shouldBe ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.navn
             this.begrunnelser.toSet() shouldBe setOf(BegrunnelseType.AUTOMATISK_LUKKET.navn, BegrunnelseType.IKKE_TID.navn)
@@ -190,12 +188,12 @@ class VirksomhethistorikkTest {
         sak2.bliEier(bruker.token)
 
         val historikk = virksomhet.hentHistorikk()
-        historikk.historikkVirksomhet.samarbeidsperioder[0].should { eldsteSak ->
+        historikk.samarbeidsperioder[0].should { eldsteSak ->
             eldsteSak.saksnummer shouldBe sak.saksnummer
             eldsteSak.eier shouldBe null
             eldsteSak.status shouldBe IASak.Status.VURDERT
         }
-        historikk.historikkVirksomhet.samarbeidsperioder[1].should { nyesteSak ->
+        historikk.samarbeidsperioder[1].should { nyesteSak ->
             nyesteSak.saksnummer shouldBe sak2.saksnummer
             nyesteSak.eier shouldBe bruker.navIdent
             nyesteSak.status shouldBe IASak.Status.VURDERES

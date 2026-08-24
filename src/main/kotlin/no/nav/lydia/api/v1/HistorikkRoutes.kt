@@ -21,7 +21,6 @@ import no.nav.lydia.api.sendFeil
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.historikk.HistorikkService
 import no.nav.lydia.historikk.model.HistorikkHendelse
-import no.nav.lydia.historikk.model.HistorikkVirksomhetDto
 import no.nav.lydia.historikk.model.Historikkfeil
 import no.nav.lydia.historikk.model.SamarbeidsperiodeHistorikkDto
 import no.nav.lydia.historikk.model.Årsak
@@ -98,7 +97,7 @@ fun Route.historikkRoutes(
             val orgnummer = call.orgnummer ?: Historikkfeil.`ugyldig orgnummer`.left().bind()
             call.somLesebruker(adGrupper = adGrupper) { _ -> Unit.right() }.bind()
             val historikkVirksomhet = historikkService.hentHistorikkForVirksomhet(orgnummer).bind()
-            HistorikkVirksomhetDto(historikkVirksomhet)
+            historikkVirksomhet.tilDto()
         }.also {
             auditLog.auditloggEither(
                 call = call,
