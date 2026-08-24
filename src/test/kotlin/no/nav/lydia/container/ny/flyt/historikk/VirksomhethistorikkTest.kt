@@ -190,15 +190,15 @@ class VirksomhethistorikkTest {
         sak2.bliEier(bruker.token)
 
         val historikk = virksomhet.hentHistorikk()
-        historikk.historikkVirksomhet.samarbeidsperioder[0].should { nyesteSak ->
-            nyesteSak.saksnummer shouldBe sak2.saksnummer
-            nyesteSak.eier shouldBe bruker.navIdent
-            nyesteSak.status shouldBe IASak.Status.VURDERES
-        }
-        historikk.historikkVirksomhet.samarbeidsperioder[1].should { eldsteSak ->
+        historikk.historikkVirksomhet.samarbeidsperioder[0].should { eldsteSak ->
             eldsteSak.saksnummer shouldBe sak.saksnummer
             eldsteSak.eier shouldBe null
             eldsteSak.status shouldBe IASak.Status.VURDERT
+        }
+        historikk.historikkVirksomhet.samarbeidsperioder[1].should { nyesteSak ->
+            nyesteSak.saksnummer shouldBe sak2.saksnummer
+            nyesteSak.eier shouldBe bruker.navIdent
+            nyesteSak.status shouldBe IASak.Status.VURDERES
         }
     }
 }

@@ -46,7 +46,7 @@ class HistorikkService(
                         eier = it.eidAv,
                     )
                 }
-                .sortedByDescending { it.fraDato }
+                .sortedBy { it.fraDato }
             HistorikkVirksomhet(
                 hendelser = hendelser.map {
                     Historikklinje(beskrivelse = it.hendelsetype.tilBeskrivelse(), tidspunkt = it.tidspunkt, relatertHendelse = it)

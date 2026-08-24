@@ -26,7 +26,7 @@ class HistorikkVirksomhetRepository(
                     WHERE iah.orgnr = :orgnr AND iah.type = ANY(:typer)
                     GROUP BY iah.id, iah.opprettet, hb.aarsak, iah.type, iah.opprettet, iah.saksnummer, iah.resulterende_status,
                     iah.opprettet_av, hb.aarsak_enum
-                    ORDER BY opprettet DESC
+                    ORDER BY opprettet
                     """.trimIndent(),
                     mapOf("orgnr" to orgnr, "typer" to virksomhetshendelsestyper.map { it.name }.toTypedArray()),
                 ).map { row ->
