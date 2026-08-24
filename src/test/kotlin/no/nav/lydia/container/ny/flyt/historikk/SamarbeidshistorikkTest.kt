@@ -22,8 +22,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestResponseTriple
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilListeRespons
-import no.nav.lydia.historikk.SamarbeidshistorikkRadDto
-import no.nav.lydia.historikk.SamarbeidshistorikkType
+import no.nav.lydia.historikk.model.SamarbeidshistorikkRadDto
+import no.nav.lydia.historikk.model.SamarbeidshistorikkType
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.samarbeid.IASamarbeid
 import org.junit.AfterClass
