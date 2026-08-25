@@ -2,6 +2,7 @@ package no.nav.lydia.tilstandsmaskin.tilstand
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
@@ -14,8 +15,19 @@ object VirksomhetErAvregistrertIBrreg : Tilstand() {
         hendelse: Hendelse,
         fiaKontekst: FiaKontekst,
     ): Either<Feil, Konsekvens> =
-        Feil(
-            feilmelding = "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetErAvregistrertIBrreg.tilVirksomhetIATilstand()}'",
-            httpStatusCode = HttpStatusCode.BadRequest,
-        ).left()
+        when (hendelse) {
+            is no.nav.lydia.tilstandsmaskin.hendelse.VirksomhetErAvregistrertIBrreg -> {
+                Konsekvens(
+                    nyTilstand = VirksomhetErAvregistrertIBrreg,
+                    verdi = null,
+                ).right()
+            }
+
+            else -> {
+                Feil(
+                    feilmelding = "'${hendelse.navn()}' er ikke gjennomførbar for '${VirksomhetErAvregistrertIBrreg.tilVirksomhetIATilstand()}'",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                ).left()
+            }
+        }
 }

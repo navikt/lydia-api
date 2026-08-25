@@ -33,9 +33,11 @@ import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
@@ -291,10 +293,9 @@ class NyFlytVirksomhetTest {
     }
 
     @Test
-    fun `VirksomhetErAvregistrertIBrreg er en terminal tilstand som avviser alle hendelser`() {
+    fun `VirksomhetErAvregistrertIBrreg er en terminal tilstand som avviser alle hendelser -- bortsett fra sletting`() {
         val virksomhet = lastInnNyVirksomhet()
         vurderVirksomhet(virksomhet)
-
         sendSlettingForVirksomhet(virksomhet)
 
         hentVirksomhetTilstand(
@@ -303,6 +304,22 @@ class NyFlytVirksomhetTest {
         ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
 
         vurderVirksomhetResponse(virksomhet).statuskode() shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `VirksomhetErAvregistrertIBrreg kan få hendelse om sletting uten å lage feil`() {
+        val virksomhet = lastInnNyVirksomhet()
+        vurderVirksomhet(virksomhet)
+        sendSlettingForVirksomhet(virksomhet)
+        hentVirksomhetTilstand(
+            orgnr = virksomhet.orgnr,
+            token = authContainerHelper.saksbehandler1.token,
+        ).tilstand shouldBe VirksomhetIATilstand.VirksomhetErAvregistrertIBrreg
+
+        // send en ny melding om sletting
+        sendSlettingForVirksomhet(virksomhet)
+
+        applikasjon shouldNotContainLog "Fikk feil ved sletting/fjerning av virksomhet".toRegex()
     }
 
     @Test
