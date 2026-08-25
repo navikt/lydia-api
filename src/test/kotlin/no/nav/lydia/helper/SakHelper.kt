@@ -136,7 +136,7 @@ class SakHelper {
             token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token,
         ) = TestContainerHelper.applikasjon.performGet("${NY_FLYT_API_PATH}/virksomhet/$orgnummer/samarbeidsperiode/$saksnummer/historikk")
             .authentication().bearer(token = token)
-            .tilListeRespons<SamarbeidsperiodeHistorikkDto>()
+            .tilSingelRespons<SamarbeidsperiodeHistorikkDto>()
 
         fun hentHistorikkForSamarbeidsperiode(
             orgnummer: String,

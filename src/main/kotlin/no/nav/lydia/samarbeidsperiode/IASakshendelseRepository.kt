@@ -30,7 +30,7 @@ class IASakshendelseRepository(
                         FROM hendelser_til_samarbeid
                         JOIN ia_sak_hendelse ON (ia_sak_hendelse.id = hendelser_til_samarbeid.hendelse_id)
                         WHERE ia_sak_hendelse.orgnr = :orgnr
-                        ORDER BY ia_sak_hendelse.opprettet ASC 
+                        ORDER BY ia_sak_hendelse.opprettet  
                         """.trimIndent(),
                     paramMap = mapOf(
                         "orgnr" to orgnr,
@@ -70,7 +70,7 @@ class IASakshendelseRepository(
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
                     WHERE $orgnrKolonneNavn = :$orgnrKolonneNavn
                     GROUP BY aarsak_enum, id, type, $orgnrKolonneNavn, opprettet_av, saksnummer, opprettet
-                    ORDER BY opprettet ASC
+                    ORDER BY opprettet 
                     """.trimIndent(),
                     mapOf(
                         orgnrKolonneNavn to orgnr,
@@ -79,6 +79,37 @@ class IASakshendelseRepository(
             )
         }.verifiserAtViIkkeHarDuplikater()
     }
+
+    fun hentHendelserForSaksnummer(saksnummer: String): List<IASakshendelse> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT 
+                        id,
+                        type,
+                        orgnr,
+                        opprettet_av,
+                        opprettet_av_rolle,
+                        saksnummer,
+                        opprettet,
+                        nav_enhet_nummer,
+                        nav_enhet_navn,
+                        resulterende_status,
+                        aarsak_enum,
+                        array_agg(begrunnelse_enum) as begrunnelser
+                    FROM ia_sak_hendelse
+                    LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
+                    WHERE saksnummer = :saksnummer
+                    GROUP BY aarsak_enum, id, type, orgnr, opprettet_av, saksnummer, opprettet
+                    ORDER BY opprettet 
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                    ),
+                ).map(this::mapRow).asList,
+            )
+        }.verifiserAtViIkkeHarDuplikater()
 
     fun lagreHendelse(
         hendelse: IASakshendelse,

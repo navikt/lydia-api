@@ -40,6 +40,8 @@ class IASakService(
 
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> = iaSakshendelseRepository.hentHendelserForOrgnummer(orgnr = orgnr)
 
+    fun hentHendelserForSaksnummer(saksnummer: String): List<IASakshendelse> = iaSakshendelseRepository.hentHendelserForSaksnummer(saksnummer = saksnummer)
+
     fun hentSamarbeidshendelserForOrgnummer(orgnr: String): List<SamarbeidshendelseDto> =
         iaSakshendelseRepository.hentSamarbeidshendelserForOrgnummer(orgnr = orgnr)
 
@@ -168,5 +170,23 @@ class IASakService(
 //                oppdatertSak.maskineltSettSakTilIkkeAktuell(tørrKjør = false)
             }
         }
+    }
+
+    fun filtrerHendelserISamarbeidsperiodeHistorikk(hendelser: List<IASakshendelse>): List<IASakshendelse> {
+        val filtrerteHendelser = hendelser.filter { it.hendelsesType !in skjulteHendelser }
+
+        return (listOf(null) + filtrerteHendelser)
+            .zipWithNext()
+            .filter { (forrige, nåværende) ->
+                forrige?.resulterendeStatus != nåværende?.resulterendeStatus
+            }.mapNotNull { (_, nåværende) -> nåværende }
+    }
+
+    companion object {
+        val skjulteHendelser = setOf(
+            IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
+            IASakshendelseType.TA_EIERSKAP_I_SAK,
+            IASakshendelseType.TILBAKE,
+        )
     }
 }

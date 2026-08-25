@@ -151,41 +151,41 @@ private fun Route.samarbeidsperiodehistorikkRoute(
         val orgnr = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
         call.somLesebruker(adGrupper = adGrupper) {
-            val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnr)
-                .groupBy { it.saksnummer }
+            val hendelser = iaSakService.hentHendelserForSaksnummer(saksnummer = saksnummer)
+
+            val filtrerteHendelser = iaSakService.filtrerHendelserISamarbeidsperiodeHistorikk(hendelser = hendelser)
 
             iaSakService.hentIASakDto(saksnummer)
                 .map { iASakDto ->
-                    val iASakDtoMedHendelser = iASakDto.addHendelser(hendelser[saksnummer] ?: emptyList())
+                    val iASakDtoMedHendelser = iASakDto.addHendelser(filtrerteHendelser)
                     val samarbeid = nyFlytService.hentSamarbeidSomIkkeErSlettet(saksnummer).getOrElse { emptyList() }
-                    listOf(
-                        SamarbeidsperiodeHistorikkDto(
-                            saksnummer = iASakDtoMedHendelser.saksnummer,
-                            opprettet = iASakDtoMedHendelser.opprettetTidspunkt,
-                            sistEndret = iASakDtoMedHendelser.endretTidspunkt ?: iASakDtoMedHendelser.opprettetTidspunkt,
-                            historikkHendelser = iASakDtoMedHendelser.hendelser.map { hendelse ->
-                                HistorikkHendelse(
-                                    hendelseId = hendelse.id,
-                                    hendelsetype = hendelse.hendelsesType,
-                                    resulterendeStatus = hendelse.resulterendeStatus ?: IASak.Status.IKKE_AKTIV,
-                                    tidspunkt = hendelse.opprettetTidspunkt
-                                        .toKotlinLocalDateTime(),
-                                    hendelseOpprettetAv = hendelse.opprettetAv,
-                                    årsak = when (hendelse) {
-                                        is VirksomhetIkkeAktuellHendelse -> Årsak(
-                                            beskrivelse = hendelse.valgtÅrsak.type.navn,
-                                            begrunnelser = hendelse.valgtÅrsak.begrunnelser.map { it.navn },
-                                        )
 
-                                        else -> null
-                                    },
-                                )
-                            },
-                            samarbeid = samarbeid.tilDto(),
-                        ),
+                    SamarbeidsperiodeHistorikkDto(
+                        saksnummer = iASakDtoMedHendelser.saksnummer,
+                        opprettet = iASakDtoMedHendelser.opprettetTidspunkt,
+                        sistEndret = iASakDtoMedHendelser.endretTidspunkt ?: iASakDtoMedHendelser.opprettetTidspunkt,
+                        historikkHendelser = iASakDtoMedHendelser.hendelser.map { hendelse ->
+                            HistorikkHendelse(
+                                hendelseId = hendelse.id,
+                                hendelsetype = hendelse.hendelsesType,
+                                resulterendeStatus = hendelse.resulterendeStatus ?: IASak.Status.IKKE_AKTIV,
+                                tidspunkt = hendelse.opprettetTidspunkt
+                                    .toKotlinLocalDateTime(),
+                                hendelseOpprettetAv = hendelse.opprettetAv,
+                                årsak = when (hendelse) {
+                                    is VirksomhetIkkeAktuellHendelse -> Årsak(
+                                        beskrivelse = hendelse.valgtÅrsak.type.navn,
+                                        begrunnelser = hendelse.valgtÅrsak.begrunnelser.map { it.navn },
+                                    )
+
+                                    else -> null
+                                },
+                            )
+                        },
+                        samarbeid = samarbeid.tilDto(),
                     )
                 }
-        }.also { either: Either<Feil, List<SamarbeidsperiodeHistorikkDto>> ->
+        }.also { either: Either<Feil, SamarbeidsperiodeHistorikkDto> ->
             auditLog.auditloggEither(
                 call = call,
                 either = either,

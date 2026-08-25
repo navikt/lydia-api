@@ -1,5 +1,8 @@
 package no.nav.lydia.container.ny.flyt
 
+import io.kotest.inspectors.shouldForAll
+import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
+import io.kotest.matchers.ints.shouldBeAtLeast
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.helper.SakHelper.Companion.hentHistorikkForSamarbeidsperiode
@@ -43,9 +46,10 @@ class HistorikkTest {
 
         val historikk = hentHistorikkForSamarbeidsperiode(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        historikk.isNotEmpty() shouldBe true
-        historikk.zipWithNext().forEach { (a, b) ->
-            (a.opprettet <= b.opprettet) shouldBe true
+        historikk.historikkHendelser.size shouldBeAtLeast 1
+
+        historikk.historikkHendelser.zipWithNext().shouldForAll { (a, b) ->
+            a.tidspunkt shouldBeLessThanOrEqualTo b.tidspunkt
         }
     }
 }
