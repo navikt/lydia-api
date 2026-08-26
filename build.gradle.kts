@@ -1,8 +1,8 @@
 val ktorVersion = "3.5.2"
 val iaFellesVersion = "2.0.6"
-val kotestVerstion = "6.2.3"
+val kotestVerstion = "6.2.4"
 val testcontainersVersion = "2.0.5"
-val logbackVersion = "1.6.1"
+val logbackVersion = "1.6.3"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.30.0-alpha"
 
@@ -54,14 +54,14 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.13")
     implementation("com.zaxxer:HikariCP:7.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:13.1.0")
+    implementation("org.flywaydb:flyway-database-postgresql:13.3.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Serialization med Gson
     implementation("com.google.code.gson:gson:2.14.0")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.11.1")
+    implementation("at.yawk.lz4:lz4-java:1.11.2")
     implementation("org.apache.kafka:kafka-clients:4.3.1") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
@@ -100,7 +100,7 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:5.0.2")
+    testImplementation("no.nav.security:mock-oauth2-server:6.0.1")
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
