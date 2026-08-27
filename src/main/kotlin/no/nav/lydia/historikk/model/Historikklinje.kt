@@ -3,6 +3,7 @@ package no.nav.lydia.historikk.model
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import no.nav.lydia.getEnvVar
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 
@@ -33,7 +34,18 @@ enum class HistorikkVersjon {
     ;
 
     companion object {
-        val datoForEndring = LocalDateTime.parse("2026-04-28T00:00:00")
+        val DATO_FOR_MIGRERING_TIL_NY_FLYT_I_PROD = "2026-04-28T00:00:00"
+        val DATO_FOR_MIGRERING_TIL_NY_FLYT_I_DEV = "2026-03-31T00:00:00"
+        val datoForEndring =
+            if (getEnvVar(
+                    varName = "NAIS_CLUSTER_NAME",
+                    defaultValue = "PROD-GCP",
+                ) == "PROD-GCP"
+            ) {
+                LocalDateTime.parse(DATO_FOR_MIGRERING_TIL_NY_FLYT_I_PROD)
+            } else {
+                LocalDateTime.parse(DATO_FOR_MIGRERING_TIL_NY_FLYT_I_DEV)
+            }
 
         fun fraTidspunkt(tidspunkt: LocalDateTime) = if (tidspunkt < datoForEndring) LEGACY else NY_FLYT
     }
