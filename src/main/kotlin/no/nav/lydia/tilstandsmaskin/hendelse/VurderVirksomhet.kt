@@ -8,5 +8,5 @@ data class VurderVirksomhet(
     override val orgnr: String,
     val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
     val navEnhet: NavEnhet,
-    val valgtÅrsak: ValgtÅrsak? = null,
+    val valgtÅrsak: ValgtÅrsak,
 ) : Hendelse()

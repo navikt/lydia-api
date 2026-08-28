@@ -318,6 +318,47 @@ class NyFlytTest {
     }
 
     @Test
+    fun `Batch jobb - automatisk vurdering skal begrunnes med at virksomheten er vurdert på nytt`() {
+        val sak = vurderVirksomhet()
+
+        sak.avsluttVurdering(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
+                ),
+                dato = LocalDate.now().plusDays(1).toKotlinLocalDate(),
+            ),
+        )
+
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE tilstand_automatisk_oppdatering 
+            SET planlagt_dato = CURRENT_DATE - INTERVAL '1 day'
+            WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+
+        kafkaContainerHelper.sendJobbMelding(Jobb.prosesserPlanlagteHendelser)
+
+        hentVirksomhetTilstand(orgnr = sak.orgnr).tilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
+
+        val historikk = hentSamarbeidshistorikkNyFlyt(orgnummer = sak.orgnr)
+        historikk shouldHaveSize 2
+
+        val nyesteSak = historikk.sortedByDescending { it.opprettet }.first()
+        nyesteSak.saksnummer shouldNotBe sak.saksnummer
+        nyesteSak.sakshendelser
+            .single { it.hendelsestype == IASakshendelseType.VIRKSOMHET_VURDERES }
+            .begrunnelser shouldBe listOf(BegrunnelseType.AUTOMATISK_VURDERT_PÅ_NYTT.navn)
+
+        historikk.single { it.saksnummer == sak.saksnummer }
+            .sakshendelser
+            .single { it.hendelsestype == IASakshendelseType.VIRKSOMHET_VURDERES }
+            .begrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.navn)
+    }
+
+    @Test
     fun `nesteTilstand skal være null ved Hendelse vurderVirksomhet fra tilstand VirksomhetErVurdert`() {
         val sak = vurderVirksomhet()
         sak.status shouldBe IASak.Status.VURDERES

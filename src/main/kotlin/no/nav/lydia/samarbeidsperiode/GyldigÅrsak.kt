@@ -113,6 +113,9 @@ enum class BegrunnelseType(
     NAV_VURDERER_VIRKSOMHETEN(navn = "Nav vurderer virksomheten"),
     VIRKSOMHETEN_HAR_TATT_KONTAKT(navn = "Virksomheten har tatt kontakt"),
 
+    // bakgrunn for vurdering av virksomhet. Automatisk vurdert på nytt.
+    AUTOMATISK_VURDERT_PÅ_NYTT(navn = "Automatisk vurdert på nytt"),
+
     // avslutt-vurdering v1
     // Vurderes på et senere tidspunkt
     VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE(navn = "Virksomheten ønsker å bli kontaktet senere"),

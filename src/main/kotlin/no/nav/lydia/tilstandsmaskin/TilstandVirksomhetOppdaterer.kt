@@ -3,7 +3,10 @@ package no.nav.lydia.tilstandsmaskin
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.samarbeid.IASamarbeidService
+import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASakService
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.samarbeidsplan.PlanService
 import no.nav.lydia.tilgangskontroll.Standardbrukere
 import no.nav.lydia.tilstandsmaskin.hendelse.GjørVirksomhetKlarTilNyVurdering
@@ -24,6 +27,11 @@ class TilstandVirksomhetOppdaterer(
         val NAV_ENHET_FOR_MASKINELT_OPPDATERING = NavEnhet(
             enhetsnummer = "2840",
             enhetsnavn = "IA- og sykefraværskontoret",
+        )
+
+        val ÅRSAK_FOR_AUTOMATISK_VURDERT_PÅ_NYTT = ValgtÅrsak(
+            type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+            begrunnelser = listOf(BegrunnelseType.AUTOMATISK_VURDERT_PÅ_NYTT),
         )
     }
 
@@ -59,6 +67,7 @@ class TilstandVirksomhetOppdaterer(
                 orgnr = orgnr,
                 superbruker = Standardbrukere.fiaSystemSuperbruker,
                 navEnhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
+                valgtÅrsak = ÅRSAK_FOR_AUTOMATISK_VURDERT_PÅ_NYTT,
             )
 
             else -> throw IllegalArgumentException("Ukjent hendelse: $hendelse")

@@ -29,7 +29,7 @@ class VurderVirksomhetSideEffect(
     val orgnummer: String,
     val superbruker: NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker,
     val navEnhet: NavEnhet,
-    val valgtÅrsak: ValgtÅrsak? = null,
+    val valgtÅrsak: ValgtÅrsak,
 ) : SideEffect<IASakDto>() {
     context(nyFlytService: NyFlytService)
     override fun apply(): Either<Feil, IASakDto> =
@@ -60,12 +60,10 @@ class VurderVirksomhetSideEffect(
                     sistEndretAvHendelseId = null,
                     resulterendeStatus = VURDERES,
                 )
-                valgtÅrsak?.let {
-                    lagreÅrsakForHendelse(
-                        hendelseId = iaSakshendelseVurderes.id,
-                        valgtÅrsak = it,
-                    )
-                }
+                lagreÅrsakForHendelse(
+                    hendelseId = iaSakshendelseVurderes.id,
+                    valgtÅrsak = valgtÅrsak,
+                )
                 val oppdatertIaSakDto = oppdaterStatusPåSak(
                     saksnummer = iaSakDto.saksnummer,
                     status = VURDERES,
