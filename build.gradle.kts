@@ -4,7 +4,7 @@ val kotestVerstion = "6.2.4"
 val testcontainersVersion = "2.0.5"
 val logbackVersion = "1.6.3"
 val logstashLogbackEncoderVersion = "9.0"
-val opentelemetryLogbackMdcVersion = "2.30.0-alpha"
+val opentelemetryLogbackMdcVersion = "2.31.1-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -49,7 +49,7 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.17.0")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.17.1")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.13")
@@ -100,7 +100,7 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:6.0.1")
+    testImplementation("no.nav.security:mock-oauth2-server:6.0.2")
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
