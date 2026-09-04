@@ -17,6 +17,7 @@ import no.nav.lydia.api.sendFeil
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
+import no.nav.lydia.samarbeidsperiode.HendelseAktorDto
 import no.nav.lydia.samarbeidsperiode.IASakError
 import no.nav.lydia.samarbeidsperiode.IASakService
 import no.nav.lydia.team.IATeamService
@@ -119,7 +120,28 @@ fun Route.nyFlytSamarbeidsperiode(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+
+    post("$NY_FLYT_API_PATH/samarbeidsperiode/{saksnummer}/aktorer") {
+        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val hendelseIder = call.receive<Set<String>>()
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            hendelseIder.right()
+        }.map { ider ->
+            val aktørPerHendelse = iaSakService.hentAktørerForHendelser(saksnummer = saksnummer, hendelseIder = ider)
+            val navnPerNavIdent = hentNavn(azureService, aktørPerHendelse.map { it.second }.toSet())
+                .associateBy { it.navIdent }
+
+            call.respond(
+                aktørPerHendelse.mapNotNull { (hendelseId, navIdent) ->
+                    navnPerNavIdent[navIdent]?.let { HendelseAktorDto(hendelseId = hendelseId, aktor = it) }
+                },
+            )
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
 }
+
 
 private suspend fun hentNavn(
     azureService: AzureService,

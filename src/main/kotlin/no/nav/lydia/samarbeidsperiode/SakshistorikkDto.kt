@@ -3,6 +3,7 @@ package no.nav.lydia.samarbeidsperiode
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.samarbeid.IASamarbeidDto
 
 @Serializable
@@ -17,6 +18,7 @@ data class SakshistorikkDto(
 
 @Serializable
 data class SakSnapshotDto(
+    val hendelseId: String,
     val status: IASak.Status,
     val hendelsestype: IASakshendelseType,
     val tidspunktForSnapshot: LocalDateTime,
@@ -26,6 +28,7 @@ data class SakSnapshotDto(
     companion object {
         fun from(iaSakshendelse: IASakshendelse) =
             SakSnapshotDto(
+                hendelseId = iaSakshendelse.id,
                 status = iaSakshendelse.resulterendeStatus ?: IASak.Status.IKKE_AKTIV,
                 hendelsestype = iaSakshendelse.hendelsesType,
                 tidspunktForSnapshot = iaSakshendelse.opprettetTidspunkt.toKotlinLocalDateTime(),
@@ -67,9 +70,16 @@ fun IASakDto.tilSakshistorikk(
 
 @Serializable
 data class SamarbeidshendelseDto(
+    val hendelseId: String,
     val samarbeidId: Int,
     val saksnummer: String,
     val hendelsestype: IASakshendelseType,
     val tidspunkt: LocalDateTime,
     val opprettetAv: String,
+)
+
+@Serializable
+data class HendelseAktorDto(
+    val hendelseId: String,
+    val aktor: EierDTO,
 )

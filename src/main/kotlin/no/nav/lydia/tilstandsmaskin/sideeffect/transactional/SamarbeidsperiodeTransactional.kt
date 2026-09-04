@@ -67,6 +67,7 @@ class SamarbeidsperiodeTransactional {
                     mapOf("hendelse_id" to hendelseId),
                 ).map { row ->
                     SamarbeidshendelseDto(
+                        hendelseId = hendelseId,
                         samarbeidId = row.int("samarbeid_id"),
                         saksnummer = row.string("saksnummer"),
                         hendelsestype = IASakshendelseType.valueOf(row.string("type")),

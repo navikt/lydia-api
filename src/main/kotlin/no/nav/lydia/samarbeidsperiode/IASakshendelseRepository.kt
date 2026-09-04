@@ -22,6 +22,7 @@ class IASakshendelseRepository(
                     statement =
                         """
                         SELECT 
+                            ia_sak_hendelse.id,
                             hendelser_til_samarbeid.samarbeid_id,
                             ia_sak_hendelse.saksnummer,
                             ia_sak_hendelse.type, 
@@ -37,6 +38,7 @@ class IASakshendelseRepository(
                     ),
                 ).map { row ->
                     SamarbeidshendelseDto(
+                        hendelseId = row.string("id"),
                         samarbeidId = row.int("samarbeid_id"),
                         saksnummer = row.string("saksnummer"),
                         hendelsestype = IASakshendelseType.valueOf(row.string("type")),
@@ -45,6 +47,31 @@ class IASakshendelseRepository(
                     )
                 }.asList,
             )
+        }
+
+    fun hentAktørerForHendelser(
+        saksnummer: String,
+        hendelseIder: Set<String>,
+    ): List<Pair<String, String>> =
+        if (hendelseIder.isEmpty()) {
+            emptyList()
+        } else {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf(
+                        """
+                        SELECT id, opprettet_av
+                        FROM ia_sak_hendelse
+                        WHERE saksnummer = :saksnummer
+                          AND id in (select unnest(:hendelseIder))
+                        """.trimIndent(),
+                        mapOf(
+                            "saksnummer" to saksnummer,
+                            "hendelseIder" to session.createArrayOf("text", hendelseIder),
+                        ),
+                    ).map { row -> row.string("id") to row.string("opprettet_av") }.asList,
+                )
+            }
         }
 
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> {
