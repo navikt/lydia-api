@@ -128,6 +128,7 @@ fun Route.historikkRoutes(
         path = "$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/historikk",
         iaSakService = iaSakService,
         nyFlytService = nyFlytService,
+        historikkService = historikkService,
         adGrupper = adGrupper,
         auditLog = auditLog,
     )
@@ -144,6 +145,7 @@ private fun Route.samarbeidsperiodehistorikkRoute(
     path: String,
     iaSakService: IASakService,
     nyFlytService: NyFlytService,
+    historikkService: HistorikkService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
@@ -194,7 +196,7 @@ private fun Route.samarbeidsperiodehistorikkRoute(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(status = HttpStatusCode.OK, message = it)
+            call.respond(status = HttpStatusCode.OK, message = historikkService.berikMedAktører(it))
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
