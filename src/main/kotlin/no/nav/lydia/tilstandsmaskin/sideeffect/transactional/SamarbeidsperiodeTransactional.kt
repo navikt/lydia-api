@@ -156,7 +156,7 @@ class SamarbeidsperiodeTransactional {
                         """.trimMargin(),
                         mapOf(
                             "hendelse_id" to hendelseId,
-                            "aarsak" to valgtÅrsak.årsak,
+                            "aarsak" to valgtÅrsak.beskrivelse,
                             "begrunnelse" to begrunnelse.navn,
                             "aarsak_enum" to valgtÅrsak.type.name,
                             "begrunnelse_enum" to begrunnelse.name,

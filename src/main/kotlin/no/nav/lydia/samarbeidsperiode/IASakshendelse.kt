@@ -125,7 +125,7 @@ class VirksomhetIkkeAktuellHendelse(
             orgnummer = orgnummer,
             hendelsesType = hendelsesType,
             saksnummer = saksnummer,
-            årsak = Årsak(type = valgtÅrsak.årsak, begrunnelser = valgtÅrsak.begrunnelser.map { it.navn }),
+            årsak = Årsak(type = valgtÅrsak.beskrivelse, begrunnelser = valgtÅrsak.begrunnelser.map { it.navn }),
         )
         return key to Json.encodeToString(value)
     }

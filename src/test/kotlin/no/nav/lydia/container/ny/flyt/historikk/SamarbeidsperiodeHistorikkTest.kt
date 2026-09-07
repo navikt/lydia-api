@@ -79,11 +79,11 @@ class SamarbeidsperiodeHistorikkTest {
     }
 
     @Test
-    fun `får tilbake samme årsak som man putter inn`() {
+    fun `får tilbake samme årsaksbeskrivelse som man putter inn`() {
         val sak = vurderVirksomhet(
             valgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                årsak = "bAkGrUnN FoR VuRdErInG Av vIrKsOmHeT",
+                beskrivelse = "bAkGrUnN FoR VuRdErInG Av vIrKsOmHeT",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         )

@@ -239,7 +239,7 @@ class IASakshendelseRepository(
         nullable {
             val valgtÅrsak = ÅrsakType.valueOf(årsakEnum.bind())
             val valgtBegrunnelser = begrunnelser.filterNotNull().map(BegrunnelseType::valueOf)
-            ValgtÅrsak(type = valgtÅrsak, årsak = årsak.bind(), begrunnelser = valgtBegrunnelser)
+            ValgtÅrsak(type = valgtÅrsak, beskrivelse = årsak.bind(), begrunnelser = valgtBegrunnelser)
         }
 
     companion object {

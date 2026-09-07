@@ -258,7 +258,7 @@ class NyFlytTestUtils {
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                årsak = "Bakgrunn for vurdering av virksomhet",
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/vurder")
@@ -272,7 +272,7 @@ class NyFlytTestUtils {
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                årsak = "Bakgrunn for vurdering av virksomhet",
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = vurderVirksomhetMedOrgnrResponse(virksomhet.orgnr, token, valgtÅrsak)
@@ -282,7 +282,7 @@ class NyFlytTestUtils {
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                årsak = "Bakgrunn for vurdering av virksomhet",
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = vurderVirksomhetResponse(virksomhet = virksomhet, token = token, valgtÅrsak = valgtÅrsak).third.fold(
@@ -294,7 +294,7 @@ class NyFlytTestUtils {
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                årsak = "Bakgrunn for vurdering av virksomhet",
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = vurderVirksomhetMedOrgnrResponse(orgnr, token, valgtÅrsak)
@@ -303,7 +303,7 @@ class NyFlytTestUtils {
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                årsak = "Bakgrunn for vurdering av virksomhet",
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = revurderVirksomhetResponse(token = token, valgtÅrsak = valgtÅrsak).third.fold(
