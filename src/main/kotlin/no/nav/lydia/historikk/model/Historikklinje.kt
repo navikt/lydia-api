@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import no.nav.lydia.getEnvVar
+import no.nav.lydia.prioritering.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 
@@ -24,6 +25,7 @@ data class HistorikkHendelse(
     val tidspunkt: LocalDateTime,
     @SerialName("hendelse_opprettet_av")
     val hendelseOpprettetAv: String, // NavIdent
+    val aktør: EierDTO? = null,
     val årsak: Årsak?,
     val versjon: HistorikkVersjon = HistorikkVersjon.fraTidspunkt(tidspunkt),
 )

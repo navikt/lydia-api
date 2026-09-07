@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ny.flyt.historikk
 
+import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
@@ -54,6 +55,24 @@ class SamarbeidsperiodeHistorikkTest {
         samarbeidsperiodeHistorikkDto.historikkHendelser shouldHaveSize 2
         samarbeidsperiodeHistorikkDto.historikkHendelser.map { it.resulterendeStatus } shouldBe
             listOf(IASak.Status.VURDERES, IASak.Status.AKTIV)
+    }
+
+    // superbruker1 (S54321) er den eneste testbrukeren som også finnes i Azure-stubben
+    @Test
+    fun `hendelser skal berikes med navnet til den som utførte dem`() {
+        val superbruker = authContainerHelper.superbruker1
+        val sak = vurderVirksomhet(token = superbruker.token)
+
+        val historikk = hentSamarbeidsperiodeHistorikk(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            token = superbruker.token,
+        )
+
+        historikk.historikkHendelser.forAtLeastOne { hendelse ->
+            hendelse.hendelseOpprettetAv shouldBe "S54321"
+            hendelse.aktør?.navn shouldBe "Bjørg Scheie Scheie"
+        }
     }
 
     private fun hentSamarbeidsperiodeHistorikkRespons(

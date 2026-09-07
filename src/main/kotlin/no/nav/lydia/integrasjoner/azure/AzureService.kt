@@ -102,6 +102,20 @@ class AzureService(
             }
         }
 
+    // Navn på personer utenfor saksbehandler- og superbrukergruppa kan ikke slås opp, og utelates
+    suspend fun hentNavnFor(navIdenter: Set<String>): List<EierDTO> =
+        if (navIdenter.isEmpty()) {
+            emptyList()
+        } else {
+            hentVeiledere().fold(
+                ifLeft = { emptyList() },
+                ifRight = { veiledere -> veiledere.filter { it.navIdent in navIdenter }.map { it.tilEierDTO() } },
+            )
+        }
+
+    suspend fun hentNavnPerNavIdent(navIdenter: Set<String>): Map<String, String> =
+        hentNavnFor(navIdenter = navIdenter).associate { it.navIdent to it.navn }
+
     private suspend fun hentVeiledereFraAzure(): Either<Feil, Set<VeilederDTO>> =
         coroutineScope {
             Either.catch {

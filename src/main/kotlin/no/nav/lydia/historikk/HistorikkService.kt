@@ -13,6 +13,7 @@ import no.nav.lydia.historikk.model.SamarbeidshistorikkKandidat
 import no.nav.lydia.historikk.model.SamarbeidshistorikkRadDto
 import no.nav.lydia.historikk.model.SamarbeidshistorikkType
 import no.nav.lydia.historikk.model.Samarbeidsperiode
+import no.nav.lydia.historikk.model.SamarbeidsperiodeHistorikkDto
 import no.nav.lydia.historikk.model.Virksomhetshistorikk
 import no.nav.lydia.historikk.repository.SamarbeidshistorikkRepository
 import no.nav.lydia.historikk.repository.VirksomhetshistorikkRepository
@@ -72,7 +73,7 @@ class HistorikkService(
             rekonstruerteHendelser = samarbeidshistorikkRepository.hentRekonstruerteHendelser(samarbeidId = samarbeidId),
         )
 
-        val navnPerNavIdent = hentNavnPerNavIdent(navIdenter = kandidater.mapNotNull { it.navIdent }.toSet())
+        val navnPerNavIdent = azureService.hentNavnPerNavIdent(navIdenter = kandidater.mapNotNull { it.navIdent }.toSet())
 
         return kandidater.map { kandidat ->
             SamarbeidshistorikkRadDto(
@@ -85,19 +86,20 @@ class HistorikkService(
         }.right()
     }
 
-    private suspend fun hentNavnPerNavIdent(navIdenter: Set<String>): Map<String, String> =
-        if (navIdenter.isEmpty()) {
-            emptyMap()
-        } else {
-            azureService.hentVeiledere().fold(
-                ifLeft = { emptyMap() },
-                ifRight = { veiledere ->
-                    veiledere.filter { it.navIdent in navIdenter }
-                        .map { it.tilEierDTO() }
-                        .associate { it.navIdent to it.navn }
-                },
-            )
-        }
+    suspend fun berikMedAktører(historikk: SamarbeidsperiodeHistorikkDto): SamarbeidsperiodeHistorikkDto {
+        val navnPerNavIdent = azureService.hentNavnPerNavIdent(
+            navIdenter = historikk.historikkHendelser.map { it.hendelseOpprettetAv }.toSet(),
+        )
+        return historikk.copy(
+            historikkHendelser = historikk.historikkHendelser.map { hendelse ->
+                hendelse.copy(
+                    aktør = navnPerNavIdent[hendelse.hendelseOpprettetAv]?.let { navn ->
+                        EierDTO(navIdent = hendelse.hendelseOpprettetAv, navn = navn)
+                    },
+                )
+            },
+        )
+    }
 
     companion object {
         /**
