@@ -97,9 +97,9 @@ enum class ÅrsakType(
     BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET(navn = "Bakgrunn for vurdering av virksomhet"),
 
     // avslutt-vurdering v1
-    VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT(navn = "Virksomheten vurderes på et senere tidspunkt"),
-    VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING(navn = "Virksomheten er ferdig vurdert med intern vurdering"),
-    VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI(navn = "Virksomheten er ferdig vurdert og har takket nei"),
+    VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT(navn = "Vurder virksomheten senere"),
+    VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING(navn = "Nav har konkludert"),
+    VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI(navn = "Virksomheten har takket nei"),
 
     // -- Gammel saksflyt
     NAV_IGANGSETTER_IKKE_TILTAK(navn = "NAV har besluttet å ikke starte samarbeid"),
