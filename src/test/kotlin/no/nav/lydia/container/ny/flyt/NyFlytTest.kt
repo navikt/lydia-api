@@ -11,6 +11,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.angreVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeidRespons
@@ -40,18 +41,22 @@ import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.bliEierResponse
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkNyFlyt
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
+import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.prioritering.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
@@ -1507,5 +1512,31 @@ class NyFlytTest {
             .flatMap { it.samarbeidshendelser }
             .filter { it.hendelsestype == IASakshendelseType.FULLFØR_PROSESS }
             .map { it.samarbeidId } shouldBe listOf(samarbeid.id)
+    }
+
+    @Test
+    fun `avslutt vurdering med manglende verdi for årsak gir suksess`() {
+        val sak = vurderVirksomhet()
+        sak.leggTilFolger(authContainerHelper.superbruker1.token)
+        val orgnr = sak.orgnr
+        val response = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/avslutt-vurdering")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .jsonBody(
+                """
+                {
+                  "type": "VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI",
+                  "begrunnelser": [
+                    "VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET",
+                    "VIRKSOMHETEN_SAMARBEIDER_MED_ANDRE_ELLER_GJØR_EGNE_TILTAK",
+                    "VIRKSOMHETEN_ØNSKER_KUN_INFORMASJON_OG_VEILEDNING",
+                    "KOMMUNEN_ELLER_OVERORDNET_LEDELSE_ØNSKER_IKKE_Å_STARTE_ET_SAMARBEID"
+                  ],
+                  "dato": "2027-09-07"
+                }
+                """.trimIndent(),
+            )
+            .tilSingelRespons<IASakDto>()
+
+        response.second.statusCode shouldBe HttpStatusCode.OK.value
     }
 }
