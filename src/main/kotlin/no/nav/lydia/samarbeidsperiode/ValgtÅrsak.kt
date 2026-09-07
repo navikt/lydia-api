@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class ValgtÅrsak(
     val type: ÅrsakType,
+    val årsak: String = type.navn,
     val begrunnelser: List<BegrunnelseType>,
     val dato: LocalDate? = null,
 )

@@ -1,5 +1,6 @@
 package no.nav.lydia.samarbeidsperiode
 
+import arrow.core.raise.nullable
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
@@ -65,11 +66,12 @@ class IASakshendelseRepository(
                         nav_enhet_navn,
                         resulterende_status,
                         aarsak_enum,
+                        aarsak,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
                     WHERE $orgnrKolonneNavn = :$orgnrKolonneNavn
-                    GROUP BY aarsak_enum, id, type, $orgnrKolonneNavn, opprettet_av, saksnummer, opprettet
+                    GROUP BY aarsak_enum, aarsak, id, type, $orgnrKolonneNavn, opprettet_av, saksnummer, opprettet
                     ORDER BY opprettet 
                     """.trimIndent(),
                     mapOf(
@@ -97,11 +99,12 @@ class IASakshendelseRepository(
                         nav_enhet_navn,
                         resulterende_status,
                         aarsak_enum,
+                        aarsak,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
                     WHERE saksnummer = :saksnummer
-                    GROUP BY aarsak_enum, id, type, orgnr, opprettet_av, saksnummer, opprettet
+                    GROUP BY aarsak_enum, aarsak, id, type, orgnr, opprettet_av, saksnummer, opprettet
                     ORDER BY opprettet 
                     """.trimIndent(),
                     mapOf(
@@ -182,11 +185,12 @@ class IASakshendelseRepository(
                         nav_enhet_navn,
                         resulterende_status,
                         aarsak_enum,
+                        aarsak,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
                     WHERE $idKolonneNavn = :$idKolonneNavn
-                    GROUP BY id, aarsak_enum
+                    GROUP BY id, aarsak_enum, aarsak
                     """.trimIndent(),
                     mapOf(idKolonneNavn to hendelseId),
                 ).map(this::mapRow).asSingle,
@@ -195,7 +199,7 @@ class IASakshendelseRepository(
     }
 
     private fun mapRow(row: Row): IASakshendelse {
-        val valgtÅrsak = årsakFraDatabase(row.stringOrNull("aarsak_enum"), row.array("begrunnelser"))
+        val valgtÅrsak = årsakFraDatabase(row.stringOrNull("aarsak_enum"), row.stringOrNull("aarsak"), row.array("begrunnelser"))
             ?: return IASakshendelse(
                 id = row.string("id"),
                 opprettetTidspunkt = row.localDateTime("opprettet"),
@@ -228,13 +232,15 @@ class IASakshendelseRepository(
     }
 
     private fun årsakFraDatabase(
+        årsakEnum: String?,
         årsak: String?,
         begrunnelser: Array<String?>,
-    ) = årsak?.let {
-        val valgtÅrsak = ÅrsakType.valueOf(it)
-        val valgtBegrunnelser = begrunnelser.filterNotNull().map(BegrunnelseType::valueOf)
-        ValgtÅrsak(type = valgtÅrsak, begrunnelser = valgtBegrunnelser)
-    }
+    ): ValgtÅrsak? =
+        nullable {
+            val valgtÅrsak = ÅrsakType.valueOf(årsakEnum.bind())
+            val valgtBegrunnelser = begrunnelser.filterNotNull().map(BegrunnelseType::valueOf)
+            ValgtÅrsak(type = valgtÅrsak, årsak = årsak.bind(), begrunnelser = valgtBegrunnelser)
+        }
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
