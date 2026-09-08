@@ -256,7 +256,11 @@ class NyFlytTestUtils {
         fun vurderVirksomhetMedOrgnrResponse(
             orgnr: String,
             token: String = authContainerHelper.superbruker1.token,
-            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET, listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN)),
+            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
         ) = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/vurder")
             .authentication().bearer(token)
             .jsonBody(Json.encodeToString(valgtÅrsak))
@@ -267,8 +271,9 @@ class NyFlytTestUtils {
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
-                ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = vurderVirksomhetMedOrgnrResponse(virksomhet.orgnr, token, valgtÅrsak)
 
@@ -276,8 +281,9 @@ class NyFlytTestUtils {
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
-                ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = vurderVirksomhetResponse(virksomhet = virksomhet, token = token, valgtÅrsak = valgtÅrsak).third.fold(
             success = { it },
@@ -287,16 +293,18 @@ class NyFlytTestUtils {
         fun IASakDto.revurderVirksomhetResponse(
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
-                ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = vurderVirksomhetMedOrgnrResponse(orgnr, token, valgtÅrsak)
 
         fun IASakDto.revurderVirksomhet(
             token: String = authContainerHelper.superbruker1.token,
             valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
-                ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
-                listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         ) = revurderVirksomhetResponse(token = token, valgtÅrsak = valgtÅrsak).third.fold(
             success = { it },

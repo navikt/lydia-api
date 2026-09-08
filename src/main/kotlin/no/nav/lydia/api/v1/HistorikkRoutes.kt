@@ -176,7 +176,7 @@ private fun Route.samarbeidsperiodehistorikkRoute(
                                 hendelseOpprettetAv = hendelse.opprettetAv,
                                 årsak = when (hendelse) {
                                     is VirksomhetIkkeAktuellHendelse -> Årsak(
-                                        beskrivelse = hendelse.valgtÅrsak.type.navn,
+                                        beskrivelse = hendelse.valgtÅrsak.beskrivelse,
                                         begrunnelser = hendelse.valgtÅrsak.begrunnelser.map { it.navn },
                                     )
 

@@ -16,7 +16,10 @@ import no.nav.lydia.helper.TestResponseTriple
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.historikk.model.SamarbeidsperiodeHistorikkDto
+import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
 import kotlin.test.Test
 import kotlin.test.fail
@@ -73,6 +76,20 @@ class SamarbeidsperiodeHistorikkTest {
             hendelse.hendelseOpprettetAv shouldBe "S54321"
             hendelse.aktør?.navn shouldBe "Bjørg Scheie Scheie"
         }
+    }
+
+    @Test
+    fun `får tilbake samme årsaksbeskrivelse som man putter inn`() {
+        val sak = vurderVirksomhet(
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "bAkGrUnN FoR VuRdErInG Av vIrKsOmHeT",
+                begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
+            ),
+        )
+
+        val historikk = hentSamarbeidsperiodeHistorikk(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        historikk.historikkHendelser[0].årsak?.beskrivelse shouldBe "bAkGrUnN FoR VuRdErInG Av vIrKsOmHeT"
     }
 
     private fun hentSamarbeidsperiodeHistorikkRespons(
