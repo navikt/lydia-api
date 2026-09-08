@@ -113,8 +113,7 @@ class AzureService(
             )
         }
 
-    suspend fun hentNavnPerNavIdent(navIdenter: Set<String>): Map<String, String> =
-        hentNavnFor(navIdenter = navIdenter).associate { it.navIdent to it.navn }
+    suspend fun hentNavnPerNavIdent(navIdenter: Set<String>): Map<String, String> = hentNavnFor(navIdenter = navIdenter).associate { it.navIdent to it.navn }
 
     private suspend fun hentVeiledereFraAzure(): Either<Feil, Set<VeilederDTO>> =
         coroutineScope {
