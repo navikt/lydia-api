@@ -1,12 +1,31 @@
 package no.nav.lydia.samarbeidsperiode
 
+import arrow.core.raise.nullable
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
 @Serializable
+class ValgtÅrsakDto(
+    val type: ÅrsakType? = null,
+    val beskrivelse: String? = null,
+    val begrunnelser: List<BegrunnelseType>? = null,
+    val dato: LocalDate? = null,
+) {
+    fun tilValgtÅrsak() =
+        nullable {
+            ValgtÅrsak(
+                type = type.bind(),
+                beskrivelse = beskrivelse.bind(),
+                begrunnelser = begrunnelser.bind(),
+                dato = dato,
+            )
+        }
+}
+
+@Serializable
 class ValgtÅrsak(
     val type: ÅrsakType,
-    val beskrivelse: String = type.navn,
+    val beskrivelse: String,
     val begrunnelser: List<BegrunnelseType>,
     val dato: LocalDate? = null,
 )

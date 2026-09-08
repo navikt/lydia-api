@@ -46,7 +46,7 @@ import no.nav.lydia.samarbeidsperiode.IASakLeveranseStatus
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType.VURDERING_FULLFØRT_UTEN_SAMARBEID
-import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsakDto
 import no.nav.lydia.samarbeidsperiode.ÅrsakTilAtSakIkkeKanAvsluttes
 import no.nav.lydia.samarbeidsperiode.ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING
 import no.nav.lydia.samarbeidsperiode.ÅrsaksType
@@ -259,8 +259,9 @@ class IASakApiTest {
 
     @Test
     fun `skal få samarbeidshistorikken til en virksomhet`() {
-        val valgtÅrsak = ValgtÅrsak(
+        val valgtÅrsak = ValgtÅrsakDto(
             type = VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
+            beskrivelse = "Nav har konkludert",
             begrunnelser = listOf(VIRKSOMHETEN_HAR_FOR_LAVT_POTENSIALE, VIRKSOMHETEN_MANGLER_REPRESANTANTER_ELLER_ETABLERT_PARTSGRUPPE),
             dato = Clock.System.todayIn(TimeZone.currentSystemDefault()).plus(90, DateTimeUnit.DAY),
         )
@@ -286,7 +287,7 @@ class IASakApiTest {
                 VURDERING_FULLFØRT_UTEN_SAMARBEID,
             )
             sakshistorikk.sakshendelser.forExactlyOne { sakSnapshot ->
-                sakSnapshot.begrunnelser shouldBe valgtÅrsak.begrunnelser.map { it.navn }
+                sakSnapshot.begrunnelser shouldBe valgtÅrsak.begrunnelser?.map { it.navn }
             }
             sakshistorikk.sistEndret shouldBe sak.endretTidspunkt
         }

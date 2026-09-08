@@ -161,15 +161,15 @@ class VirksomhethistorikkTest {
         postgresContainerHelper.performUpdate(
             """
             INSERT INTO hendelse_begrunnelse (hendelse_id, aarsak_enum, aarsak, begrunnelse_enum, begrunnelse)
-            VALUES ('$hendelseId', '${ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.name}', '${ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.navn}', '${BegrunnelseType.AUTOMATISK_LUKKET.name}', '${BegrunnelseType.AUTOMATISK_LUKKET.navn}'),
-                   ('$hendelseId', '${ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.name}', '${ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.navn}', '${BegrunnelseType.IKKE_TID.name}', '${BegrunnelseType.IKKE_TID.navn}');
+            VALUES ('$hendelseId', '${ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.name}', 'Virksomheten har takket nei', '${BegrunnelseType.AUTOMATISK_LUKKET.name}', '${BegrunnelseType.AUTOMATISK_LUKKET.navn}'),
+                   ('$hendelseId', '${ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.name}', 'Virksomheten har takket nei', '${BegrunnelseType.IKKE_TID.name}', '${BegrunnelseType.IKKE_TID.navn}');
             """.trimIndent(),
         )
 
         val historikk = virksomhet.hentHistorikk()
         historikk.hendelser[0].relatertHendelse!!.årsak.run {
             this shouldNotBe null
-            this!!.beskrivelse shouldBe ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.navn
+            this!!.beskrivelse shouldBe "Virksomheten har takket nei"
             this.begrunnelser.toSet() shouldBe setOf(BegrunnelseType.AUTOMATISK_LUKKET.navn, BegrunnelseType.IKKE_TID.navn)
         }
     }
