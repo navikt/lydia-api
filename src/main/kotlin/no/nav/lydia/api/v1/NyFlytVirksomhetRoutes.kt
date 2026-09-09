@@ -26,7 +26,7 @@ import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakError
 import no.nav.lydia.samarbeidsperiode.IASakService
-import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsakDto
 import no.nav.lydia.samarbeidsperiode.validerBegrunnelserForVurdering
 import no.nav.lydia.samarbeidsperiode.validerBegrunnelserForVurderingAvVirksomhet
 import no.nav.lydia.samarbeidsplan.PlanService
@@ -127,7 +127,7 @@ fun Route.nyFlytVirksomhet(
     // POST
     post("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/vurder") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        val valgtÅrsak = runCatching { call.receiveNullable<ValgtÅrsak>() }.getOrNull()
+        val valgtÅrsak = runCatching { call.receiveNullable<ValgtÅrsakDto>() }.getOrNull()?.tilValgtÅrsak()
 
         if (valgtÅrsak == null) {
             return@post call.respond(
@@ -199,19 +199,37 @@ fun Route.nyFlytVirksomhet(
 
     post("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/avslutt-vurdering") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        val årsak = call.receive<ValgtÅrsak>()
+        val årsakDto = call.receive<ValgtÅrsakDto>()
+
+        if (årsakDto.dato == null || årsakDto.dato.toJavaLocalDate().isBefore(LocalDate.now().plusDays(1))) {
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Dato for avslutting av vurdering må oppgis",
+            )
+        }
+
+        if (årsakDto.beskrivelse == null) {
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Beskrivelse for avslutting av vurdering må oppgis",
+            )
+        }
+
+        if (årsakDto.begrunnelser == null) {
+            return@post call.respond(
+                status = HttpStatusCode.BadRequest,
+                message = "Begrunnelser for avslutting av vurdering må oppgis",
+            )
+        }
+
+        val årsak =
+            årsakDto.tilValgtÅrsak()
+                ?: return@post call.respond(status = HttpStatusCode.BadRequest, message = "Ugyldig format av body for avslutting av vurdering")
 
         if (!årsak.validerBegrunnelserForVurdering()) {
             return@post call.respond(
                 status = HttpStatusCode.BadRequest,
                 message = "Ugyldig årsak eller begrunnelse for avslutting av vurdering",
-            )
-        }
-
-        if (årsak.dato == null || årsak.dato.toJavaLocalDate().isBefore(LocalDate.now().plusDays(1))) {
-            return@post call.respond(
-                status = HttpStatusCode.BadRequest,
-                message = "Dato for avslutting av vurdering må oppgis",
             )
         }
 

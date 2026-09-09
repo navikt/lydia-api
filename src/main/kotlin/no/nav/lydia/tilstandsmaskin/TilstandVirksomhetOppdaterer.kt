@@ -31,6 +31,7 @@ class TilstandVirksomhetOppdaterer(
 
         val ÅRSAK_FOR_AUTOMATISK_VURDERT_PÅ_NYTT = ValgtÅrsak(
             type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+            beskrivelse = "Bakgrunn for vurdering av virksomhet",
             begrunnelser = listOf(BegrunnelseType.AUTOMATISK_VURDERT_PÅ_NYTT),
         )
     }

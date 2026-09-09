@@ -51,7 +51,7 @@ import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakStatistikkProdusent
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
-import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsakDto
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.samarbeidsplan.EndreUndertemaRequest
@@ -256,7 +256,7 @@ class NyFlytTestUtils {
         fun vurderVirksomhetMedOrgnrResponse(
             orgnr: String,
             token: String = authContainerHelper.superbruker1.token,
-            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+            valgtÅrsak: ValgtÅrsakDto = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
                 beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
@@ -270,7 +270,7 @@ class NyFlytTestUtils {
         fun vurderVirksomhetResponse(
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
             token: String = authContainerHelper.superbruker1.token,
-            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+            valgtÅrsak: ValgtÅrsakDto = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
                 beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
@@ -280,7 +280,7 @@ class NyFlytTestUtils {
         fun vurderVirksomhet(
             virksomhet: TestVirksomhet = lastInnNyVirksomhet(),
             token: String = authContainerHelper.superbruker1.token,
-            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+            valgtÅrsak: ValgtÅrsakDto = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
                 beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
@@ -292,7 +292,7 @@ class NyFlytTestUtils {
 
         fun IASakDto.revurderVirksomhetResponse(
             token: String = authContainerHelper.superbruker1.token,
-            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+            valgtÅrsak: ValgtÅrsakDto = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
                 beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
@@ -301,7 +301,7 @@ class NyFlytTestUtils {
 
         fun IASakDto.revurderVirksomhet(
             token: String = authContainerHelper.superbruker1.token,
-            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+            valgtÅrsak: ValgtÅrsakDto = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
                 beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
@@ -350,8 +350,9 @@ class NyFlytTestUtils {
 
         fun IASakDto.avsluttVurderingResponse(
             token: String = authContainerHelper.superbruker1.token,
-            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+            valgtÅrsak: ValgtÅrsakDto = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
@@ -366,8 +367,9 @@ class NyFlytTestUtils {
 
         fun IASakDto.avsluttVurdering(
             token: String = authContainerHelper.superbruker1.token,
-            valgtÅrsak: ValgtÅrsak = ValgtÅrsak(
+            valgtÅrsak: ValgtÅrsakDto = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),

@@ -6,7 +6,6 @@ import no.nav.lydia.samarbeidsperiode.GyldigBegrunnelse.Companion.somGyldigeBegr
 @Serializable
 class GyldigÅrsak(
     val type: ÅrsakType,
-    val navn: String = type.navn,
     val begrunnelser: List<GyldigBegrunnelse>,
 ) {
     companion object {
@@ -90,20 +89,18 @@ class GyldigBegrunnelse(
     }
 }
 
-enum class ÅrsakType(
-    val navn: String,
-) {
+enum class ÅrsakType {
     // bakgrunn for vurdering av virksomhet
-    BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET(navn = "Bakgrunn for vurdering av virksomhet"),
+    BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
 
     // avslutt-vurdering v1
-    VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT(navn = "Vurder virksomheten senere"),
-    VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING(navn = "Nav har konkludert"),
-    VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI(navn = "Virksomheten har takket nei"),
+    VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+    VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
+    VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
 
     // -- Gammel saksflyt
-    NAV_IGANGSETTER_IKKE_TILTAK(navn = "NAV har besluttet å ikke starte samarbeid"),
-    VIRKSOMHETEN_TAKKET_NEI(navn = "Virksomheten har takket nei"),
+    NAV_IGANGSETTER_IKKE_TILTAK,
+    VIRKSOMHETEN_TAKKET_NEI,
 }
 
 enum class BegrunnelseType(

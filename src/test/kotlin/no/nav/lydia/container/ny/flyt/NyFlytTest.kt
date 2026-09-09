@@ -8,10 +8,10 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContainIgnoringCase
 import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
-import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.angreVurdering
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.avsluttSamarbeidRespons
@@ -58,7 +58,7 @@ import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
-import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsakDto
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
@@ -117,8 +117,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
@@ -155,8 +156,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_KUN_INFORMASJON_OG_VEILEDNING,
@@ -270,8 +272,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
@@ -296,8 +299,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
@@ -327,8 +331,9 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
@@ -369,8 +374,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                     BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
@@ -456,8 +462,9 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                 ),
@@ -500,8 +507,9 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_HAR_IKKE_SVART_PÅ_HENVENDELSER,
                 ),
@@ -543,8 +551,9 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                 ),
@@ -576,8 +585,9 @@ class NyFlytTest {
         val sak = vurderVirksomhet()
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET),
                 dato = LocalDate.now().plusDays(90).toKotlinLocalDate(),
             ),
@@ -663,8 +673,9 @@ class NyFlytTest {
         val virksomhet = lastInnNyVirksomhet()
         val sak = vurderVirksomhet(
             virksomhet = virksomhet,
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         )
@@ -686,8 +697,9 @@ class NyFlytTest {
         val virksomhet = lastInnNyVirksomhet()
         val sak = vurderVirksomhet(
             virksomhet = virksomhet,
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT),
             ),
         )
@@ -708,8 +720,9 @@ class NyFlytTest {
         val virksomhet = lastInnNyVirksomhet()
         val res = vurderVirksomhetResponse(
             virksomhet = virksomhet,
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         )
@@ -721,8 +734,9 @@ class NyFlytTest {
         val virksomhet = lastInnNyVirksomhet()
         val res = vurderVirksomhetResponse(
             virksomhet = virksomhet,
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(
                     BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN,
                     BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT,
@@ -737,8 +751,9 @@ class NyFlytTest {
         val virksomhet = lastInnNyVirksomhet()
         val sak = vurderVirksomhet(virksomhet = virksomhet)
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                     BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
@@ -750,8 +765,9 @@ class NyFlytTest {
 
         val gjenvurdertSak = vurderVirksomhet(
             virksomhet = virksomhet,
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT),
             ),
         )
@@ -780,8 +796,9 @@ class NyFlytTest {
 
         val gjenvurdertSak = vurderVirksomhet(
             virksomhet = virksomhet,
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         )
@@ -817,8 +834,9 @@ class NyFlytTest {
         val res1 = vurderVirksomhetMedOrgnrResponse(
             orgnr = orgnummer,
             token = authContainerHelper.lesebruker.token,
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         )
@@ -827,8 +845,9 @@ class NyFlytTest {
         val res2 = vurderVirksomhetMedOrgnrResponse(
             orgnr = orgnummer,
             token = authContainerHelper.saksbehandler1.token,
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                beskrivelse = "Bakgrunn for vurdering av virksomhet",
                 begrunnelser = listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN),
             ),
         )
@@ -935,8 +954,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         val oppdatertSakDto = sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                     BegrunnelseType.VIRKSOMHETEN_SAMARBEIDER_MED_ANDRE_ELLER_GJØR_EGNE_TILTAK,
@@ -965,8 +985,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
                     BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
@@ -989,8 +1010,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
@@ -1012,8 +1034,9 @@ class NyFlytTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         val avsluttVurderingRes = sak.avsluttVurderingResponse(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
@@ -1515,28 +1538,23 @@ class NyFlytTest {
     }
 
     @Test
-    fun `avslutt vurdering med manglende verdi for årsak gir suksess`() {
+    fun `avslutt vurdering med manglende verdi for beskrivelse gir bad request`() {
         val sak = vurderVirksomhet()
         sak.leggTilFolger(authContainerHelper.superbruker1.token)
-        val orgnr = sak.orgnr
-        val response = applikasjon.performPost("$NY_FLYT_API_PATH/virksomhet/$orgnr/avslutt-vurdering")
-            .authentication().bearer(authContainerHelper.superbruker1.token)
-            .jsonBody(
-                """
-                {
-                  "type": "VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI",
-                  "begrunnelser": [
-                    "VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET",
-                    "VIRKSOMHETEN_SAMARBEIDER_MED_ANDRE_ELLER_GJØR_EGNE_TILTAK",
-                    "VIRKSOMHETEN_ØNSKER_KUN_INFORMASJON_OG_VEILEDNING",
-                    "KOMMUNEN_ELLER_OVERORDNET_LEDELSE_ØNSKER_IKKE_Å_STARTE_ET_SAMARBEID"
-                  ],
-                  "dato": "2027-09-07"
-                }
-                """.trimIndent(),
-            )
-            .tilSingelRespons<IASakDto>()
+        val response = sak.avsluttVurderingResponse(
+            valgtÅrsak = ValgtÅrsakDto(
+                type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                begrunnelser = listOf(
+                    BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
+                    BegrunnelseType.VIRKSOMHETEN_SAMARBEIDER_MED_ANDRE_ELLER_GJØR_EGNE_TILTAK,
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_KUN_INFORMASJON_OG_VEILEDNING,
+                    BegrunnelseType.KOMMUNEN_ELLER_OVERORDNET_LEDELSE_ØNSKER_IKKE_Å_STARTE_ET_SAMARBEID,
+                ),
+                dato = LocalDate.now().plusDays(45).toKotlinLocalDate(),
+            ),
+        )
 
-        response.second.statusCode shouldBe HttpStatusCode.OK.value
+        response.second.statusCode shouldBe HttpStatusCode.BadRequest.value
+        response.second.body().asString("text/plain") shouldContainIgnoringCase "beskrivelse"
     }
 }

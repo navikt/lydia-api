@@ -51,7 +51,7 @@ import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
-import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsakDto
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
@@ -81,8 +81,9 @@ class NyFlytVirksomhetTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         val oppdatertSakDto = sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_OG_TAKKET_NEI,
+                beskrivelse = "Virksomheten har takket nei",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ER_IKKE_MOTIVERT_ELLER_HAR_IKKE_KAPASITET,
                     BegrunnelseType.VIRKSOMHETEN_FERDIG_VURDERT_TAKKET_NEI_ANNET,
@@ -111,8 +112,9 @@ class NyFlytVirksomhetTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
+                beskrivelse = "Nav har konkludert",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_HAR_FOR_LAVT_POTENSIALE,
                     BegrunnelseType.VIRKSOMHETEN_MANGLER_REPRESANTANTER_ELLER_ETABLERT_PARTSGRUPPE,
@@ -135,8 +137,9 @@ class NyFlytVirksomhetTest {
         sak.status shouldBe IASak.Status.VURDERES
 
         sak.avsluttVurdering(
-            valgtÅrsak = ValgtÅrsak(
+            valgtÅrsak = ValgtÅrsakDto(
                 type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                beskrivelse = "Vurder virksomheten senere",
                 begrunnelser = listOf(
                     BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE,
                 ),
