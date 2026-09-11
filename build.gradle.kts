@@ -1,6 +1,7 @@
-val ktorVersion = "3.5.2"
+val flywayVersion = "13.6.0"
 val iaFellesVersion = "2.0.6"
-val kotestVerstion = "6.2.4"
+val ktorVersion = "3.5.2"
+val kotestVerstion = "6.2.5"
 val testcontainersVersion = "2.0.5"
 val logbackVersion = "1.6.3"
 val logstashLogbackEncoderVersion = "9.0"
@@ -54,7 +55,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.13")
     implementation("com.zaxxer:HikariCP:7.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:13.3.0")
+    implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Serialization med Gson
@@ -104,16 +105,16 @@ dependencies {
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
-            version { require("2.22.1") }
+            version { require("2.22.2") }
             because("versjoner < 2.21.1 har sårbarhet. inkludert i ktor-server-auth:3.4.0")
         }
         implementation("tools.jackson.core:jackson-core") {
-            version { require("3.2.1") }
+            version { require("3.2.2") }
             because("versjoner <= 3.1.0 har sårbarhet. inkludert i logstash-logback-encoder:9.0")
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.16.Final")
+                require("4.2.18.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
@@ -133,7 +134,7 @@ dependencies {
         }
         testImplementation("org.bouncycastle:bcprov-jdk18on") {
             version {
-                require("1.85")
+                require("1.86")
             }
             because(
                 "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.3",
@@ -141,7 +142,7 @@ dependencies {
         }
         testImplementation("org.bouncycastle:bcpkix-jdk18on") {
             version {
-                require("1.85")
+                require("1.86")
             }
             because(
                 "versjoner < 1.84 har sårbarhet. inkludert i no.nav.security:mock-oauth2-server:3.0.3",
