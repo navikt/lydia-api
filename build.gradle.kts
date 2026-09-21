@@ -9,9 +9,9 @@ val opentelemetryLogbackMdcVersion = "2.31.1-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.4.10"
+    kotlin("jvm") version "2.4.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.4.10"
+    kotlin("plugin.serialization") version "2.4.20"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
@@ -62,7 +62,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.14.0")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.11.2")
+    implementation("at.yawk.lz4:lz4-java:1.11.3")
     implementation("org.apache.kafka:kafka-clients:4.3.1") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
