@@ -7,6 +7,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContainIgnoringCase
 import io.kotest.matchers.string.shouldStartWith
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.DatePeriod
@@ -19,6 +20,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidsplan
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.slettSamarbeidsplanRespons
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
@@ -41,6 +43,8 @@ import no.nav.lydia.helper.PlanHelper.Companion.inkluderTemaOgAltInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
+import no.nav.lydia.helper.PlanHelper.Companion.publiser
+import no.nav.lydia.helper.PlanHelper.Companion.sendKvittering
 import no.nav.lydia.helper.PlanHelper.Companion.senesteSluttDato
 import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
@@ -1033,5 +1037,23 @@ class PlanApiTest {
         )
 
         sak.hentPlan().sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
+    }
+
+    @Test
+    fun `Skal ikke kunne slette en plan som er publisert`() {
+        val sak = aktivSamarbeidsperiode()
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Kan ikke slette publisert samarbeid")
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+            .also {
+                it.publiser()
+                    .sendKvittering(samarbeidId = samarbeid.id)
+            }
+        val response = samarbeid.slettSamarbeidsplanRespons(
+            orgnr = sak.orgnr,
+            planId = plan.id,
+        )
+
+        response.second.statusCode shouldBe HttpStatusCode.Conflict.value
+        response.second.body().asString("text/plain") shouldContainIgnoringCase "publisert"
     }
 }

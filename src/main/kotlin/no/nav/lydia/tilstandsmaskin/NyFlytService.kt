@@ -9,6 +9,7 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.api.IASakSpørreundersøkelseError
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto.Companion.tilDokumentTilPubliseringType
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.felles.Feil
@@ -473,6 +474,11 @@ class NyFlytService(
             }
             ensure(!finnesSalesforceAktivitet) {
                 PlanFeil.`aktiviteter i salesforce`
+            }
+
+            val status = dokumentPubliseringService.hentPubliseringStatus(plan.id, DokumentPubliseringDto.Type.SAMARBEIDSPLAN)
+            ensure(status.status != DokumentPubliseringDto.Status.PUBLISERT) {
+                PlanFeil.`plan er publisert`
             }
 
             plan

@@ -116,4 +116,8 @@ object PlanFeil {
         feilmelding = "Det finnes aktiviteter registrert på dette undertemaet i Salesforce.",
         httpStatusCode = HttpStatusCode.Conflict,
     )
+    val `plan er publisert` = Feil(
+        feilmelding = "Kan ikke slette en plan som er publisert",
+        httpStatusCode = HttpStatusCode.Conflict,
+    )
 }
