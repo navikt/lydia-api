@@ -18,6 +18,7 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
@@ -51,6 +52,8 @@ class DbDumpTest {
         opprettVirksomhetMedKartlegginger()
 
         opprettVirksomhetMedFlereSaker()
+
+        opprettvirksomhetMedPublisertPlan()
 
         val jdbcUrl = postgresContainerHelper.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
@@ -258,6 +261,24 @@ class DbDumpTest {
                 .leggTilFolger(token = token)
                 .opprettSamarbeid(token = token)
         }
+    }
+
+    private fun opprettvirksomhetMedPublisertPlan() {
+        val token = authContainerHelper.saksbehandler1.token
+        val virksomhet = lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "VIRKSOMHET MED PUBLISERT SAMARBEIDSPLAN"),
+        )
+        val samarbeidsperiode = vurderVirksomhet(virksomhet)
+            .leggTilFolger(token = token)
+        val samarbeid = samarbeidsperiode
+            .opprettSamarbeid(token = token)
+        val plan = samarbeid
+            .opprettSamarbeidsplan(orgnr = virksomhet.orgnr, token = token)
+        DokumentPubliseringHelper.publiserDokument(
+            plan.id,
+            dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+            token = token,
+        )
     }
 
     @Test
