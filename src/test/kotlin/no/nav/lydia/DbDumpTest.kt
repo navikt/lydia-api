@@ -9,12 +9,14 @@ import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.helper.DokumentPubliseringHelper
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
@@ -274,11 +276,17 @@ class DbDumpTest {
             .opprettSamarbeid(token = token)
         val plan = samarbeid
             .opprettSamarbeidsplan(orgnr = virksomhet.orgnr, token = token)
-        DokumentPubliseringHelper.publiserDokument(
+        val response = DokumentPubliseringHelper.publiserDokument(
             plan.id,
             dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
             token = token,
         )
+
+        sendKvittering(
+            dokument = response.third.get(),
+            samarbeidId = samarbeidsperiode.hentAlleSamarbeid().first().id,
+        )
+        samarbeidsperiode.hentPlan(token = token).publiseringStatus shouldBe DokumentPubliseringDto.Status.PUBLISERT
     }
 
     @Test
