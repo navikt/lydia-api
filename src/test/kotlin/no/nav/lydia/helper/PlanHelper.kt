@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.api.PLAN_BASE_ROUTE
 import no.nav.lydia.api.v1.NY_FLYT_API_PATH
+import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
@@ -395,5 +396,21 @@ class PlanHelper {
                 token = token,
             )
         }
+
+        fun PlanDto.publiserResponse(token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token): TestResponseTriple<DokumentPubliseringDto> =
+            DokumentPubliseringHelper.publiserDokument(
+                this.id,
+                dokumentType = DokumentPubliseringDto.Type.SAMARBEIDSPLAN,
+                token = token,
+            )
+
+        fun PlanDto.publiser(token: String = TestContainerHelper.authContainerHelper.saksbehandler1.token): DokumentPubliseringDto =
+            publiserResponse(token).third.get()
+
+        fun DokumentPubliseringDto.sendKvittering(samarbeidId: Int) =
+            DokumentPubliseringHelper.sendKvittering(
+                dokument = this,
+                samarbeidId = samarbeidId,
+            )
     }
 }

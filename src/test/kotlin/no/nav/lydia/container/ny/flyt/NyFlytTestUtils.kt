@@ -563,16 +563,23 @@ class NyFlytTestUtils {
             failure = { fail(it.message) },
         )
 
+        fun IASamarbeidDto.slettSamarbeidsplanRespons(
+            orgnr: String,
+            planId: String,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ): TestResponseTriple<PlanDto> =
+            applikasjon.performDelete("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId")
+                .authentication().bearer(token)
+                .tilSingelRespons<PlanDto>()
+
         fun IASamarbeidDto.slettSamarbeidsplan(
             orgnr: String,
             planId: String,
             token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performDelete("$NY_FLYT_API_PATH/virksomhet/$orgnr/samarbeidsperiode/${this.saksnummer}/samarbeid/${this.id}/plan/$planId")
-            .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
-            )
+        ) = slettSamarbeidsplanRespons(orgnr = orgnr, planId = planId, token = token).third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
 
         fun IASamarbeidDto.endreStatusPåUndertemaISamarbeidsplan(
             orgnr: String,
