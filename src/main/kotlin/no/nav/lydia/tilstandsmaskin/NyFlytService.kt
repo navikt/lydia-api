@@ -477,7 +477,7 @@ class NyFlytService(
             }
 
             val status = dokumentPubliseringService.hentPubliseringStatus(plan.id, DokumentPubliseringDto.Type.SAMARBEIDSPLAN)
-            ensure(status.status != DokumentPubliseringDto.Status.PUBLISERT) {
+            ensure(status.status !in setOf(DokumentPubliseringDto.Status.PUBLISERT, DokumentPubliseringDto.Status.OPPRETTET)) {
                 PlanFeil.`plan er publisert`
             }
 
