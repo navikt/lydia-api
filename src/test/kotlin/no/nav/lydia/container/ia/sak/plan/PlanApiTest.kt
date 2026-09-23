@@ -1056,4 +1056,19 @@ class PlanApiTest {
         response.second.statusCode shouldBe HttpStatusCode.Conflict.value
         response.second.body().asString("text/plain") shouldContainIgnoringCase "publisert"
     }
+
+    @Test
+    fun `Skal ikke kunne slette en plan som er forsøkt publisert`() {
+        val sak = aktivSamarbeidsperiode()
+        val samarbeid = sak.opprettSamarbeid(samarbeidsnavn = "Kan ikke slette publisert samarbeid")
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = sak.orgnr)
+            .also { it.publiser() }
+        val response = samarbeid.slettSamarbeidsplanRespons(
+            orgnr = sak.orgnr,
+            planId = plan.id,
+        )
+
+        response.second.statusCode shouldBe HttpStatusCode.Conflict.value
+        response.second.body().asString("text/plain") shouldContainIgnoringCase "publisert"
+    }
 }
