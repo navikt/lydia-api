@@ -114,7 +114,7 @@ import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.team.IATeamRepository
 import no.nav.lydia.team.IATeamService
-import no.nav.lydia.tilgangskontroll.NyPlanTilgangEnvironment
+import no.nav.lydia.tilgangskontroll.FeatureToggleEnvironment
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetOppdaterer
@@ -134,7 +134,7 @@ fun startLydiaBackend() {
     log.tlinfo("Starter Lydia backend")
 
     val naisEnv = NaisEnvironment()
-    val nyPlanTilgangEnvironment = NyPlanTilgangEnvironment(naisEnv)
+    val featureToggleEnvironment = FeatureToggleEnvironment(naisEnv)
 
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
@@ -421,7 +421,7 @@ fun startLydiaBackend() {
             nyFlytService = nyFlytService,
             tilstandVirksomhetRepository = tilstandVirksomhetRepository,
             historikkService = historikkService,
-            nyPlanTilgangEnvironment = nyPlanTilgangEnvironment,
+            featureToggleEnvironment = featureToggleEnvironment,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -508,7 +508,7 @@ private fun Application.lydiaRestApi(
     nyFlytService: NyFlytService,
     tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     historikkService: HistorikkService,
-    nyPlanTilgangEnvironment: NyPlanTilgangEnvironment,
+    featureToggleEnvironment: FeatureToggleEnvironment,
 ) {
     install(ContentNegotiation) {
         json()
@@ -625,7 +625,7 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
-                nyPlanTilgangEnvironment = nyPlanTilgangEnvironment,
+                featureToggleEnvironment = featureToggleEnvironment,
             )
             nyFlytKartlegging(
                 iaSakService = iaSakService,

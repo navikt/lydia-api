@@ -42,7 +42,7 @@ import no.nav.lydia.samarbeidsplan.PlanService
 import no.nav.lydia.samarbeidsplan.PlanUndertema
 import no.nav.lydia.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.team.IATeamService
-import no.nav.lydia.tilgangskontroll.NyPlanTilgangEnvironment
+import no.nav.lydia.tilgangskontroll.FeatureToggleEnvironment
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
@@ -69,7 +69,7 @@ fun Route.nyFlytSamarbeidsplan(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
-    nyPlanTilgangEnvironment: NyPlanTilgangEnvironment,
+    featureToggleEnvironment: FeatureToggleEnvironment,
 ) {
     suspend fun <T> ApplicationCall.somEierEllerFølgerAvSakMedNavenhet(
         iaSakService: IASakService,
@@ -103,7 +103,12 @@ fun Route.nyFlytSamarbeidsplan(
     ): Either<Feil, T> =
         somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             either {
-                ensure(navEnhet.enhetsnummer in nyPlanTilgangEnvironment.navenheterMedNyPlanTilgang) {
+                ensure(
+                    featureToggleEnvironment.erSkruddPå(
+                        togglenavn = FeatureToggleEnvironment.NAVENHETER_MED_NY_PLAN_TILGANG,
+                        verdi = navEnhet.enhetsnummer,
+                    ),
+                ) {
                     PlanFeil.`har ikke tilgang til ny plan`
                 }
                 block(saksbehandler, navEnhet).bind()
