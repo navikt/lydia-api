@@ -42,6 +42,10 @@ class AuthContainerHelper(
         private const val TEAM_PLA_GROUP_ID = "enTeamPiaGroupId"
         private const val UGYILDIG_ROLLE_GROUP_ID = "enHeltAnnenRolleGroupId"
         const val FNR = "12345678901"
+
+        // Fast objectId slik at Wiremock-stubben for Azure (src/test/resources/mappings/azure-veileder-annen-enhet.json)
+        // kan gi saksbehandler2 en annen NAV-enhet enn de andre testbrukerne
+        const val SAKSBEHANDLER_2_OBJECT_ID = "22222222-2222-2222-2222-222222222222"
     }
 
     val lesebruker: TestBruker
@@ -77,7 +81,7 @@ class AuthContainerHelper(
             lesebruker = TestBruker(navIdent = "L54321", LESETILGANG_GROUP_ID)
             lesebrukerAudit = TestBruker(navIdent = "A54321", LESETILGANG_GROUP_ID)
             saksbehandler1 = TestBruker(navIdent = "X12345", SAKSBEHANDLER_GROUP_ID)
-            saksbehandler2 = TestBruker(navIdent = "Y54321", SAKSBEHANDLER_GROUP_ID)
+            saksbehandler2 = TestBruker(navIdent = "Y54321", SAKSBEHANDLER_GROUP_ID, objectId = SAKSBEHANDLER_2_OBJECT_ID)
             saksbehandler3 = TestBruker(navIdent = "Z123456", SAKSBEHANDLER_GROUP_ID)
             superbruker1 = TestBruker(navIdent = "S54321", SUPERBRUKER_GROUP_ID)
             superbruker2 = TestBruker(navIdent = "S22222", SUPERBRUKER_GROUP_ID)
@@ -90,6 +94,7 @@ class AuthContainerHelper(
         gruppe: String,
         audience: String = "lydia-api",
         issuerId: String = "azure",
+        val objectId: String = UUID.randomUUID().toString(),
     ) {
         val navn = "F_$navIdent E_$navIdent"
         val token: String = issueToken(
@@ -98,7 +103,7 @@ class AuthContainerHelper(
                 NAV_IDENT_CLAIM to navIdent,
                 NAME_CLAIM to navn,
                 GROUPS_CLAIM to listOf(gruppe),
-                OBJECT_ID_CLAIM to UUID.randomUUID().toString(),
+                OBJECT_ID_CLAIM to objectId,
             ),
             issuerId = issuerId,
         ).serialize()

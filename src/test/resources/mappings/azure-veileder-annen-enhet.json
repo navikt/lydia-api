@@ -1,0 +1,24 @@
+{
+  "priority": 1,
+  "request" : {
+    "urlPath" : "/v1.0/users/22222222-2222-2222-2222-222222222222",
+    "method" : "GET",
+    "queryParameters": {
+      "$search": {
+        "absent": true
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "contains": "Bearer"
+      }
+    }
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName": "azure-veileder-annen-enhet-response.json",
+    "headers" : {
+      "Content-Type" : "application/json"
+    }
+  }
+}
