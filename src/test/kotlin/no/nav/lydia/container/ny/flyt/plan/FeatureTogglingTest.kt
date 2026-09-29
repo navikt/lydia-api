@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.api.v1.NY_FLYT_API_PATH
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.featureToggleForNavEnhet
 import no.nav.lydia.featureToggle.FeatureToggleEnvironment
+import no.nav.lydia.featureToggle.FeatureToggleVerdier
 import no.nav.lydia.featureToggle.ToggleVerdi
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -74,16 +75,13 @@ class FeatureTogglingTest {
     }
 
     @Test
-    fun `saksbehandler skal få erPå false for en ukjent toggel`() {
+    fun `saksbehandler skal få 404 for en ukjent toggel`() {
         val url = "$NY_FLYT_API_PATH/feature-toggling/ukjent-toggel/${FeatureToggleEnvironment.NAVENHET_TEST_SAKSBEHANDLER2}"
         val respons = applikasjon.performGet(url)
             .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .tilSingelRespons<ToggleVerdi>()
 
-        respons.third.fold(
-            success = { it.erPå shouldBe false },
-            failure = { fail(it.message) },
-        )
+        respons.second.statusCode shouldBe HttpStatusCode.NotFound.value
     }
 
     @Test
@@ -100,6 +98,47 @@ class FeatureTogglingTest {
     fun `uten token skal spørring om feature-toggling for en gitt verdi avvises`() {
         val url = "$NY_FLYT_API_PATH/feature-toggling/$togglenavn/${FeatureToggleEnvironment.NAVENHET_TEST_SAKSBEHANDLER2}"
         val respons = applikasjon.performGet(url).tilSingelRespons<ToggleVerdi>()
+
+        respons.second.statusCode shouldBe HttpStatusCode.Unauthorized.value
+    }
+
+    @Test
+    fun `superbruker skal få verdiene som er skrudd på for en toggel`() {
+        val url = "$NY_FLYT_API_PATH/feature-toggling/$togglenavn"
+        val respons = applikasjon.performGet(url)
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<FeatureToggleVerdier>()
+
+        respons.third.fold(
+            success = { it.verdier shouldBe setOf(FeatureToggleEnvironment.NAVENHET_TEST_SAKSBEHANDLER2) },
+            failure = { fail(it.message) },
+        )
+    }
+
+    @Test
+    fun `superbruker skal få 404 for en ukjent toggel`() {
+        val url = "$NY_FLYT_API_PATH/feature-toggling/ukjent-toggel"
+        val respons = applikasjon.performGet(url)
+            .authentication().bearer(authContainerHelper.superbruker1.token)
+            .tilSingelRespons<FeatureToggleVerdier>()
+
+        respons.second.statusCode shouldBe HttpStatusCode.NotFound.value
+    }
+
+    @Test
+    fun `saksbehandler skal ikke ha tilgang til å hente verdiene for en toggel`() {
+        val url = "$NY_FLYT_API_PATH/feature-toggling/$togglenavn"
+        val respons = applikasjon.performGet(url)
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<FeatureToggleVerdier>()
+
+        respons.second.statusCode shouldBe HttpStatusCode.Forbidden.value
+    }
+
+    @Test
+    fun `uten token skal henting av verdiene for en toggel avvises`() {
+        val url = "$NY_FLYT_API_PATH/feature-toggling/$togglenavn"
+        val respons = applikasjon.performGet(url).tilSingelRespons<FeatureToggleVerdier>()
 
         respons.second.statusCode shouldBe HttpStatusCode.Unauthorized.value
     }

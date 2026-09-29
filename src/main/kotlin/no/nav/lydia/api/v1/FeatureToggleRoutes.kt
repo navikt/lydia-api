@@ -12,6 +12,7 @@ import no.nav.lydia.api.featureToggle
 import no.nav.lydia.api.sendFeil
 import no.nav.lydia.featureToggle.FeatureToggleEnvironment
 import no.nav.lydia.featureToggle.FeatureToggleFeil
+import no.nav.lydia.featureToggle.FeatureToggleVerdier
 import no.nav.lydia.featureToggle.ToggleVerdi
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
@@ -55,7 +56,7 @@ fun Route.featureToggleRoutes(
         call.somSuperbrukerMedNavenhet(adGrupper, azureService) { _, _ ->
             either {
                 val verdier = featureToggleEnvironment.hentVerdier(toggle) ?: FeatureToggleFeil.`feature toggle finnes ikke`.left().bind()
-                mapOf("verdier" to verdier)
+                FeatureToggleVerdier(verdier = verdier)
             }
         }.map { call.respond(it) }
             .mapLeft { call.sendFeil(it) }
