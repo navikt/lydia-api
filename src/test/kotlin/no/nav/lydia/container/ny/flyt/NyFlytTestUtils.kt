@@ -53,6 +53,7 @@ import no.nav.lydia.samarbeidsperiode.IASakStatistikkProdusent
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsakDto
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
+import no.nav.lydia.samarbeidsplan.BrukerHarTilgang
 import no.nav.lydia.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.samarbeidsplan.PlanDto
@@ -623,6 +624,17 @@ class NyFlytTestUtils {
                         tema
                     }
                 },
+            )
+
+        fun brukerHarTilgangTilNyPlanRespons(token: String = authContainerHelper.saksbehandler1.token) =
+            applikasjon.performGet(
+                url = "$NY_FLYT_API_PATH/virksomhet/har-tilgang-til-ny-plan",
+            ).authentication().bearer(token).tilSingelRespons<BrukerHarTilgang>()
+
+        fun brukerHarTilgangTilNyPlan(token: String = authContainerHelper.saksbehandler1.token) =
+            brukerHarTilgangTilNyPlanRespons(token).third.fold(
+                success = { it },
+                failure = { fail(it.message) },
             )
 
         private fun medDatoParameterHvisNotNull(dato: String?): String =

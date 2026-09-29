@@ -120,4 +120,9 @@ object PlanFeil {
         feilmelding = "Kan ikke slette en plan som er publisert",
         httpStatusCode = HttpStatusCode.Conflict,
     )
+    val `har ikke tilgang til ny plan` =
+        Feil(
+            feilmelding = "Har ikke tilgang til ny plan",
+            httpStatusCode = HttpStatusCode.Forbidden,
+        )
 }
