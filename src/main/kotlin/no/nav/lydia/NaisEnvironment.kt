@@ -26,7 +26,7 @@ class NaisEnvironment(
             LOKAL,
         }
 
-        fun hentMiljø(cluster: String) =
+        private fun hentMiljø(cluster: String) =
             Environment.entries.find { it.name.lowercase() == cluster }
                 ?: throw IllegalStateException("Ukjent miljø $cluster")
     }

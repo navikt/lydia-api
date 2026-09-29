@@ -42,6 +42,7 @@ import no.nav.lydia.samarbeidsplan.PlanService
 import no.nav.lydia.samarbeidsplan.PlanUndertema
 import no.nav.lydia.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.team.IATeamService
+import no.nav.lydia.tilgangskontroll.NyPlanTilgangEnvironment
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
@@ -56,7 +57,6 @@ import no.nav.lydia.tilstandsmaskin.hendelse.SlettPlanForSamarbeid
 import java.util.UUID
 
 const val NY_FLYT_API_PATH = "api/v1"
-val NAVENHETER_MED_NY_PLAN_TILGANG = setOf<NavEnhet>()
 
 fun Route.nyFlytSamarbeidsplan(
     iaSakService: IASakService,
@@ -69,6 +69,7 @@ fun Route.nyFlytSamarbeidsplan(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
+    nyPlanTilgangEnvironment: NyPlanTilgangEnvironment,
 ) {
     suspend fun <T> ApplicationCall.somEierEllerFølgerAvSakMedNavenhet(
         iaSakService: IASakService,
@@ -102,7 +103,7 @@ fun Route.nyFlytSamarbeidsplan(
     ): Either<Feil, T> =
         somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
             either {
-                ensure(navEnhet in NAVENHETER_MED_NY_PLAN_TILGANG) {
+                ensure(navEnhet.enhetsnummer in nyPlanTilgangEnvironment.navenheterMedNyPlanTilgang) {
                     PlanFeil.`har ikke tilgang til ny plan`
                 }
                 block(saksbehandler, navEnhet).bind()
