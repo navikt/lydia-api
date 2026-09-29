@@ -33,6 +33,7 @@ import no.nav.lydia.api.iaSamarbeid
 import no.nav.lydia.api.samarbeid
 import no.nav.lydia.api.statusoversikt
 import no.nav.lydia.api.sykefraværsstatistikk
+import no.nav.lydia.api.v1.featureToggleRoutes
 import no.nav.lydia.api.v1.historikkRoutes
 import no.nav.lydia.api.v1.nyFlytKartlegging
 import no.nav.lydia.api.v1.nyFlytSamarbeid
@@ -48,6 +49,7 @@ import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.featureToggle.FeatureToggleEnvironment
 import no.nav.lydia.historikk.HistorikkService
 import no.nav.lydia.historikk.repository.SamarbeidshistorikkRepository
 import no.nav.lydia.historikk.repository.VirksomhetshistorikkRepository
@@ -114,7 +116,6 @@ import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.team.IATeamRepository
 import no.nav.lydia.team.IATeamService
-import no.nav.lydia.tilgangskontroll.FeatureToggleEnvironment
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetOppdaterer
@@ -625,7 +626,6 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
-                featureToggleEnvironment = featureToggleEnvironment,
             )
             nyFlytKartlegging(
                 iaSakService = iaSakService,
@@ -688,6 +688,11 @@ private fun Application.lydiaRestApi(
                 ),
                 auditLog = auditLog,
                 naisEnvironment = naisEnv,
+            )
+            featureToggleRoutes(
+                adGrupper = naisEnv.security.adGrupper,
+                featureToggleEnvironment = featureToggleEnvironment,
+                azureService = azureService,
             )
         }
     }

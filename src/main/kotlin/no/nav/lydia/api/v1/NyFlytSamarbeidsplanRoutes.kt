@@ -2,16 +2,12 @@ package no.nav.lydia.api.v1
 
 import arrow.core.Either
 import arrow.core.left
-import arrow.core.raise.either
-import arrow.core.raise.ensure
-import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
@@ -31,18 +27,15 @@ import no.nav.lydia.samarbeid.IASamarbeidFeil
 import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeidsperiode.IASakError
 import no.nav.lydia.samarbeidsperiode.IASakService
-import no.nav.lydia.samarbeidsplan.BrukerHarTilgang
 import no.nav.lydia.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.samarbeidsplan.Plan
 import no.nav.lydia.samarbeidsplan.PlanDto
-import no.nav.lydia.samarbeidsplan.PlanFeil
 import no.nav.lydia.samarbeidsplan.PlanMalDto
 import no.nav.lydia.samarbeidsplan.PlanService
 import no.nav.lydia.samarbeidsplan.PlanUndertema
 import no.nav.lydia.samarbeidsplan.tilDtoMedPubliseringStatus
 import no.nav.lydia.team.IATeamService
-import no.nav.lydia.tilgangskontroll.FeatureToggleEnvironment
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
@@ -69,7 +62,6 @@ fun Route.nyFlytSamarbeidsplan(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
-    featureToggleEnvironment: FeatureToggleEnvironment,
 ) {
     suspend fun <T> ApplicationCall.somEierEllerFølgerAvSakMedNavenhet(
         iaSakService: IASakService,
@@ -94,24 +86,6 @@ fun Route.nyFlytSamarbeidsplan(
                 IASakError.`er ikke følger eller eier av sak`.left()
             } else {
                 block(saksbehandler, navEnhet, orgnummer, saksnummer)
-            }
-        }
-
-    suspend fun <T> ApplicationCall.somSaksbehandlerMedTilgangTilNyPlan(
-        adGrupper: ADGrupper,
-        block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, NavEnhet) -> Either<Feil, T>,
-    ): Either<Feil, T> =
-        somSaksbehandlerMedNavenhet(adGrupper, azureService) { saksbehandler, navEnhet ->
-            either {
-                ensure(
-                    featureToggleEnvironment.erSkruddPå(
-                        togglenavn = FeatureToggleEnvironment.NAVENHETER_MED_NY_PLAN_TILGANG,
-                        verdi = navEnhet.enhetsnummer,
-                    ),
-                ) {
-                    PlanFeil.`har ikke tilgang til ny plan`
-                }
-                block(saksbehandler, navEnhet).bind()
             }
         }
 
@@ -341,20 +315,5 @@ fun Route.nyFlytSamarbeidsplan(
         }.mapLeft { feil: Feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
-    }
-
-    get("$NY_FLYT_API_PATH/virksomhet/har-tilgang-til-ny-plan") {
-        call.somSaksbehandlerMedTilgangTilNyPlan(
-            adGrupper = adGrupper,
-        ) { _, _ -> Unit.right() }.fold(
-            ifLeft = { feil ->
-                if (feil === PlanFeil.`har ikke tilgang til ny plan`) {
-                    call.respond(BrukerHarTilgang(false))
-                } else {
-                    call.sendFeil(feil)
-                }
-            },
-            ifRight = { call.respond(BrukerHarTilgang(true)) },
-        )
     }
 }

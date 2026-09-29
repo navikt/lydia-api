@@ -20,6 +20,8 @@ import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companio
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkludertInnhold
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkluderteTemaer
+import no.nav.lydia.featureToggle.FeatureToggleEnvironment
+import no.nav.lydia.featureToggle.ToggleVerdi
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanResponse
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.SakHelper
@@ -53,7 +55,6 @@ import no.nav.lydia.samarbeidsperiode.IASakStatistikkProdusent
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import no.nav.lydia.samarbeidsperiode.ValgtÅrsakDto
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
-import no.nav.lydia.samarbeidsplan.BrukerHarTilgang
 import no.nav.lydia.samarbeidsplan.EndreTemaRequest
 import no.nav.lydia.samarbeidsplan.EndreUndertemaRequest
 import no.nav.lydia.samarbeidsplan.PlanDto
@@ -626,16 +627,20 @@ class NyFlytTestUtils {
                 },
             )
 
-        fun brukerHarTilgangTilNyPlanRespons(token: String = authContainerHelper.saksbehandler1.token) =
-            applikasjon.performGet(
-                url = "$NY_FLYT_API_PATH/virksomhet/har-tilgang-til-ny-plan",
-            ).authentication().bearer(token).tilSingelRespons<BrukerHarTilgang>()
+        fun featureToggleForNavEnhetRespons(
+            togglenavn: String = FeatureToggleEnvironment.NAVENHETER_MED_NY_PLAN_TILGANG,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performGet(
+            url = "$NY_FLYT_API_PATH/feature-toggling/nav-enhet/$togglenavn",
+        ).authentication().bearer(token).tilSingelRespons<ToggleVerdi>()
 
-        fun brukerHarTilgangTilNyPlan(token: String = authContainerHelper.saksbehandler1.token) =
-            brukerHarTilgangTilNyPlanRespons(token).third.fold(
-                success = { it },
-                failure = { fail(it.message) },
-            )
+        fun featureToggleForNavEnhet(
+            togglenavn: String = FeatureToggleEnvironment.NAVENHETER_MED_NY_PLAN_TILGANG,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = featureToggleForNavEnhetRespons(togglenavn = togglenavn, token = token).third.fold(
+            success = { it },
+            failure = { fail(it.message) },
+        )
 
         private fun medDatoParameterHvisNotNull(dato: String?): String =
             (

@@ -1,4 +1,4 @@
-package no.nav.lydia.tilgangskontroll
+package no.nav.lydia.featureToggle
 
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.NaisEnvironment.Companion.Environment
@@ -33,9 +33,9 @@ class FeatureToggleEnvironment(
     fun erSkruddPå(
         togglenavn: String,
         verdi: String,
-    ): Boolean = toggles[togglenavn]?.bryter?.erPåFor(verdi) ?: false
+    ): Boolean? = toggles[togglenavn]?.bryter?.erPåFor(verdi)
 
-    fun hentBrytere(): Map<String, Set<String>> = toggles.mapValues { it.value.bryter.skruddPåFor }
+    fun hentVerdier(togglenavn: String): Set<String>? = toggles[togglenavn]?.bryter?.skruddPåFor
 
     companion object {
         const val NAVENHETER_MED_NY_PLAN_TILGANG = "pia.nyplan"
