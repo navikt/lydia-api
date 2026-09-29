@@ -9,6 +9,10 @@ class NyPlanTilgangEnvironment(
     val navenheterMedNyPlanTilgang = when (naisEnvironment.miljø) {
         Environment.`PROD-GCP` -> setOf()
         Environment.`DEV-GCP` -> setOf()
-        Environment.LOKAL -> setOf("0220")
+        Environment.LOKAL -> setOf(NAVENHET_TEST_SAKSBEHANDLER2)
+    }
+
+    companion object {
+        const val NAVENHET_TEST_SAKSBEHANDLER2 = "0220"
     }
 }
