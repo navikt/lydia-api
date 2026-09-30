@@ -26,7 +26,8 @@ class FeatureToggleEnvironment(
 
     private val toggles = mapOf(
         NAVENHETER_MED_NY_PLAN_TILGANG to EnvBryter(
-            lokal = MengdeBryter(setOf(NAVENHET_TEST_SAKSBEHANDLER2)),
+            lokal = MengdeBryter(skruddPåFor = setOf(NavEnheter.Dev.NAV_IKT_DRIFT.enhetsnummer)),
+            dev = MengdeBryter(skruddPåFor = setOf(NavEnheter.Dev.NAV_IKT_DRIFT.enhetsnummer)),
         ),
     )
 
@@ -38,7 +39,6 @@ class FeatureToggleEnvironment(
     fun hentVerdier(togglenavn: String): Set<String>? = toggles[togglenavn]?.bryter?.skruddPåFor
 
     companion object {
-        const val NAVENHETER_MED_NY_PLAN_TILGANG = "pia.nyplan"
-        const val NAVENHET_TEST_SAKSBEHANDLER2 = "0220"
+        const val NAVENHETER_MED_NY_PLAN_TILGANG = "enheter_til_nyplan"
     }
 }
