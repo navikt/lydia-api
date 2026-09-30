@@ -29,6 +29,7 @@ class TestContainerHelper {
         private const val ANTALL_BRANSJE_PERIODER = 11
         private const val ANTALL_SEKTOR_PERIODER = 9
         private const val ANTALL_TEST_VIRKSOMHETER = 150
+        const val NAVENHET_TEST_SAKSBEHANDLER2 = "0220"
 
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -60,6 +61,8 @@ class TestContainerHelper {
                     "NAIS_CLUSTER_NAME" to "lokal",
                     "PIA_PDFGEN_URL" to "http://pia-pdfgen",
                     "LOKAL_TEAM_LOGS" to "1",
+                    "FEATURE_TOGGLE_NAMES" to "FEATURE_TOGGLE_NAVENHETER_NY_PLAN",
+                    "FEATURE_TOGGLE_NAVENHETER_NY_PLAN" to NAVENHET_TEST_SAKSBEHANDLER2,
                 )
                     .plus(authContainerHelper.envVars())
                     .plus(kafkaContainerHelper.envVars())

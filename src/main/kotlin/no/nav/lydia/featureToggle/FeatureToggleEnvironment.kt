@@ -1,44 +1,26 @@
 package no.nav.lydia.featureToggle
 
-import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.NaisEnvironment.Companion.Environment
+import no.nav.lydia.getEnvVar
 
-private data class MengdeBryter(
-    val skruddPåFor: Set<String>,
-) {
-    fun erPåFor(verdi: String) = skruddPåFor.contains(verdi)
-}
-
-class FeatureToggleEnvironment(
-    private val naisEnvironment: NaisEnvironment,
-) {
-    private inner class EnvBryter(
-        lokal: MengdeBryter = MengdeBryter(emptySet()),
-        dev: MengdeBryter = MengdeBryter(emptySet()),
-        prod: MengdeBryter = MengdeBryter(emptySet()),
-    ) {
-        val bryter = when (naisEnvironment.miljø) {
-            Environment.`PROD-GCP` -> prod
-            Environment.`DEV-GCP` -> dev
-            Environment.LOKAL -> lokal
-        }
-    }
-
-    private val toggles = mapOf(
-        NAVENHETER_MED_NY_PLAN_TILGANG to EnvBryter(
-            lokal = MengdeBryter(setOf(NAVENHET_TEST_SAKSBEHANDLER2)),
-        ),
-    )
+/**
+ * Leser feature-toggles dynamisk fra miljøvariabler på formen FEATURE_TOGGLE_<TOGGELNAVN>,
+ * satt opp per miljø i .nais/dev.yaml og .nais/prod.yaml og injisert via .nais/nais.yaml.
+ * Verdien er en kommaseparert liste, f.eks. "1456,0220".
+ */
+class FeatureToggleEnvironment {
+    private val toggles: Map<String, Set<String>> = getEnvList("FEATURE_TOGGLE_NAMES")
+        .associate { toggle -> toggle.removePrefix(PREFIX).lowercase() to getEnvList(toggle).toSet() }
 
     fun erSkruddPå(
         togglenavn: String,
         verdi: String,
-    ): Boolean? = toggles[togglenavn]?.bryter?.erPåFor(verdi)
+    ): Boolean? = toggles[togglenavn]?.contains(verdi)
 
-    fun hentVerdier(togglenavn: String): Set<String>? = toggles[togglenavn]?.bryter?.skruddPåFor
+    fun hentVerdier(togglenavn: String): Set<String>? = toggles[togglenavn]
+
+    private fun getEnvList(name: String) = getEnvVar(name, "").split(",").map { it.trim() }.filter { it.isNotBlank() }
 
     companion object {
-        const val NAVENHETER_MED_NY_PLAN_TILGANG = "pia.nyplan"
-        const val NAVENHET_TEST_SAKSBEHANDLER2 = "0220"
+        private const val PREFIX = "FEATURE_TOGGLE_"
     }
 }

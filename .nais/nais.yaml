@@ -103,3 +103,9 @@ spec:
       value: {{journalpostApi}}
     - name: JOURNALPOST_SCOPE
       value: {{journalpostOboScope}}
+    - name: "FEATURE_TOGGLE_NAMES"
+      value: "{{#each feature_toggles}}FEATURE_TOGGLE_{{@key}}{{#unless @last}},{{/unless}}{{/each}}"
+    {{#each feature_toggles}}
+    - name: "FEATURE_TOGGLE_{{@key}}"
+      value: "{{this}}"
+    {{/each}}

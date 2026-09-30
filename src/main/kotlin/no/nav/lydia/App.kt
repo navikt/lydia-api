@@ -135,7 +135,7 @@ fun startLydiaBackend() {
     log.tlinfo("Starter Lydia backend")
 
     val naisEnv = NaisEnvironment()
-    val featureToggleEnvironment = FeatureToggleEnvironment(naisEnv)
+    val featureToggleEnvironment = FeatureToggleEnvironment()
 
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)

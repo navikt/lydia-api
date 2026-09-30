@@ -19,3 +19,5 @@ db_flags:
   cloudsql.enable_pgaudit: "true"
   pgaudit.log: 'write,ddl,role'
   pgaudit.log_parameter: "on"
+feature_toggles:
+  NAVENHETER_NY_PLAN: # Ikke klare for prod ennå, holder den tom

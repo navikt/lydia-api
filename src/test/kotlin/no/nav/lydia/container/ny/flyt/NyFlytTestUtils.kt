@@ -20,7 +20,6 @@ import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companio
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkludertInnhold
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkluderteTemaer
-import no.nav.lydia.featureToggle.FeatureToggleEnvironment
 import no.nav.lydia.featureToggle.ToggleVerdi
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanResponse
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
@@ -71,6 +70,7 @@ import kotlin.time.Clock
 
 class NyFlytTestUtils {
     companion object {
+        val NAVENHETER_NY_PLAN = "navenheter_ny_plan"
         private val iaSakTopic = Topic.IA_SAK_TOPIC
         private val iaSakStatistikkTopic = Topic.IA_SAK_STATISTIKK_TOPIC
         private val samarbeidsplanTopic = Topic.SAMARBEIDSPLAN_TOPIC
@@ -628,14 +628,14 @@ class NyFlytTestUtils {
             )
 
         fun featureToggleForNavEnhetRespons(
-            togglenavn: String = FeatureToggleEnvironment.NAVENHETER_MED_NY_PLAN_TILGANG,
+            togglenavn: String = NAVENHETER_NY_PLAN,
             token: String = authContainerHelper.saksbehandler1.token,
         ) = applikasjon.performGet(
             url = "$NY_FLYT_API_PATH/feature-toggling/nav-enhet/$togglenavn",
         ).authentication().bearer(token).tilSingelRespons<ToggleVerdi>()
 
         fun featureToggleForNavEnhet(
-            togglenavn: String = FeatureToggleEnvironment.NAVENHETER_MED_NY_PLAN_TILGANG,
+            togglenavn: String = NAVENHETER_NY_PLAN,
             token: String = authContainerHelper.saksbehandler1.token,
         ) = featureToggleForNavEnhetRespons(togglenavn = togglenavn, token = token).third.fold(
             success = { it },
