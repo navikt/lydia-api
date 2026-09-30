@@ -33,6 +33,7 @@ import no.nav.lydia.api.iaSamarbeid
 import no.nav.lydia.api.samarbeid
 import no.nav.lydia.api.statusoversikt
 import no.nav.lydia.api.sykefraværsstatistikk
+import no.nav.lydia.api.v1.featureToggleRoutes
 import no.nav.lydia.api.v1.historikkRoutes
 import no.nav.lydia.api.v1.nyFlytKartlegging
 import no.nav.lydia.api.v1.nyFlytSamarbeid
@@ -48,6 +49,7 @@ import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringProdusent
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringRepository
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
+import no.nav.lydia.featureToggle.FeatureToggleEnvironment
 import no.nav.lydia.historikk.HistorikkService
 import no.nav.lydia.historikk.repository.SamarbeidshistorikkRepository
 import no.nav.lydia.historikk.repository.VirksomhetshistorikkRepository
@@ -133,6 +135,7 @@ fun startLydiaBackend() {
     log.tlinfo("Starter Lydia backend")
 
     val naisEnv = NaisEnvironment()
+    val featureToggleEnvironment = FeatureToggleEnvironment(naisEnv)
 
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
@@ -419,6 +422,7 @@ fun startLydiaBackend() {
             nyFlytService = nyFlytService,
             tilstandVirksomhetRepository = tilstandVirksomhetRepository,
             historikkService = historikkService,
+            featureToggleEnvironment = featureToggleEnvironment,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -505,6 +509,7 @@ private fun Application.lydiaRestApi(
     nyFlytService: NyFlytService,
     tilstandVirksomhetRepository: TilstandVirksomhetRepository,
     historikkService: HistorikkService,
+    featureToggleEnvironment: FeatureToggleEnvironment,
 ) {
     install(ContentNegotiation) {
         json()
@@ -683,6 +688,11 @@ private fun Application.lydiaRestApi(
                 ),
                 auditLog = auditLog,
                 naisEnvironment = naisEnv,
+            )
+            featureToggleRoutes(
+                adGrupper = naisEnv.security.adGrupper,
+                featureToggleEnvironment = featureToggleEnvironment,
+                azureService = azureService,
             )
         }
     }

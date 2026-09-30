@@ -20,6 +20,8 @@ import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companio
 import no.nav.lydia.container.ia.eksport.IASakStatistikkEksportererTest.Companion.hentFraSiste4Kvartaler
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkludertInnhold
 import no.nav.lydia.container.ia.eksport.SamarbeidsplanBigqueryEksportererTest.Companion.inkluderteTemaer
+import no.nav.lydia.featureToggle.FeatureToggleEnvironment
+import no.nav.lydia.featureToggle.ToggleVerdi
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanResponse
 import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.SakHelper
@@ -624,6 +626,21 @@ class NyFlytTestUtils {
                     }
                 },
             )
+
+        fun featureToggleForNavEnhetRespons(
+            togglenavn: String = FeatureToggleEnvironment.NAVENHETER_MED_NY_PLAN_TILGANG,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = applikasjon.performGet(
+            url = "$NY_FLYT_API_PATH/feature-toggling/nav-enhet/$togglenavn",
+        ).authentication().bearer(token).tilSingelRespons<ToggleVerdi>()
+
+        fun featureToggleForNavEnhet(
+            togglenavn: String = FeatureToggleEnvironment.NAVENHETER_MED_NY_PLAN_TILGANG,
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = featureToggleForNavEnhetRespons(togglenavn = togglenavn, token = token).third.fold(
+            success = { it },
+            failure = { fail(it.message) },
+        )
 
         private fun medDatoParameterHvisNotNull(dato: String?): String =
             (

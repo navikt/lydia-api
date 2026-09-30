@@ -29,5 +29,7 @@ val ApplicationCall.dokumentType
     get() = parameters["dokumentType"]?.tilDokumentTilPubliseringType()
 val ApplicationCall.dokumentReferanseId
     get() = parameters["dokumentReferanseId"]?.tilUUID(hvaErJeg = "dokumentReferanseId")
+val ApplicationCall.featureToggle
+    get() = parameters["featureToggle"]
 
 suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)
