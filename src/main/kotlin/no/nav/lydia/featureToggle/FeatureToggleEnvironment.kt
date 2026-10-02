@@ -26,7 +26,7 @@ class FeatureToggleEnvironment(
 
     private val toggles = mapOf(
         NAVENHETER_MED_NY_PLAN_TILGANG to EnvBryter(
-            lokal = MengdeBryter(skruddPåFor = setOf(NavEnheter.Dev.NAV_IKT_DRIFT.enhetsnummer)),
+            lokal = MengdeBryter(skruddPåFor = setOf(NavEnheter.Dev.NAV_IKT_DRIFT.enhetsnummer, NavEnheter.Lokal.IT_AVDELINGEN.enhetsnummer)),
             dev = MengdeBryter(skruddPåFor = setOf(NavEnheter.Dev.NAV_IKT_DRIFT.enhetsnummer)),
         ),
     )

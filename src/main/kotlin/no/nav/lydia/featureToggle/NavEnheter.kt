@@ -9,4 +9,11 @@ object NavEnheter {
             enhetsnavn = "NAV IKT DRIFT",
         )
     }
+
+    object Lokal {
+        val IT_AVDELINGEN = NavEnhet(
+            enhetsnummer = "2900",
+            enhetsnavn = "IT-avdelingen",
+        )
+    }
 }
