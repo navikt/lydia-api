@@ -1,17 +1,17 @@
-val flywayVersion = "13.6.0"
+val flywayVersion = "13.8.0"
 val iaFellesVersion = "2.0.6"
-val ktorVersion = "3.5.2"
+val ktorVersion = "3.6.0"
 val kotestVerstion = "6.2.5"
 val testcontainersVersion = "2.0.5"
-val logbackVersion = "1.6.3"
+val logbackVersion = "1.6.4"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.31.1-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.4.10"
+    kotlin("jvm") version "2.4.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.4.10"
+    kotlin("plugin.serialization") version "2.4.20"
     // Apply the application plugin to add support for building a CLI application in Java.
     id("application")
 }
@@ -62,7 +62,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.14.0")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.11.2")
+    implementation("at.yawk.lz4:lz4-java:1.12.0")
     implementation("org.apache.kafka:kafka-clients:4.3.1") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
@@ -82,7 +82,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.8.0-0.6.x-compat")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.9.1")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.10")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -101,7 +101,7 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:6.0.2")
+    testImplementation("no.nav.security:mock-oauth2-server:6.0.3")
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
