@@ -48,16 +48,15 @@ class IASakshendelseRepository(
             )
         }
 
-    fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> {
-        val orgnrKolonneNavn = "orgnr"
-        return using(sessionOf(dataSource)) { session ->
+    fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> =
+        using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     SELECT 
                         id,
                         type,
-                        $orgnrKolonneNavn,
+                        orgnr,
                         opprettet_av,
                         opprettet_av_rolle,
                         saksnummer,
@@ -70,17 +69,16 @@ class IASakshendelseRepository(
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
-                    WHERE $orgnrKolonneNavn = :$orgnrKolonneNavn
-                    GROUP BY aarsak_enum, aarsak, id, type, $orgnrKolonneNavn, opprettet_av, saksnummer, opprettet
+                    WHERE orgnr = :orgnr
+                    GROUP BY aarsak_enum, aarsak, id, type, orgnr, opprettet_av, saksnummer, opprettet
                     ORDER BY opprettet 
                     """.trimIndent(),
                     mapOf(
-                        orgnrKolonneNavn to orgnr,
+                        "orgnr" to orgnr,
                     ),
                 ).map(this::mapRow).asList,
             )
         }.verifiserAtViIkkeHarDuplikater()
-    }
 
     fun hentHendelserForSaksnummer(saksnummer: String): List<IASakshendelse> =
         using(sessionOf(dataSource)) { session ->
@@ -167,14 +165,13 @@ class IASakshendelseRepository(
         hendelse
     }
 
-    fun hentHendelse(hendelseId: String): IASakshendelse? {
-        val idKolonneNavn = "id"
-        return using(sessionOf(dataSource)) { session ->
+    fun hentHendelse(hendelseId: String): IASakshendelse? =
+        using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     SELECT 
-                        $idKolonneNavn,
+                        id,
                         type,
                         orgnr,
                         opprettet_av,
@@ -189,14 +186,13 @@ class IASakshendelseRepository(
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
-                    WHERE $idKolonneNavn = :$idKolonneNavn
+                    WHERE id = :id
                     GROUP BY id, aarsak_enum, aarsak
                     """.trimIndent(),
-                    mapOf(idKolonneNavn to hendelseId),
+                    mapOf("id" to hendelseId),
                 ).map(this::mapRow).asSingle,
             )
         }
-    }
 
     private fun mapRow(row: Row): IASakshendelse {
         val valgtÅrsak = årsakFraDatabase(row.stringOrNull("aarsak_enum"), row.stringOrNull("aarsak"), row.array("begrunnelser"))
