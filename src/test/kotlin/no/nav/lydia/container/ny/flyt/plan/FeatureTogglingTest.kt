@@ -21,14 +21,14 @@ class FeatureTogglingTest {
 
     @Test
     fun `saksbehandler i en NAV-enhet der toggelen ikke er skrudd på skal få erPå false`() {
-        val respons = featureToggleForNavEnhet(token = authContainerHelper.saksbehandler1.token)
+        val respons = featureToggleForNavEnhet(token = authContainerHelper.saksbehandler2.token)
 
         respons.erPå.shouldBe(false)
     }
 
     @Test
     fun `saksbehandler i en NAV-enhet der toggelen er skrudd på skal få erPå true`() {
-        val respons = featureToggleForNavEnhet(token = authContainerHelper.saksbehandler2.token)
+        val respons = featureToggleForNavEnhet(token = authContainerHelper.saksbehandler1.token)
 
         respons.erPå shouldBe true
     }
@@ -111,7 +111,7 @@ class FeatureTogglingTest {
             .tilSingelRespons<FeatureToggleVerdier>()
 
         respons.third.fold(
-            success = { it.verdier shouldBe setOf(NavEnheter.Dev.NAV_IKT_DRIFT.enhetsnummer) },
+            success = { it.verdier shouldBe setOf(NavEnheter.Dev.NAV_IKT_DRIFT.enhetsnummer, NavEnheter.Lokal.IT_AVDELINGEN.enhetsnummer) },
             failure = { fail(it.message) },
         )
     }
