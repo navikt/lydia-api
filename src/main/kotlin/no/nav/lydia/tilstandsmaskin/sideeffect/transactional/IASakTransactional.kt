@@ -42,6 +42,17 @@ object IASakTransactional {
                 USING ia_sak_hendelse h
                 WHERE hb.hendelse_id = h.id
                   AND h.orgnr = :orgnr;
+                  
+                DELETE FROM aarsak_begrunnelse ab
+                USING hendelse_aarsak ha, ia_sak_hendelse h
+                WHERE ab.aarsak_id = ha.aarsak_id
+                  AND ha.hendelse_id = h.id
+                  AND h.orgnr = :orgnr;
+                  
+                DELETE FROM hendelse_aarsak ha
+                USING ia_sak_hendelse h
+                WHERE ha.hendelse_id = h.id
+                  AND h.orgnr = :orgnr;
                 
                 DELETE FROM ia_sak_alle WHERE orgnr = :orgnr;
                 

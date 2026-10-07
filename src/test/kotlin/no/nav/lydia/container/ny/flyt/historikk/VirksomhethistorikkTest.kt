@@ -32,8 +32,11 @@ import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import no.nav.lydia.samarbeidsperiode.IASakshendelseType
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
 import no.nav.lydia.samarbeidsperiode.ÅrsakType
+import no.nav.lydia.tilstandsmaskin.Transaction
 import no.nav.lydia.tilstandsmaskin.VirksomhetIATilstand
+import no.nav.lydia.tilstandsmaskin.sideeffect.transactional.SamarbeidsperiodeTransactional
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -157,14 +160,16 @@ class VirksomhethistorikkTest {
 
         val hendelseId = virksomhet.hentHistorikk().hendelser[0].relatertHendelse!!.hendelseId
 
-        // Finnes ikke en realistisk måte å få en årsak på i dag, så lager fake data
-        postgresContainerHelper.performUpdate(
-            """
-            INSERT INTO hendelse_begrunnelse (hendelse_id, aarsak_enum, aarsak, begrunnelse_enum, begrunnelse)
-            VALUES ('$hendelseId', '${ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.name}', 'Virksomheten har takket nei', '${BegrunnelseType.AUTOMATISK_LUKKET.name}', '${BegrunnelseType.AUTOMATISK_LUKKET.navn}'),
-                   ('$hendelseId', '${ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.name}', 'Virksomheten har takket nei', '${BegrunnelseType.IKKE_TID.name}', '${BegrunnelseType.IKKE_TID.navn}');
-            """.trimIndent(),
-        )
+        Transaction(postgresContainerHelper.dataSource).transactional {
+            SamarbeidsperiodeTransactional.lagreÅrsakForHendelse(
+                hendelseId,
+                ValgtÅrsak(
+                    type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
+                    beskrivelse = "Virksomheten har takket nei",
+                    begrunnelser = listOf(BegrunnelseType.AUTOMATISK_LUKKET, BegrunnelseType.IKKE_TID),
+                ),
+            )
+        }
 
         val historikk = virksomhet.hentHistorikk()
         historikk.hendelser[0].relatertHendelse!!.årsak.run {
