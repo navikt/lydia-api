@@ -1,7 +1,7 @@
 CREATE TABLE hendelse_aarsak
 (
     aarsak_id   varchar not null primary key,
-    hendelse_id varchar not null references ia_sak_hendelse (id),
+    hendelse_id varchar not null unique references ia_sak_hendelse (id),
     aarsak_enum varchar not null,
     aarsak      varchar not null
 );
