@@ -142,21 +142,21 @@ class SamarbeidsperiodeTransactional {
                 tx.run(
                     queryOf(
                         """
-                                    INSERT INTO hendelse_begrunnelse (
-                                        hendelse_id,
-                                        aarsak,
-                                        begrunnelse,
-                                        aarsak_enum,
-                                        begrunnelse_enum
-                                    )
-                                    VALUES (
-                                        :hendelse_id,
-                                        :aarsak,
-                                        :begrunnelse,
-                                        :aarsak_enum,
-                                        :begrunnelse_enum
-                                    ) 
-                                    ON CONFLICT DO NOTHING  
+                        INSERT INTO hendelse_begrunnelse (
+                            hendelse_id,
+                            aarsak,
+                            begrunnelse,
+                            aarsak_enum,
+                            begrunnelse_enum
+                        )
+                        VALUES (
+                            :hendelse_id,
+                            :aarsak,
+                            :begrunnelse,
+                            :aarsak_enum,
+                            :begrunnelse_enum
+                        ) 
+                        ON CONFLICT DO NOTHING  
                         """.trimMargin(),
                         mapOf(
                             "hendelse_id" to hendelseId,
