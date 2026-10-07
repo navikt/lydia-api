@@ -68,9 +68,10 @@ class IASakshendelseRepository(
                         aarsak,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
-                    LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
+                    LEFT JOIN hendelse_aarsak ON (ia_sak_hendelse.id = hendelse_aarsak.hendelse_id) 
+                    LEFT JOIN aarsak_begrunnelse USING (aarsak_id)
                     WHERE orgnr = :orgnr
-                    GROUP BY aarsak_enum, aarsak, id, type, orgnr, opprettet_av, saksnummer, opprettet
+                    GROUP BY aarsak_id, aarsak_enum, aarsak, id, type, orgnr, opprettet_av, saksnummer, opprettet
                     ORDER BY opprettet 
                     """.trimIndent(),
                     mapOf(
@@ -100,9 +101,10 @@ class IASakshendelseRepository(
                         aarsak,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
-                    LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
+                    LEFT JOIN hendelse_aarsak ON (ia_sak_hendelse.id = hendelse_aarsak.hendelse_id) 
+                    LEFT JOIN aarsak_begrunnelse USING (aarsak_id)
                     WHERE saksnummer = :saksnummer
-                    GROUP BY aarsak_enum, aarsak, id, type, orgnr, opprettet_av, saksnummer, opprettet
+                    GROUP BY aarsak_id, aarsak_enum, aarsak, id, type, orgnr, opprettet_av, saksnummer, opprettet
                     ORDER BY opprettet 
                     """.trimIndent(),
                     mapOf(
@@ -185,9 +187,10 @@ class IASakshendelseRepository(
                         aarsak,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
-                    LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
+                    LEFT JOIN hendelse_aarsak ON (ia_sak_hendelse.id = hendelse_aarsak.hendelse_id)
+                    LEFT JOIN aarsak_begrunnelse USING (aarsak_id)
                     WHERE id = :id
-                    GROUP BY id, aarsak_enum, aarsak
+                    GROUP BY id, aarsak_id, aarsak_enum, aarsak
                     """.trimIndent(),
                     mapOf("id" to hendelseId),
                 ).map(this::mapRow).asSingle,
