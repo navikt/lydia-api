@@ -188,6 +188,7 @@ class SamarbeidsperiodeTransactional {
                     """
                     INSERT INTO hendelse_aarsak (aarsak_id, hendelse_id, aarsak_enum, aarsak)
                     VALUES (:aarsak_id, :hendelse_id, :aarsak_enum, :aarsak)
+                    ON CONFLICT DO NOTHING
                     """.trimIndent(),
                     mapOf("aarsak_id" to årsakID, "hendelse_id" to hendelseId, "aarsak_enum" to valgtÅrsak.type.name, "aarsak" to valgtÅrsak.beskrivelse),
                 ).asUpdate,
