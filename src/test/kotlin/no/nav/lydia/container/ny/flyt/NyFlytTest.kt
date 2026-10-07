@@ -713,7 +713,7 @@ class NyFlytTest {
         )
 
         // Slett når hendelse_begrunnelse slettes
-        val gamleBegrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+        val begrunnelserGammel = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
             SELECT hb.begrunnelse_enum
                  FROM hendelse_begrunnelse hb
@@ -721,7 +721,7 @@ class NyFlytTest {
                  WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
         )
-        gamleBegrunnelser shouldBe listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
+        begrunnelserGammel shouldBe listOf(BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
 
         val begrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
@@ -794,7 +794,7 @@ class NyFlytTest {
         gjenvurdertSak.status shouldBe IASak.Status.VURDERES
 
         // Slett når hendelse_begrunnelse slettes
-        val gamleBegrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+        val begrunnelserGammel = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
             SELECT hb.begrunnelse_enum
                  FROM hendelse_begrunnelse hb
@@ -802,7 +802,7 @@ class NyFlytTest {
                  WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
         )
-        gamleBegrunnelser.toSet() shouldBe setOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
+        begrunnelserGammel.toSet() shouldBe setOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
 
         val begrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
@@ -813,7 +813,7 @@ class NyFlytTest {
             WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
         )
-        begrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
+        begrunnelser.toSet() shouldBe setOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.VIRKSOMHETEN_HAR_TATT_KONTAKT.name)
     }
 
     @Test
@@ -837,7 +837,7 @@ class NyFlytTest {
         gjenvurdertSak.status shouldBe IASak.Status.VURDERES
 
         // Slett når hendelse_begrunnelse slettes
-        val gamleBegrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+        val begrunnelserGammel = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
             SELECT hb.begrunnelse_enum
                  FROM hendelse_begrunnelse hb
@@ -845,7 +845,7 @@ class NyFlytTest {
                  WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
         )
-        gamleBegrunnelser shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name)
+        begrunnelserGammel shouldBe listOf(BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name, BegrunnelseType.NAV_VURDERER_VIRKSOMHETEN.name)
 
         val begrunnelser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
