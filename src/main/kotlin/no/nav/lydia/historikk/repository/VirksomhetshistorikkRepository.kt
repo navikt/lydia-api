@@ -23,9 +23,9 @@ class VirksomhetshistorikkRepository(
                            ha.aarsak, array_agg(ab.begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse iah 
                     LEFT JOIN hendelse_aarsak ha ON iah.id = ha.hendelse_id
-                    LEFT JOIN aarsak_begrunnelse ab USING (aarsak_id)
+                    LEFT JOIN aarsak_begrunnelse ab ON (ha.id = ab.aarsak_id)
                     WHERE iah.orgnr = :orgnr AND iah.type = ANY(:typer)
-                    GROUP BY iah.id, iah.opprettet, ha.aarsak_id, ha.aarsak, ha.aarsak_enum, iah.type, iah.saksnummer, iah.resulterende_status,
+                    GROUP BY iah.id, iah.opprettet, ha.id, ha.aarsak, ha.aarsak_enum, iah.type, iah.saksnummer, iah.resulterende_status,
                     iah.opprettet_av
                     ORDER BY opprettet
                     """.trimIndent(),
