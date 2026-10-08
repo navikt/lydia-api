@@ -8,6 +8,7 @@ CREATE TABLE hendelse_aarsak
 
 CREATE TABLE aarsak_begrunnelse
 (
+    begrunnelse_id   serial primary key,
     aarsak_id        varchar not null references hendelse_aarsak (aarsak_id),
     begrunnelse_enum varchar not null,
     begrunnelse      varchar not null,
