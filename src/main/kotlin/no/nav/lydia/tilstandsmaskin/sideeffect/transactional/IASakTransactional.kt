@@ -45,7 +45,7 @@ object IASakTransactional {
                   
                 DELETE FROM aarsak_begrunnelse ab
                 USING hendelse_aarsak ha, ia_sak_hendelse h
-                WHERE ab.aarsak_id = ha.aarsak_id
+                WHERE ab.aarsak_id = ha.id
                   AND ha.hendelse_id = h.id
                   AND h.orgnr = :orgnr;
                   

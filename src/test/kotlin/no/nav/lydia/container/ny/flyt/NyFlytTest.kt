@@ -692,7 +692,7 @@ class NyFlytTest {
             """
             SELECT ab.begrunnelse_enum
             FROM aarsak_begrunnelse ab
-            INNER JOIN hendelse_aarsak ha USING (aarsak_id)
+            INNER JOIN hendelse_aarsak ha ON ha.id = ab.aarsak_id
             INNER JOIN ia_sak_hendelse h ON h.id = ha.hendelse_id
             WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
@@ -727,7 +727,7 @@ class NyFlytTest {
             """
             SELECT ab.begrunnelse_enum
             FROM aarsak_begrunnelse ab
-            INNER JOIN hendelse_aarsak ha USING (aarsak_id)
+            INNER JOIN hendelse_aarsak ha ON ha.id = ab.aarsak_id
             INNER JOIN ia_sak_hendelse h ON h.id = ha.hendelse_id
             WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
@@ -808,7 +808,7 @@ class NyFlytTest {
             """
             SELECT ab.begrunnelse_enum
             FROM aarsak_begrunnelse ab
-            INNER JOIN hendelse_aarsak ha USING (aarsak_id)
+            INNER JOIN hendelse_aarsak ha ON ha.id = ab.aarsak_id
             INNER JOIN ia_sak_hendelse h ON h.id = ha.hendelse_id
             WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),
@@ -851,7 +851,7 @@ class NyFlytTest {
             """
             SELECT ab.begrunnelse_enum
             FROM aarsak_begrunnelse ab
-            INNER JOIN hendelse_aarsak ha USING (aarsak_id)
+            INNER JOIN hendelse_aarsak ha ON ha.id = ab.aarsak_id 
             INNER JOIN ia_sak_hendelse h ON h.id = ha.hendelse_id
             WHERE h.orgnr = '${sak.orgnr}' AND h.type = '${IASakshendelseType.VIRKSOMHET_VURDERES.name}'
             """.trimIndent(),

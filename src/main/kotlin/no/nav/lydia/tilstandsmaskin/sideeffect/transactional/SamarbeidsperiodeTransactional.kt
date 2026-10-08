@@ -186,7 +186,7 @@ class SamarbeidsperiodeTransactional {
             tx.run(
                 queryOf(
                     """
-                    INSERT INTO hendelse_aarsak (aarsak_id, hendelse_id, aarsak_enum, aarsak)
+                    INSERT INTO hendelse_aarsak (id, hendelse_id, aarsak_enum, aarsak)
                     VALUES (:aarsak_id, :hendelse_id, :aarsak_enum, :aarsak)
                     ON CONFLICT DO NOTHING
                     """.trimIndent(),

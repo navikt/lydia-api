@@ -1,6 +1,6 @@
 CREATE TABLE hendelse_aarsak
 (
-    aarsak_id   varchar not null primary key,
+    id          varchar not null primary key,
     hendelse_id varchar not null unique references ia_sak_hendelse (id),
     aarsak_enum varchar not null,
     aarsak      varchar not null
@@ -8,8 +8,8 @@ CREATE TABLE hendelse_aarsak
 
 CREATE TABLE aarsak_begrunnelse
 (
-    begrunnelse_id   serial primary key,
-    aarsak_id        varchar not null references hendelse_aarsak (aarsak_id),
+    id               serial primary key,
+    aarsak_id        varchar not null references hendelse_aarsak (id),
     begrunnelse_enum varchar not null,
     begrunnelse      varchar not null,
     CONSTRAINT begrunnelse_mengde UNIQUE (aarsak_id, begrunnelse_enum)
