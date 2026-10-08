@@ -7,6 +7,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASak
 import no.nav.lydia.samarbeidsperiode.IASak.Companion.tilIASakDto
 import no.nav.lydia.samarbeidsperiode.IASakDto
@@ -133,26 +134,29 @@ class SamarbeidsperiodeTransactional {
         fun lagreÅrsakForHendelse(
             hendelseId: String,
             valgtÅrsak: ValgtÅrsak,
-        ) = run {
-            valgtÅrsak.begrunnelser.forEach { begrunnelse ->
+        ) {
+            val årsakID = ULID.random()
+
+            // Slett når hendelse_begrunnelse slettes
+            fun insertTilHendelseBegrunnelse(begrunnelse: BegrunnelseType) {
                 tx.run(
                     queryOf(
                         """
-                            INSERT INTO hendelse_begrunnelse (
-                                hendelse_id,
-                                aarsak,
-                                begrunnelse,
-                                aarsak_enum,
-                                begrunnelse_enum
-                            )
-                            VALUES (
-                                :hendelse_id,
-                                :aarsak,
-                                :begrunnelse,
-                                :aarsak_enum,
-                                :begrunnelse_enum
-                            ) 
-                            ON CONFLICT DO NOTHING  
+                        INSERT INTO hendelse_begrunnelse (
+                            hendelse_id,
+                            aarsak,
+                            begrunnelse,
+                            aarsak_enum,
+                            begrunnelse_enum
+                        )
+                        VALUES (
+                            :hendelse_id,
+                            :aarsak,
+                            :begrunnelse,
+                            :aarsak_enum,
+                            :begrunnelse_enum
+                        ) 
+                        ON CONFLICT DO NOTHING  
                         """.trimMargin(),
                         mapOf(
                             "hendelse_id" to hendelseId,
@@ -163,6 +167,38 @@ class SamarbeidsperiodeTransactional {
                         ),
                     ).asUpdate,
                 )
+            }
+
+            // Inline når hendelse_begrunnelse slettes
+            fun insertTilAarsakBegrunnelse(begrunnelse: BegrunnelseType) {
+                tx.run(
+                    queryOf(
+                        """
+                        INSERT INTO aarsak_begrunnelse (aarsak_id, begrunnelse_enum, begrunnelse)
+                        VALUES (:aarsak_id, :begrunnelse_enum, :begrunnelse)
+                        ON CONFLICT DO NOTHING
+                        """.trimIndent(),
+                        mapOf("aarsak_id" to årsakID, "begrunnelse_enum" to begrunnelse.name, "begrunnelse" to begrunnelse.navn),
+                    ).asUpdate,
+                )
+            }
+
+            tx.run(
+                queryOf(
+                    """
+                    INSERT INTO hendelse_aarsak (id, hendelse_id, aarsak_enum, aarsak)
+                    VALUES (:aarsak_id, :hendelse_id, :aarsak_enum, :aarsak)
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                    mapOf("aarsak_id" to årsakID, "hendelse_id" to hendelseId, "aarsak_enum" to valgtÅrsak.type.name, "aarsak" to valgtÅrsak.beskrivelse),
+                ).asUpdate,
+            )
+
+            run {
+                valgtÅrsak.begrunnelser.forEach { begrunnelse ->
+                    insertTilHendelseBegrunnelse(begrunnelse)
+                    insertTilAarsakBegrunnelse(begrunnelse)
+                }
             }
         }
 
