@@ -20,12 +20,13 @@ class VirksomhetshistorikkRepository(
                 queryOf(
                     """
                     SELECT iah.id, iah.type, iah.opprettet, iah.saksnummer, iah.resulterende_status, iah.opprettet_av,
-                           hb.aarsak, array_agg(hb.begrunnelse_enum) as begrunnelser
+                           ha.aarsak, array_agg(ab.begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse iah 
-                    LEFT JOIN hendelse_begrunnelse hb ON iah.id = hb.hendelse_id
+                    LEFT JOIN hendelse_aarsak ha ON iah.id = ha.hendelse_id
+                    LEFT JOIN aarsak_begrunnelse ab ON (ha.id = ab.aarsak_id)
                     WHERE iah.orgnr = :orgnr AND iah.type = ANY(:typer)
-                    GROUP BY iah.id, iah.opprettet, hb.aarsak, iah.type, iah.saksnummer, iah.resulterende_status,
-                    iah.opprettet_av, hb.aarsak_enum
+                    GROUP BY iah.id, iah.opprettet, ha.id, ha.aarsak, ha.aarsak_enum, iah.type, iah.saksnummer, iah.resulterende_status,
+                    iah.opprettet_av
                     ORDER BY opprettet
                     """.trimIndent(),
                     mapOf("orgnr" to orgnr, "typer" to virksomhetshendelsestyper.map { it.name }.toTypedArray()),
