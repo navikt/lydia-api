@@ -38,11 +38,6 @@ object IASakTransactional {
                 WHERE t.saksnummer = s.saksnummer
                   AND s.orgnr = :orgnr;
                 
-                DELETE FROM hendelse_begrunnelse hb
-                USING ia_sak_hendelse h
-                WHERE hb.hendelse_id = h.id
-                  AND h.orgnr = :orgnr;
-                  
                 DELETE FROM aarsak_begrunnelse ab
                 USING hendelse_aarsak ha, ia_sak_hendelse h
                 WHERE ab.aarsak_id = ha.id
