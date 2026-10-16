@@ -40,6 +40,7 @@ import no.nav.lydia.api.v1.nyFlytSamarbeid
 import no.nav.lydia.api.v1.nyFlytSamarbeidsperiode
 import no.nav.lydia.api.v1.nyFlytSamarbeidsplan
 import no.nav.lydia.api.v1.nyFlytVirksomhet
+import no.nav.lydia.api.v1.personopplysningssjekk
 import no.nav.lydia.api.virksomhet
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
@@ -694,6 +695,7 @@ private fun Application.lydiaRestApi(
                 featureToggleEnvironment = featureToggleEnvironment,
                 azureService = azureService,
             )
+            personopplysningssjekk(adGrupper = naisEnv.security.adGrupper)
         }
     }
 }
