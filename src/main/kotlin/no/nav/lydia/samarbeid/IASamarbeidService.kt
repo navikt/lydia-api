@@ -7,6 +7,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.dokumentpublisering.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.dokumentpublisering.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.felles.Feil
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.samarbeid.IASamarbeidService.StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING
@@ -163,6 +164,11 @@ class IASamarbeidService(
             advarsler = advarsler,
         )
     }
+
+    fun hentSalesforceAktiviteter(
+        saksnummer: String,
+        samarbeidId: Int,
+    ): List<SalesforceAktivitet> = samarbeidRepository.hentSalesforceAktiviteter(saksnummer = saksnummer, samarbeidId = samarbeidId)
 
     fun kanAvbryteSamarbeid(
         saksnummer: String,
