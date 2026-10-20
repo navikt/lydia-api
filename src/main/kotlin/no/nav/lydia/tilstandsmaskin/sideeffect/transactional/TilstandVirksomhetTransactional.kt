@@ -26,10 +26,10 @@ class TilstandVirksomhetTransactional {
                         )
                         VALUES (
                             :orgnr,
-                            :tilstand
+                            :tilstand::virksomhet_tilstand_type
                         )
                         ON CONFLICT ON CONSTRAINT tilstand_virksomhet_orgnr_unique DO UPDATE SET
-                            tilstand = :tilstand,
+                            tilstand = :tilstand::virksomhet_tilstand_type,
                             sist_endret = now()
                         RETURNING *
                     )
@@ -56,7 +56,7 @@ class TilstandVirksomhetTransactional {
                 queryOf(
                     """
                     UPDATE tilstand_virksomhet
-                    SET tilstand = :tilstand,
+                    SET tilstand = :tilstand::virksomhet_tilstand_type,
                         sist_endret = current_timestamp
                     WHERE orgnr = :orgnr
                     RETURNING *
@@ -102,9 +102,9 @@ class TilstandVirksomhetTransactional {
                     VALUES (
                         :orgnr,
                         :tilstandVirksomhetId,
-                        :startTilstand,
+                        :startTilstand::virksomhet_tilstand_type,
                         :planlagtHendelse,
-                        :nyTilstand,
+                        :nyTilstand::virksomhet_tilstand_type,
                         :planlagtDato
                     )
                     RETURNING *
