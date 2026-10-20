@@ -131,6 +131,7 @@ class PlanApiTest {
             TaskEvent__c = "Møte",
             Service__c = førsteTema.navn,
             IASubtheme__c = førsteUndertema.navn,
+            Subject__c = "emne",
         )
         kafkaContainerHelper.sendOgVentTilKonsumert(
             nøkkel = salesforceAktivitet.Id__c,

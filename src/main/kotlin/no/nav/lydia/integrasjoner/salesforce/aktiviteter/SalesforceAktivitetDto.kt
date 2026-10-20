@@ -22,4 +22,5 @@ data class SalesforceAktivitetDto(
     val EndDateTime__c: String? = null, // -- Når et møte er planlagt ferdig
     val Status__c: String? = null, // -- Status på aktivitet (Åpen ; Fullført)
     val AccountOrgNumber__c: String? = null, // -- Orgnummer aktiviteten gjelder
+    val Subject__c: String? = null, // -- Fritekst med emne på aktiviteten
 )
