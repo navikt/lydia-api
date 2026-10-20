@@ -1,0 +1,6 @@
+ALTER TABLE tilstand_virksomhet
+ALTER COLUMN tilstand TYPE virksomhet_tilstand_type USING tilstand::virksomhet_tilstand_type;
+
+ALTER TABLE tilstand_automatisk_oppdatering
+ALTER COLUMN ny_tilstand TYPE virksomhet_tilstand_type USING ny_tilstand::virksomhet_tilstand_type,
+ALTER COLUMN start_tilstand TYPE virksomhet_tilstand_type USING start_tilstand::virksomhet_tilstand_type;
