@@ -159,6 +159,7 @@ class NyFlytSamarbeidsplanTest {
             TaskEvent__c = "Møte",
             Service__c = førsteTema.navn,
             IASubtheme__c = førsteUndertema.navn,
+            Subject__c = "Emne",
         )
         kafkaContainerHelper.sendOgVentTilKonsumert(
             nøkkel = salesforceAktivitet.Id__c,

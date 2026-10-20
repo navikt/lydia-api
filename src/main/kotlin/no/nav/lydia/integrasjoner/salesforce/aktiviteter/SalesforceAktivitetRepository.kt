@@ -50,7 +50,8 @@ class SalesforceAktivitetRepository(
                             mote_start,
                             mote_slutt,
                             status,
-                            sist_endret_salesforce
+                            sist_endret_salesforce,
+                            emne
                         )
                         VALUES (
                             :id,
@@ -65,7 +66,8 @@ class SalesforceAktivitetRepository(
                             :moteStart,
                             :moteSlutt,
                             :status,
-                            :sistEndretISalesforce
+                            :sistEndretISalesforce,
+                            :emne
                         )
                         ON CONFLICT (id) DO UPDATE SET
                             type = :type, 
@@ -79,7 +81,8 @@ class SalesforceAktivitetRepository(
                             mote_start = :moteStart,
                             mote_slutt = :moteSlutt, 
                             status = :status, 
-                            sist_endret_salesforce = :sistEndretISalesforce
+                            sist_endret_salesforce = :sistEndretISalesforce,
+                            emne = :emne
                         WHERE (
                             salesforce_aktiviteter.sist_endret_salesforce IS NULL OR
                             salesforce_aktiviteter.sist_endret_salesforce <= :sistEndretISalesforce
@@ -99,6 +102,7 @@ class SalesforceAktivitetRepository(
                         "moteStart" to aktivitet.møteStart,
                         "moteSlutt" to aktivitet.møteSlutt,
                         "status" to aktivitet.status?.name,
+                        "emne" to aktivitet.emne,
                     ),
                 ).asUpdate,
             )
@@ -122,4 +126,5 @@ fun Row.mapTilSalesforceAktivitet() =
         status = this.stringOrNull("status")?.let {
             SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)
         },
+        emne = this.stringOrNull("emne"),
     )
