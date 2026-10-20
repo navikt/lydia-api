@@ -56,7 +56,7 @@ class TilstandVirksomhetTransactional {
                 queryOf(
                     """
                     UPDATE tilstand_virksomhet
-                    SET tilstand = :tilstand,
+                    SET tilstand = :tilstand::virksomhet_tilstand_type,
                         sist_endret = current_timestamp
                     WHERE orgnr = :orgnr
                     RETURNING *
