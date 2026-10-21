@@ -29,14 +29,83 @@ class PersonopplysningssjekkApiTest {
         val respons = sjekk("Ring 12345678 eller send til ola@firma.no").tilSingelRespons<PersonopplysningssjekkResultatDto>()
 
         respons.statuskode() shouldBe HttpStatusCode.OK.value
-        respons.third.get() shouldBe PersonopplysningssjekkResultatDto(inneholderTall = true, inneholderEpost = true)
+        respons.third.get() shouldBe PersonopplysningssjekkResultatDto(
+            kanInneholdePersonopplysninger = true,
+            inneholderTall = true,
+            inneholderEpost = true,
+            kiFlagget = false,
+        )
     }
 
     @Test
-    fun `skal ikke gi treff på tekst uten tall eller e-post`() {
+    fun `skal ikke gi treff på tekst uten tall, e-post eller personopplysninger`() {
         val respons = sjekk("Redusere sykefraværet i virksomheten").tilSingelRespons<PersonopplysningssjekkResultatDto>()
 
-        respons.third.get() shouldBe PersonopplysningssjekkResultatDto(inneholderTall = false, inneholderEpost = false)
+        respons.third.get() shouldBe PersonopplysningssjekkResultatDto(
+            kanInneholdePersonopplysninger = false,
+            inneholderTall = false,
+            inneholderEpost = false,
+            kiFlagget = false,
+        )
+    }
+
+    @Test
+    fun `skal flagge tekst når KI finner personopplysninger som regex ikke fanger`() {
+        val respons = sjekk("Ola har depresjon som fører til sykefravær").tilSingelRespons<PersonopplysningssjekkResultatDto>()
+
+        respons.statuskode() shouldBe HttpStatusCode.OK.value
+        respons.third.get() shouldBe PersonopplysningssjekkResultatDto(
+            kanInneholdePersonopplysninger = true,
+            inneholderTall = false,
+            inneholderEpost = false,
+            kiFlagget = true,
+        )
+    }
+
+    @Test
+    fun `skal flagge uten å kalle KI når teksten er tom etter filtrering`() {
+        val respons = sjekk("12345678901").tilSingelRespons<PersonopplysningssjekkResultatDto>()
+
+        respons.statuskode() shouldBe HttpStatusCode.OK.value
+        respons.third.get() shouldBe PersonopplysningssjekkResultatDto(
+            kanInneholdePersonopplysninger = true,
+            inneholderTall = true,
+            inneholderEpost = false,
+            kiFlagget = null,
+        )
+    }
+
+    @Test
+    fun `skal flagge tekst når Azure sitt innholdsfilter slår til`() {
+        val respons = sjekk("KI_INNHOLDSFILTER").tilSingelRespons<PersonopplysningssjekkResultatDto>()
+
+        respons.statuskode() shouldBe HttpStatusCode.OK.value
+        respons.third.get().kanInneholdePersonopplysninger shouldBe true
+        respons.third.get().kiFlagget shouldBe true
+    }
+
+    @Test
+    fun `skal gi feil når KI svarer med serverfeil`() {
+        sjekk("KI_FEIL_500").responseString()
+            .statuskode() shouldBe HttpStatusCode.InternalServerError.value
+    }
+
+    @Test
+    fun `skal gi feil når KI svarer med for mange forespørsler`() {
+        sjekk("KI_FEIL_429").responseString()
+            .statuskode() shouldBe HttpStatusCode.InternalServerError.value
+    }
+
+    @Test
+    fun `skal gi feil når KI gir ufullstendig svar`() {
+        sjekk("KI_UFULLSTENDIG").responseString()
+            .statuskode() shouldBe HttpStatusCode.InternalServerError.value
+    }
+
+    @Test
+    fun `skal gi feil når KI avslår å vurdere teksten`() {
+        sjekk("KI_AVSLAG").responseString()
+            .statuskode() shouldBe HttpStatusCode.InternalServerError.value
     }
 
     @Test
@@ -45,6 +114,7 @@ class PersonopplysningssjekkApiTest {
 
         body shouldNotContain "ola@firma.no"
         body shouldNotContain "12345678"
+        body shouldNotContain "begrunnelse"
     }
 
     @Test

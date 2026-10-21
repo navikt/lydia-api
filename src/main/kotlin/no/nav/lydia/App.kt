@@ -70,6 +70,8 @@ import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetServ
 import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.ki.AzureOpenAiKlient
+import no.nav.lydia.personopplysninger.Personopplysningssjekk
 import no.nav.lydia.kartlegging.FullførtBehovsvurderingProdusent
 import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryProdusent
@@ -695,7 +697,12 @@ private fun Application.lydiaRestApi(
                 featureToggleEnvironment = featureToggleEnvironment,
                 azureService = azureService,
             )
-            personopplysningssjekk(adGrupper = naisEnv.security.adGrupper)
+            personopplysningssjekk(
+                adGrupper = naisEnv.security.adGrupper,
+                personopplysningssjekk = Personopplysningssjekk(
+                    azureOpenAiKlient = AzureOpenAiKlient(config = naisEnv.integrasjoner.azureOpenAi),
+                ),
+            )
         }
     }
 }

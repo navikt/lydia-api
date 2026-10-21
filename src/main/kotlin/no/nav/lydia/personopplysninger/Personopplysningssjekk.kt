@@ -6,6 +6,7 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.Serializable
 import no.nav.lydia.felles.Feil
+import no.nav.lydia.ki.AzureOpenAiKlient
 
 const val MAKS_ANTALL_TEGN_I_PERSONOPPLYSNINGSSJEKK = 250
 
@@ -16,8 +17,11 @@ data class PersonopplysningssjekkDto(
 
 @Serializable
 data class PersonopplysningssjekkResultatDto(
+    val kanInneholdePersonopplysninger: Boolean,
     val inneholderTall: Boolean,
     val inneholderEpost: Boolean,
+    // null betyr at KI ikke ble kalt, fordi teksten var tom etter filtrering, burde man ha null?
+    val kiFlagget: Boolean?,
 )
 
 object PersonopplysningssjekkFeil {
@@ -28,12 +32,36 @@ object PersonopplysningssjekkFeil {
         )
 }
 
-fun sjekkForPersonopplysninger(tekst: String): Either<Feil, PersonopplysningssjekkResultatDto> =
-    if (tekst.length > MAKS_ANTALL_TEGN_I_PERSONOPPLYSNINGSSJEKK) {
-        PersonopplysningssjekkFeil.`for lang tekst`.left()
-    } else {
-        PersonopplysningssjekkResultatDto(
-            inneholderTall = PersondataFilter.inneholderTall(tekst),
-            inneholderEpost = PersondataFilter.inneholderEpost(tekst),
-        ).right()
+class Personopplysningssjekk(
+    private val azureOpenAiKlient: AzureOpenAiKlient,
+) {
+    suspend fun sjekk(tekst: String): Either<Feil, PersonopplysningssjekkResultatDto> {
+        if (tekst.length > MAKS_ANTALL_TEGN_I_PERSONOPPLYSNINGSSJEKK) {
+            return PersonopplysningssjekkFeil.`for lang tekst`.left()
+        }
+
+        val inneholderTall = PersondataFilter.inneholderTall(tekst)
+        val inneholderEpost = PersondataFilter.inneholderEpost(tekst)
+        val filtrertTekst = PersondataFilter.filtrerUtPersonsensitiveData(tekst)
+
+        if (filtrertTekst.isBlank()) {
+            return PersonopplysningssjekkResultatDto(
+                kanInneholdePersonopplysninger = true,
+                inneholderTall = inneholderTall,
+                inneholderEpost = inneholderEpost,
+                //TODO: burde dette være null? sender ikke til KI fordi det er ingenting i fritekstfeltet
+                //TODO: burde kanskje bare settes til false, slik at vi kan ha Boolean men kan være misvisende
+                kiFlagget = null,
+            ).right()
+        }
+
+        return azureOpenAiKlient.vurderPersonvern(filtrertTekst).map { vurdering ->
+            PersonopplysningssjekkResultatDto(
+                kanInneholdePersonopplysninger = vurdering.personvernflagget || inneholderTall || inneholderEpost,
+                inneholderTall = inneholderTall,
+                inneholderEpost = inneholderEpost,
+                kiFlagget = vurdering.personvernflagget,
+            )
+        }
     }
+}

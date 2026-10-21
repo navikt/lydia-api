@@ -1,0 +1,150 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/openai/deployments/test-deployment/chat/completions",
+        "bodyPatterns": [{ "contains": "Ola har depresjon" }]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "message": {
+                "role": "assistant",
+                "content": "{\"identifiserbarEnkeltperson\":true,\"helseopplysningOmEnkeltperson\":true,\"personvernflagget\":true,\"begrunnelse\":\"Teksten knytter en helsetilstand til en gjenkjennelig person.\"}",
+                "refusal": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/openai/deployments/test-deployment/chat/completions",
+        "bodyPatterns": [{ "contains": "KI_INNHOLDSFILTER" }]
+      },
+      "response": {
+        "status": 400,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "error": {
+            "code": "content_filter",
+            "message": "The response was filtered due to the prompt triggering Azure OpenAI's content management policy.",
+            "status": 400,
+            "innererror": {
+              "code": "ResponsibleAIPolicyViolation",
+              "content_filter_result": {
+                "self_harm": { "filtered": true, "severity": "medium" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/openai/deployments/test-deployment/chat/completions",
+        "bodyPatterns": [{ "contains": "KI_FEIL_429" }]
+      },
+      "response": {
+        "status": 429,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "error": { "code": "429", "message": "Rate limit exceeded" } }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/openai/deployments/test-deployment/chat/completions",
+        "bodyPatterns": [{ "contains": "KI_FEIL_500" }]
+      },
+      "response": {
+        "status": 500,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "error": { "code": "InternalServerError", "message": "Intern feil" } }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/openai/deployments/test-deployment/chat/completions",
+        "bodyPatterns": [{ "contains": "KI_UFULLSTENDIG" }]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "choices": [
+            {
+              "finish_reason": "length",
+              "message": { "role": "assistant", "content": "{\"identifiserbar", "refusal": null }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "POST",
+        "urlPath": "/openai/deployments/test-deployment/chat/completions",
+        "bodyPatterns": [{ "contains": "KI_AVSLAG" }]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "message": { "role": "assistant", "content": null, "refusal": "Jeg kan ikke hjelpe med dette." }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "priority": 10,
+      "request": {
+        "method": "POST",
+        "urlPath": "/openai/deployments/test-deployment/chat/completions",
+        "queryParameters": { "api-version": { "matches": ".+" } },
+        "headers": { "api-key": { "equalTo": "test-api-key" } },
+        "bodyPatterns": [
+          { "matchesJsonPath": "$.messages[?(@.role == 'system')]" },
+          { "matchesJsonPath": "$.messages[?(@.role == 'user')]" },
+          { "matchesJsonPath": "$.response_format[?(@.type == 'json_schema')]" },
+          { "matchesJsonPath": "$.response_format.json_schema[?(@.strict == true)]" }
+        ]
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": {
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "message": {
+                "role": "assistant",
+                "content": "{\"identifiserbarEnkeltperson\":false,\"helseopplysningOmEnkeltperson\":false,\"personvernflagget\":false,\"begrunnelse\":\"Teksten omtaler ingen enkeltperson.\"}",
+                "refusal": null
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
