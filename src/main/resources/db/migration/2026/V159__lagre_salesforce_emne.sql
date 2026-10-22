@@ -1,2 +1,2 @@
 ALTER TABLE salesforce_aktiviteter
-ADD COLUMN emne TEXT;
+ADD COLUMN emne VARCHAR;
