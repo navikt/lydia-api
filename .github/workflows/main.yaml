@@ -70,7 +70,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/les-sf-emne'
+    if: github.ref == 'refs/heads/lag-virksomhet-tilstand-enum-type'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
