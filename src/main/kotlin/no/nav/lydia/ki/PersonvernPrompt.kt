@@ -36,11 +36,12 @@ object PersonvernPrompt {
         Flagget er et varsel for videre vurdering, ikke en juridisk konklusjon om at et personvernbrudd har skjedd.
     """
 
+    //TODO: bruke samme dato konvensjon som resten av koden
     val endretTidspunkt: ZonedDateTime =
         ZonedDateTime.of(LocalDateTime.parse(TIDSSTEMPEL_UTEN_SONE), ZoneId.of("Europe/Oslo"))
 
     private fun normalisertPrompt() = PROMPT.trimIndent().trim()
-
+    
     private fun sha256Hex6(input: String): String =
         MessageDigest
             .getInstance("SHA-256")

@@ -21,6 +21,7 @@ fun Route.personopplysningssjekk(
         val personopplysningssjekkDto = call.receive<PersonopplysningssjekkDto>()
 
         // somSaksbehandler tar en ikke-suspend blokk, så tilgangssjekk og KI-kall kjøres i either { }
+        //TODO: lurer på hvilken tilgangsgruppe som skal bruke dette
         either {
             call.navAnsattMedSaksbehandlerRolle(adGrupper).bind()
             personopplysningssjekk.sjekk(personopplysningssjekkDto.tekst).bind()

@@ -49,6 +49,7 @@ class PersonopplysningssjekkApiTest {
         )
     }
 
+    //kall mot api, men så går azure kallet til wiremock
     @Test
     fun `skal flagge tekst når KI finner personopplysninger som regex ikke fanger`() {
         val respons = sjekk("Ola har depresjon som fører til sykefravær").tilSingelRespons<PersonopplysningssjekkResultatDto>()

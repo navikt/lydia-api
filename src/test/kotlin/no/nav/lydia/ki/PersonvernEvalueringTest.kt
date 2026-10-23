@@ -19,9 +19,10 @@ import kotlin.test.Test
  */
 class PersonvernEvalueringTest {
     companion object {
-        private const val PAUSE_MELLOM_KALL_MS = 2_000L
-        private const val PAUSE_VED_429_MS = 5_000L
-        private const val MAKS_FORSØK = 3
+        private const val PAUSE_MELLOM_KALL_MS = 2_000L //prøver og unngå azure 429 rate limit
+        private const val PAUSE_VED_429_MS = 5_000L //venter lenger om vi faktisk får 429
+        private const val MAKS_FORSØK = 3 //gi opp etter 3 forsøk
+        //TODO:kanskje egen mappe for resultatene?
         private const val RAPPORTFIL = "build/personvernEvalueringResultater.txt"
 
         // Pair(forventet personvernflagget, tekst)
@@ -68,6 +69,7 @@ class PersonvernEvalueringTest {
         val feil: Feil?,
     )
 
+    //TODO: finne ut hvordan de håndterer secrets offline for manuell testing
     @Ignore("Testen skal kun kjøres manuelt ved behov")
     @Test
     fun `evaluer personvernprompten mot ekte modell`() {

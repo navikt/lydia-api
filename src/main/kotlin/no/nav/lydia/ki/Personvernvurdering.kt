@@ -41,6 +41,7 @@ internal val personvernSchema: JsonObject =
             """.trimIndent(),
         ).jsonObject
 
+//TODO: burde det være norske navn for dette fra azure docs, med f.eks. bruk av @SerialName
 @Serializable
 internal data class PromptMelding(
     val role: String,
