@@ -41,10 +41,8 @@ class AngreVurderVirksomhetSideEffect(
                 val alleSaker = hentAlleSakerDtoForVirksomhet(
                     orgnummer = orgnummer,
                 )
-                    .sortedByDescending { it.opprettetTidspunkt }
-                val nestSisteSakDto = if (alleSaker.size >= 2) alleSaker[alleSaker.size - 2] else null
 
-                if (nestSisteSakDto != null) {
+                if (alleSaker.size > 1) {
                     oppdaterVirksomhetTilstand(
                         orgnr = orgnummer,
                         tilstand = VirksomhetKlarTilVurdering.tilVirksomhetIATilstand(),

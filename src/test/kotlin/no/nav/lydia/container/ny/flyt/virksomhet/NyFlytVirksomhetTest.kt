@@ -38,6 +38,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
@@ -153,6 +154,19 @@ class NyFlytVirksomhetTest {
         virksomhetsTilstand.nesteTilstand.planlagtHendelse shouldBe "VurderVirksomhet"
         virksomhetsTilstand.nesteTilstand.nyTilstand shouldBe VirksomhetIATilstand.VirksomhetVurderes
         virksomhetsTilstand.nesteTilstand.planlagtDato shouldBe LocalDate.now().plusDays(20).toKotlinLocalDate()
+    }
+
+    @Test
+    fun `angre vurdering på en virksomhet med tidligere sak skal sette virksomheten til tilstand klar til vurdering`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val sak1 = vurderVirksomhet(virksomhet = virksomhet)
+        sak1.avsluttVurdering()
+
+        val sak2 = vurderVirksomhet(virksomhet = virksomhet)
+        sak2.angreVurdering()
+
+        val virksomhetstilstand = hentVirksomhetTilstand(orgnr = virksomhet.orgnr)
+        virksomhetstilstand.tilstand shouldBe VirksomhetIATilstand.VirksomhetKlarTilVurdering
     }
 
     @Test
