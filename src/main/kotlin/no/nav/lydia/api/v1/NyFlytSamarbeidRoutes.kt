@@ -229,7 +229,7 @@ fun Route.nyFlytSamarbeid(
         }
     }
 
-    get("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}") {
+    get("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/salesforce-aktiviteter") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val samarbeidId = call.samarbeidId ?: return@get call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         call.somSaksbehandler(adGrupper = adGrupper) {
