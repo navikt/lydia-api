@@ -9,12 +9,14 @@ class WiremockContainerHelper {
     private val salesforceMock: WireMockServer
     private val naringMock: WireMockServer
     private val journalpostMock: WireMockServer
+    private val azureOpenAiMock: WireMockServer
 
     init {
         azureMock = lagMockServer("azure")
         salesforceMock = lagMockServer("salesforce")
         naringMock = lagMockServer("naring")
         journalpostMock = lagMockServer("journalpost")
+        azureOpenAiMock = lagMockServer("azure-openai")
     }
 
     private fun lagMockServer(service: String) =
@@ -39,5 +41,8 @@ class WiremockContainerHelper {
             "SALESFORCE_SECURITY_TOKEN" to "securityToken",
             "JOURNALPOST_V1_URL" to "http://host.testcontainers.internal:${journalpostMock.port()}/rest/journalpostapi/v1/journalpost",
             "JOURNALPOST_SCOPE" to "api://dev-fss.teamdokumenthandtering.dokarkiv/.default",
+            "AZURE_OPENAI_ENDPOINT" to "http://host.testcontainers.internal:${azureOpenAiMock.port()}",
+            "AZURE_OPENAI_API_KEY" to "test-api-key",
+            "AZURE_OPENAI_DEPLOYMENT" to "test-deployment",
         )
 }

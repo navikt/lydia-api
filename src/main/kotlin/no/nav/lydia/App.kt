@@ -40,6 +40,7 @@ import no.nav.lydia.api.v1.nyFlytSamarbeid
 import no.nav.lydia.api.v1.nyFlytSamarbeidsperiode
 import no.nav.lydia.api.v1.nyFlytSamarbeidsplan
 import no.nav.lydia.api.v1.nyFlytVirksomhet
+import no.nav.lydia.api.v1.personopplysningssjekk
 import no.nav.lydia.api.virksomhet
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
@@ -69,6 +70,8 @@ import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetServ
 import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.ki.AzureOpenAiKlient
+import no.nav.lydia.personopplysninger.Personopplysningssjekk
 import no.nav.lydia.kartlegging.FullførtBehovsvurderingProdusent
 import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryProdusent
@@ -693,6 +696,12 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 featureToggleEnvironment = featureToggleEnvironment,
                 azureService = azureService,
+            )
+            personopplysningssjekk(
+                adGrupper = naisEnv.security.adGrupper,
+                personopplysningssjekk = Personopplysningssjekk(
+                    azureOpenAiKlient = AzureOpenAiKlient(config = naisEnv.integrasjoner.azureOpenAi),
+                ),
             )
         }
     }

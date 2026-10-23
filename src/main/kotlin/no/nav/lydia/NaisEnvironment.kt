@@ -146,12 +146,21 @@ class Salesforce(
     val securityToken: String = getEnvVar("SALESFORCE_SECURITY_TOKEN"),
 )
 
+class AzureOpenAi(
+    val endpoint: String = getEnvVar("AZURE_OPENAI_ENDPOINT"),
+    val apiKey: String = getEnvVar("AZURE_OPENAI_API_KEY"),
+    val deployment: String = getEnvVar("AZURE_OPENAI_DEPLOYMENT"),
+) {
+    override fun toString() = "AzureOpenAi(endpoint='$endpoint', deployment='$deployment')"
+}
+
 class Integrasjoner(
     val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL"),
     val salesforce: Salesforce = Salesforce(),
     val piaPdfgenUrl: String = getEnvVar("PIA_PDFGEN_URL"),
     val journalpostUrl: String = getEnvVar("JOURNALPOST_V1_URL"),
     val journalpostScope: String = getEnvVar("JOURNALPOST_SCOPE"),
+    val azureOpenAi: AzureOpenAi = AzureOpenAi(),
 )
 
 enum class Topic(
