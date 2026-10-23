@@ -298,6 +298,7 @@ class IASakProsessTest {
             LastModifiedDate__c = ZonedDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
             EventType__c = "Created",
             TaskEvent__c = "Møte",
+            Subject__c = "Emne",
         )
         kafkaContainerHelper.sendOgVentTilKonsumert(
             nøkkel = salesforceAktivitet.Id__c,

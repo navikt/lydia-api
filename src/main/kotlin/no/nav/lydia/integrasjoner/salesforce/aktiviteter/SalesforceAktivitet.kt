@@ -16,6 +16,7 @@ data class SalesforceAktivitet(
     val møteStart: ZonedDateTime?,
     val møteSlutt: ZonedDateTime?,
     val status: AktivitetsStatus?,
+    val emne: String?,
 ) {
     companion object {
         enum class AktivitetsType {
@@ -47,4 +48,5 @@ internal fun SalesforceAktivitetDto.tilDomene() =
         status = Status__c?.let {
             if (it.isBlank()) null else SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)
         },
+        emne = Subject__c,
     )
