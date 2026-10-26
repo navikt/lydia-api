@@ -1,10 +1,12 @@
 package no.nav.lydia.api.v1
 
+import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
@@ -17,15 +19,18 @@ import no.nav.lydia.api.sendFeil
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringService
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
 import no.nav.lydia.samarbeid.EndringISamarbeidDto
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.IASamarbeidFeil
 import no.nav.lydia.samarbeid.IASamarbeidService
+import no.nav.lydia.samarbeid.tilRespons
 import no.nav.lydia.samarbeidsperiode.IASakError
 import no.nav.lydia.samarbeidsperiode.IASakService
 import no.nav.lydia.samarbeidsplan.PlanService
 import no.nav.lydia.samarbeidsplan.SamarbeidDto
+import no.nav.lydia.tilgangskontroll.somSaksbehandler
 import no.nav.lydia.tilgangskontroll.somSaksbehandlerMedNavenhet
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.tilstandsmaskin.NyFlytService
@@ -222,5 +227,18 @@ fun Route.nyFlytSamarbeid(
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
+    }
+
+    get("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/salesforce-aktiviteter") {
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val samarbeidId = call.samarbeidId ?: return@get call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        call.somSaksbehandler(adGrupper = adGrupper) {
+            iASamarbeidService.hentSalesforceAktiviteter(
+                saksnummer = saksnummer,
+                samarbeidId = samarbeidId,
+            ).right()
+        }
+            .map { call.respond(it.map(SalesforceAktivitet::tilRespons)) }
+            .mapLeft { call.sendFeil(it) }
     }
 }
