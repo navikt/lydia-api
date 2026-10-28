@@ -24,6 +24,9 @@ hs_err_pid*
 # Ignore Gradle build output directory
 build
 
+# Ignore gradlew.bat (Windows)
+/gradlew.bat
+
 # Ignore Intellij project-specific directory
 /.idea/
 
