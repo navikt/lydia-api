@@ -49,7 +49,7 @@ class AzureOpenAiKlient(
         )
     }
 
-    //TODO: hva er det som logges?
+    //TODO: hva er det som logges??
     private val log = LoggerFactory.getLogger(this::class.java)
 
     private val json = Json {
