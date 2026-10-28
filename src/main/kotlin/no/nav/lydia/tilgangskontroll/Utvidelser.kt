@@ -4,12 +4,19 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.raise.either
+import arrow.core.raise.ensure
+import arrow.core.raise.ensureNotNull
 import arrow.core.right
 import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ADGrupper
+import no.nav.lydia.api.orgnummer
+import no.nav.lydia.api.saksnummer
 import no.nav.lydia.felles.Feil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.samarbeidsperiode.IASakError
+import no.nav.lydia.samarbeidsperiode.IASakService
+import no.nav.lydia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.Lesebruker
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.Lesebruker.Companion.lesebruker
@@ -51,6 +58,27 @@ fun <T> ApplicationCall.somHøyestTilgang(
         erLesebruker.flatMap { block(it) }
     }
 }
+
+fun ApplicationCall.eierEllerFølgerAvSak(
+    adGrupper: ADGrupper,
+    iaSakService: IASakService,
+    iaTeamService: IATeamService,
+): Either<Feil, NavAnsattMedSaksbehandlerRolle> =
+    either {
+        val saksbehandler = navAnsattMedSaksbehandlerRolle(adGrupper).bind()
+        val orgnummer = ensureNotNull(orgnummer) { IASakError.`ugyldig orgnummer` }
+        val saksnummer = ensureNotNull(saksnummer) { IASakError.`ugyldig saksnummer` }
+        val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).bind()
+        ensure(iaSak.orgnr == orgnummer) { IASakError.`ugyldig orgnummer` }
+        ensure(
+            iaTeamService.erEierEllerFølgerAvSak(
+                saksnummer = iaSak.saksnummer,
+                eierAvSak = iaSak.eidAv,
+                saksbehandler = saksbehandler,
+            ),
+        ) { IASakError.`er ikke følger eller eier av sak` }
+        saksbehandler
+    }
 
 suspend fun <T> ApplicationCall.somSaksbehandlerMedNavenhet(
     adGrupper: ADGrupper,

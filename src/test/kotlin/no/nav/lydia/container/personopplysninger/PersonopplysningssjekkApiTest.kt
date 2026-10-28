@@ -4,23 +4,40 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotContain
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
-import no.nav.lydia.api.v1.PERSONOPPLYSNINGSSJEKK_PATH
+import no.nav.lydia.api.v1.NY_FLYT_API_PATH
+import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.responseString
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.personopplysninger.MAKS_ANTALL_TEGN_I_PERSONOPPLYSNINGSSJEKK
 import no.nav.lydia.personopplysninger.PersonopplysningssjekkDto
 import no.nav.lydia.personopplysninger.PersonopplysningssjekkResultatDto
+import no.nav.lydia.samarbeidsperiode.IASakDto
 import kotlin.test.Test
 
 class PersonopplysningssjekkApiTest {
+    companion object {
+        private val sakEidAvSaksbehandler1: IASakDto by lazy {
+            aktivSamarbeidsperiode(
+                token = authContainerHelper.saksbehandler1.token,
+                følgerToken = null,
+            )
+        }
+    }
+
     private fun sjekk(
         tekst: String,
         token: String = authContainerHelper.saksbehandler1.token,
-    ) = applikasjon.performPost(PERSONOPPLYSNINGSSJEKK_PATH)
+        orgnummer: String = sakEidAvSaksbehandler1.orgnr,
+        saksnummer: String = sakEidAvSaksbehandler1.saksnummer,
+    ) = applikasjon.performPost(
+        "$NY_FLYT_API_PATH/virksomhet/$orgnummer/samarbeidsperiode/$saksnummer/personopplysningssjekk",
+    )
         .authentication().bearer(token)
         .jsonBody(Json.encodeToString(PersonopplysningssjekkDto(tekst = tekst)))
 
@@ -131,9 +148,42 @@ class PersonopplysningssjekkApiTest {
     }
 
     @Test
-    fun `superbruker skal kunne sjekke tekst`() {
+    fun `følger av sak skal kunne sjekke tekst`() {
+        val sak = aktivSamarbeidsperiode(
+            token = authContainerHelper.superbruker1.token,
+            følgerToken = null,
+        ).leggTilFolger(authContainerHelper.saksbehandler2.token)
+
+        sjekk(
+            tekst = "Mål",
+            token = authContainerHelper.saksbehandler2.token,
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        ).responseString().statuskode() shouldBe HttpStatusCode.OK.value
+    }
+
+    @Test
+    fun `saksbehandler som verken er eier eller følger av sak skal ikke kunne sjekke tekst`() {
+        sjekk("Mål", token = authContainerHelper.saksbehandler2.token).responseString()
+            .statuskode() shouldBe HttpStatusCode.Forbidden.value
+    }
+
+    @Test
+    fun `superbruker som verken er eier eller følger av sak skal ikke kunne sjekke tekst`() {
         sjekk("Mål", token = authContainerHelper.superbruker1.token).responseString()
-            .statuskode() shouldBe HttpStatusCode.OK.value
+            .statuskode() shouldBe HttpStatusCode.Forbidden.value
+    }
+
+    @Test
+    fun `skal avvise når orgnummer ikke hører til saken`() {
+        sjekk("Mål", orgnummer = lastInnNyVirksomhet().orgnr).responseString()
+            .statuskode() shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `skal avvise når saken ikke finnes`() {
+        sjekk("Mål", saksnummer = "finnes-ikke").responseString()
+            .statuskode() shouldBe HttpStatusCode.BadRequest.value
     }
 
     @Test

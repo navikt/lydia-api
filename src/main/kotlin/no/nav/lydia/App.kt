@@ -699,6 +699,8 @@ private fun Application.lydiaRestApi(
             )
             personopplysningssjekk(
                 adGrupper = naisEnv.security.adGrupper,
+                iaSakService = iaSakService,
+                iaTeamService = iaTeamService,
                 personopplysningssjekk = Personopplysningssjekk(
                     azureOpenAiKlient = AzureOpenAiKlient(config = naisEnv.integrasjoner.azureOpenAi),
                 ),
