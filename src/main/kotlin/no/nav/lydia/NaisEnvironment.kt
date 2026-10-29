@@ -160,7 +160,7 @@ class Integrasjoner(
     val piaPdfgenUrl: String = getEnvVar("PIA_PDFGEN_URL"),
     val journalpostUrl: String = getEnvVar("JOURNALPOST_V1_URL"),
     val journalpostScope: String = getEnvVar("JOURNALPOST_SCOPE"),
-    val azureOpenAi: AzureOpenAi = AzureOpenAi(),
+    val azureOpenAi: AzureOpenAi? = System.getenv("AZURE_OPENAI_ENDPOINT")?.let { AzureOpenAi() },
 )
 
 enum class Topic(

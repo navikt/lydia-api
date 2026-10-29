@@ -697,14 +697,16 @@ private fun Application.lydiaRestApi(
                 featureToggleEnvironment = featureToggleEnvironment,
                 azureService = azureService,
             )
-            personopplysningssjekk(
-                adGrupper = naisEnv.security.adGrupper,
-                iaSakService = iaSakService,
-                iaTeamService = iaTeamService,
-                personopplysningssjekk = Personopplysningssjekk(
-                    azureOpenAiKlient = AzureOpenAiKlient(config = naisEnv.integrasjoner.azureOpenAi),
-                ),
-            )
+            naisEnv.integrasjoner.azureOpenAi?.let { azureOpenAi ->
+                personopplysningssjekk(
+                    adGrupper = naisEnv.security.adGrupper,
+                    iaSakService = iaSakService,
+                    iaTeamService = iaTeamService,
+                    personopplysningssjekk = Personopplysningssjekk(
+                        azureOpenAiKlient = AzureOpenAiKlient(config = azureOpenAi),
+                    ),
+                )
+            }
         }
     }
 }
