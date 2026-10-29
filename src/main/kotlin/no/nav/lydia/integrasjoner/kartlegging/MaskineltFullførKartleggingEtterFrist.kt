@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.UUID
 
-class MaskineltFullførKartleggingEtter24t(
+class MaskineltFullførKartleggingEtterFrist(
     private val nyFlytService: NyFlytService,
     private val iaSakService: IASakService,
     private val iASamarbeidService: IASamarbeidService,
@@ -54,7 +54,7 @@ class MaskineltFullførKartleggingEtter24t(
 
         val tilstandsmaskin = tilstandsmaskin(kartlegging.orgnummer)
         if (tilstandsmaskin.saksnummer != kartlegging.saksnummer) {
-            logger.warn("Kartleggingen med id {} tilhører ikke gjeldende sak. Stopper.", kartleggingId)
+            logger.warn("Kartleggingen med id '$kartleggingId' tilhører ikke gjeldende sak. Stopper.")
             return
         }
 

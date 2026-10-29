@@ -59,7 +59,7 @@ import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
-import no.nav.lydia.integrasjoner.kartlegging.MaskineltFullførKartleggingEtter24t
+import no.nav.lydia.integrasjoner.kartlegging.MaskineltFullførKartleggingEtterFrist
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.kvittering.KvitteringConsumer
@@ -314,7 +314,7 @@ fun startLydiaBackend() {
         tilstandVirksomhetRepository = tilstandVirksomhetRepository,
     )
 
-    val maskineltFullførKartleggingEtter24T = MaskineltFullførKartleggingEtter24t(
+    val maskineltFullførKartleggingEtterFrist = MaskineltFullførKartleggingEtterFrist(
         nyFlytService = nyFlytService,
         iaSakService = iaSakService,
         iASamarbeidService = samarbeidService,
@@ -359,7 +359,7 @@ fun startLydiaBackend() {
         virksomhetService = virksomhetService,
         iaSakService = iaSakService,
         tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
-        maskineltFullførKartleggingEtter24t = maskineltFullførKartleggingEtter24T
+        maskineltFullførKartleggingEtterFrist = maskineltFullførKartleggingEtterFrist
     )
 
     listOf(
@@ -482,7 +482,7 @@ private fun jobblytter(
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
-    maskineltFullførKartleggingEtter24t: MaskineltFullførKartleggingEtter24t
+    maskineltFullførKartleggingEtterFrist: MaskineltFullførKartleggingEtterFrist
 ) {
     Jobblytter.apply {
         create(
@@ -498,7 +498,7 @@ private fun jobblytter(
             virksomhetService = virksomhetService,
             iaSakService = iaSakService,
             tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
-            maskineltFullførKartleggingEtter24T = maskineltFullførKartleggingEtter24t,
+            maskineltFullførKartleggingEtterFrist = maskineltFullførKartleggingEtterFrist,
         )
         run()
     }
