@@ -2,6 +2,7 @@ package no.nav.lydia.integrasjoner.jobblytter
 
 import ia.felles.integrasjoner.jobbsender.Jobb
 import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
+import ia.felles.integrasjoner.jobbsender.Jobb.fullforKartleggingEtter24t
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidBigQueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
@@ -24,6 +25,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.integrasjoner.kartlegging.MaskineltFullførKartleggingEtter24t
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.prioritering.StatistikkViewOppdaterer
@@ -65,6 +67,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer
     private lateinit var virksomhetService: VirksomhetService
     private lateinit var iaSakService: IASakService
+    private lateinit var maskineltFullførKartleggingEtter24T: MaskineltFullførKartleggingEtter24t
     private val topic = Topic.JOBBLYTTER_TOPIC
 
     override val coroutineContext: CoroutineContext
@@ -87,6 +90,7 @@ object Jobblytter : CoroutineScope {
         tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
         virksomhetService: VirksomhetService,
         iaSakService: IASakService,
+        maskineltFullførKartleggingEtter24T: MaskineltFullførKartleggingEtter24t,
     ) {
         logger.info("Creating kafka consumer job for ${topic.navn}")
         job = Job()
@@ -108,6 +112,7 @@ object Jobblytter : CoroutineScope {
         this.tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer
         this.virksomhetService = virksomhetService
         this.iaSakService = iaSakService
+        this.maskineltFullførKartleggingEtter24T = maskineltFullførKartleggingEtter24T
 
         logger.info("Created kafka consumer job for ${topic.navn}")
     }
@@ -155,6 +160,15 @@ object Jobblytter : CoroutineScope {
                                                         iaSakService.avsluttSakForSlettetVirksomhet(virksomhet)
                                                     }
                                                 }
+                                            }
+                                        }
+
+                                        fullforKartleggingEtter24t -> {
+                                            if (jobInfo.parameter.isNullOrEmpty()) {
+                                                logger.warn("Forsøkte å starte jobb 'fullforKartleggingEtter24t' med null/empty parameter. Avslutter")
+                                            } else {
+                                                val kartleggingId = jobInfo.parameter
+                                                maskineltFullførKartleggingEtter24T.fullfør(parameter = kartleggingId)
                                             }
                                         }
 

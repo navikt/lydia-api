@@ -29,6 +29,7 @@ build
 
 # Ignore Intellij project-specific directory
 /.idea/
+/out/
 
 # DS_Store for mac
 .DS_Store

@@ -59,6 +59,7 @@ import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
+import no.nav.lydia.integrasjoner.kartlegging.MaskineltFullførKartleggingEtter24t
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.kvittering.KvitteringConsumer
@@ -313,6 +314,15 @@ fun startLydiaBackend() {
         tilstandVirksomhetRepository = tilstandVirksomhetRepository,
     )
 
+    val maskineltFullførKartleggingEtter24T = MaskineltFullførKartleggingEtter24t(
+        nyFlytService = nyFlytService,
+        iaSakService = iaSakService,
+        iASamarbeidService = samarbeidService,
+        dokumentPubliseringService = dokumentPubliseringService,
+        planService = planService,
+        tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+    )
+
     jobblytter(
         naisEnv = naisEnv,
         iaSakEksporterer = IASakEksporterer(
@@ -349,6 +359,7 @@ fun startLydiaBackend() {
         virksomhetService = virksomhetService,
         iaSakService = iaSakService,
         tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
+        maskineltFullførKartleggingEtter24t = maskineltFullførKartleggingEtter24T
     )
 
     listOf(
@@ -471,6 +482,7 @@ private fun jobblytter(
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
+    maskineltFullførKartleggingEtter24t: MaskineltFullførKartleggingEtter24t
 ) {
     Jobblytter.apply {
         create(
@@ -486,6 +498,7 @@ private fun jobblytter(
             virksomhetService = virksomhetService,
             iaSakService = iaSakService,
             tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
+            maskineltFullførKartleggingEtter24T = maskineltFullførKartleggingEtter24t,
         )
         run()
     }

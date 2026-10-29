@@ -1,5 +1,5 @@
 val flywayVersion = "13.10.0"
-val iaFellesVersion = "2.0.6"
+val iaFellesVersion = "3.1.2"
 val ktorVersion = "3.6.0"
 val kotestVerstion = "6.2.5"
 val testcontainersVersion = "2.0.5"
