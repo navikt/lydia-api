@@ -60,6 +60,7 @@ import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
+import no.nav.lydia.integrasjoner.kartlegging.MaskineltFullførKartleggingEtterFrist
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.kvittering.KvitteringConsumer
@@ -316,6 +317,15 @@ fun startLydiaBackend() {
         tilstandVirksomhetRepository = tilstandVirksomhetRepository,
     )
 
+    val maskineltFullførKartleggingEtterFrist = MaskineltFullførKartleggingEtterFrist(
+        nyFlytService = nyFlytService,
+        iaSakService = iaSakService,
+        iASamarbeidService = samarbeidService,
+        dokumentPubliseringService = dokumentPubliseringService,
+        planService = planService,
+        tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+    )
+
     jobblytter(
         naisEnv = naisEnv,
         iaSakEksporterer = IASakEksporterer(
@@ -352,6 +362,7 @@ fun startLydiaBackend() {
         virksomhetService = virksomhetService,
         iaSakService = iaSakService,
         tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
+        maskineltFullførKartleggingEtterFrist = maskineltFullførKartleggingEtterFrist
     )
 
     listOf(
@@ -474,6 +485,7 @@ private fun jobblytter(
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
+    maskineltFullførKartleggingEtterFrist: MaskineltFullførKartleggingEtterFrist
 ) {
     Jobblytter.apply {
         create(
@@ -489,6 +501,7 @@ private fun jobblytter(
             virksomhetService = virksomhetService,
             iaSakService = iaSakService,
             tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
+            maskineltFullførKartleggingEtterFrist = maskineltFullførKartleggingEtterFrist,
         )
         run()
     }
