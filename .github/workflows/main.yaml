@@ -70,7 +70,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/fullforing-kartlegging-etter-24t'
+    if: github.ref == 'refs/heads/ny-samarbeidsplan'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

@@ -15,3 +15,4 @@ salesforceApiHost: navdialog--preprod.sandbox.my.salesforce.com
 journalpostHost: dokarkiv-q2.dev-fss-pub.nais.io
 journalpostApi: https://dokarkiv-q2.dev-fss-pub.nais.io/rest/journalpostapi/v1/journalpost
 journalpostOboScope: api://dev-fss.teamdokumenthandtering.dokarkiv/.default
+azureOpenAiHost: arbeidsmarked-dev.openai.azure.com

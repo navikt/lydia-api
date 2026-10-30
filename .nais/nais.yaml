@@ -48,6 +48,9 @@ spec:
         - host: data.ssb.no
         - host: {{salesforceTokenHost}}
         - host: {{salesforceApiHost}}
+      {{#if azureOpenAiHost}}
+        - host: {{azureOpenAiHost}}
+      {{/if}}
     inbound:
       rules:
         - application: lydia-radgiver-frontend
@@ -82,6 +85,9 @@ spec:
     pool: {{kafkaPool}}
   envFrom:
     - secret: fia-salesforce
+  {{#if azureOpenAiHost}}
+    - secret: pia-azure-openai
+  {{/if}}
   env:
     - name: CONSUMER_LOOP_DELAY
       value: "1000"
