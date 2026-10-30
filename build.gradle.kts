@@ -1,7 +1,7 @@
-val flywayVersion = "13.10.0"
+val flywayVersion = "13.11.1"
 val iaFellesVersion = "3.1.2"
 val ktorVersion = "3.6.0"
-val kotestVerstion = "6.2.5"
+val kotestVerstion = "6.2.6"
 val testcontainersVersion = "2.0.5"
 val logbackVersion = "1.6.5"
 val logstashLogbackEncoderVersion = "9.0"
@@ -50,7 +50,7 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.17.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.17.2")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.14")
@@ -62,8 +62,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.14.0")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.12.0")
-    implementation("org.apache.kafka:kafka-clients:4.3.1") {
+    implementation("at.yawk.lz4:lz4-java:1.12.1")
+    implementation("org.apache.kafka:kafka-clients:4.4.0") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
     }
@@ -101,7 +101,7 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:6.0.5")
+    testImplementation("no.nav.security:mock-oauth2-server:6.1.2")
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
