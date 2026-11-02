@@ -1,6 +1,6 @@
-val flywayVersion = "13.11.1"
+val flywayVersion = "13.12.0"
 val iaFellesVersion = "3.1.2"
-val ktorVersion = "3.6.0"
+val ktorVersion = "3.6.1"
 val kotestVerstion = "6.2.6"
 val testcontainersVersion = "2.0.5"
 val logbackVersion = "1.6.6"
@@ -72,7 +72,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:2.2.3")
+    implementation("io.arrow-kt:arrow-core:2.3.0")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
@@ -101,20 +101,20 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:6.1.3")
+    testImplementation("no.nav.security:mock-oauth2-server:6.1.4")
 
     constraints {
         implementation("com.fasterxml.jackson.core:jackson-core") {
-            version { require("2.22.2") }
+            version { require("2.22.4") }
             because("versjoner < 2.21.1 har sårbarhet. inkludert i ktor-server-auth:3.4.0")
         }
         implementation("tools.jackson.core:jackson-core") {
-            version { require("3.2.2") }
+            version { require("3.2.4") }
             because("versjoner <= 3.1.0 har sårbarhet. inkludert i logstash-logback-encoder:9.0")
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.18.Final")
+                require("4.2.19.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
@@ -122,7 +122,7 @@ dependencies {
         }
         implementation("joda-time:joda-time") {
             version {
-                require("2.14.3")
+                require("2.15.1")
             }
             because("kotliquery har sårbar versjon på v2.11.0")
         }
