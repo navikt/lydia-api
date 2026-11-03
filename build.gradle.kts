@@ -104,6 +104,14 @@ dependencies {
     testImplementation("no.nav.security:mock-oauth2-server:6.1.4")
 
     constraints {
+        implementation("org.xerial.snappy:snappy-java") {
+            version { require("1.1.10.12") }
+            because("versjoner < 1.1.10.9 har sårbarhet. Inkludert i org.apache.kafka:kafka-clients:4.4.0")
+        }
+        implementation("com.google.guava:guava") {
+            version { require("33.7.2-jre") }
+            because("versjoner < 33.7.2-jre har sårbarhet. Inkludert i ktor-server-auth-jwt:3.6.1 -> com.auth0:jwks-rsa:0.24.1")
+        }
         implementation("com.fasterxml.jackson.core:jackson-core") {
             version { require("2.22.4") }
             because("versjoner < 2.21.1 har sårbarhet. inkludert i ktor-server-auth:3.4.0")
