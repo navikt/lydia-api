@@ -198,6 +198,7 @@ class SalesforceAktivitetKonsumentTest {
         møteSlutt: String? = ZonedDateTime.now(atUTC).plusHours(1).format(utcFormat),
         oppgavePlanlagt: String? = ZonedDateTime.of(LocalDate.now().atStartOfDay(), ZoneId.of("Europe/Oslo")).withZoneSameInstant(atUTC).format(utcFormat),
         oppgaveFullført: String? = null,
+        emne: String? = null,
     ) = SalesforceAktivitetDto(
         Id__c = UUID.randomUUID().toString(),
         LastModifiedDate__c = sistEndretSalesforce,
@@ -214,5 +215,6 @@ class SalesforceAktivitetKonsumentTest {
         EndDateTime__c = møteSlutt,
         Status__c = "",
         AccountOrgNumber__c = orgnummer,
+        Subject__c = emne,
     )
 }
