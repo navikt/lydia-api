@@ -35,6 +35,7 @@ import no.nav.lydia.api.statusoversikt
 import no.nav.lydia.api.sykefraværsstatistikk
 import no.nav.lydia.api.v1.featureToggleRoutes
 import no.nav.lydia.api.v1.historikkRoutes
+import no.nav.lydia.api.v1.mål
 import no.nav.lydia.api.v1.nyFlytKartlegging
 import no.nav.lydia.api.v1.nyFlytSamarbeid
 import no.nav.lydia.api.v1.nyFlytSamarbeidsperiode
@@ -81,6 +82,7 @@ import no.nav.lydia.kartlegging.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.kartlegging.SpørreundersøkelseProdusent
 import no.nav.lydia.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.kartlegging.SpørreundersøkelseService
+import no.nav.lydia.mål.MålService
 import no.nav.lydia.prioritering.StatistikkViewOppdaterer
 import no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringRepository
 import no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService
@@ -718,6 +720,16 @@ private fun Application.lydiaRestApi(
                     personopplysningssjekk = Personopplysningssjekk(
                         azureOpenAiKlient = AzureOpenAiKlient(config = azureOpenAi),
                     ),
+                )
+            }
+            if (naisEnv.miljø != NaisEnvironment.Companion.Environment.`PROD-GCP`) {
+                mål(
+                    målService = MålService(dataSource = dataSource),
+                    iaSakService = iaSakService,
+                    iaSamarbeidService = samarbeidService,
+                    iaTeamService = iaTeamService,
+                    adGrupper = naisEnv.security.adGrupper,
+                    auditLog = auditLog,
                 )
             }
         }
