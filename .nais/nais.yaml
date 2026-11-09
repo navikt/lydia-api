@@ -76,11 +76,13 @@ spec:
       tier: {{dbTier}}
       databases:
         - name: "lydia-api-db"
+      {{#if db_flags}}
       flags:
       {{#each db_flags}}
          - name: {{@key}}
            value: "{{this}}"
       {{/each}}
+      {{/if}}
   kafka:
     pool: {{kafkaPool}}
   envFrom:
