@@ -5,7 +5,7 @@ val kotestVerstion = "6.2.6"
 val testcontainersVersion = "2.0.5"
 val logbackVersion = "1.6.6"
 val logstashLogbackEncoderVersion = "9.0"
-val opentelemetryLogbackMdcVersion = "2.33.0-alpha"
+val opentelemetryLogbackMdcVersion = "2.33.1-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -72,7 +72,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:2.3.0")
+    implementation("io.arrow-kt:arrow-core:2.3.0.1")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
