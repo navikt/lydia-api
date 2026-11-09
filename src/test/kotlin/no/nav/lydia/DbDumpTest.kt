@@ -1,5 +1,6 @@
 package no.nav.lydia
 
+import com.github.guepardoapps.kulid.ULID
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
@@ -24,6 +25,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
@@ -56,6 +58,8 @@ class DbDumpTest {
         opprettVirksomhetMedFlereSaker()
 
         opprettvirksomhetMedPublisertPlan()
+
+        opprettVirksomhetMedSalesforceAktiviteter()
 
         val jdbcUrl = postgresContainerHelper.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
@@ -287,6 +291,19 @@ class DbDumpTest {
             samarbeidId = samarbeidsperiode.hentAlleSamarbeid().first().id,
         )
         samarbeidsperiode.hentPlan(token = token).publiseringStatus shouldBe DokumentPubliseringDto.Status.PUBLISERT
+    }
+
+    private fun opprettVirksomhetMedSalesforceAktiviteter() {
+        val token = authContainerHelper.saksbehandler1.token
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "VIRKSOMHET MED SALESFORCE-AKTIVITETER"))
+        val samarbeidsperiode = vurderVirksomhet(virksomhet).leggTilFolger(token = token)
+        val samarbeid = samarbeidsperiode.opprettSamarbeid(token = token)
+        postgresContainerHelper.performUpdate(
+            """
+            INSERT INTO salesforce_aktiviteter (id, type, saksnummer, samarbeid, tema, undertema, oppgave_planlagt, oppgave_fullfort, mote_start, mote_slutt, sist_endret, status, slettet, plan_id, sist_endret_salesforce, emne) 
+            VALUES ('${ULID.random()}', 'Møte', '${samarbeidsperiode.saksnummer}', ${samarbeid.id}, 'Partssamarbeid', 'Utvikle partssamarbeidet', '2026-11-02 01:00:00.000000', null, '2026-11-02 20:00:00.000000', '2026-11-02 21:00:00.000000', '2026-11-02 19:05:16.173185', null, false, '${ULID.random()}', '2026-11-02 19:05:15.000000', 'Møte for å få tydeligere rolleavklaringer')
+            """.trimIndent(),
+        )
     }
 
     @Test
