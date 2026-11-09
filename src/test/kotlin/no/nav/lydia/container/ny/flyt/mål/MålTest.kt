@@ -2,6 +2,7 @@ package no.nav.lydia.container.ny.flyt.mål
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
@@ -57,6 +58,19 @@ class MålTest {
         .authentication().bearer(token)
         .tilSingelRespons<MålDto>()
 
+    private fun List<SykefraværsmålDto>.utenId() = map { it.copy(id = null) }
+
+    private data class Sporing(
+        val opprettet: String,
+        val sistEndret: String,
+        val endretAv: String,
+    )
+
+    private fun sporing(sykefraværsmålId: Int?) =
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "SELECT concat_ws('|', opprettet, sist_endret, endret_av) FROM samarbeid_sykefravaersmaal WHERE id = $sykefraværsmålId",
+        ).split("|").let { Sporing(opprettet = it[0], sistEndret = it[1], endretAv = it[2]) }
+
     private fun antallLagredeMål(samarbeidId: Int): Int =
         postgresContainerHelper.hentEnkelKolonne<Long>(
             """
@@ -79,7 +93,7 @@ class MålTest {
 
         lagret.statuskode() shouldBe HttpStatusCode.OK.value
         val mål = lagret.third.get()
-        mål.sykefraværsmål shouldBe listOf(sykefraværsmål())
+        mål.sykefraværsmål.utenId() shouldBe listOf(sykefraværsmål())
         mål.samarbeidsmål shouldHaveSize 1
         mål.samarbeidsmål.first().mål shouldBe "Bedre dialog mellom leder og ansatte"
         mål.samarbeidsmål.first().lagretMedKiAdvarsel shouldBe true
@@ -101,17 +115,93 @@ class MålTest {
             ),
         ).third.get()
         val målA = første.samarbeidsmål.first { it.mål == "Mål A" }
+        val korttid = første.sykefraværsmål.first { it.type == Sykefraværsmåltype.KORTTIDSFRAVÆR }
 
         val andre = sak.lagreMål(
             MålDto(
-                sykefraværsmål = listOf(sykefraværsmål(type = Sykefraværsmåltype.KORTTIDSFRAVÆR, mål = 2.0)),
+                sykefraværsmål = listOf(korttid.copy(mål = 2.0)),
                 samarbeidsmål = listOf(målA.copy(mål = "Mål A endret"), SamarbeidsmålDto(mål = "Mål C")),
             ),
         ).third.get()
 
-        andre.sykefraværsmål shouldBe listOf(sykefraværsmål(type = Sykefraværsmåltype.KORTTIDSFRAVÆR, mål = 2.0))
+        andre.sykefraværsmål shouldBe listOf(korttid.copy(mål = 2.0))
         andre.samarbeidsmål.map { it.mål } shouldBe listOf("Mål A endret", "Mål C")
         andre.samarbeidsmål.first().id shouldBe målA.id
+    }
+
+    @Test
+    fun `sykefraværsmål beholder rekkefølgen de ble lagret i`() {
+        val sak = aktivSamarbeidsperiode()
+        val rekkefølge = listOf(
+            Sykefraværsmåltype.TAPTE_DAGSVERK,
+            Sykefraværsmåltype.EGENMELDT_FRAVÆR,
+            Sykefraværsmåltype.LEGEMELDT_FRAVÆR,
+            Sykefraværsmåltype.KORTTIDSFRAVÆR,
+        )
+        val lagret = sak.lagreMål(MålDto(rekkefølge.map { sykefraværsmål(type = it) }, emptyList())).third.get().sykefraværsmål
+
+        sak.hentMål().third.get().sykefraværsmål.map { it.type } shouldBe rekkefølge
+
+        val endret = listOf(lagret[0].copy(mål = 1.0)) + lagret.drop(2) + sykefraværsmål(type = Sykefraværsmåltype.EGENMELDT_FRAVÆR)
+        sak.lagreMål(MålDto(endret, emptyList()))
+
+        sak.hentMål().third.get().sykefraværsmål.map { it.type } shouldBe listOf(
+            Sykefraværsmåltype.TAPTE_DAGSVERK,
+            Sykefraværsmåltype.LEGEMELDT_FRAVÆR,
+            Sykefraværsmåltype.KORTTIDSFRAVÆR,
+            Sykefraværsmåltype.EGENMELDT_FRAVÆR,
+        )
+    }
+
+    @Test
+    fun `sykefraværsmål beholder opprettet og sporer hvem som endret sist`() {
+        val sak = aktivSamarbeidsperiode()
+        val lagret = sak.lagreMål(
+            MålDto(
+                listOf(sykefraværsmål(type = Sykefraværsmåltype.LANGTIDSFRAVÆR), sykefraværsmål(type = Sykefraværsmåltype.KORTTIDSFRAVÆR)),
+                emptyList(),
+            ),
+        ).third.get().sykefraværsmål
+        val (uendret, endret) = lagret
+        val førUendret = sporing(uendret.id)
+        val førEndret = sporing(endret.id)
+
+        sak.lagreMål(
+            MålDto(listOf(uendret, endret.copy(mål = 1.0)), emptyList()),
+            token = authContainerHelper.superbruker1.token,
+        ).statuskode() shouldBe HttpStatusCode.OK.value
+
+        sporing(uendret.id) shouldBe førUendret
+        sporing(endret.id).opprettet shouldBe førEndret.opprettet
+        sporing(endret.id).sistEndret shouldNotBe førEndret.sistEndret
+        sporing(endret.id).endretAv shouldBe authContainerHelper.superbruker1.navIdent
+    }
+
+    @Test
+    fun `skal avvise ukjent id og endret type på sykefraværsmål`() {
+        val sak = aktivSamarbeidsperiode()
+        val lagret = sak.lagreMål(MålDto(listOf(sykefraværsmål()), emptyList())).third.get()
+        val mål = lagret.sykefraværsmål.single()
+
+        sak.lagreMål(
+            MålDto(listOf(mål.copy(type = Sykefraværsmåltype.KORTTIDSFRAVÆR)), emptyList()),
+        ).statuskode() shouldBe HttpStatusCode.BadRequest.value
+        sak.lagreMål(
+            MålDto(listOf(sykefraværsmål().copy(id = Int.MAX_VALUE)), emptyList()),
+        ).statuskode() shouldBe HttpStatusCode.BadRequest.value
+        sak.lagreMål(
+            MålDto(listOf(mål, sykefraværsmål(type = Sykefraværsmåltype.KORTTIDSFRAVÆR).copy(id = mål.id)), emptyList()),
+        ).statuskode() shouldBe HttpStatusCode.BadRequest.value
+
+        val annenSak = aktivSamarbeidsperiode()
+        val målIAnnetSamarbeid = annenSak.lagreMål(MålDto(listOf(sykefraværsmål(mål = 3.0)), emptyList()))
+            .third.get().sykefraværsmål.single()
+        sak.lagreMål(
+            MålDto(listOf(målIAnnetSamarbeid.copy(mål = 1.0)), emptyList()),
+        ).statuskode() shouldBe HttpStatusCode.BadRequest.value
+
+        sak.hentMål().third.get() shouldBe lagret
+        annenSak.hentMål().third.get().sykefraværsmål shouldBe listOf(målIAnnetSamarbeid)
     }
 
     @Test
@@ -146,7 +236,7 @@ class MålTest {
         val sak = aktivSamarbeidsperiode()
         val dagsverk = sykefraværsmål(type = Sykefraværsmåltype.TAPTE_DAGSVERK, nåværende = 1250.0, mål = 900.25)
 
-        sak.lagreMål(MålDto(listOf(dagsverk), emptyList())).third.get().sykefraværsmål shouldBe listOf(dagsverk)
+        sak.lagreMål(MålDto(listOf(dagsverk), emptyList())).third.get().sykefraværsmål.utenId() shouldBe listOf(dagsverk)
     }
 
     @Test

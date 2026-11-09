@@ -21,48 +21,55 @@ class MålTransactional {
             sykefraværsmål: List<SykefraværsmålDto>,
             endretAv: String,
         ) {
-            val typerSomBeholdes = sykefraværsmål.map { it.type }.toSet()
+            val iderSomBeholdes = sykefraværsmål.mapNotNull { it.id }.toSet()
             hentSykefraværsmål(samarbeidId)
-                .map { it.type }
-                .filterNot { it in typerSomBeholdes }
-                .forEach { type ->
+                .mapNotNull { it.id }
+                .filterNot { it in iderSomBeholdes }
+                .forEach { id ->
                     tx.run(
                         queryOf(
-                            """
-                            DELETE FROM samarbeid_sykefravaersmaal
-                            WHERE ia_prosess = :samarbeidId
-                            AND type = :type::sykefravaersmaal_type
-                            """.trimIndent(),
-                            mapOf("samarbeidId" to samarbeidId, "type" to type.name),
+                            "DELETE FROM samarbeid_sykefravaersmaal WHERE ia_prosess = :samarbeidId AND id = :id",
+                            mapOf("samarbeidId" to samarbeidId, "id" to id),
                         ).asUpdate,
                     )
                 }
 
             sykefraværsmål.forEach { mål ->
-                tx.run(
-                    queryOf(
-                        """
-                        INSERT INTO samarbeid_sykefravaersmaal (ia_prosess, type, naavaerende, maal, frist, endret_av)
-                        VALUES (:samarbeidId, :type::sykefravaersmaal_type, :naavaerende, :maal, :frist, :endretAv)
-                        ON CONFLICT (ia_prosess, type) DO UPDATE
-                        SET naavaerende = excluded.naavaerende,
-                            maal = excluded.maal,
-                            frist = excluded.frist,
-                            endret_av = excluded.endret_av,
-                            sist_endret = current_timestamp
-                        WHERE (samarbeid_sykefravaersmaal.naavaerende, samarbeid_sykefravaersmaal.maal, samarbeid_sykefravaersmaal.frist)
-                            IS DISTINCT FROM (excluded.naavaerende, excluded.maal, excluded.frist)
-                        """.trimIndent(),
-                        mapOf(
-                            "samarbeidId" to samarbeidId,
-                            "type" to mål.type.name,
-                            "naavaerende" to mål.nåværende.toBigDecimal(),
-                            "maal" to mål.mål.toBigDecimal(),
-                            "frist" to mål.frist.toJavaLocalDate(),
-                            "endretAv" to endretAv,
-                        ),
-                    ).asUpdate,
+                val verdier = mapOf(
+                    "samarbeidId" to samarbeidId,
+                    "naavaerende" to mål.nåværende.toBigDecimal(),
+                    "maal" to mål.mål.toBigDecimal(),
+                    "frist" to mål.frist.toJavaLocalDate(),
+                    "endretAv" to endretAv,
                 )
+                if (mål.id == null) {
+                    tx.run(
+                        queryOf(
+                            """
+                            INSERT INTO samarbeid_sykefravaersmaal (ia_prosess, type, naavaerende, maal, frist, endret_av)
+                            VALUES (:samarbeidId, :type::sykefravaersmaal_type, :naavaerende, :maal, :frist, :endretAv)
+                            """.trimIndent(),
+                            verdier + ("type" to mål.type.name),
+                        ).asUpdate,
+                    )
+                } else {
+                    tx.run(
+                        queryOf(
+                            """
+                            UPDATE samarbeid_sykefravaersmaal
+                            SET naavaerende = :naavaerende,
+                                maal = :maal,
+                                frist = :frist,
+                                endret_av = :endretAv,
+                                sist_endret = current_timestamp
+                            WHERE ia_prosess = :samarbeidId
+                            AND id = :id
+                            AND (naavaerende, maal, frist) IS DISTINCT FROM (:naavaerende::decimal, :maal::decimal, :frist::date)
+                            """.trimIndent(),
+                            verdier + ("id" to mål.id),
+                        ).asUpdate,
+                    )
+                }
             }
         }
 
@@ -142,14 +149,14 @@ class MålTransactional {
             )
 
         context(tx: TransactionalSession)
-        private fun hentSykefraværsmål(samarbeidId: Int): List<SykefraværsmålDto> =
+        fun hentSykefraværsmål(samarbeidId: Int): List<SykefraværsmålDto> =
             tx.run(
                 queryOf(
                     """
-                    SELECT type, naavaerende, maal, frist
+                    SELECT id, type, naavaerende, maal, frist
                     FROM samarbeid_sykefravaersmaal
                     WHERE ia_prosess = :samarbeidId
-                    ORDER BY type
+                    ORDER BY id
                     """.trimIndent(),
                     mapOf("samarbeidId" to samarbeidId),
                 ).map { it.tilSykefraværsmål() }.asList,
@@ -157,6 +164,7 @@ class MålTransactional {
 
         private fun Row.tilSykefraværsmål() =
             SykefraværsmålDto(
+                id = int("id"),
                 type = Sykefraværsmåltype.valueOf(string("type")),
                 nåværende = bigDecimal("naavaerende").toDouble(),
                 mål = bigDecimal("maal").toDouble(),

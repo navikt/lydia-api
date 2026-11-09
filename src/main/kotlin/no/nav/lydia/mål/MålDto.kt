@@ -33,6 +33,7 @@ data class MålDto(
 
 @Serializable
 data class SykefraværsmålDto(
+    val id: Int? = null,
     val type: Sykefraværsmåltype,
     val nåværende: Double,
     val mål: Double,
@@ -67,8 +68,16 @@ object MålFeil {
         feilmelding = "Samarbeidsmål kan ikke være lengre enn $MAKS_ANTALL_TEGN_I_SAMARBEIDSMÅL tegn",
         httpStatusCode = HttpStatusCode.BadRequest,
     )
+    val `ugyldig id på sykefraværsmål` = Feil(
+        feilmelding = "Sykefraværsmålet finnes ikke i dette samarbeidet",
+        httpStatusCode = HttpStatusCode.BadRequest,
+    )
+    val `endret type på sykefraværsmål` = Feil(
+        feilmelding = "Kan ikke endre type på et lagret sykefraværsmål",
+        httpStatusCode = HttpStatusCode.BadRequest,
+    )
     val `ugyldig id på samarbeidsmål` = Feil(
-        feilmelding = "Samarbeidsmålet finnes ikke i denne planen",
+        feilmelding = "Samarbeidsmålet finnes ikke i dette samarbeidet",
         httpStatusCode = HttpStatusCode.BadRequest,
     )
     val `samarbeidet er ikke aktivt` = Feil(
@@ -76,11 +85,11 @@ object MålFeil {
         httpStatusCode = HttpStatusCode.Conflict,
     )
     val `feil ved henting av mål` = Feil(
-        feilmelding = "Klarte ikke å hente målene i samarbeidsplanen",
+        feilmelding = "Klarte ikke å hente målene for samarbeidet",
         httpStatusCode = HttpStatusCode.InternalServerError,
     )
     val `feil ved lagring av mål` = Feil(
-        feilmelding = "Klarte ikke å lagre målene i samarbeidsplanen",
+        feilmelding = "Klarte ikke å lagre målene for samarbeidet",
         httpStatusCode = HttpStatusCode.InternalServerError,
     )
 }
@@ -100,6 +109,10 @@ fun MålDto.valider(): Either<Feil, MålDto> =
         }
         ensure(sykefraværsmål.distinctBy { it.type }.size == sykefraværsmål.size) {
             MålFeil.`flere sykefraværsmål med samme type`
+        }
+        val sykefraværsmålider = sykefraværsmål.mapNotNull { it.id }
+        ensure(sykefraværsmålider.distinct().size == sykefraværsmålider.size) {
+            MålFeil.`ugyldig id på sykefraværsmål`
         }
 
         val ider = samarbeidsmål.mapNotNull { it.id }
