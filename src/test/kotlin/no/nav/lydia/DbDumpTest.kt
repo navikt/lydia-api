@@ -1,8 +1,8 @@
 package no.nav.lydia
 
-import com.github.guepardoapps.kulid.ULID
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import kotlinx.serialization.json.Json
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
@@ -25,13 +25,14 @@ import no.nav.lydia.helper.PlanHelper.Companion.opprettSamarbeidsplan
 import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.kartlegging.Spørreundersøkelse.Type.Evaluering
@@ -41,6 +42,7 @@ import no.nav.lydia.kartlegging.TemaDto
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import org.junit.experimental.categories.Category
 import java.util.UUID
+import kotlin.String
 import kotlin.test.Test
 
 class DbDumpTest {
@@ -298,11 +300,21 @@ class DbDumpTest {
         val virksomhet = lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "VIRKSOMHET MED SALESFORCE-AKTIVITETER"))
         val samarbeidsperiode = vurderVirksomhet(virksomhet).leggTilFolger(token = token)
         val samarbeid = samarbeidsperiode.opprettSamarbeid(token = token)
-        postgresContainerHelper.performUpdate(
-            """
-            INSERT INTO salesforce_aktiviteter (id, type, saksnummer, samarbeid, tema, undertema, oppgave_planlagt, oppgave_fullfort, mote_start, mote_slutt, sist_endret, status, slettet, plan_id, sist_endret_salesforce, emne) 
-            VALUES ('${ULID.random()}', 'Møte', '${samarbeidsperiode.saksnummer}', ${samarbeid.id}, 'Partssamarbeid', 'Utvikle partssamarbeidet', '2026-11-02 01:00:00.000000', null, '2026-11-02 20:00:00.000000', '2026-11-02 21:00:00.000000', '2026-11-02 19:05:16.173185', null, false, '${ULID.random()}', '2026-11-02 19:05:15.000000', 'Møte for å få tydeligere rolleavklaringer')
-            """.trimIndent(),
+        val salesforceAktivitet = SalesforceAktivitetDto(
+            Id__c = UUID.randomUUID().toString(),
+            IACaseNumber__c = samarbeidsperiode.saksnummer,
+            IACooperationId__c = samarbeid.id.toString(),
+            LastModifiedDate__c = "2026-11-02T19:05:15+01:00[Europe/Oslo]",
+            EventType__c = "Created",
+            TaskEvent__c = "Møte",
+            Service__c = "Partssamarbeid",
+            IASubtheme__c = "Utvikle partssamarbeidet",
+            Subject__c = "Møte for å få tydeligere rolleavklaringer",
+        )
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = salesforceAktivitet.Id__c,
+            melding = Json.encodeToString(salesforceAktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
     }
 
