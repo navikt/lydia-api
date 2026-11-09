@@ -1,11 +1,11 @@
-val flywayVersion = "13.12.0"
+val flywayVersion = "13.12.1"
 val iaFellesVersion = "3.1.2"
 val ktorVersion = "3.6.1"
 val kotestVerstion = "6.2.6"
 val testcontainersVersion = "2.0.5"
 val logbackVersion = "1.6.6"
 val logstashLogbackEncoderVersion = "9.0"
-val opentelemetryLogbackMdcVersion = "2.33.0-alpha"
+val opentelemetryLogbackMdcVersion = "2.33.1-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -62,7 +62,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.15.0")
 
     // Kafka
-    implementation("at.yawk.lz4:lz4-java:1.12.1")
+    implementation("at.yawk.lz4:lz4-java:1.14.0")
     implementation("org.apache.kafka:kafka-clients:4.4.0") {
         // "Fikser CVE-2025-12183 - lz4-java >1.8.1 har sårbar versjon (transitive dependency fra kafka-clients:4.1.0)"
         exclude("org.lz4", "lz4-java")
@@ -72,7 +72,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:2.3.0")
+    implementation("io.arrow-kt:arrow-core:2.3.0.1")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
@@ -109,20 +109,20 @@ dependencies {
             because("versjoner < 1.1.10.9 har sårbarhet. Inkludert i org.apache.kafka:kafka-clients:4.4.0")
         }
         implementation("com.google.guava:guava") {
-            version { require("33.7.2-jre") }
+            version { require("33.8.0-jre") }
             because("versjoner < 33.7.2-jre har sårbarhet. Inkludert i ktor-server-auth-jwt:3.6.1 -> com.auth0:jwks-rsa:0.24.1")
         }
         implementation("com.fasterxml.jackson.core:jackson-core") {
-            version { require("2.22.4") }
+            version { require("2.23.0") }
             because("versjoner < 2.21.1 har sårbarhet. inkludert i ktor-server-auth:3.4.0")
         }
         implementation("tools.jackson.core:jackson-core") {
-            version { require("3.2.4") }
+            version { require("3.3.0") }
             because("versjoner <= 3.1.0 har sårbarhet. inkludert i logstash-logback-encoder:9.0")
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.19.Final")
+                require("4.2.20.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
