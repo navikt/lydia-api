@@ -2,6 +2,7 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import kotlinx.serialization.json.Json
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.aktivSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.fullførSamarbeidsperiode
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettOgFullførSamarbeidsperiode
@@ -25,11 +26,13 @@ import no.nav.lydia.helper.SakHelper.Companion.bliEier
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.kartlegging.Spørreundersøkelse.Type.Behovsvurdering
 import no.nav.lydia.kartlegging.Spørreundersøkelse.Type.Evaluering
@@ -39,6 +42,7 @@ import no.nav.lydia.kartlegging.TemaDto
 import no.nav.lydia.samarbeidsperiode.IASakDto
 import org.junit.experimental.categories.Category
 import java.util.UUID
+import kotlin.String
 import kotlin.test.Test
 
 class DbDumpTest {
@@ -56,6 +60,8 @@ class DbDumpTest {
         opprettVirksomhetMedFlereSaker()
 
         opprettvirksomhetMedPublisertPlan()
+
+        opprettVirksomhetMedSalesforceAktiviteter()
 
         val jdbcUrl = postgresContainerHelper.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
@@ -287,6 +293,29 @@ class DbDumpTest {
             samarbeidId = samarbeidsperiode.hentAlleSamarbeid().first().id,
         )
         samarbeidsperiode.hentPlan(token = token).publiseringStatus shouldBe DokumentPubliseringDto.Status.PUBLISERT
+    }
+
+    private fun opprettVirksomhetMedSalesforceAktiviteter() {
+        val token = authContainerHelper.saksbehandler1.token
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "VIRKSOMHET MED SALESFORCE-AKTIVITETER"))
+        val samarbeidsperiode = vurderVirksomhet(virksomhet).leggTilFolger(token = token)
+        val samarbeid = samarbeidsperiode.opprettSamarbeid(token = token)
+        val salesforceAktivitet = SalesforceAktivitetDto(
+            Id__c = UUID.randomUUID().toString(),
+            IACaseNumber__c = samarbeidsperiode.saksnummer,
+            IACooperationId__c = samarbeid.id.toString(),
+            LastModifiedDate__c = "2026-11-02T19:05:15+01:00[Europe/Oslo]",
+            EventType__c = "Created",
+            TaskEvent__c = "Møte",
+            Service__c = "Partssamarbeid",
+            IASubtheme__c = "Utvikle partssamarbeidet",
+            Subject__c = "Møte for å få tydeligere rolleavklaringer",
+        )
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = salesforceAktivitet.Id__c,
+            melding = Json.encodeToString(salesforceAktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
     }
 
     @Test
