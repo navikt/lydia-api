@@ -21,6 +21,7 @@ data class SalesforceAktivitetRespons(
     val møteStart: LocalDateTime?,
     val møteSlutt: LocalDateTime?,
     val status: SalesforceAktivitet.Companion.AktivitetsStatus?,
+    val emne: String?,
 )
 
 private fun ZonedDateTime.toKotlinLocalDateTime() = toLocalDateTime().toKotlinLocalDateTime()
@@ -40,4 +41,5 @@ internal fun SalesforceAktivitet.tilRespons() =
         møteStart = møteStart?.toKotlinLocalDateTime(),
         møteSlutt = møteSlutt?.toKotlinLocalDateTime(),
         status = status,
+        emne = emne,
     )
