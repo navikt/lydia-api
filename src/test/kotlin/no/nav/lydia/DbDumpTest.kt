@@ -300,22 +300,62 @@ class DbDumpTest {
         val virksomhet = lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(navn = "VIRKSOMHET MED SALESFORCE-AKTIVITETER"))
         val samarbeidsperiode = vurderVirksomhet(virksomhet).leggTilFolger(token = token)
         val samarbeid = samarbeidsperiode.opprettSamarbeid(token = token)
-        val salesforceAktivitet = SalesforceAktivitetDto(
-            Id__c = UUID.randomUUID().toString(),
-            IACaseNumber__c = samarbeidsperiode.saksnummer,
-            IACooperationId__c = samarbeid.id.toString(),
-            LastModifiedDate__c = "2026-11-02T19:05:15+01:00[Europe/Oslo]",
-            EventType__c = "Created",
-            TaskEvent__c = "Møte",
-            Service__c = "Partssamarbeid",
-            IASubtheme__c = "Utvikle partssamarbeidet",
-            Subject__c = "Møte for å få tydeligere rolleavklaringer",
+        val plan = samarbeid.opprettSamarbeidsplan(orgnr = virksomhet.orgnr, token = token)
+        val salesforceAktiviteter = listOf(
+            SalesforceAktivitetDto(
+                Id__c = UUID.randomUUID().toString(),
+                LastModifiedDate__c = "2026-05-18T12:53:38.627591+01:00[Europe/Oslo]",
+                EventType__c = "Created",
+                TaskEvent__c = "Oppgave",
+                IACaseNumber__c = samarbeidsperiode.saksnummer,
+                IACooperationId__c = samarbeid.id.toString(),
+                IAPlanId__c = plan.id,
+                Service__c = "Partssamarbeid",
+                IASubtheme__c = "Utvikle partssamarbeidet",
+                ActivityDate__c = "2026-05-18T02:00+01:00[Europe/Oslo]",
+                CompletedDate__c = "2026-05-18T12:53:34.160+01:00[Europe/Oslo]",
+                StartDateTime__c = null,
+                EndDateTime__c = null,
+                Status__c = "Fullført",
+                Subject__c = "Tydeligere rolleavklaring",
+            ),
+            SalesforceAktivitetDto(
+                Id__c = UUID.randomUUID().toString(),
+                LastModifiedDate__c = "2026-05-18T12:54:31.816787+01:00[Europe/Oslo]",
+                EventType__c = "Created",
+                TaskEvent__c = "Oppgave",
+                IACaseNumber__c = samarbeidsperiode.saksnummer,
+                IACooperationId__c = samarbeid.id.toString(),
+                IAPlanId__c = plan.id,
+                Service__c = "Arbeidsmiljø",
+                IASubtheme__c = "Utvikle arbeidsmiljøet;Endring og omstilling;Oppfølging av arbeidsmiljøundersøkelser;Livsfaseorientert personalpolitikk",
+                ActivityDate__c = "2026-05-18T02:00+01:00[Europe/Oslo]",
+                Status__c = "Åpen",
+                Subject__c = "Virksomheten plikter å ta konkrete grep for arbeidsmiljøet",
+            ),
+            SalesforceAktivitetDto(
+                Id__c = UUID.randomUUID().toString(),
+                LastModifiedDate__c = "2026-05-18T13:12:05.058019+01:00[Europe/Oslo]",
+                EventType__c = "Created",
+                TaskEvent__c = "Møte",
+                IACaseNumber__c = samarbeidsperiode.saksnummer,
+                IACooperationId__c = samarbeid.id.toString(),
+                IAPlanId__c = plan.id,
+                Service__c = "Partssamarbeid",
+                IASubtheme__c = "Utvikle partssamarbeidet",
+                ActivityDate__c = "2026-05-19T02:00+01:00[Europe/Oslo]",
+                StartDateTime__c = "2026-05-19T14:00+01:00[Europe/Oslo]",
+                EndDateTime__c = "2026-05-19T15:00+01:00[Europe/Oslo]",
+                Subject__c = "Avtale plan fremover",
+            ),
         )
-        kafkaContainerHelper.sendOgVentTilKonsumert(
-            nøkkel = salesforceAktivitet.Id__c,
-            melding = Json.encodeToString(salesforceAktivitet),
-            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
-        )
+        salesforceAktiviteter.forEach { salesforceAktivitet ->
+            kafkaContainerHelper.sendOgVentTilKonsumert(
+                nøkkel = salesforceAktivitet.Id__c,
+                melding = Json.encodeToString(salesforceAktivitet),
+                topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+            )
+        }
     }
 
     @Test
