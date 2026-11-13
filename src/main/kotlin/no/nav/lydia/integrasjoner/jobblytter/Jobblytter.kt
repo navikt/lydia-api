@@ -153,9 +153,9 @@ object Jobblytter : CoroutineScope {
                                             if (jobInfo.parameter.isNullOrEmpty()) {
                                                 logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
                                             } else {
-                                                val tørrKjør = jobInfo.parameter != "GO!" // parameter: ett orgnr
+                                                val tørrKjør = jobInfo.parameter != "GO!"
                                                 virksomhetService.finnVirksomheterMedIkkeAktuellStatus().forEach { ikkeAktuellVirksomhet ->
-                                                    logger.info("Saksnummer ${ikkeAktuellVirksomhet.saksnummer}")
+                                                    logger.info("Saksnummer '${ikkeAktuellVirksomhet.saksnummer}'")
                                                     if (!tørrKjør || ikkeAktuellVirksomhet.saksnummer == jobInfo.parameter) {
                                                         virksomhetService.rettOppIIkkeAktuellStatus(ikkeAktuellVirksomhet)
                                                     }

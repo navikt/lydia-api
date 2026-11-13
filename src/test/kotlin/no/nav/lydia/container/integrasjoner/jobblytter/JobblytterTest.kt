@@ -1,5 +1,6 @@
 package no.nav.lydia.container.integrasjoner.jobblytter
 
+import com.github.guepardoapps.kulid.ULID
 import ia.felles.integrasjoner.jobbsender.Jobb.alleKategorierSykefraværsstatistikkDvhImport
 import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
 import ia.felles.integrasjoner.jobbsender.Jobb.fullforKartleggingEtter24t
@@ -28,6 +29,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.samarbeid.SAMARBEID_ID_PREFIKS
 import org.junit.Test
+import java.time.LocalDateTime
 
 class JobblytterTest {
     @Test
@@ -214,5 +216,116 @@ class JobblytterTest {
         maskineltFullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
         applikasjon shouldContainLog "Fullførte kartleggingen".toRegex()
         applikasjon shouldContainLog "Jobb 'fullforKartleggingEtter24t' ferdig".toRegex()
+    }
+
+    @Test
+    fun `skal rette opp i virksomheter som sitter fast i 'IKKE_AKTUELL'`() {
+        /*
+
+#1 ny test virksomhet
+#2 VURDER virksomhet -> tilstand vurderes, DB inneholder riktig tilstand, riktig status i ia_sak og to hendelser i ia_sak_hendelse: 'OPPRETT_SAK_FOR_VIRKSOMHET' og 'VIRKSOMHET_VURDERES'
+#3 update DB for disse to hendelser: 'opprettet' = 'opprettet' - 8 måneder (dvs før tilstandmaskin)
+-- MIGRERING_TIL_NY_FLYT (laget av 'fia-system'), med 'opprettet' = for 8 måneder siden - 1 dag
+-- VIRKSOMHET_ER_IKKE_AKTUELL (laget av 'SUPERBRUKER'), med 'opprettet' = for 8 måneder siden - 2 dager
+
+#5 send melding til Kafka (jobben kjører)
+#6 sjekk at status er VURDERES og tilstand er VURDERES
+# 7 sjekk at POST avslutt-vurdering fungerer
+*/
+        val sak = vurderVirksomhet()
+
+        // opprettet tilbake til
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE ia_sak_hendelse 
+            SET 
+              opprettet = opprettet - INTERVAL '8 months' 
+            WHERE saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
+        )
+
+        // migrering til ny flyt
+        postgresContainerHelper.performUpdate(
+            """
+            INSERT INTO ia_sak_hendelse (
+            id,
+            saksnummer,
+            orgnr,
+            type,
+            opprettet_av,
+            opprettet,
+            opprettet_av_rolle,
+            nav_enhet_nummer,
+            nav_enhet_navn,
+            resulterende_status
+            ) 
+            VALUES (
+            '${ULID.random()}',
+            '${sak.saksnummer}',
+            '${sak.orgnr}',
+            'MIGRERING_TIL_NY_FLYT',
+            'Fia system',
+            '${LocalDateTime.now().minusMonths(8).plusDays(1)}',
+            'SUPERBRUKER',
+            '2840',
+            'IA- og sykefraværskontoret',
+            'VURDERES'
+            )
+            """.trimIndent(),
+        )
+        // virksomhet er ikke aktuell
+        postgresContainerHelper.performUpdate(
+            """
+            INSERT INTO ia_sak_hendelse (
+            id,
+            saksnummer,
+            orgnr,
+            type,
+            opprettet_av,
+            opprettet,
+            opprettet_av_rolle,
+            nav_enhet_nummer,
+            nav_enhet_navn,
+            resulterende_status
+            ) 
+            VALUES (
+            '${ULID.random()}',
+            '${sak.saksnummer}',
+            '${sak.orgnr}',
+            'VIRKSOMHET_ER_IKKE_AKTUELL',
+            'Fia system',
+            '${LocalDateTime.now().minusMonths(8).plusDays(2)}',
+            'SUPERBRUKER',
+            '2840',
+            'IA- og sykefraværskontoret',
+            'IKKE_AKTUELL'
+            )
+            """.trimIndent(),
+        )
+
+        kafkaContainerHelper.sendJobbMelding(jobb = engangsJobb, parameter = "Dry run")
+        applikasjon shouldContainLog "Saksnummer '${sak.saksnummer}'".toRegex()
+
+        val resDryRun = postgresContainerHelper.hentEnkelKolonne<Int>(
+            """
+            SELECT COUNT(*) FROM ia_sak_hendelse WHERE saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
+        )
+        resDryRun shouldBe 4
+
+        kafkaContainerHelper.sendJobbMelding(jobb = engangsJobb, parameter = "GO!")
+        val resGO = postgresContainerHelper.hentEnkelKolonne<Int>(
+            """
+            SELECT COUNT(*) FROM ia_sak_hendelse WHERE saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
+        )
+        resGO shouldBe 7
+
+        val typer = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            """
+            SELECT type FROM ia_sak_hendelse WHERE saksnummer = '${sak.saksnummer}' ORDER BY opprettet
+            """.trimIndent(),
+        )
+        println("TYPER: '$typer'")
     }
 }
