@@ -52,8 +52,6 @@ class VirksomhetService(
 
     fun insertNæringsundergrupper(virksomhetLagringDao: VirksomhetLagringDao) = virksomhetRepository.insertNæringsundergrupper(virksomhetLagringDao)
 
-    fun finnSlettedeVirksomheterMedAktivSak() = virksomhetRepository.finnSlettedeVirksomheterMedAktivSak() // TODO: rydd opp
-
     fun rettOppIIkkeAktuellStatus(ikkeAktuellVirksomhet: IkkeAktuellVirksomhet) {
         either {
             val hentTilstandForVirksomhet = TilstandsmaskinBuilder.medKontekst(
