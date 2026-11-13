@@ -10,15 +10,21 @@ import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhet
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Sletting
 import no.nav.lydia.prioritering.virksomhet.domene.Virksomhet
 import no.nav.lydia.samarbeid.IASamarbeidService
+import no.nav.lydia.samarbeidsperiode.BegrunnelseType
 import no.nav.lydia.samarbeidsperiode.IASakService
+import no.nav.lydia.samarbeidsperiode.ValgtÅrsak
+import no.nav.lydia.samarbeidsperiode.ÅrsakType
 import no.nav.lydia.samarbeidsplan.PlanService
+import no.nav.lydia.tilgangskontroll.Standardbrukere
 import no.nav.lydia.tilstandsmaskin.FiaKontekst
 import no.nav.lydia.tilstandsmaskin.NyFlytService
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetOppdaterer.Companion.NAV_ENHET_FOR_MASKINELT_OPPDATERING
 import no.nav.lydia.tilstandsmaskin.TilstandVirksomhetRepository
 import no.nav.lydia.tilstandsmaskin.TilstandsmaskinBuilder
 import no.nav.lydia.tilstandsmaskin.hendelse.Avregistrering
+import no.nav.lydia.tilstandsmaskin.hendelse.AvsluttVurdering
 import no.nav.lydia.tilstandsmaskin.hendelse.VirksomhetErAvregistrertIBrreg
+import no.nav.lydia.tilstandsmaskin.hendelse.VurderVirksomhet
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -46,7 +52,54 @@ class VirksomhetService(
 
     fun insertNæringsundergrupper(virksomhetLagringDao: VirksomhetLagringDao) = virksomhetRepository.insertNæringsundergrupper(virksomhetLagringDao)
 
-    fun finnSlettedeVirksomheterMedAktivSak() = virksomhetRepository.finnSlettedeVirksomheterMedAktivSak()
+    fun finnSlettedeVirksomheterMedAktivSak() = virksomhetRepository.finnSlettedeVirksomheterMedAktivSak() // TODO: rydd opp
+
+    fun rettOppIIkkeAktuellStatus(ikkeAktuellVirksomhet: IkkeAktuellVirksomhet) {
+        either {
+            val hentTilstandForVirksomhet = TilstandsmaskinBuilder.medKontekst(
+                fiaKontekst = FiaKontekst(
+                    iaSakService = iaSakService,
+                    iASamarbeidService = iASamarbeidService,
+                    nyFlytService = nyFlytService,
+                    dokumentPubliseringService = dokumentPubliseringService,
+                    planService = planService,
+                    tilstandVirksomhetRepository = tilstandVirksomhetRepository,
+                    saksnummer = nyFlytService.hentSisteIASakDto(ikkeAktuellVirksomhet.orgnr)?.saksnummer,
+                ),
+            )
+
+            val avsluttVurderingHendelse = AvsluttVurdering(
+                orgnr = ikkeAktuellVirksomhet.orgnr,
+                årsak = ValgtÅrsak(
+                    type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
+                    beskrivelse = "Vurder virksomheten senere",
+                    begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE),
+                ),
+                saksbehandler = Standardbrukere.fiaSystemSuperbruker,
+                navEnhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
+            )
+
+            val avsluttTilstand = hentTilstandForVirksomhet.build(ikkeAktuellVirksomhet.orgnr)
+            avsluttTilstand.prosesserHendelse(avsluttVurderingHendelse).bind()
+
+            val vurderHendelse = VurderVirksomhet(
+                orgnr = ikkeAktuellVirksomhet.orgnr,
+                valgtÅrsak = ValgtÅrsak(
+                    type = ÅrsakType.BAKGRUNN_FOR_VURDERING_AV_VIRKSOMHET,
+                    beskrivelse = "Bakgrunn for vurdering av virksomhet",
+                    begrunnelser = listOf(BegrunnelseType.AUTOMATISK_VURDERT_PÅ_NYTT),
+                ),
+                superbruker = Standardbrukere.fiaSystemSuperbruker,
+                navEnhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
+            )
+            val vurderTilstand = hentTilstandForVirksomhet.build(ikkeAktuellVirksomhet.orgnr)
+            vurderTilstand.prosesserHendelse(vurderHendelse).bind()
+        }.onLeft {
+            logger.error("Prøver å rette opp i IKKE_AKTUELL status, men feiler med '${it.feilmelding}. Saksnummer: '${ikkeAktuellVirksomhet.saksnummer}'")
+        }
+    }
+
+    fun finnVirksomheterMedIkkeAktuellStatus() = virksomhetRepository.finnVirksomheterMedIkkeAktuellStatus()
 
     fun oppdaterStatusTilVirksomhetTilSlettetEllerFjernet(oppdateringVirksomhet: BrregOppdateringConsumer.OppdateringVirksomhet): Either<Feil, Unit> =
         either {
