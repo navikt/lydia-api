@@ -13,6 +13,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
 import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.assertions.nondeterministic.eventuallyConfig
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
@@ -308,14 +309,14 @@ class JobblytterTest {
 
         kafkaContainerHelper.sendJobbMelding(jobb = engangsJobb, parameter = "GO!")
 
-        val alleHendelsesTyper = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
-            """
-            SELECT type FROM ia_sak_hendelse WHERE orgnr = '${sak.orgnr}' ORDER BY opprettet
-            """.trimIndent(),
-        )
-
         runBlocking {
             eventually(1.seconds) {
+                val alleHendelsesTyper = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+                    """
+                    SELECT type FROM ia_sak_hendelse WHERE orgnr = '${sak.orgnr}' ORDER BY opprettet
+                    """.trimIndent(),
+                )
+
                 alleHendelsesTyper shouldBe listOf(
                     "OPPRETT_SAK_FOR_VIRKSOMHET",
                     "VIRKSOMHET_VURDERES",
