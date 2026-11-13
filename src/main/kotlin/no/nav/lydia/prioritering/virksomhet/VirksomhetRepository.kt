@@ -272,7 +272,37 @@ class VirksomhetRepository(
         }
 
     private fun java.time.Instant.toKxInstant(): Instant = Instant.fromEpochMilliseconds(toEpochMilli())
+
+    fun finnVirksomheterMedIkkeAktuellStatus(): List<IkkeAktuellVirksomhet> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT DISTINCT saksnummer, orgnr
+                    FROM ia_sak_hendelse ish
+                    WHERE opprettet = (
+                      SELECT max(opprettet)
+                          FROM ia_sak_hendelse ishi
+                          WHERE ish.orgnr = ishi.orgnr
+                          GROUP BY ishi.orgnr
+                      )
+                    AND ish.type = 'VIRKSOMHET_ER_IKKE_AKTUELL'; 
+                    """.trimIndent(),
+                    mapOf(),
+                ).map {
+                    IkkeAktuellVirksomhet(
+                        saksnummer = it.string("saksnummer"),
+                        orgnr = it.string("orgnr"),
+                    )
+                }.asList,
+            )
+        }
 }
+
+data class IkkeAktuellVirksomhet(
+    val saksnummer: String,
+    val orgnr: String,
+)
 
 @Serializable
 data class VirksomhetSøkeresultat(
