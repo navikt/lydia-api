@@ -1,5 +1,6 @@
 package no.nav.lydia.tilgangskontroll
 
+import no.nav.lydia.featureToggle.NavEnheter
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
 object Standardbrukere {
