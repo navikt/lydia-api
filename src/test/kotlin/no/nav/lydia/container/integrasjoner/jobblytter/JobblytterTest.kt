@@ -12,7 +12,9 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.runBlocking
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
@@ -28,8 +30,11 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.samarbeid.SAMARBEID_ID_PREFIKS
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import org.junit.Test
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class JobblytterTest {
     @Test
@@ -220,18 +225,6 @@ class JobblytterTest {
 
     @Test
     fun `skal rette opp i virksomheter som sitter fast i 'IKKE_AKTUELL'`() {
-        /*
-
-#1 ny test virksomhet
-#2 VURDER virksomhet -> tilstand vurderes, DB inneholder riktig tilstand, riktig status i ia_sak og to hendelser i ia_sak_hendelse: 'OPPRETT_SAK_FOR_VIRKSOMHET' og 'VIRKSOMHET_VURDERES'
-#3 update DB for disse to hendelser: 'opprettet' = 'opprettet' - 8 måneder (dvs før tilstandmaskin)
--- MIGRERING_TIL_NY_FLYT (laget av 'fia-system'), med 'opprettet' = for 8 måneder siden - 1 dag
--- VIRKSOMHET_ER_IKKE_AKTUELL (laget av 'SUPERBRUKER'), med 'opprettet' = for 8 måneder siden - 2 dager
-
-#5 send melding til Kafka (jobben kjører)
-#6 sjekk at status er VURDERES og tilstand er VURDERES
-# 7 sjekk at POST avslutt-vurdering fungerer
-*/
         val sak = vurderVirksomhet()
 
         // opprettet tilbake til
@@ -308,24 +301,31 @@ class JobblytterTest {
 
         val resDryRun = postgresContainerHelper.hentEnkelKolonne<Int>(
             """
-            SELECT COUNT(*) FROM ia_sak_hendelse WHERE saksnummer = '${sak.saksnummer}'
+            SELECT COUNT(*) FROM ia_sak_hendelse WHERE orgnr = '${sak.orgnr}'
             """.trimIndent(),
         )
         resDryRun shouldBe 4
 
         kafkaContainerHelper.sendJobbMelding(jobb = engangsJobb, parameter = "GO!")
-        val resGO = postgresContainerHelper.hentEnkelKolonne<Int>(
-            """
-            SELECT COUNT(*) FROM ia_sak_hendelse WHERE saksnummer = '${sak.saksnummer}'
-            """.trimIndent(),
-        )
-        resGO shouldBe 7
 
-        val typer = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+        val alleHendelsesTyper = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
-            SELECT type FROM ia_sak_hendelse WHERE saksnummer = '${sak.saksnummer}' ORDER BY opprettet
+            SELECT type FROM ia_sak_hendelse WHERE orgnr = '${sak.orgnr}' ORDER BY opprettet
             """.trimIndent(),
         )
-        println("TYPER: '$typer'")
+
+        runBlocking {
+            eventually(1.seconds) {
+                alleHendelsesTyper shouldBe listOf(
+                    "OPPRETT_SAK_FOR_VIRKSOMHET",
+                    "VIRKSOMHET_VURDERES",
+                    "MIGRERING_TIL_NY_FLYT",
+                    "VIRKSOMHET_ER_IKKE_AKTUELL",
+                    "VURDERING_FULLFØRT_UTEN_SAMARBEID",
+                    "OPPRETT_SAK_FOR_VIRKSOMHET",
+                    "VIRKSOMHET_VURDERES",
+                )
+            }
+        }
     }
 }

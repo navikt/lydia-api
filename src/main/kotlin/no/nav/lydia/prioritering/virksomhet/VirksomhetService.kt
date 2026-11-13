@@ -54,7 +54,7 @@ class VirksomhetService(
 
     fun rettOppIIkkeAktuellStatus(ikkeAktuellVirksomhet: IkkeAktuellVirksomhet) {
         either {
-            val hentTilstandForVirksomhet = TilstandsmaskinBuilder.medKontekst(
+            val tilstandsmaskinBuilder = TilstandsmaskinBuilder.medKontekst(
                 fiaKontekst = FiaKontekst(
                     iaSakService = iaSakService,
                     iASamarbeidService = iASamarbeidService,
@@ -66,19 +66,21 @@ class VirksomhetService(
                 ),
             )
 
+            val ikkeAktuellTilstandSomBehandlesSomVurderes = tilstandsmaskinBuilder.build(ikkeAktuellVirksomhet.orgnr)
+
             val avsluttVurderingHendelse = AvsluttVurdering(
                 orgnr = ikkeAktuellVirksomhet.orgnr,
                 årsak = ValgtÅrsak(
-                    type = ÅrsakType.VIRKSOMHETEN_VURDERES_PÅ_ET_SENERE_TIDSPUNKT,
-                    beskrivelse = "Vurder virksomheten senere",
-                    begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_ØNSKER_Å_BLI_KONTAKTET_SENERE),
+                    type = ÅrsakType.VIRKSOMHETEN_ER_FERDIG_VURDERT_MED_INTERN_VURDERING,
+                    beskrivelse = "Nav har konkludert",
+                    begrunnelser = listOf(BegrunnelseType.VIRKSOMHETEN_HAR_FOR_LAVT_POTENSIALE),
                 ),
                 saksbehandler = Standardbrukere.fiaSystemSuperbruker,
                 navEnhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
             )
+            ikkeAktuellTilstandSomBehandlesSomVurderes.prosesserHendelse(avsluttVurderingHendelse).bind()
 
-            val avsluttTilstand = hentTilstandForVirksomhet.build(ikkeAktuellVirksomhet.orgnr)
-            avsluttTilstand.prosesserHendelse(avsluttVurderingHendelse).bind()
+            val vurdertTilstand = tilstandsmaskinBuilder.build(ikkeAktuellVirksomhet.orgnr)
 
             val vurderHendelse = VurderVirksomhet(
                 orgnr = ikkeAktuellVirksomhet.orgnr,
@@ -90,8 +92,7 @@ class VirksomhetService(
                 superbruker = Standardbrukere.fiaSystemSuperbruker,
                 navEnhet = NAV_ENHET_FOR_MASKINELT_OPPDATERING,
             )
-            val vurderTilstand = hentTilstandForVirksomhet.build(ikkeAktuellVirksomhet.orgnr)
-            vurderTilstand.prosesserHendelse(vurderHendelse).bind()
+            vurdertTilstand.prosesserHendelse(vurderHendelse).bind()
         }.onLeft {
             logger.error("Prøver å rette opp i IKKE_AKTUELL status, men feiler med '${it.feilmelding}. Saksnummer: '${ikkeAktuellVirksomhet.saksnummer}'")
         }
