@@ -96,9 +96,17 @@ object MålFeil {
 
 fun MålDto.valider(): Either<Feil, MålDto> =
     either {
-        sykefraværsmål.forEach { sykefraværsmål ->
-            val maksverdi = sykefraværsmål.type.maksverdi()
-            listOf(sykefraværsmål.nåværende, sykefraværsmål.mål).forEach { verdi ->
+        MålDto(
+            sykefraværsmål = validerSykefraværsmål(sykefraværsmål).bind(),
+            samarbeidsmål = validerSamarbeidsmål(samarbeidsmål).bind(),
+        )
+    }
+
+fun validerSykefraværsmål(sykefraværsmål: List<SykefraværsmålDto>): Either<Feil, List<SykefraværsmålDto>> =
+    either {
+        sykefraværsmål.forEach { mål ->
+            val maksverdi = mål.type.maksverdi()
+            listOf(mål.nåværende, mål.mål).forEach { verdi ->
                 ensure(verdi.isFinite() && verdi >= 0 && verdi <= maksverdi) {
                     MålFeil.`ugyldig verdi i sykefraværsmål`
                 }
@@ -110,20 +118,22 @@ fun MålDto.valider(): Either<Feil, MålDto> =
         ensure(sykefraværsmål.distinctBy { it.type }.size == sykefraværsmål.size) {
             MålFeil.`flere sykefraværsmål med samme type`
         }
-        val sykefraværsmålider = sykefraværsmål.mapNotNull { it.id }
-        ensure(sykefraværsmålider.distinct().size == sykefraværsmålider.size) {
+        val ider = sykefraværsmål.mapNotNull { it.id }
+        ensure(ider.distinct().size == ider.size) {
             MålFeil.`ugyldig id på sykefraværsmål`
         }
+        sykefraværsmål
+    }
 
+fun validerSamarbeidsmål(samarbeidsmål: List<SamarbeidsmålDto>): Either<Feil, List<SamarbeidsmålDto>> =
+    either {
         val ider = samarbeidsmål.mapNotNull { it.id }
         ensure(ider.distinct().size == ider.size) { MålFeil.`ugyldig id på samarbeidsmål` }
 
-        copy(
-            samarbeidsmål = samarbeidsmål.map { samarbeidsmål ->
-                val trimmet = samarbeidsmål.mål.trim()
-                ensure(trimmet.isNotEmpty()) { MålFeil.`tomt samarbeidsmål` }
-                ensure(trimmet.length <= MAKS_ANTALL_TEGN_I_SAMARBEIDSMÅL) { MålFeil.`for langt samarbeidsmål` }
-                samarbeidsmål.copy(mål = trimmet)
-            },
-        )
+        samarbeidsmål.map { mål ->
+            val trimmet = mål.mål.trim()
+            ensure(trimmet.isNotEmpty()) { MålFeil.`tomt samarbeidsmål` }
+            ensure(trimmet.length <= MAKS_ANTALL_TEGN_I_SAMARBEIDSMÅL) { MålFeil.`for langt samarbeidsmål` }
+            mål.copy(mål = trimmet)
+        }
     }

@@ -9,8 +9,6 @@ import no.nav.lydia.felles.Feil
 import no.nav.lydia.mål.MålTransactional.Companion.hentMål
 import no.nav.lydia.mål.MålTransactional.Companion.hentSamarbeidsmål
 import no.nav.lydia.mål.MålTransactional.Companion.hentSykefraværsmål
-import no.nav.lydia.mål.MålTransactional.Companion.lagreSamarbeidsmål
-import no.nav.lydia.mål.MålTransactional.Companion.lagreSykefraværsmål
 import no.nav.lydia.tilstandsmaskin.Transaction
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -33,11 +31,49 @@ class MålService(
         mål: MålDto,
         endretAv: String,
     ): Either<Feil, MålDto> =
+        lagreOgHentMål(
+            samarbeidId = samarbeidId,
+            valider = {
+                validerSykefraværsmålMotLagrede(samarbeidId, mål.sykefraværsmål)
+                    ?: validerSamarbeidsmålMotLagrede(samarbeidId, mål.samarbeidsmål)
+            },
+            lagre = {
+                MålTransactional.lagreSykefraværsmål(samarbeidId, mål.sykefraværsmål, endretAv)
+                MålTransactional.lagreSamarbeidsmål(samarbeidId, mål.samarbeidsmål, endretAv)
+            },
+        )
+
+    fun lagreSykefraværsmål(
+        samarbeidId: Int,
+        sykefraværsmål: List<SykefraværsmålDto>,
+        endretAv: String,
+    ): Either<Feil, MålDto> =
+        lagreOgHentMål(
+            samarbeidId = samarbeidId,
+            valider = { validerSykefraværsmålMotLagrede(samarbeidId, sykefraværsmål) },
+            lagre = { MålTransactional.lagreSykefraværsmål(samarbeidId, sykefraværsmål, endretAv) },
+        )
+
+    fun lagreSamarbeidsmål(
+        samarbeidId: Int,
+        samarbeidsmål: List<SamarbeidsmålDto>,
+        endretAv: String,
+    ): Either<Feil, MålDto> =
+        lagreOgHentMål(
+            samarbeidId = samarbeidId,
+            valider = { validerSamarbeidsmålMotLagrede(samarbeidId, samarbeidsmål) },
+            lagre = { MålTransactional.lagreSamarbeidsmål(samarbeidId, samarbeidsmål, endretAv) },
+        )
+
+    private fun lagreOgHentMål(
+        samarbeidId: Int,
+        valider: context(TransactionalSession) () -> Feil?,
+        lagre: context(TransactionalSession) () -> Unit,
+    ): Either<Feil, MålDto> =
         Either.catch {
             Transaction(dataSource).transactional {
-                valider(samarbeidId, mål)?.left() ?: run {
-                    lagreSykefraværsmål(samarbeidId, mål.sykefraværsmål, endretAv)
-                    lagreSamarbeidsmål(samarbeidId, mål.samarbeidsmål, endretAv)
+                valider()?.left() ?: run {
+                    lagre()
                     hentMål(samarbeidId).right()
                 }
             }
@@ -47,18 +83,29 @@ class MålService(
         }.flatMap { it }
 
     context(tx: TransactionalSession)
-    private fun valider(
+    private fun validerSykefraværsmålMotLagrede(
         samarbeidId: Int,
-        mål: MålDto,
+        sykefraværsmål: List<SykefraværsmålDto>,
     ): Feil? {
         val lagredeTyper = hentSykefraværsmål(samarbeidId).associate { it.id to it.type }
-        val sykefraværsmålMedId = mål.sykefraværsmål.filter { it.id != null }
-        val lagredeSamarbeidsmålider = hentSamarbeidsmål(samarbeidId).mapNotNull { it.id }.toSet()
+        val sykefraværsmålMedId = sykefraværsmål.filter { it.id != null }
         return when {
             sykefraværsmålMedId.any { it.id !in lagredeTyper } -> MålFeil.`ugyldig id på sykefraværsmål`
             sykefraværsmålMedId.any { lagredeTyper[it.id] != it.type } -> MålFeil.`endret type på sykefraværsmål`
-            mål.samarbeidsmål.any { it.id != null && it.id !in lagredeSamarbeidsmålider } -> MålFeil.`ugyldig id på samarbeidsmål`
             else -> null
+        }
+    }
+
+    context(tx: TransactionalSession)
+    private fun validerSamarbeidsmålMotLagrede(
+        samarbeidId: Int,
+        samarbeidsmål: List<SamarbeidsmålDto>,
+    ): Feil? {
+        val lagredeIder = hentSamarbeidsmål(samarbeidId).mapNotNull { it.id }.toSet()
+        return if (samarbeidsmål.any { it.id != null && it.id !in lagredeIder }) {
+            MålFeil.`ugyldig id på samarbeidsmål`
+        } else {
+            null
         }
     }
 }
