@@ -51,6 +51,24 @@ class MålTest {
         .jsonBody(Json.encodeToString(mål))
         .tilSingelRespons<MålDto>()
 
+    private fun IASakDto.lagreSykefraværsmål(
+        sykefraværsmål: List<SykefraværsmålDto>,
+        token: String = authContainerHelper.saksbehandler1.token,
+        samarbeid: IASamarbeidDto = samarbeid(),
+    ) = applikasjon.performPut("${samarbeid.url(orgnr)}/sykefravaersmaal")
+        .authentication().bearer(token)
+        .jsonBody(Json.encodeToString(sykefraværsmål))
+        .tilSingelRespons<MålDto>()
+
+    private fun IASakDto.lagreSamarbeidsmål(
+        samarbeidsmål: List<SamarbeidsmålDto>,
+        token: String = authContainerHelper.saksbehandler1.token,
+        samarbeid: IASamarbeidDto = samarbeid(),
+    ) = applikasjon.performPut("${samarbeid.url(orgnr)}/samarbeidsmaal")
+        .authentication().bearer(token)
+        .jsonBody(Json.encodeToString(samarbeidsmål))
+        .tilSingelRespons<MålDto>()
+
     private fun IASakDto.hentMål(
         token: String = authContainerHelper.saksbehandler1.token,
         samarbeid: IASamarbeidDto = samarbeid(),
@@ -284,5 +302,56 @@ class MålTest {
             .jsonBody(Json.encodeToString(mål))
             .tilSingelRespons<MålDto>()
             .statuskode() shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `lagring av sykefraværsmål endrer ikke mål for samarbeidet`() {
+        val sak = aktivSamarbeidsperiode()
+        val lagredeSamarbeidsmål = sak.lagreSamarbeidsmål(listOf(SamarbeidsmålDto(mål = "Bedre dialog"))).third.get().samarbeidsmål
+
+        val lagret = sak.lagreSykefraværsmål(listOf(sykefraværsmål())).third.get()
+
+        lagret.sykefraværsmål.utenId() shouldBe listOf(sykefraværsmål())
+        lagret.samarbeidsmål shouldBe lagredeSamarbeidsmål
+        sak.hentMål().third.get() shouldBe lagret
+    }
+
+    @Test
+    fun `lagring av mål for samarbeidet endrer ikke sykefraværsmål`() {
+        val sak = aktivSamarbeidsperiode()
+        val lagredeSykefraværsmål = sak.lagreSykefraværsmål(listOf(sykefraværsmål())).third.get().sykefraværsmål
+
+        val lagret = sak.lagreSamarbeidsmål(listOf(SamarbeidsmålDto(mål = "  Bedre dialog  "))).third.get()
+
+        lagret.samarbeidsmål.map { it.mål } shouldBe listOf("Bedre dialog")
+        lagret.sykefraværsmål shouldBe lagredeSykefraværsmål
+        sak.hentMål().third.get() shouldBe lagret
+    }
+
+    @Test
+    fun `endepunktene per måltype avviser ugyldige mål`() {
+        val sak = aktivSamarbeidsperiode()
+
+        sak.lagreSykefraværsmål(listOf(sykefraværsmål(), sykefraværsmål())).statuskode() shouldBe HttpStatusCode.Conflict.value
+        sak.lagreSykefraværsmål(listOf(sykefraværsmål().copy(id = Int.MAX_VALUE))).statuskode() shouldBe HttpStatusCode.BadRequest.value
+        sak.lagreSamarbeidsmål(listOf(SamarbeidsmålDto(mål = "   "))).statuskode() shouldBe HttpStatusCode.BadRequest.value
+        sak.lagreSamarbeidsmål(listOf(SamarbeidsmålDto(id = Int.MAX_VALUE, mål = "Ukjent"))).statuskode() shouldBe HttpStatusCode.BadRequest.value
+
+        sak.hentMål().third.get() shouldBe MålDto(sykefraværsmål = emptyList(), samarbeidsmål = emptyList())
+    }
+
+    @Test
+    fun `endepunktene per måltype krever tilgang og aktivt samarbeid`() {
+        val sak = aktivSamarbeidsperiode()
+        val lesebruker = authContainerHelper.lesebruker.token
+
+        sak.lagreSykefraværsmål(listOf(sykefraværsmål()), token = lesebruker).statuskode() shouldBe HttpStatusCode.Forbidden.value
+        sak.lagreSamarbeidsmål(listOf(SamarbeidsmålDto(mål = "Mål A")), token = lesebruker).statuskode() shouldBe HttpStatusCode.Forbidden.value
+
+        sak.samarbeid().opprettSamarbeidsplan(orgnr = sak.orgnr)
+        sak.samarbeid().avsluttSamarbeid(orgnr = sak.orgnr, avslutningsType = IASamarbeid.Status.FULLFØRT)
+
+        sak.lagreSykefraværsmål(emptyList()).statuskode() shouldBe HttpStatusCode.Conflict.value
+        sak.lagreSamarbeidsmål(emptyList()).statuskode() shouldBe HttpStatusCode.Conflict.value
     }
 }

@@ -18,7 +18,11 @@ import no.nav.lydia.api.sendFeil
 import no.nav.lydia.mål.MålDto
 import no.nav.lydia.mål.MålFeil
 import no.nav.lydia.mål.MålService
+import no.nav.lydia.mål.SamarbeidsmålDto
+import no.nav.lydia.mål.SykefraværsmålDto
 import no.nav.lydia.mål.valider
+import no.nav.lydia.mål.validerSamarbeidsmål
+import no.nav.lydia.mål.validerSykefraværsmål
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidFeil
 import no.nav.lydia.samarbeid.IASamarbeidService
@@ -30,6 +34,8 @@ import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val MÅL_PATH =
     "$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid/{samarbeidId}/maal"
+const val SYKEFRAVÆRSMÅL_PATH = "$MÅL_PATH/sykefravaersmaal"
+const val SAMARBEIDSMÅL_PATH = "$MÅL_PATH/samarbeidsmaal"
 
 fun Route.mål(
     målService: MålService,
@@ -39,6 +45,7 @@ fun Route.mål(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
+    // Hent sykefraværsmål og mål for samarbeidet
     get(MÅL_PATH) {
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -66,6 +73,7 @@ fun Route.mål(
         }
     }
 
+    // Lagre sykefraværsmål og mål for samarbeidet. Fjernes når frontend bruker endepunktene under
     put(MÅL_PATH) {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -87,6 +95,84 @@ fun Route.mål(
             målService.lagre(
                 samarbeidId = samarbeidId,
                 mål = gyldigeMål,
+                endretAv = saksbehandler.navIdent,
+            ).bind()
+        }.also {
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = orgnummer,
+                auditType = AuditType.update,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // Lagre sykefraværsmål
+    put(SYKEFRAVÆRSMÅL_PATH) {
+        val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val samarbeidId = call.samarbeidId ?: return@put call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        val sykefraværsmål = call.receive<List<SykefraværsmålDto>>()
+
+        either {
+            val saksbehandler = call.eierEllerFølgerAvSak(
+                adGrupper = adGrupper,
+                iaSakService = iaSakService,
+                iaTeamService = iaTeamService,
+            ).bind()
+            val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).bind()
+            ensure(iaSak.orgnr == orgnummer) { IASakError.`ugyldig orgnummer` }
+            val samarbeid = iaSamarbeidService.hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).bind()
+            ensure(samarbeid.status == IASamarbeid.Status.AKTIV) { MålFeil.`samarbeidet er ikke aktivt` }
+            val gyldigeSykefraværsmål = validerSykefraværsmål(sykefraværsmål).bind()
+
+            målService.lagreSykefraværsmål(
+                samarbeidId = samarbeidId,
+                sykefraværsmål = gyldigeSykefraværsmål,
+                endretAv = saksbehandler.navIdent,
+            ).bind()
+        }.also {
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = orgnummer,
+                auditType = AuditType.update,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // Lagre mål for samarbeidet
+    put(SAMARBEIDSMÅL_PATH) {
+        val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val samarbeidId = call.samarbeidId ?: return@put call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
+        val samarbeidsmål = call.receive<List<SamarbeidsmålDto>>()
+
+        either {
+            val saksbehandler = call.eierEllerFølgerAvSak(
+                adGrupper = adGrupper,
+                iaSakService = iaSakService,
+                iaTeamService = iaTeamService,
+            ).bind()
+            val iaSak = iaSakService.hentIASakDto(saksnummer = saksnummer).bind()
+            ensure(iaSak.orgnr == orgnummer) { IASakError.`ugyldig orgnummer` }
+            val samarbeid = iaSamarbeidService.hentSamarbeid(saksnummer = saksnummer, samarbeidId = samarbeidId).bind()
+            ensure(samarbeid.status == IASamarbeid.Status.AKTIV) { MålFeil.`samarbeidet er ikke aktivt` }
+            val gyldigeSamarbeidsmål = validerSamarbeidsmål(samarbeidsmål).bind()
+
+            målService.lagreSamarbeidsmål(
+                samarbeidId = samarbeidId,
+                samarbeidsmål = gyldigeSamarbeidsmål,
                 endretAv = saksbehandler.navIdent,
             ).bind()
         }.also {
