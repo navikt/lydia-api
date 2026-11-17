@@ -2,6 +2,7 @@ package no.nav.lydia.tilstandsmaskin.sideeffect.transactional
 
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.samarbeid.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidDto
@@ -104,18 +105,20 @@ class SamarbeidTransactional {
             offentligId: UUID = UUID.randomUUID(),
             saksnummer: String,
             navn: String? = DEFAULT_SAMARBEID_NAVN,
+            navEnhet: NavEnhet,
         ): IASamarbeid =
             tx.run(
                 queryOf(
                     """
-                    INSERT INTO ia_prosess (offentlig_id, saksnummer, navn) 
-                    values (:offentligId, :saksnummer, :navn)
+                    INSERT INTO ia_prosess (offentlig_id, saksnummer, navn, nav_enhet_nummer) 
+                    values (:offentligId, :saksnummer, :navn, :navEnhet)
                      returning *
                     """.trimIndent(),
                     mapOf(
                         "offentligId" to offentligId,
                         "saksnummer" to saksnummer,
                         "navn" to navn.nullIfEmpty(),
+                        "navEnhet" to navEnhet.enhetsnummer,
                     ),
                 ).map { it.mapRowToIASamarbeid() }.asSingle,
             )!!
