@@ -154,10 +154,10 @@ object Jobblytter : CoroutineScope {
                                                 logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
                                             } else {
                                                 val tørrKjør = jobInfo.parameter != "GO!"
-                                                virksomhetService.finnSlettedeVirksomheterMedAktivSak().forEach { virksomhet ->
-                                                    logger.info("Virksomhet $virksomhet")
-                                                    if (!tørrKjør) {
-                                                        iaSakService.avsluttSakForSlettetVirksomhet(virksomhet)
+                                                virksomhetService.finnVirksomheterMedIkkeAktuellStatus().forEach { ikkeAktuellVirksomhet ->
+                                                    logger.info("Saksnummer '${ikkeAktuellVirksomhet.saksnummer}'")
+                                                    if (!tørrKjør || ikkeAktuellVirksomhet.saksnummer == jobInfo.parameter) {
+                                                        virksomhetService.rettOppIIkkeAktuellStatus(ikkeAktuellVirksomhet)
                                                     }
                                                 }
                                             }
