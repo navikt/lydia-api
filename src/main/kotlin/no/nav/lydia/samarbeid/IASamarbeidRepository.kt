@@ -1,5 +1,6 @@
 package no.nav.lydia.samarbeid
 
+import arrow.core.raise.nullable
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.Session
@@ -9,6 +10,7 @@ import kotliquery.using
 import no.nav.lydia.dokumentpublisering.DokumentPubliseringDto
 import no.nav.lydia.dokumentpublisering.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.felles.tilUUID
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import no.nav.lydia.samarbeidsplan.SamarbeidDto
@@ -186,6 +188,8 @@ class IASamarbeidRepository(
                           ia_prosess.navn as navn,
                           ia_prosess.status as status,
                           ia_prosess.endret_tidspunkt as endret_tidspunkt,
+                          ia_prosess.nav_enhet_nummer,
+                          ia_prosess.nav_enhet_navn,
                           ia_sak.saksnummer as saksnummer,
                           ia_sak.orgnr as orgnr
                           from ia_prosess 
@@ -209,6 +213,8 @@ class IASamarbeidRepository(
                           ia_prosess.navn as navn,
                           ia_prosess.status as status,
                           ia_prosess.endret_tidspunkt as endret_tidspunkt,
+                          ia_prosess.nav_enhet_nummer,
+                          ia_prosess.nav_enhet_navn,
                           ia_sak.saksnummer as saksnummer,
                           ia_sak.orgnr as orgnr
                           from ia_prosess 
@@ -248,6 +254,12 @@ class IASamarbeidRepository(
                 navn = row.stringOrNull("navn"),
                 status = row.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
                 endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
+                navEnhet = nullable {
+                    NavEnhet(
+                        enhetsnummer = row.stringOrNull("nav_enhet_nummer").bind(),
+                        enhetsnavn = row.stringOrNull("nav_enhet_navn").bind(),
+                    )
+                },
             ),
         )
 
