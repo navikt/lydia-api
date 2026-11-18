@@ -17,7 +17,8 @@ FROM ia_sak_hendelse ish
 WHERE ip.nav_enhet_nummer IS NULL
   AND ish.saksnummer = ip.saksnummer
   AND ish.opprettet =
-      (SELECT max(indre.opprettet) FROM ia_sak_hendelse indre
-                                   WHERE indre.saksnummer = ip.saksnummer
-                                   AND indre.type = 'OPPRETT_SAK_FOR_VIRKSOMHET'
-                                   AND indre.opprettet <= ip.opprettet);
+      (SELECT max(indre.opprettet)
+       FROM ia_sak_hendelse indre
+       WHERE indre.saksnummer = ip.saksnummer
+         AND indre.type = 'OPPRETT_SAK_FOR_VIRKSOMHET'
+         AND indre.opprettet <= ip.opprettet);
