@@ -110,15 +110,16 @@ class SamarbeidTransactional {
             tx.run(
                 queryOf(
                     """
-                    INSERT INTO ia_prosess (offentlig_id, saksnummer, navn, nav_enhet_nummer) 
-                    values (:offentligId, :saksnummer, :navn, :navEnhet)
+                    INSERT INTO ia_prosess (offentlig_id, saksnummer, navn, nav_enhet_nummer, nav_enhet_navn) 
+                    values (:offentligId, :saksnummer, :navn, :navEnhetNummer, :navEnhetNavn)
                      returning *
                     """.trimIndent(),
                     mapOf(
                         "offentligId" to offentligId,
                         "saksnummer" to saksnummer,
                         "navn" to navn.nullIfEmpty(),
-                        "navEnhet" to navEnhet.enhetsnummer,
+                        "navEnhetNummer" to navEnhet.enhetsnummer,
+                        "navEnhetNavn" to navEnhet.enhetsnavn,
                     ),
                 ).map { it.mapRowToIASamarbeid() }.asSingle,
             )!!
