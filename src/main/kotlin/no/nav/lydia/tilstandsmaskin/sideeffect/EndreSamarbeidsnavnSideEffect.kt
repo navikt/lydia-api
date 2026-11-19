@@ -38,6 +38,7 @@ class EndreSamarbeidsnavnSideEffect(
                     id = samarbeidId,
                     saksnummer = saksnummer,
                     navn = nyttNavn,
+                    navEnhet = navEnhet,
                 )
 
                 oppdaterNavnPåSamarbeid(samarbeidDto)
