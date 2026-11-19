@@ -49,8 +49,8 @@ class Personopplysningssjekk(
                 kanInneholdePersonopplysninger = true,
                 inneholderTall = inneholderTall,
                 inneholderEpost = inneholderEpost,
-                //TODO: burde dette være null? sender ikke til KI fordi det er ingenting i fritekstfeltet
-                //TODO: burde kanskje bare settes til false, slik at vi kan ha Boolean men kan være misvisende
+                // TODO: burde dette være null? sender ikke til KI fordi det er ingenting i fritekstfeltet
+                // TODO: burde kanskje bare settes til false, slik at vi kan ha Boolean men kan være misvisende
                 kiFlagget = null,
             ).right()
         }

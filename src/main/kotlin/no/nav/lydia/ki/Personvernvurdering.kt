@@ -16,7 +16,7 @@ data class Personvernvurdering(
     val stoppetAvInnholdsfilter: Boolean = false,
 )
 
-//TODO: Diskuter om dette er dataen vi skal lagre, og undersøk om det finnes noe bedre måte å gjøre dette på
+// TODO: Diskuter om dette er dataen vi skal lagre, og undersøk om det finnes noe bedre måte å gjøre dette på
 // Strict json_schema krever at alle felter står i "required" og "additionalProperties": false
 internal val personvernSchema: JsonObject =
     Json
@@ -41,7 +41,7 @@ internal val personvernSchema: JsonObject =
             """.trimIndent(),
         ).jsonObject
 
-//TODO: burde det være norske navn for dette fra azure docs, med f.eks. bruk av @SerialName
+// TODO: burde det være norske navn for dette fra azure docs, med f.eks. bruk av @SerialName
 @Serializable
 internal data class PromptMelding(
     val role: String,
