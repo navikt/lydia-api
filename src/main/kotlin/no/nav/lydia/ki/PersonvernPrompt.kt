@@ -5,13 +5,14 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
+// TODO: Vurdere systemPrompt
+
 /**
  * Systemprompt for KI-vurdering av personvern i fritekst.
  *
  * Endrer du PROMPT, må du samtidig øke VERSJONSNUMMER, oppdatere tidsstempel og
  * oppdatere HASH. Kjør main() nederst i filen for å generere ny hash.
  */
-//TODO: Vurdere systemPrompt
 object PersonvernPrompt {
     const val VERSJONSNUMMER = 1
     private const val TIDSSTEMPEL_UTEN_SONE = "2026-05-12T12:00:00"
@@ -36,12 +37,12 @@ object PersonvernPrompt {
         Flagget er et varsel for videre vurdering, ikke en juridisk konklusjon om at et personvernbrudd har skjedd.
     """
 
-    //TODO: bruke samme dato konvensjon som resten av koden
+    // TODO: bruke samme dato konvensjon som resten av koden
     val endretTidspunkt: ZonedDateTime =
         ZonedDateTime.of(LocalDateTime.parse(TIDSSTEMPEL_UTEN_SONE), ZoneId.of("Europe/Oslo"))
 
     private fun normalisertPrompt() = PROMPT.trimIndent().trim()
-    
+
     private fun sha256Hex6(input: String): String =
         MessageDigest
             .getInstance("SHA-256")

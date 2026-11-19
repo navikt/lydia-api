@@ -9,7 +9,8 @@ import java.io.File
 import kotlin.test.Ignore
 import kotlin.test.Test
 
-//TODO:Gjennomgang av tester må fremdeles skje
+// TODO:Gjennomgang av tester må fremdeles skje
+
 /**
  * Evaluerer personvernprompten mot ekte Azure OpenAI. Kjøres manuelt når prompt, modell eller parametre endres.
  *
@@ -19,10 +20,11 @@ import kotlin.test.Test
  */
 class PersonvernEvalueringTest {
     companion object {
-        private const val PAUSE_MELLOM_KALL_MS = 2_000L //prøver og unngå azure 429 rate limit
-        private const val PAUSE_VED_429_MS = 5_000L //venter lenger om vi faktisk får 429
-        private const val MAKS_FORSØK = 3 //gi opp etter 3 forsøk
-        //TODO:kanskje egen mappe for resultatene?
+        private const val PAUSE_MELLOM_KALL_MS = 2_000L // prøver og unngå azure 429 rate limit
+        private const val PAUSE_VED_429_MS = 5_000L // venter lenger om vi faktisk får 429
+        private const val MAKS_FORSØK = 3 // gi opp etter 3 forsøk
+
+        // TODO:kanskje egen mappe for resultatene?
         private const val RAPPORTFIL = "build/personvernEvalueringResultater.txt"
 
         // Pair(forventet personvernflagget, tekst)
@@ -38,7 +40,6 @@ class PersonvernEvalueringTest {
             Pair(true, "Daglig leder er langtidssykmeldt etter hjerteinfarkt"),
             Pair(true, "Hjelpe Mohammed tilbake i jobb etter operasjonen i kneet"),
             Pair(true, "Lærlingen vår har ADHD og trenger tettere oppfølging"),
-
             // Generelle mål uten enkeltperson: skal ikke flagges
             Pair(false, "Redusere sykefraværet i virksomheten"),
             Pair(false, "Redusere sykefraværet med 10 % innen utgangen av året"),
@@ -50,7 +51,6 @@ class PersonvernEvalueringTest {
             Pair(false, "Utarbeide en plan for oppfølging av gravide arbeidstakere"),
             Pair(false, "Gjennomføre medarbeidersamtaler om trivsel og helse"),
             Pair(false, "Ansatte med psykiske plager skal få bedre tilrettelegging"),
-
             // Grensetilfeller
             Pair(false, "Lederen skal følge opp sykmeldte ansatte tettere"),
             Pair(true, "Ola skal lede arbeidsmiljøgruppen"),
@@ -69,7 +69,7 @@ class PersonvernEvalueringTest {
         val feil: Feil?,
     )
 
-    //TODO: finne ut hvordan de håndterer secrets offline for manuell testing
+    // TODO: finne ut hvordan de håndterer secrets offline for manuell testing
     @Ignore("Testen skal kun kjøres manuelt ved behov")
     @Test
     fun `evaluer personvernprompten mot ekte modell`() {

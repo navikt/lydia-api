@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotStartWith
 import kotlin.test.Test
 
-//TODO:Gjennomgang av tester må fremdeles skje
+// TODO:Gjennomgang av tester må fremdeles skje
 class PersonvernPromptTest {
     @Test
     fun `hash skal stemme med gjeldende prompt`() {
