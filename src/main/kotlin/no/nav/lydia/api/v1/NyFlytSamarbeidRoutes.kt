@@ -24,6 +24,7 @@ import no.nav.lydia.samarbeid.EndringISamarbeidDto
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidDto
 import no.nav.lydia.samarbeid.IASamarbeidFeil
+import no.nav.lydia.samarbeid.IASamarbeidRequestDto
 import no.nav.lydia.samarbeid.IASamarbeidService
 import no.nav.lydia.samarbeid.tilRespons
 import no.nav.lydia.samarbeidsperiode.IASakError
@@ -70,7 +71,7 @@ fun Route.nyFlytSamarbeid(
     post("$NY_FLYT_API_PATH/virksomhet/{orgnummer}/samarbeidsperiode/{saksnummer}/samarbeid") {
         val orgnr = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@post call.respond(IASakError.`ugyldig saksnummer`)
-        val iaSamarbeidDto = call.receive<IASamarbeidDto>()
+        val iaSamarbeidDto = call.receive<IASamarbeidRequestDto>()
 
         if (saksnummer != iaSamarbeidDto.saksnummer) {
             return@post call.respond(status = HttpStatusCode.BadRequest, message = "Ugyldig saksnummer")

@@ -274,6 +274,10 @@ fun Row.mapRowToIASamarbeid(): IASamarbeid =
         saksnummer = this.string("saksnummer"),
         navn = this.string("navn"),
         status = this.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
+        navEnhet = NavEnhet(
+            this.string("nav_enhet_nummer"),
+            enhetsnavn = this.string("nav_enhet_navn"),
+        ),
         opprettet = this.localDateTime("opprettet").toKotlinLocalDateTime(),
         avbrutt = this.localDateTimeOrNull("avbrutt_tidspunkt")?.toKotlinLocalDateTime(),
         fullført = this.localDateTimeOrNull("fullfort_tidspunkt")?.toKotlinLocalDateTime(),

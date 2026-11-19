@@ -42,6 +42,7 @@ class SlettSamarbeidSideEffect(
                     id = samarbeidId,
                     saksnummer = saksnummer,
                     navn = "",
+                    navEnhet = navEnhet,
                 )
 
                 val slettetSamarbeid = slettSamarbeid(samarbeidDto)
