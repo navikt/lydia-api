@@ -1,6 +1,5 @@
 package no.nav.lydia.samarbeid
 
-import arrow.core.raise.nullable
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.Session
@@ -254,12 +253,10 @@ class IASamarbeidRepository(
                 navn = row.stringOrNull("navn"),
                 status = row.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
                 endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
-                navEnhet = nullable {
-                    NavEnhet(
-                        enhetsnummer = row.stringOrNull("nav_enhet_nummer").bind(),
-                        enhetsnavn = row.stringOrNull("nav_enhet_navn").bind(),
-                    )
-                },
+                navEnhet = NavEnhet(
+                    enhetsnummer = row.string("nav_enhet_nummer"),
+                    enhetsnavn = row.string("nav_enhet_navn"),
+                ),
             ),
         )
 
