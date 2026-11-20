@@ -1,5 +1,6 @@
 package no.nav.lydia.container.integrasjoner.jobblytter
 
+import com.github.guepardoapps.kulid.ULID
 import ia.felles.integrasjoner.jobbsender.Jobb.alleKategorierSykefraværsstatistikkDvhImport
 import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
 import ia.felles.integrasjoner.jobbsender.Jobb.fullforKartleggingEtter24t
@@ -11,7 +12,10 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.prosesserPlanlagteHendelser
+import io.kotest.assertions.nondeterministic.eventually
+import io.kotest.assertions.nondeterministic.eventuallyConfig
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.runBlocking
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.opprettSamarbeid
 import no.nav.lydia.container.ny.flyt.NyFlytTestUtils.Companion.vurderVirksomhet
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.fullfør
@@ -27,7 +31,11 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.kartlegging.Spørreundersøkelse
 import no.nav.lydia.samarbeid.SAMARBEID_ID_PREFIKS
+import no.nav.lydia.samarbeidsperiode.IASakshendelseType
 import org.junit.Test
+import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class JobblytterTest {
     @Test
@@ -214,5 +222,111 @@ class JobblytterTest {
         maskineltFullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
         applikasjon shouldContainLog "Fullførte kartleggingen".toRegex()
         applikasjon shouldContainLog "Jobb 'fullforKartleggingEtter24t' ferdig".toRegex()
+    }
+
+    @Test
+    fun `skal rette opp i virksomheter som sitter fast i 'IKKE_AKTUELL'`() {
+        val sak = vurderVirksomhet()
+
+        // opprettet tilbake til
+        postgresContainerHelper.performUpdate(
+            """
+            UPDATE ia_sak_hendelse 
+            SET 
+              opprettet = opprettet - INTERVAL '8 months' 
+            WHERE saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
+        )
+
+        // migrering til ny flyt
+        postgresContainerHelper.performUpdate(
+            """
+            INSERT INTO ia_sak_hendelse (
+            id,
+            saksnummer,
+            orgnr,
+            type,
+            opprettet_av,
+            opprettet,
+            opprettet_av_rolle,
+            nav_enhet_nummer,
+            nav_enhet_navn,
+            resulterende_status
+            ) 
+            VALUES (
+            '${ULID.random()}',
+            '${sak.saksnummer}',
+            '${sak.orgnr}',
+            'MIGRERING_TIL_NY_FLYT',
+            'Fia system',
+            '${LocalDateTime.now().minusMonths(8).plusDays(1)}',
+            'SUPERBRUKER',
+            '2840',
+            'IA- og sykefraværskontoret',
+            'VURDERES'
+            )
+            """.trimIndent(),
+        )
+        // virksomhet er ikke aktuell
+        postgresContainerHelper.performUpdate(
+            """
+            INSERT INTO ia_sak_hendelse (
+            id,
+            saksnummer,
+            orgnr,
+            type,
+            opprettet_av,
+            opprettet,
+            opprettet_av_rolle,
+            nav_enhet_nummer,
+            nav_enhet_navn,
+            resulterende_status
+            ) 
+            VALUES (
+            '${ULID.random()}',
+            '${sak.saksnummer}',
+            '${sak.orgnr}',
+            'VIRKSOMHET_ER_IKKE_AKTUELL',
+            'Fia system',
+            '${LocalDateTime.now().minusMonths(8).plusDays(2)}',
+            'SUPERBRUKER',
+            '2840',
+            'IA- og sykefraværskontoret',
+            'IKKE_AKTUELL'
+            )
+            """.trimIndent(),
+        )
+
+        kafkaContainerHelper.sendJobbMelding(jobb = engangsJobb, parameter = "Dry run")
+        applikasjon shouldContainLog "Saksnummer '${sak.saksnummer}'".toRegex()
+
+        val resDryRun = postgresContainerHelper.hentEnkelKolonne<Int>(
+            """
+            SELECT COUNT(*) FROM ia_sak_hendelse WHERE orgnr = '${sak.orgnr}'
+            """.trimIndent(),
+        )
+        resDryRun shouldBe 4
+
+        kafkaContainerHelper.sendJobbMelding(jobb = engangsJobb, parameter = "GO!")
+
+        runBlocking {
+            eventually(1.seconds) {
+                val alleHendelsesTyper = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+                    """
+                    SELECT type FROM ia_sak_hendelse WHERE orgnr = '${sak.orgnr}' ORDER BY opprettet
+                    """.trimIndent(),
+                )
+
+                alleHendelsesTyper shouldBe listOf(
+                    "OPPRETT_SAK_FOR_VIRKSOMHET",
+                    "VIRKSOMHET_VURDERES",
+                    "MIGRERING_TIL_NY_FLYT",
+                    "VIRKSOMHET_ER_IKKE_AKTUELL",
+                    "VURDERING_FULLFØRT_UTEN_SAMARBEID",
+                    "OPPRETT_SAK_FOR_VIRKSOMHET",
+                    "VIRKSOMHET_VURDERES",
+                )
+            }
+        }
     }
 }

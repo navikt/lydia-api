@@ -56,6 +56,7 @@ class OpprettSamarbeidSideEffect(
                 val opprettetSamarbeid = opprettNyttSamarbeid(
                     saksnummer = saksnummer,
                     navn = samarbeidsNavn,
+                    navEnhet = navEnhet,
                 )
 
                 lagreHendelseTilSamarbeid(
