@@ -27,15 +27,17 @@ import no.nav.lydia.AzureOpenAi
 import no.nav.lydia.felles.Feil
 import org.slf4j.LoggerFactory
 
-//TODO: Burde deles opp fra domenelogikk slik at klienten kan gjenbrukes senere
+// TODO: Burde deles opp fra domenelogikk slik at klienten kan gjenbrukes senere
 class AzureOpenAiKlient(
     private val config: AzureOpenAi,
 ) {
     companion object {
         const val API_VERSION = "2025-04-01-preview"
-        //TODO: sjekk MAKS_TOKENS
+
+        // TODO: sjekk MAKS_TOKENS
         private const val MAKS_TOKENS = 4000
-        //TODO: sjekk om det skal være medium eller low
+
+        // TODO: sjekk om det skal være medium eller low
         private const val REASONING_EFFORT = "low"
         private const val TIMEOUT_MS = 30_000L
 
@@ -49,7 +51,7 @@ class AzureOpenAiKlient(
         )
     }
 
-    //TODO: hva er det som logges??
+    // TODO: hva er det som logges??
     private val log = LoggerFactory.getLogger(this::class.java)
 
     private val json = Json {
@@ -90,33 +92,36 @@ class AzureOpenAiKlient(
                 KiFeil.`ugyldig systemprompt`
             }
 
-    private fun lagForespørsel(systemMelding: String, filtrertTekst: String) =
-        AzureOpenAiForespørsel(
-            messages = listOf(
-                PromptMelding(role = "system", content = systemMelding),
-                PromptMelding(role = "user", content = filtrertTekst),
+    private fun lagForespørsel(
+        systemMelding: String,
+        filtrertTekst: String,
+    ) = AzureOpenAiForespørsel(
+        messages = listOf(
+            PromptMelding(role = "system", content = systemMelding),
+            PromptMelding(role = "user", content = filtrertTekst),
+        ),
+        maksTokens = MAKS_TOKENS,
+        reasoningEffort = REASONING_EFFORT,
+        svarformat = Svarformat(
+            type = "json_schema",
+            jsonSchema = JsonSchemaSpesifikasjon(
+                name = "personvernvurdering",
+                strict = true,
+                schema = personvernSchema,
             ),
-            maksTokens = MAKS_TOKENS,
-            reasoningEffort = REASONING_EFFORT,
-            svarformat = Svarformat(
-                type = "json_schema",
-                jsonSchema = JsonSchemaSpesifikasjon(
-                    name = "personvernvurdering",
-                    strict = true,
-                    schema = personvernSchema,
-                ),
-            ),
-        )
+        ),
+    )
 
     private suspend fun tolkRespons(respons: HttpResponse): Either<Feil, Personvernvurdering> =
         when (respons.status) {
-            HttpStatusCode.OK ->
+            HttpStatusCode.OK -> {
                 Either
                     .catch { json.decodeFromString<AzureOpenAiSvar>(respons.bodyAsText()) }
                     .mapLeft { KiFeil.`ugyldig svar fra KI` }
                     .flatMap { it.tilPersonvernvurdering() }
+            }
 
-            //TODO: burde personvernflagget kanskje ikke være true her men heller endres til eget flagg for badrequest?
+            // TODO: burde personvernflagget kanskje ikke være true her men heller endres til eget flagg for badrequest?
             HttpStatusCode.BadRequest -> {
                 val kategorier = innholdsfilterKategorier(respons.bodyAsText())
                 if (kategorier != null) {
@@ -160,8 +165,7 @@ class AzureOpenAiKlient(
                     .ifEmpty { listOf("ukjent kategori") }
             }
 
-    private fun JsonElement.erFiltrert() =
-        (this as? JsonObject)?.get("filtered")?.jsonPrimitive?.booleanOrNull == true
+    private fun JsonElement.erFiltrert() = (this as? JsonObject)?.get("filtered")?.jsonPrimitive?.booleanOrNull == true
 
     private fun AzureOpenAiSvar.tilPersonvernvurdering(): Either<Feil, Personvernvurdering> {
         val valg = choices.firstOrNull() ?: return KiFeil.`ugyldig svar fra KI`.left()

@@ -1,6 +1,7 @@
 package no.nav.lydia.samarbeid
 
 import kotlinx.datetime.LocalDateTime
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import java.util.UUID
 
 data class IASamarbeid(
@@ -9,6 +10,7 @@ data class IASamarbeid(
     val saksnummer: String,
     val navn: String,
     val status: Status?,
+    val navEnhet: NavEnhet,
     val opprettet: LocalDateTime,
     val avbrutt: LocalDateTime?,
     val fullført: LocalDateTime?,

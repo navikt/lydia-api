@@ -46,6 +46,7 @@ import no.nav.lydia.prioritering.virksomhet.VirksomhetDto
 import no.nav.lydia.samarbeid.EndringISamarbeidDto
 import no.nav.lydia.samarbeid.IASamarbeid
 import no.nav.lydia.samarbeid.IASamarbeidDto
+import no.nav.lydia.samarbeid.IASamarbeidRequestDto
 import no.nav.lydia.samarbeid.SamarbeidBigqueryProdusent.SamarbeidValue
 import no.nav.lydia.samarbeid.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.samarbeidsperiode.BegrunnelseType
@@ -473,7 +474,7 @@ class NyFlytTestUtils {
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(
-                    IASamarbeidDto(
+                    IASamarbeidRequestDto(
                         id = 0,
                         saksnummer = saksnummer,
                         navn = samarbeidsnavn,
