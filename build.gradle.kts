@@ -1,9 +1,9 @@
-val flywayVersion = "13.12.1"
+val flywayVersion = "13.12.2"
 val iaFellesVersion = "3.1.2"
 val ktorVersion = "3.6.1"
-val kotestVerstion = "6.2.6"
+val kotestVerstion = "6.2.7"
 val testcontainersVersion = "2.0.5"
-val logbackVersion = "1.6.6"
+val logbackVersion = "1.6.7"
 val logstashLogbackEncoderVersion = "9.0"
 val opentelemetryLogbackMdcVersion = "2.33.1-alpha"
 
@@ -101,7 +101,7 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:6.1.4")
+    testImplementation("no.nav.security:mock-oauth2-server:7.0.0")
 
     constraints {
         implementation("org.xerial.snappy:snappy-java") {
