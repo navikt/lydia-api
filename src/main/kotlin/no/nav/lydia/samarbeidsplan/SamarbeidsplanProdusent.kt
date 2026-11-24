@@ -7,6 +7,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.felles.KafkaProdusent
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.samarbeid.IASamarbeid
 
 class SamarbeidsplanProdusent(
@@ -55,6 +56,7 @@ data class SamarbeidDto(
     val startDato: LocalDate? = null,
     val sluttDato: LocalDate? = null,
     val endretTidspunkt: LocalDateTime? = null,
+    val navEnhet: NavEnhet? = null,
 )
 
 fun PlanDto.tilPlanKafkaMeldingDto() =
