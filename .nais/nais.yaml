@@ -44,6 +44,9 @@ spec:
           namespace: nais-system
         - application: pia-pdfgen
       external:
+      {{#if geminiProject}}
+        - host: aiplatform.eu.rep.googleapis.com
+      {{/if}}
         - host: {{journalpostHost}}
         - host: data.ssb.no
         - host: {{salesforceTokenHost}}
@@ -70,6 +73,14 @@ spec:
   tokenx:
     enabled: true
   gcp:
+    {{#if geminiProject}}
+    permissions:
+      - resource:
+          apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
+          kind: Project
+          name: {{geminiProject}}
+        role: roles/aiplatform.user
+    {{/if}}
     sqlInstances:
     - type: POSTGRES_18
       diskAutoresize: {{dbAutoresizeDisk}}
@@ -111,3 +122,11 @@ spec:
       value: {{journalpostApi}}
     - name: JOURNALPOST_SCOPE
       value: {{journalpostOboScope}}
+  {{#if geminiProject}}
+    - name: GEMINI_PROJECT
+      value: {{geminiProject}}
+    - name: GEMINI_LOCATION
+      value: eu
+    - name: GEMINI_MODEL
+      value: gemini-3.8-flash
+  {{/if}}
