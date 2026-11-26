@@ -61,8 +61,8 @@ import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
-import no.nav.lydia.integrasjoner.kartlegging.MaskineltFullførKartleggingEtterFrist
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
+import no.nav.lydia.integrasjoner.kartlegging.MaskineltFullførKartleggingEtterFrist
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.kvittering.KvitteringConsumer
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
@@ -72,8 +72,6 @@ import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetServ
 import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.ki.AzureOpenAiKlient
-import no.nav.lydia.personopplysninger.Personopplysningssjekk
 import no.nav.lydia.kartlegging.FullførtBehovsvurderingProdusent
 import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.kartlegging.SpørreundersøkelseBigqueryProdusent
@@ -82,7 +80,9 @@ import no.nav.lydia.kartlegging.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.kartlegging.SpørreundersøkelseProdusent
 import no.nav.lydia.kartlegging.SpørreundersøkelseRepository
 import no.nav.lydia.kartlegging.SpørreundersøkelseService
+import no.nav.lydia.ki.AzureOpenAiKlient
 import no.nav.lydia.mål.MålService
+import no.nav.lydia.personopplysninger.Personopplysningssjekk
 import no.nav.lydia.prioritering.StatistikkViewOppdaterer
 import no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringRepository
 import no.nav.lydia.prioritering.sykefraværsstatistikk.SistePubliseringService
@@ -364,7 +364,7 @@ fun startLydiaBackend() {
         virksomhetService = virksomhetService,
         iaSakService = iaSakService,
         tilstandVirksomhetOppdaterer = tilstandVirksomhetOppdaterer,
-        maskineltFullførKartleggingEtterFrist = maskineltFullførKartleggingEtterFrist
+        maskineltFullførKartleggingEtterFrist = maskineltFullførKartleggingEtterFrist,
     )
 
     listOf(
@@ -487,7 +487,7 @@ private fun jobblytter(
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     tilstandVirksomhetOppdaterer: TilstandVirksomhetOppdaterer,
-    maskineltFullførKartleggingEtterFrist: MaskineltFullførKartleggingEtterFrist
+    maskineltFullførKartleggingEtterFrist: MaskineltFullførKartleggingEtterFrist,
 ) {
     Jobblytter.apply {
         create(
