@@ -1,7 +1,5 @@
 package no.nav.lydia.samarbeidsplan
 
-import arrow.core.raise.context.bind
-import arrow.core.raise.context.nullable
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
@@ -139,12 +137,10 @@ class PlanRepository(
                 startDato = startDato,
                 sluttDato = sluttDato,
                 endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
-                navEnhet = nullable {
-                    NavEnhet(
-                        enhetsnummer = row.stringOrNull("nav_enhet_nummer").bind(),
-                        enhetsnavn = row.stringOrNull("nav_enhet_navn").bind(),
-                    )
-                },
+                navEnhet = NavEnhet(
+                    enhetsnummer = row.string("nav_enhet_nummer"),
+                    enhetsnavn = row.string("nav_enhet_navn"),
+                ),
             ),
             plan = planDto,
         )
