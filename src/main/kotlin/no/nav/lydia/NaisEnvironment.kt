@@ -154,6 +154,25 @@ class AzureOpenAi(
     override fun toString() = "AzureOpenAi(endpoint='$endpoint', deployment='$deployment')"
 }
 
+class Gemini(
+    val endpoint: String = getEnvVar("GEMINI_ENDPOINT"),
+    val project: String = getEnvVar("GEMINI_PROJECT"),
+    val location: String = getEnvVar("GEMINI_LOCATION"),
+    val model: String = getEnvVar("GEMINI_MODEL"),
+) {
+    companion object {
+        val TILLATTE_LOCATIONS = setOf("eu", "europe-north1")
+    }
+
+    init {
+        require(location in TILLATTE_LOCATIONS) {
+            "GEMINI_LOCATION '$location' er ikke tillatt. Tillatte verdier: $TILLATTE_LOCATIONS"
+        }
+    }
+
+    override fun toString() = "Gemini(endpoint='$endpoint', project='$project', location='$location', model='$model')"
+}
+
 class Integrasjoner(
     val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL"),
     val salesforce: Salesforce = Salesforce(),
@@ -161,6 +180,7 @@ class Integrasjoner(
     val journalpostUrl: String = getEnvVar("JOURNALPOST_V1_URL"),
     val journalpostScope: String = getEnvVar("JOURNALPOST_SCOPE"),
     val azureOpenAi: AzureOpenAi? = System.getenv("AZURE_OPENAI_ENDPOINT")?.let { AzureOpenAi() },
+    val gemini: Gemini? = System.getenv("GEMINI_PROJECT")?.let { Gemini() },
 )
 
 enum class Topic(

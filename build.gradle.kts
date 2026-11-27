@@ -74,6 +74,9 @@ dependencies {
     // Funksjonelle operatorer
     implementation("io.arrow-kt:arrow-core:2.3.0.1")
 
+    // Google-auth for Vertex AI (Application Default Credentials)
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.58.0")
+
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 

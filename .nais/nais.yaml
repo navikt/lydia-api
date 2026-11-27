@@ -123,6 +123,8 @@ spec:
     - name: JOURNALPOST_SCOPE
       value: {{journalpostOboScope}}
   {{#if geminiProject}}
+    - name: GEMINI_ENDPOINT
+      value: https://aiplatform.eu.rep.googleapis.com
     - name: GEMINI_PROJECT
       value: {{geminiProject}}
     - name: GEMINI_LOCATION
